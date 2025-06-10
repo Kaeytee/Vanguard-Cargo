@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import AnimateInView from '../../components/ui/animate-in-view';
 import { motion } from 'framer-motion';
+import Image from '../../images/deliveryparcel.jpg';
 
 // Simple animated button component
 const AnimatedButton = ({
@@ -60,7 +61,7 @@ export default function CTA() {
 					<AnimateInView variant="fadeInRight" delay={0.4}>
 						<div className="relative max-w-xs md:max-w-md">
 							<img
-								src="/images/delivery.jpg"
+								src={Image}
 								alt="Logistics delivery worker"
 								className="rounded-lg shadow-xl object-cover"
 								style={{ maxHeight: "300px", width: "100%" }}

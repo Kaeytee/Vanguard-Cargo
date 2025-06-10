@@ -7,4 +7,8 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
+  // Ensure consistent CSS processing in development and production
+  css: {
+    devSourcemap: true,
+  },
 })
