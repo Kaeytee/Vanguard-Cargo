@@ -1,11 +1,15 @@
 import { Link } from 'react-router-dom';
 import { useState, useEffect, useRef, useCallback } from 'react';
+import Image from "../../images/logistics-background.png";
+import Image2 from "../../images/logistics-background-2.png";
+import Image3 from "../../images/logistics-background-3.png";
+import Image4 from "../../images/logistics-background-4.jpg";
 
 export default function Hero() {
 	const slides = [
 		{
 			id: 1,
-			backgroundImage: "images/logistics-background.png",
+			backgroundImage: Image,
 			title: "Global Logistics Excellence",
 			description: "Seamless end-to-end supply chain solutions for businesses worldwide",
 			buttonText: "Get Started",
@@ -15,7 +19,7 @@ export default function Hero() {
 		},
 		{
 			id: 2,
-			backgroundImage: "/images/logistics-background-2.png",
+			backgroundImage: Image2,
 			title: "Efficient Shipping Solutions",
 			description: "Fast and reliable freight services across air, land, and sea",
 			buttonText: "Our Services",
@@ -25,7 +29,7 @@ export default function Hero() {
 		},
 		{
 			id: 3,
-			backgroundImage: "/images/logistics-background-3.png",
+			backgroundImage: Image3,
 			title: "Worldwide Delivery Network",
 			description: "Connecting businesses globally with our extensive transport solutions",
 			buttonText: "See Network",
@@ -35,7 +39,7 @@ export default function Hero() {
 		},
 		{
 			id: 4,
-			backgroundImage: "/images/logistics-background-4.jpg",
+			backgroundImage: Image4,
 			title: "Technology-Driven Logistics",
 			description: "Advanced tracking and optimization for your supply chain needs",
 			buttonText: "Learn More",
