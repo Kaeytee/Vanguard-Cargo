@@ -147,3 +147,10 @@ body {
 	transition: background-color 0.3s ease, color 0.3s ease;
 	font-family: "roboto";
 }
+
+/* Cross-browser shadow utilities */
+.shadow-red {
+	box-shadow: 0 10px 15px -3px rgba(225, 29, 72, 0.1), 0 4px 6px -4px rgba(225, 29, 72, 0.1);
+	-webkit-box-shadow: 0 10px 15px -3px rgba(225, 29, 72, 0.1), 0 4px 6px -4px rgba(225, 29, 72, 0.1);
+	-moz-box-shadow: 0 10px 15px -3px rgba(225, 29, 72, 0.1), 0 4px 6px -4px rgba(225, 29, 72, 0.1);
+}

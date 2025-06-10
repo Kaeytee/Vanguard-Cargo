@@ -5,10 +5,14 @@ import tailwindcss from '@tailwindcss/vite'
 export default defineConfig({
   plugins: [
     react(),
-    tailwindcss(),
+    tailwindcss(), // Remove the configuration object
   ],
   // Ensure consistent CSS processing in development and production
   css: {
     devSourcemap: true,
   },
+  build: {
+    sourcemap: true,
+    cssMinify: true,
+  }
 })

@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { cn } from '../../lib/utils';
-import { Globe, Plane, Ship, Truck } from "lucide-react"
+import { Globe, Plane, Ship, Truck } from "lucide-react";
 import AnimateInView from '../../components/ui/animate-in-view';
 
 export default function Services() {
@@ -60,7 +60,7 @@ export default function Services() {
 									<div
 										className={cn(
 											"border border-gray-200 rounded-lg p-6 text-center transition-all duration-300 h-full",
-											isHovered && "shadow-lg shadow-[rgba(220,38,38,0.2)] border-[rgba(220,38,38,0.5)]"
+											isHovered && "border-red-500 shadow-red"
 										)}
 										onMouseEnter={() => setHoveredIndex(index)}
 										onMouseLeave={() => setHoveredIndex(null)}
@@ -68,7 +68,7 @@ export default function Services() {
 										<motion.div
 											className={cn(
 												"flex justify-center mb-4 mx-auto p-2 rounded-full w-16 h-16 items-center transition-all duration-300 bg-gray-100",
-												isHovered && "bg-[rgba(220,38,38,0.1)] text-[#dc2626]"
+												isHovered && "bg-red-50 text-red-500"
 											)}
 											animate={isHovered ? { scale: 1.1, rotate: 5 } : { scale: 1, rotate: 0 }}
 											transition={{ type: "spring", stiffness: 300, damping: 15 }}
