@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useState, useEffect, useRef, useCallback } from 'react';
-import Image from "../../images/logistics-background.png";
+import Image from "../../images/register-bg.jpg";
 import Image2 from "../../images/logistics-background-2.png";
 import Image3 from "../../images/logistics-background-3.png";
 import Image4 from "../../images/logistics-background-4.jpg";
@@ -13,7 +13,7 @@ export default function Hero() {
 			title: "Global Logistics Excellence",
 			description: "Seamless end-to-end supply chain solutions for businesses worldwide",
 			buttonText: "Get Started",
-			buttonLink: "/contact",
+			buttonLink: "/register",
 			secondaryButtonText: "Learn More",
 			secondaryButtonLink: "/services"
 		},
