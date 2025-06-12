@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from 'framer-motion';
 import { 
 	Eye, 
@@ -8,22 +8,60 @@ import { cn } from '../../lib/utils';
 import AnimateInView from '../../components/ui/animate-in-view';
 import loginbg from '../../images/register-bg.jpg';
 import Image from '../../images/delivery-man.png';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../../context/AuthProvider';
 /**
  * Login component - Displays the Login page with animations matching the design
  * @returns {JSX.Element} The Login page component	
  */
+/**
+ * Login component - Handles user authentication and redirects to the client app
+ * 
+ * This component manages the login form, authentication process, and redirection
+ * to the client app dashboard or the originally requested protected route.
+ * 
+ * @returns {JSX.Element} The Login page component
+ */
 export default function Login() {
+	const navigate = useNavigate();
+	const location = useLocation();
+	const { user, setUser, setLoading: setAuthLoading } = useAuth();
+	
+	// Get the path the user was trying to access before being redirected to login
+	const from = location.state?.from || '/app/dashboard';
+	
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
 	const [isLoading, setIsLoading] = useState(false);
 	const [showPassword, setShowPassword] = useState(false);
 	const [rememberMe, setRememberMe] = useState(false);
+	
+	// Check if user is already authenticated on component mount
+	useEffect(() => {
+		if (user) {
+			// If already authenticated via context, redirect to dashboard
+			navigate('/app/dashboard');
+		} else {
+			// Fallback check for backward compatibility
+			const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
+			if (isAuthenticated) {
+				// If authenticated via localStorage, redirect to dashboard
+				navigate('/app/dashboard');
+			}
+		}
+	}, [navigate, user]);
 
+	/**
+	 * Handle form submission for login
+	 * Authenticates the user and redirects to the appropriate route
+	 */
 	const handleSubmit = async () => {
 		setIsLoading(true);
+		setAuthLoading(true);
 
 		// Simulate login (replace with actual authentication)
 		setTimeout(() => {
+			// Create mock user data (in a real app, this would come from your backend)
 			const mockUser = {
 				id: "1",
 				name: email.split("@")[0],
@@ -31,10 +69,18 @@ export default function Login() {
 				image: "https://www.pngall.com/wp-content/uploads/12/Avatar-PNG-Background.png"
 			};
 
+			// Update auth context with user data
+			setUser(mockUser);
+			
+			// Also store in localStorage for backward compatibility
+			localStorage.setItem('isAuthenticated', 'true');
+
 			console.log('Login successful:', mockUser);
 			setIsLoading(false);
-			alert('Login successful! Redirecting to dashboard...');
-			// navigate("/dashboard"); // Add your navigation logic here
+			setAuthLoading(false);
+			
+			// Redirect to the original route the user was trying to access or dashboard
+			navigate(from);
 		}, 1000);
 	};
 
