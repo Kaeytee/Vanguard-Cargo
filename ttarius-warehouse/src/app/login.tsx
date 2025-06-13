@@ -1,5 +1,7 @@
 import { useState } from 'react';
-import { FaUser, FaLock } from 'react-icons/fa';
+import { BsPerson, BsLock } from 'react-icons/bs';
+import image from '../assets/Login.png';
+
 
 /**
  * Login Component
@@ -17,74 +19,114 @@ const Login = () => {
    * Handle form submission
    * @param {React.FormEvent} e - Form event
    */
-  const handleSubmit = (e: React.FormEvent) => {
-    // Prevent default form submission behavior
-    e.preventDefault();
-    // Handle login logic here (to be implemented)
-    console.log('Login attempt with:', { username, password });
-  };
+interface LoginCredentials {
+  username: string;
+  password: string;
+}
+
+const handleSubmit = (e: React.FormEvent<HTMLButtonElement>): void => {
+  // Prevent default form submission behavior
+  e.preventDefault();
+  // Handle login logic here (to be implemented)
+  const credentials: LoginCredentials = { username, password };
+  console.log('Login attempt with:', credentials);
+};
 
   return (
-    // Main container with full viewport height and width
-    <div className="flex h-screen w-screen overflow-hidden bg-[#1e3a8a]">
-      {/* Left side - Image container */}
-      <div className="hidden md:block md:w-1/2 relative">
-        <img 
-          src="/logistics-ship.jpg" 
-          alt="Logistics Ship" 
-          className="h-full w-full object-cover"
-        />
+    // Main container with full viewport height and custom background
+    <div className="min-h-screen w-full  relative overflow-hidden flex items-center justify-center p-4">
+      {/* Background decorative elements matching the exact design */}
+      {/* Top large ellipse - positioned at top with exact dimensions */}
+      <div 
+        className="absolute bg-gradient-to-br from-blue-700 to-blue-900 rounded-full"
+        style={{
+          width: '120%',
+          height: '110%',
+          flexShrink: 0,
+          bottom: '350px',
+          left: '-40px',
+          transform: 'rotate(15deg)'
+        }}>
       </div>
       
-      {/* Right side - Login form */}
-      <div className="w-full md:w-1/2 flex flex-col justify-center items-center bg-white p-8 rounded-l-3xl">
-        <div className="w-full max-w-md p-6">
-          {/* Logo and Title */}
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-[#1e3a8a]">TTarius logistics.</h1>
-            <p className="text-gray-500 mt-2">Login as Admin</p>
+    
+      
+      {/* Bottom left curved accent to match the design flow */}
+      <div 
+        className="absolute bg-gradient-to-tr from-blue-900 to-blue-800 rounded-full"
+        style={{
+          width: '500px',
+          height: '500px',
+          bottom: '-250px',
+          left: '-250px',
+          opacity: 0.8,
+          transform: 'rotate(-15deg)'
+        }}>
+      </div>
+      {/* Centered card container - positioned above background elements */}
+      <div className="relative z-10 w-full max-w-6xl bg-white rounded-3xl shadow-2xl overflow-hidden flex">
+        {/* Left side - Image container */}
+        <div className="hidden lg:flex lg:w-1/2 relative">
+          <div className="w-full h-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center">
+            {/* Container ship illustration */}
+            <div className="relative w-full h-full flex items-center justify-center">
+              <img 
+                src={image}
+                alt="Container ship at port with cranes"
+                className="w-full h-full object-cover rounded-l-3xl"
+              />
+            </div>
           </div>
-          
-          {/* Login Form */}
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Username Input */}
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                <FaUser className="text-gray-400" />
-              </div>
-              <input
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#1e3a8a] focus:border-transparent"
-                placeholder="Enter ID"
-                required
-              />
+        </div>
+
+        {/* Right side - Login form */}
+        <div className="w-full lg:w-1/2 flex flex-col justify-center items-center p-8 lg:p-16">
+          <div className="w-full max-w-md">
+            {/* Logo and Title */}
+            <div className="text-center mb-12">
+              <h1 className="text-4xl font-bold text-blue-900 mb-4">TTarius logistics.</h1>
+              <p className="text-gray-400 text-lg font-medium">Login as Admin</p>
             </div>
-            
-            {/* Password Input */}
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                <FaLock className="text-gray-400" />
+
+            {/* Login Form */}
+            <div className="space-y-6">
+              {/* Username Input */}
+              <div className="relative">
+                <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">
+                  <BsPerson className="w-5 h-5 text-gray-400" />
+                </div>
+                <input
+                  type="text"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  className="w-full px-4 pr-12 py-4 bg-gray-50 border-0 rounded-lg text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-0 focus:bg-white focus:shadow-sm transition-all duration-200"
+                  placeholder="Enter ID"
+                />
               </div>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#1e3a8a] focus:border-transparent"
-                placeholder="Enter password"
-                required
-              />
+
+              {/* Password Input */}
+              <div className="relative">
+                <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">
+                  <BsLock className="w-5 h-5 text-gray-400" />
+                </div>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full px-4 pr-12 py-4 bg-gray-50 border-0 rounded-lg text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-0 focus:bg-white focus:shadow-sm transition-all duration-200"
+                  placeholder="Enter password"
+                />
+              </div>
+
+              {/* Login Button */}
+              <button
+                onClick={handleSubmit}
+                className="w-full bg-blue-900 text-white py-4 rounded-lg font-semibold text-lg hover:bg-blue-800 transition-colors duration-300 shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98]"
+              >
+                Log In
+              </button>
             </div>
-            
-            {/* Login Button */}
-            <button
-              type="submit"
-              className="w-full bg-[#1e3a8a] text-white py-3 rounded-md hover:bg-[#152b63] transition-colors duration-300"
-            >
-              Log In
-            </button>
-          </form>
+          </div>
         </div>
       </div>
     </div>
