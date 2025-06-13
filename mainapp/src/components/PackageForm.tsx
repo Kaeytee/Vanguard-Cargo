@@ -107,16 +107,14 @@ const PackageForm: React.FC<PackageFormProps> = ({
   // Find the selected category object for display
   const selectedCategory = PACKAGE_CATEGORIES.find(
     (cat) => cat.id === formData.packageCategory
-  );
-  return (
-    <div>
-      <div>        <div className="flex items-center mb-6">
+  );  return (
+    <div data-testid="package-form">
+      <div><div className="flex items-center mb-6">
         <h2 className="text-2xl text-[#1A2B6D] font-bold">Package Details</h2>
       </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <div className="space-y-2 mb-2">
-              <label htmlFor="deliveryType" className="font-semibold flex items-center">
+          <div>            <div className="space-y-2 mb-2">
+              <label htmlFor="freightType" className="font-semibold flex items-center">
                 Delivery Type <span className="text-primary text-lg">*</span>
                 <FaPlane className="ml-2 text-blue-500" />
               </label>

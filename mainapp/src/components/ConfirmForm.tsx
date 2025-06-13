@@ -84,9 +84,8 @@ const ConfirmForm: React.FC<ConfirmFormProps> = ({
       <div className="text-gray-900 w-full sm:w-2/3">{formatValue(value)}</div>
     </div>
   );
-
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" data-testid="confirm-form">
       <div>
         <h2 className="text-2xl text-[#1A2B6D] font-bold mb-4">Confirm Package Request</h2>
         <p className="text-gray-500 mb-6">Please review all information before submitting your package request.</p>

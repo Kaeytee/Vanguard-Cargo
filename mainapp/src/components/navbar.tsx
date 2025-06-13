@@ -101,11 +101,9 @@ export default function Navbar() {
 						<span className="text-2xl font-bold text-red-600 tracking-tight">
 							Ttarius Logistics
 						</span>
-					</Link>
-
-					{/* Desktop Navigation */}
+					</Link>					{/* Desktop Navigation */}
 					<div className="hidden md:flex items-center space-x-8">
-						{navLinks.filter(link => link.href !== "/dashboard").map((link) => (
+						{navLinks.map((link) => (
 							<Link
 								key={link.href}
 								to={link.href}

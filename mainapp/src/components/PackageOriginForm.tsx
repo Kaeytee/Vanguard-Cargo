@@ -109,10 +109,9 @@ const PackageOriginForm: React.FC<PackageOriginFormProps> = ({
     
     return flag;
   };
-  
-  return (
-    <div className="space-y-6">      
-      <div>        <h2 className="text-2xl text-[#1A2B6D] font-bold my-2">
+    return (
+    <div className="space-y-6" data-testid="package-origin-form">      
+      <div><h2 className="text-2xl text-[#1A2B6D] font-bold my-2">
           Package Origin and Your Information
         </h2>
         <p className="text-gray-600 mb-4">
