@@ -23,6 +23,29 @@
 	--input: 214.3 31.8% 91.4%;
 	--ring: 221.2 83.2% 53.3%;
 	--radius: 0.5rem;
+	
+	/* Brand Colors - Replace these values with your actual brand colors */
+	--brand-primary: 221.2 83.2% 53.3%; /* Main brand color */
+	--brand-primary-hover: 221.2 83.2% 48.3%; /* Darker variant for hover */
+	--brand-secondary: 210 40% 96%; /* Secondary brand color */
+	--brand-secondary-hover: 210 40% 91%; /* Darker variant for hover */
+	--brand-accent: 39 100% 50%; /* Accent color (e.g., for warnings, highlights) */
+	--brand-success: 142 76% 36%; /* Success color */
+	--brand-warning: 45 93% 58%; /* Warning color */
+	--brand-error: 0 84.2% 60.2%; /* Error color */
+	--brand-info: 199 89% 48%; /* Info color */
+	
+	/* Text Colors */
+	--text-primary: 222.2 84% 4.9%; /* Main text color */
+	--text-secondary: 215.4 16.3% 46.9%; /* Secondary text color */
+	--text-muted: 215.4 16.3% 65.1%; /* Muted text color */
+	--text-on-primary: 210 40% 98%; /* Text on primary background */
+	
+	/* Background Colors */
+	--bg-primary: 0 0% 100%; /* Main background */
+	--bg-secondary: 210 40% 98%; /* Secondary background */
+	--bg-muted: 210 40% 96%; /* Muted background */
+}
 }
 
 .dark {
@@ -45,6 +68,28 @@
 	--border: 217.2 32.6% 17.5%;
 	--input: 217.2 32.6% 17.5%;
 	--ring: 224.3 76.3% 94.1%;
+	
+	/* Brand Colors for Dark Mode */
+	--brand-primary: 217.2 91.2% 59.8%; /* Brighter primary for dark mode */
+	--brand-primary-hover: 217.2 91.2% 54.8%; /* Darker variant for hover */
+	--brand-secondary: 217.2 32.6% 17.5%; /* Secondary for dark mode */
+	--brand-secondary-hover: 217.2 32.6% 22.5%; /* Lighter variant for hover */
+	--brand-accent: 39 100% 60%; /* Brighter accent for dark mode */
+	--brand-success: 142 76% 46%; /* Brighter success for dark mode */
+	--brand-warning: 45 93% 68%; /* Brighter warning for dark mode */
+	--brand-error: 0 62.8% 50.6%; /* Adjusted error for dark mode */
+	--brand-info: 199 89% 58%; /* Brighter info for dark mode */
+	
+	/* Text Colors for Dark Mode */
+	--text-primary: 210 40% 98%; /* Main text color for dark mode */
+	--text-secondary: 215 20.2% 65.1%; /* Secondary text color for dark mode */
+	--text-muted: 215 20.2% 50.1%; /* Muted text color for dark mode */
+	--text-on-primary: 222.2 84% 4.9%; /* Text on primary background for dark mode */
+	
+	/* Background Colors for Dark Mode */
+	--bg-primary: 222.2 84% 4.9%; /* Main background for dark mode */
+	--bg-secondary: 217.2 32.6% 17.5%; /* Secondary background for dark mode */
+	--bg-muted: 217.2 32.6% 12.5%; /* Muted background for dark mode */
 }
 
 * {

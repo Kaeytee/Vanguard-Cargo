@@ -57,10 +57,41 @@ export default {
         popover: {
           DEFAULT: "hsl(var(--popover))",
           foreground: "hsl(var(--popover-foreground))",
-        },
-        card: {
+        },        card: {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
+        },
+        
+        // Brand Colors - These will use your CSS variables
+        brand: {
+          primary: {
+            DEFAULT: "hsl(var(--brand-primary))",
+            hover: "hsl(var(--brand-primary-hover))",
+          },
+          secondary: {
+            DEFAULT: "hsl(var(--brand-secondary))",
+            hover: "hsl(var(--brand-secondary-hover))",
+          },
+          accent: "hsl(var(--brand-accent))",
+          success: "hsl(var(--brand-success))",
+          warning: "hsl(var(--brand-warning))",
+          error: "hsl(var(--brand-error))",
+          info: "hsl(var(--brand-info))",
+        },
+        
+        // Text Colors
+        text: {
+          primary: "hsl(var(--text-primary))",
+          secondary: "hsl(var(--text-secondary))",
+          muted: "hsl(var(--text-muted))",
+          "on-primary": "hsl(var(--text-on-primary))",
+        },
+        
+        // Background Colors
+        bg: {
+          primary: "hsl(var(--bg-primary))",
+          secondary: "hsl(var(--bg-secondary))",
+          muted: "hsl(var(--bg-muted))",
         },
       },
       borderRadius: {
