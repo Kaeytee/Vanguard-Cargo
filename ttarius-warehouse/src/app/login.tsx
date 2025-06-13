@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { BsPerson, BsLock } from 'react-icons/bs';
+import { useNavigate } from 'react-router-dom';
 import image from '../assets/Login.png';
 
 
@@ -7,29 +8,76 @@ import image from '../assets/Login.png';
  * Login Component
  * 
  * This component renders the login page for TTarius Logistics warehouse application.
- * It includes a form with username and password inputs, and a login button.
+ * It includes a form with username and password inputs, and a login button with loading state.
+ * After successful login, it navigates to the dashboard.
  * The design matches the provided mockup with a split layout - image on left, form on right.
  */
 const Login = () => {
-  // State for form inputs
+  // Navigation hook for redirecting after login
+  const navigate = useNavigate();
+  
+  // State for form inputs and UI states
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
 
   /**
    * Handle form submission
    * @param {React.FormEvent} e - Form event
    */
+/**
+ * Interface for login credentials
+ */
 interface LoginCredentials {
   username: string;
   password: string;
 }
 
+/**
+ * Handles the login form submission
+ * Shows loading state, simulates authentication, and navigates to dashboard
+ * @param {React.FormEvent<HTMLButtonElement>} e - Form event
+ */
 const handleSubmit = (e: React.FormEvent<HTMLButtonElement>): void => {
   // Prevent default form submission behavior
   e.preventDefault();
-  // Handle login logic here (to be implemented)
+  
+  // Reset any previous errors
+  setError('');
+  
+  // Validate form inputs
+  if (!username || !password) {
+    setError('Please enter both username and password');
+    return;
+  }
+  
+  // Set loading state
+  setIsLoading(true);
+  
+  // Create credentials object
   const credentials: LoginCredentials = { username, password };
   console.log('Login attempt with:', credentials);
+  
+  // Simulate authentication process with a delay
+  setTimeout(() => {
+    // For demo purposes, we'll consider any login successful
+    // In a real application, you would validate credentials against an API
+    
+    // Set authentication state in session storage
+    sessionStorage.setItem('isAuthenticated', 'true');
+    
+    // Store user info if needed
+    sessionStorage.setItem('user', JSON.stringify({
+      username,
+      role: 'admin',
+      lastLogin: new Date().toISOString()
+    }));
+    
+    // Navigate to dashboard after successful login
+    setIsLoading(false);
+    navigate('/dashboard');
+  }, 2000); // 2 seconds delay to show the loader
 };
 
   return (
@@ -118,12 +166,30 @@ const handleSubmit = (e: React.FormEvent<HTMLButtonElement>): void => {
                 />
               </div>
 
-              {/* Login Button */}
+              {/* Error message display */}
+              {error && (
+                <div className="text-red-500 text-sm mt-2 mb-4">
+                  {error}
+                </div>
+              )}
+              
+              {/* Login Button with Loading State */}
               <button
                 onClick={handleSubmit}
-                className="w-full bg-blue-900 text-white py-4 rounded-lg font-semibold text-lg hover:bg-blue-800 transition-colors duration-300 shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98]"
+                disabled={isLoading}
+                className={`w-full bg-blue-900 text-white py-4 rounded-lg font-semibold text-lg transition-all duration-300 shadow-lg flex items-center justify-center ${isLoading ? 'opacity-90 cursor-not-allowed' : 'hover:bg-blue-800 hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98]'}`}
               >
-                Log In
+                {isLoading ? (
+                  <>
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Processing...
+                  </>
+                ) : (
+                  'Log In'
+                )}
               </button>
             </div>
           </div>
