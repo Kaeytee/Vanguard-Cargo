@@ -162,11 +162,10 @@ const ConfirmForm: React.FC<ConfirmFormProps> = ({
               Back to Package Details
             </button>
             
-            {/* Submit Button with Loading State - Using red color scheme */}
-            <button
+            {/* Submit Button with Loading State - Using red color scheme */}            <button
               type="submit"
               disabled={isSubmitting}
-              className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-all duration-200 disabled:opacity-80 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+              className="px-6 py-3 bg-red-600 hover:bg-red-600/90 text-primary-foreground rounded-lg transition-all duration-200 disabled:opacity-80 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
             >
               {isSubmitting ? (
                 <>

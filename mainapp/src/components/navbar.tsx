@@ -95,10 +95,9 @@ export default function Navbar() {
 			scrolled ? "shadow-md border-b border-gray-200" : "shadow-sm border-b border-gray-100"
 		)}>
 			<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-				<div className="flex justify-between items-center h-16">
-					{/* Logo */}
+				<div className="flex justify-between items-center h-16">					{/* Logo */}
 					<Link to="/" className="flex-shrink-0">
-						<span className="text-2xl font-bold text-red-600 tracking-tight">
+						<span className="text-2xl font-bold text-primary tracking-tight">
 							Ttarius Logistics
 						</span>
 					</Link>					{/* Desktop Navigation */}
@@ -110,8 +109,8 @@ export default function Navbar() {
 								className={cn(
 									"px-3 py-2 text-sm font-medium transition-colors duration-200 relative group",
 									pathname === link.href
-										? "text-red-600"
-										: "text-gray-700 hover:text-red-600"
+										? "text-primary"
+										: "text-gray-700 hover:text-primary"
 								)}
 							>
 								{link.label}
@@ -125,19 +124,17 @@ export default function Navbar() {
 
 					{/* Desktop Auth Buttons */}
 					<div className="hidden md:flex items-center space-x-3">
-						{user ? (
-							<div className="flex items-center gap-3">
+						{user ? (							<div className="flex items-center gap-3">
 								{user.email && (
 									<span className="text-sm text-gray-600 mr-2">{user.email}</span>
 								)}
-								<Button onClick={logout} variant="outline" className="border-red-600 text-red-600 hover:bg-red-50">Logout</Button>
+								<Button onClick={logout} variant="outline" className="border-primary text-primary hover:bg-red-600/10">Logout</Button>
 							</div>
 						) : (
-							<>
-								{!hideLogin && (
+							<>								{!hideLogin && (
 									<Link
 										to="/login"
-										className="px-4 py-2 text-sm font-medium text-red-600 hover:text-red-700 transition-colors duration-200 rounded-md hover:bg-red-50 border border-red-600"
+										className="px-4 py-2 text-sm font-medium text-primary hover:text-primary/80 transition-colors duration-200 rounded-md hover:bg-red-600/10 border border-primary"
 									>
 										Log In
 									</Link>
@@ -145,7 +142,7 @@ export default function Navbar() {
 								{!hideRegister && (
 									<Link
 										to="/register"
-										className="px-4 py-2 text-sm font-medium bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-all duration-200 shadow-sm"
+										className="px-4 py-2 text-sm font-medium bg-red-600 text-primary-foreground rounded-md hover:bg-red-600/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 transition-all duration-200 shadow-sm"
 									>
 										Register
 									</Link>
@@ -155,11 +152,10 @@ export default function Navbar() {
 					</div>
 
 					{/* Mobile menu button */}
-					<div className="flex items-center md:hidden">
-						<button
+					<div className="flex items-center md:hidden">						<button
 							ref={menuButtonRef}
 							onClick={() => setIsMenuOpen(!isMenuOpen)}
-							className="inline-flex items-center justify-center p-2 rounded-md text-gray-700 hover:text-red-600 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-red-500 transition-colors duration-200"
+							className="inline-flex items-center justify-center p-2 rounded-md text-gray-700 hover:text-primary hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary transition-colors duration-200"
 							aria-expanded={isMenuOpen}
 						>
 							<span className="sr-only">Open main menu</span>
@@ -191,12 +187,11 @@ export default function Navbar() {
 									initial={{ opacity: 0, x: -10 }}
 									animate={{ opacity: 1, x: 0 }}
 									transition={{ duration: 0.2, delay: 0.05 * index }}
-								>
-									<Link
+								>									<Link
 										to={link.href}
 										className={cn(
-											"text-base font-medium p-3 hover:bg-red-50 rounded-md block transition-colors",
-											pathname === link.href ? "text-red-600 bg-red-50" : "text-gray-800"
+											"text-base font-medium p-3 hover:bg-red-600/10 rounded-md block transition-colors",
+											pathname === link.href ? "text-primary bg-red-600/10" : "text-gray-800"
 										)}
 										onClick={() => setIsMenuOpen(false)}
 									>
@@ -216,22 +211,20 @@ export default function Navbar() {
 									<>
 										{user.email && (
 											<span className="text-sm text-gray-600 mb-2 text-center">{user.email}</span>
-										)}
-										<Button
+										)}										<Button
 											onClick={logout}
 											variant="outline"
-											className="w-full border-red-600 text-red-600 hover:bg-red-50"
+											className="w-full border-primary text-primary hover:bg-red-600/10"
 										>
 											Logout
 										</Button>
 									</>
 								) : (
-									<>
-										{!hideLogin && (
+									<>										{!hideLogin && (
 											<Link
 												to="/login"
 												onClick={() => setIsMenuOpen(false)}
-												className="w-full px-4 py-2 text-center text-red-600 border border-red-600 rounded-md hover:bg-red-50 transition-colors duration-200"
+												className="w-full px-4 py-2 text-center text-primary border border-primary rounded-md hover:bg-red-600/10 transition-colors duration-200"
 											>
 												Login
 											</Link>
@@ -240,7 +233,7 @@ export default function Navbar() {
 											<Link
 												to="/register"
 												onClick={() => setIsMenuOpen(false)}
-												className="w-full px-4 py-2 text-center bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors duration-200 mt-2"
+												className="w-full px-4 py-2 text-center bg-red-600 text-primary-foreground rounded-md hover:bg-red-600/90 transition-colors duration-200 mt-2"
 											>
 												Register
 											</Link>

@@ -448,7 +448,7 @@ export default function SubmitShipmentPage() {
               <button
                 type="button"
                 onClick={handleNextStep}
-                className="bg-primary hover:bg-primary/90 text-white py-2 sm:py-3 px-4 sm:px-8 text-sm sm:text-base rounded-md transition-colors flex items-center gap-2"
+                className="bg-red-600 hover:bg-red-600/90 text-white py-2 sm:py-3 px-4 sm:px-8 text-sm sm:text-base rounded-md transition-colors flex items-center gap-2"
               >
                 Next
                 <svg className="w-5 h-5" viewBox="0 0 20 20" fill="currentColor" xmlns="http://www.w3.org/2000/svg">

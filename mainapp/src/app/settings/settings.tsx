@@ -49,8 +49,16 @@ const ClientSettingsPage: React.FC = () => {
 
   return (
     <div className="min-h-screen px-4 sm:px-10 py-6transition-colors duration-300">
-      <h1 className="text-2xl font-bold mb-2">Settings</h1>
+      <div>
+        <div>
+          <h1 className="text-2xl font-bold mb-2">Settings</h1>
       <p className="mb-6 text-gray-400">Set up your preferences</p>
+        </div>
+
+        <div>
+          
+        </div>
+      </div>
       <div className="flex flex-col md:w-[95%] mx-auto md:my-10 md:flex-row gap-6 md:gap-10">
         {/* Mobile Dropdown */}
         <div className="md:hidden relative">

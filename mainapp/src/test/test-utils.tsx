@@ -2,10 +2,7 @@ import React from 'react'
 import type { ReactElement } from 'react'
 import { render } from '@testing-library/react'
 import type { RenderOptions } from '@testing-library/react'
-import { BrowserRouter } from 'react-router-dom'
 import { vi } from 'vitest'
-import { AuthProvider } from '../context/AuthProvider'
-import { ThemeProvider } from '../context/ThemeProvider'
 
 // Mock user for testing
 export const mockUser = {
@@ -25,17 +22,9 @@ export const mockAuthContext = {
   error: null
 }
 
-// Custom render function that includes all providers
+// Minimal wrapper that doesn't interfere with mocks
 const AllTheProviders = ({ children }: { children: React.ReactNode }) => {
-  return (
-    <BrowserRouter>
-      <ThemeProvider>
-        <AuthProvider>
-          {children}
-        </AuthProvider>
-      </ThemeProvider>
-    </BrowserRouter>
-  )
+  return <div data-testid="test-wrapper">{children}</div>
 }
 
 const customRender = (

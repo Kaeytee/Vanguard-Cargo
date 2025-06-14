@@ -313,7 +313,6 @@ export default function Register() {
             </AnimateInView>
           </div>
         </div>
-      </section>
-    </div>
+      </section>    </div>
   );
 }

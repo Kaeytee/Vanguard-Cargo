@@ -156,16 +156,15 @@ export default function Services() {
 											className="flex items-start space-x-4"
 											onMouseEnter={() => setHoveredServiceIndex(index)}
 											onMouseLeave={() => setHoveredServiceIndex(null)}
-										>
-											<motion.div 
+										>											<motion.div
 												className={cn(
-													"flex-shrink-0 w-12 h-12 bg-red-50 rounded-lg flex items-center justify-center transition-all duration-300",
-													isHovered && "bg-red-500/10"
+													"flex-shrink-0 w-12 h-12 bg-red-600/10 rounded-lg flex items-center justify-center transition-all duration-300",
+													isHovered && "bg-red-600/20"
 												)}
 												animate={isHovered ? { scale: 1.1, rotate: 5 } : { scale: 1, rotate: 0 }}
 												transition={{ type: "spring", stiffness: 300, damping: 15 }}
 											>
-												<Icon className="w-6 h-6 text-red-500" strokeWidth={1.5} />
+												<Icon className="w-6 h-6 text-primary" strokeWidth={1.5} />
 											</motion.div>
 											<div>
 												<motion.h2 
