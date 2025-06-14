@@ -23,10 +23,26 @@ vi.mock('../../../lib/utils', () => ({
   cn: (...classes: any[]) => classes.filter(Boolean).join(' '),
 }))
 
-// Mock the AnimateInView component
+// Mock the AnimateInView component before other imports
 vi.mock('../../../components/ui/animate-in-view', () => ({
-  default: ({ children, className }: { children: React.ReactNode; className?: string }) => 
-    React.createElement('div', { className: className || '', 'data-testid': 'animate-in-view' }, children),
+  default: React.forwardRef<HTMLDivElement, any>(({ children, className, ...props }, ref) => 
+    React.createElement('div', { className: className || '', 'data-testid': 'animate-in-view', ref, ...props }, children)
+  ),
+}))
+
+// Mock framer-motion components
+vi.mock('framer-motion', () => ({
+  motion: {
+    div: React.forwardRef<HTMLDivElement, any>((props: any, ref) => {
+      const { initial, animate, exit, variants, transition, whileHover, whileFocus, whileTap, whileInView, viewport, onAnimationComplete, onAnimationStart, layout, layoutId, ...cleanProps } = props;
+      return React.createElement('div', { ...cleanProps, ref });
+    }),
+    button: React.forwardRef<HTMLButtonElement, any>((props: any, ref) => {
+      const { initial, animate, exit, variants, transition, whileHover, whileFocus, whileTap, whileInView, viewport, onAnimationComplete, onAnimationStart, layout, layoutId, ...cleanProps } = props;
+      return React.createElement('button', { ...cleanProps, ref });
+    }),
+  },
+  AnimatePresence: ({ children }: { children: React.ReactNode }) => children,
 }))
 
 // Mock image imports

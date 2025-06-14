@@ -14,17 +14,34 @@ export const mockUser = {
 
 // Mock auth context values
 export const mockAuthContext = {
-  user: mockUser,
-  login: vi.fn(),
-  logout: vi.fn(),
-  register: vi.fn(),
+  user: null,
+  setUser: vi.fn(),
   loading: false,
-  error: null
+  setLoading: vi.fn(),
+  logout: vi.fn(),
 }
+
+// Mock AuthProvider that provides the auth context
+const MockAuthProvider = ({ children }: { children: React.ReactNode }) => {
+  const AuthContext = React.createContext(mockAuthContext)
+  return <AuthContext.Provider value={mockAuthContext}>{children}</AuthContext.Provider>
+}
+
+// Global mock for AuthProvider
+vi.mock('../context/AuthProvider', () => ({
+  useAuth: () => mockAuthContext,
+  AuthProvider: MockAuthProvider,
+}))
 
 // Minimal wrapper that doesn't interfere with mocks
 const AllTheProviders = ({ children }: { children: React.ReactNode }) => {
-  return <div data-testid="test-wrapper">{children}</div>
+  return (
+    <div data-testid="test-wrapper">
+      <MockAuthProvider>
+        {children}
+      </MockAuthProvider>
+    </div>
+  )
 }
 
 const customRender = (

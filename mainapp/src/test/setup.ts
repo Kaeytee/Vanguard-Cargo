@@ -103,7 +103,7 @@ vi.mock('react-router-dom', () => {
   }
 })
 
-// Mock lucide-react icons
+// Mock lucide-react icons with better error handling
 vi.mock('lucide-react', () => {
   const MockIcon = React.forwardRef<any, any>((props: any, ref) => {
     const { className, children, ...otherProps } = props;
@@ -111,11 +111,15 @@ vi.mock('lucide-react', () => {
       className, 
       'data-testid': 'mock-icon', 
       ref,
+      'aria-hidden': 'true',
       ...otherProps 
     }, children);
   });
   
-  return {
+  // Add display names for better debugging
+  MockIcon.displayName = 'MockIcon';
+  
+  const iconComponents = {
     Eye: MockIcon,
     EyeOff: MockIcon,
     Mail: MockIcon,
@@ -143,11 +147,52 @@ vi.mock('lucide-react', () => {
     Bell: MockIcon,
     CloudUpload: MockIcon,
     AlertCircle: MockIcon,
-    // Add any other icons used in the components
+  };
+  
+  return iconComponents;
+})
+
+// Mock react-phone-number-input
+vi.mock('react-phone-number-input', () => {
+  const MockPhoneInput = React.forwardRef<any, any>((props: any, ref) => {
+    const { value, onChange, ...otherProps } = props;
+    return React.createElement('input', {
+      type: 'tel',
+      value: value || '',
+      onChange: (e: any) => onChange?.(e.target.value),
+      'data-testid': 'phone-input',
+      ref,
+      ...otherProps
+    });
+  });
+  
+  return {
+    default: MockPhoneInput,
+    isValidPhoneNumber: vi.fn().mockReturnValue(true),
   }
 })
+
+// Mock CSS imports
+vi.mock('react-phone-number-input/style.css', () => ({}))
 
 // Mock other common imports
 vi.mock('../lib/utils', () => ({
   cn: (...classes: any[]) => classes.filter(Boolean).join(' '),
 }))
+
+// Mock specific image imports used in components
+vi.mock('../../images/register-bg.jpg', () => ({ default: 'mock-register-bg.jpg' }))
+vi.mock('../../images/delivery-man.png', () => ({ default: 'mock-delivery-man.png' }))
+vi.mock('../../images/deliveryparcel.jpg', () => ({ default: 'mock-deliveryparcel.jpg' }))
+vi.mock('../../images/forgot.jpg', () => ({ default: 'mock-forgot.jpg' }))
+
+// Mock localStorage if not already defined
+Object.defineProperty(window, 'localStorage', {
+  writable: true,
+  value: {
+    getItem: vi.fn(),
+    setItem: vi.fn(),
+    removeItem: vi.fn(),
+    clear: vi.fn(),
+  },
+})
