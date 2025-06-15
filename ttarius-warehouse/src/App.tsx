@@ -5,6 +5,14 @@ import type { ReactNode } from 'react';
 import Login from './app/login';
 import Dashboard from './app/pages/dashboard';
 import AppLayout from './components/layout/AppLayout';
+import IncomingRequest from './app/pages/IncomingRequest/IncomingRequest';
+// import CreateShipment from './app/pages/CreateShipment/CreateShipment'; // Removed from routing and sidebar as per workflow update
+import ShipmentHistory from './app/pages/ShipmentHistory/ShipmentHistory';
+import ClientManagement from './app/pages/ClientManagement/ClientManagement';
+import AnalysisReport from './app/pages/AnalysisReport/AnalysisReport';
+import Inventory from './app/pages/Inventory/Inventory';
+import About from './app/pages/About/About';
+import Support from './app/pages/Support/Support';
 
 /**
  * Protected Route Component
@@ -86,15 +94,15 @@ const App = (): React.ReactElement => {
           <Route path="/dashboard" element={<Dashboard />} />
           
           {/* Other protected routes will be added here */}
-          <Route path="/create-shipment" element={<div className="py-6"><h1 className="text-2xl font-semibold">Create Shipment</h1><p>Create shipment page content will go here</p></div>} />
-          <Route path="/incoming-request" element={<div className="py-6"><h1 className="text-2xl font-semibold">Incoming Request</h1><p>Incoming request page content will go here</p></div>} />
-          <Route path="/shipment-history" element={<div className="py-6"><h1 className="text-2xl font-semibold">Shipment History</h1><p>Shipment history page content will go here</p></div>} />
-          <Route path="/client-management" element={<div className="py-6"><h1 className="text-2xl font-semibold">Client Management</h1><p>Client management page content will go here</p></div>} />
-          <Route path="/analysis-report" element={<div className="py-6"><h1 className="text-2xl font-semibold">Analysis Report</h1><p>Analysis report page content will go here</p></div>} />
-          <Route path="/inventory" element={<div className="py-6"><h1 className="text-2xl font-semibold">Inventory</h1><p>Inventory page content will go here</p></div>} />
-          <Route path="/about" element={<div className="py-6"><h1 className="text-2xl font-semibold">About Us</h1><p>About us page content will go here</p></div>} />
-          <Route path="/support" element={<div className="py-6"><h1 className="text-2xl font-semibold">Support</h1><p>Support page content will go here</p></div>} />
-          <Route path="/settings" element={<div className="py-6"><h1 className="text-2xl font-semibold">Settings</h1><p>Settings page content will go here</p></div>} />
+          {/* <Route path="/create-shipment" element={<CreateShipment />} /> */}
+          <Route path="/incoming-request" element={<IncomingRequest />} />
+          <Route path="/shipment-history" element={<ShipmentHistory />} />
+          <Route path="/client-management" element={<ClientManagement />} />
+          <Route path="/analysis-report" element={<AnalysisReport />} />
+          <Route path="/inventory" element={<Inventory />} />
+          <Route path="/about" element={<About />} />
+          {/* <Route path="/support" element={<Support />} /> */}
+// Removed for admin context: /support now returns 404 as required
         </Route>
         
         {/* Default route - redirect to dashboard if authenticated, otherwise to login */}

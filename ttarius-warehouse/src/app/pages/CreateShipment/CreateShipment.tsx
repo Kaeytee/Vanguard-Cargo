@@ -1,5 +1,7 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { FiPackage, FiMapPin, FiCalendar, FiUser, FiTruck } from 'react-icons/fi';
+// Import the barcode utility
+import { generateTrackingBarcode } from '../../utils/barcodeUtils';
 
 /**
  * CreateShipment Component
@@ -15,10 +17,73 @@ const CreateShipment: React.FC = () => {
    * 
    * @param {React.FormEvent} e - Form submission event
    */
+  // Reference for the form to access values
+  const formRef = useRef<HTMLFormElement>(null);
+
+  /**
+   * Handle form submission for shipment creation
+   * Generates a barcode for the tracking URL and sends all data to the backend
+   */
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Implement form submission logic here
-    console.log('Shipment creation form submitted');
+    if (!formRef.current) return;
+
+    // Extract form values
+    const formData = new FormData(formRef.current);
+    const shipmentType = formData.get('shipmentType') as string;
+    const weight = formData.get('weight') as string;
+    const length = formData.get('length') as string;
+    const width = formData.get('width') as string;
+    const height = formData.get('height') as string;
+    const dimensions = `${length}x${width}x${height}`;
+    const contents = formData.get('contents') as string;
+    const originAddress = formData.get('originAddress') as string;
+    const originCity = formData.get('originCity') as string;
+    const originPostalCode = formData.get('originPostalCode') as string;
+    const destAddress = formData.get('destAddress') as string;
+    const destCity = formData.get('destCity') as string;
+    const destPostalCode = formData.get('destPostalCode') as string;
+    const pickupDate = formData.get('pickupDate') as string;
+    const deliveryDate = formData.get('deliveryDate') as string;
+    // Generate a unique packageId (for demo, using timestamp)
+    const packageId = `PKG${Date.now()}`;
+    // Generate the barcode image encoding the tracking URL
+    const barcodeImage = generateTrackingBarcode(packageId);
+
+    // Build the shipment/package object (extend as needed)
+    const packageData = {
+      packageId,
+      shipmentType,
+      weight,
+      dimensions,
+      contents,
+      originAddress,
+      originCity,
+      originPostalCode,
+      destAddress,
+      destCity,
+      destPostalCode,
+      pickupDate,
+      deliveryDate,
+      barcodeImage, // PNG DataURL for print/download
+    };
+
+    // POST the packageData to your backend API (replace with your endpoint)
+    fetch('/api/shipments', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(packageData),
+    })
+      .then(res => res.json())
+      .then(data => {
+        // Handle success (show confirmation, redirect, etc.)
+        alert('Shipment created successfully!');
+      })
+      .catch(err => {
+        // Handle errors
+        alert('Failed to create shipment.');
+        console.error(err);
+      });
   };
 
   /**
@@ -58,7 +123,8 @@ const CreateShipment: React.FC = () => {
         </p>
       </div>
 
-      <form onSubmit={handleSubmit}>
+      {/* Attach the form ref for value extraction */}
+      <form ref={formRef} onSubmit={handleSubmit}>
         {/* Shipment details section */}
         <FormSection title="Shipment Details" icon={<FiPackage size={20} />}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -259,3 +325,4 @@ const CreateShipment: React.FC = () => {
 };
 
 export default CreateShipment;
+

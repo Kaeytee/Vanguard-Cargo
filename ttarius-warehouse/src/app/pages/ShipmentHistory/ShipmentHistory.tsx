@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FiPackage, FiCalendar, FiSearch, FiFilter, FiDownload, FiEye } from 'react-icons/fi';
+import { useLocation } from 'react-router-dom';
 
 /**
  * ShipmentHistory Component
@@ -17,6 +18,32 @@ const ShipmentHistory: React.FC = () => {
     start: '',
     end: ''
   });
+  // Get location object to read query params
+  const location = useLocation();
+
+  useEffect(() => {
+    // Parse query params from URL
+    const params = new URLSearchParams(location.search);
+    const filter = params.get('filter');
+    const range = params.get('range');
+    // If filter param is set, update filterStatus
+    if (filter) {
+      setFilterStatus(filter);
+    }
+    // If range param is set, update dateRange to this week
+    if (range === 'this-week') {
+      // Calculate start and end of current week
+      const now = new Date();
+      const startOfWeek = new Date(now);
+      startOfWeek.setDate(now.getDate() - now.getDay()); // Sunday
+      const endOfWeek = new Date(now);
+      endOfWeek.setDate(now.getDate() + (6 - now.getDay())); // Saturday
+      setDateRange({
+        start: startOfWeek.toISOString().split('T')[0],
+        end: endOfWeek.toISOString().split('T')[0]
+      });
+    }
+  }, [location.search]);
   
   /**
    * Mock data for shipment history
@@ -209,9 +236,11 @@ const ShipmentHistory: React.FC = () => {
                 className="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
               >
                 <option value="all">All Status</option>
+                <option value="pending">Pending</option>
                 <option value="delivered">Delivered</option>
-                <option value="in-transit">In Transit</option>
-                <option value="processing">Processing</option>
+                <option value="arrived">Arrived</option>
+                <option value="received">Received</option>
+                <option value="in-transit">In Transit</option> // Updated as per workflow: these are the only valid shipment statuses
               </select>
             </div>
             
