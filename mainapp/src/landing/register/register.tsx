@@ -59,7 +59,6 @@ export default function Register() {
       setPhoneError('');
     }
   };
-
   // Handle form submission
   const handleSubmit = () => {
     if (!isValidPhoneNumber(formData.phoneNumber)) {
@@ -76,6 +75,7 @@ export default function Register() {
     formData.lastName && 
     formData.email && 
     formData.phoneNumber && 
+    isValidPhoneNumber(formData.phoneNumber) && 
     !phoneError && 
     formData.password && 
     formData.confirmPassword && 

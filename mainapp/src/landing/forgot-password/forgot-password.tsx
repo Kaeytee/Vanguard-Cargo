@@ -334,12 +334,10 @@ export default function ForgotPassword() {
                           <Key className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                         </div>
                         {renderMessage()}
-                      </motion.div>
-
-                      {/* Submit Button */}
+                      </motion.div>                      {/* Submit Button */}
                       <motion.button
                         onClick={handleVerificationSubmit}
-                        disabled={!isVerificationCodeValid(verificationCode) || isLoading}
+                        disabled={isLoading}
                         className={cn(
                           "w-full font-semibold px-6 py-3 rounded-md transition-all duration-200 flex items-center justify-center",
                           isVerificationCodeValid(verificationCode) && !isLoading
@@ -402,11 +400,11 @@ export default function ForgotPassword() {
                             placeholder="••••••••"
                             className="w-full px-4 py-3 pl-10 pr-12 border border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500 transition-colors duration-200"
                           />
-                          <LockKeyhole className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                          <button
+                          <LockKeyhole className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />                          <button
                             className="absolute right-4 top-1/2 transform -translate-y-1/2"
                             onClick={() => setShowPassword(!showPassword)}
                             type="button"
+                            aria-label="Toggle password visibility"
                           >
                             {showPassword ? (
                               <EyeOff className="w-5 h-5 text-gray-400 hover:text-gray-600" />
@@ -432,11 +430,11 @@ export default function ForgotPassword() {
                             placeholder="••••••••"
                             className="w-full px-4 py-3 pl-10 pr-12 border border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500 transition-colors duration-200"
                           />
-                          <LockKeyhole className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                          <button
+                          <LockKeyhole className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />                          <button
                             className="absolute right-4 top-1/2 transform -translate-y-1/2"
                             onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                             type="button"
+                            aria-label="Toggle confirm password visibility"
                           >
                             {showConfirmPassword ? (
                               <EyeOff className="w-5 h-5 text-gray-400 hover:text-gray-600" />

@@ -2,7 +2,7 @@ import '@testing-library/jest-dom'
 import React from 'react'
 import { vi } from 'vitest'
 
-// Mock window.matchMedia
+// Mock window.matchMedia with proper event listener support
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
   value: vi.fn().mockImplementation((query: string) => ({
@@ -17,8 +17,21 @@ Object.defineProperty(window, 'matchMedia', {
   })),
 });
 
-// Mock window.scrollTo
+// Mock additional window properties that framer-motion might need
 Object.defineProperty(window, 'scrollTo', {
+  writable: true,
+  value: vi.fn(),
+});
+
+Object.defineProperty(window, 'requestAnimationFrame', {
+  writable: true,
+  value: vi.fn((callback: Function) => {
+    callback(0);
+    return 0;
+  }),
+});
+
+Object.defineProperty(window, 'cancelAnimationFrame', {
   writable: true,
   value: vi.fn(),
 });
@@ -37,10 +50,9 @@ Object.defineProperty(window, 'scrollTo', {
   disconnect: vi.fn(),
 }))
 
-// Mock framer-motion to avoid DOM prop warnings
+// Mock framer-motion completely to avoid all issues
 vi.mock('framer-motion', () => {
   const createMotionComponent = (tag: string) => {
-    // Return a forwardRef component that filters out motion props
     return React.forwardRef<any, any>((props: any, ref) => {
       const {
         initial,
@@ -57,6 +69,9 @@ vi.mock('framer-motion', () => {
         onAnimationStart,
         layout,
         layoutId,
+        style,
+        onHoverStart,
+        onHoverEnd,
         ...cleanProps
       } = props;
       
@@ -64,42 +79,81 @@ vi.mock('framer-motion', () => {
     });
   };
 
+  const MockMotion = {
+    div: createMotionComponent('div'),
+    section: createMotionComponent('section'),
+    form: createMotionComponent('form'),
+    input: createMotionComponent('input'),
+    button: createMotionComponent('button'),
+    span: createMotionComponent('span'),
+    h1: createMotionComponent('h1'),
+    h2: createMotionComponent('h2'),
+    h3: createMotionComponent('h3'),
+    p: createMotionComponent('p'),
+    a: createMotionComponent('a'),
+    img: createMotionComponent('img'),
+    li: createMotionComponent('li'),
+    ul: createMotionComponent('ul'),
+    nav: createMotionComponent('nav'),
+    label: createMotionComponent('label'),
+  };
+
   return {
-    motion: {
-      div: createMotionComponent('div'),
-      section: createMotionComponent('section'),
-      form: createMotionComponent('form'),
-      input: createMotionComponent('input'),
-      button: createMotionComponent('button'),
-      span: createMotionComponent('span'),
-      h1: createMotionComponent('h1'),
-      h2: createMotionComponent('h2'),
-      h3: createMotionComponent('h3'),
-      p: createMotionComponent('p'),
-      a: createMotionComponent('a'),
-      img: createMotionComponent('img'),
-      li: createMotionComponent('li'),
-      ul: createMotionComponent('ul'),
-      nav: createMotionComponent('nav'),
-    },
-    AnimatePresence: ({ children }: { children: React.ReactNode }) => children,
+    motion: MockMotion,
+    AnimatePresence: ({ children }: { children: React.ReactNode }) => React.createElement(React.Fragment, {}, children),
+    useMotionValue: vi.fn(() => ({ get: vi.fn(() => 0), set: vi.fn() })),
+    useTransform: vi.fn(() => ({ get: vi.fn(() => 0), set: vi.fn() })),
+    useSpring: vi.fn(() => ({ get: vi.fn(() => 0), set: vi.fn() })),
+    animate: vi.fn(() => Promise.resolve()),
+    useAnimation: vi.fn(() => ({
+      start: vi.fn(() => Promise.resolve()),
+      stop: vi.fn(),
+      set: vi.fn(),
+    })),
+    useReducedMotion: vi.fn(() => false),
+    LazyMotion: ({ children }: { children: React.ReactNode }) => React.createElement(React.Fragment, {}, children),
+    domAnimation: {},
+    m: MockMotion,
   };
 })
 
-// Mock AnimateInView component
+// Mock AnimateInView component with better support for props
 vi.mock('../components/ui/animate-in-view', () => ({
-  default: ({ children, className }: { children: React.ReactNode; className?: string }) => 
-    React.createElement('div', { className: className || '', 'data-testid': 'animate-in-view' }, children),
+  default: React.forwardRef<HTMLDivElement, any>(({ children, className, ...props }, ref) => 
+    React.createElement('div', { className: className || '', 'data-testid': 'animate-in-view', ref, ...props }, children)
+  ),
+}))
+
+// Also mock the path as it might be imported from different locations
+vi.mock('../../components/ui/animate-in-view', () => ({
+  default: React.forwardRef<HTMLDivElement, any>(({ children, className, ...props }, ref) => 
+    React.createElement('div', { className: className || '', 'data-testid': 'animate-in-view', ref, ...props }, children)
+  ),
 }))
 
 // Mock react-router-dom
 vi.mock('react-router-dom', () => {
   return {
     BrowserRouter: ({ children }: { children: React.ReactNode }) => children,
+    MemoryRouter: ({ children }: { children: React.ReactNode }) => children,
     useNavigate: () => vi.fn(),
     useLocation: () => ({ pathname: '/test', state: null, search: '', hash: '', key: 'test' }),
-    Link: ({ children }: { children: React.ReactNode }) => children,
-    NavLink: ({ children }: { children: React.ReactNode }) => children,
+    Link: React.forwardRef<HTMLAnchorElement, any>(({ children, to, ...props }, ref) => 
+      React.createElement('a', { 
+        href: to, 
+        role: 'link',
+        ref,
+        ...props 
+      }, children)
+    ),
+    NavLink: React.forwardRef<HTMLAnchorElement, any>(({ children, to, ...props }, ref) => 
+      React.createElement('a', { 
+        href: to, 
+        role: 'link',
+        ref,
+        ...props 
+      }, children)
+    ),
   }
 })
 
@@ -159,16 +213,21 @@ vi.mock('react-phone-number-input', () => {
     return React.createElement('input', {
       type: 'tel',
       value: value || '',
-      onChange: (e: any) => onChange?.(e.target.value),
+      onChange: (e: any) => {
+        // PhoneInput onChange expects the phone value directly, not an event
+        onChange?.(e.target.value);
+      },
       'data-testid': 'phone-input',
       ref,
       ...otherProps
     });
   });
-  
   return {
     default: MockPhoneInput,
-    isValidPhoneNumber: vi.fn().mockReturnValue(true),
+    isValidPhoneNumber: vi.fn((phone: string) => {
+      // Mock always returns true for testing
+      return true
+    }),
   }
 })
 
@@ -181,18 +240,34 @@ vi.mock('../lib/utils', () => ({
 }))
 
 // Mock specific image imports used in components
+// The paths must match exactly how they are imported in the components
+vi.mock('../images/register-bg.jpg', () => ({ default: 'mock-register-bg.jpg' }))
+vi.mock('../images/delivery-man.png', () => ({ default: 'mock-delivery-man.png' }))
+vi.mock('../images/deliveryparcel.jpg', () => ({ default: 'mock-deliveryparcel.jpg' }))
+vi.mock('../images/forgot.jpg', () => ({ default: 'mock-forgot.jpg' }))
+
+// Also mock the paths as used from different component locations
 vi.mock('../../images/register-bg.jpg', () => ({ default: 'mock-register-bg.jpg' }))
 vi.mock('../../images/delivery-man.png', () => ({ default: 'mock-delivery-man.png' }))
 vi.mock('../../images/deliveryparcel.jpg', () => ({ default: 'mock-deliveryparcel.jpg' }))
 vi.mock('../../images/forgot.jpg', () => ({ default: 'mock-forgot.jpg' }))
 
-// Mock localStorage if not already defined
+// Mock localStorage with proper implementation
+const localStorageMock = {
+  store: new Map<string, string>(),
+  getItem: vi.fn((key: string) => localStorageMock.store.get(key) || null),
+  setItem: vi.fn((key: string, value: string) => {
+    localStorageMock.store.set(key, value)
+  }),
+  removeItem: vi.fn((key: string) => {
+    localStorageMock.store.delete(key)
+  }),
+  clear: vi.fn(() => {
+    localStorageMock.store.clear()
+  }),
+}
+
 Object.defineProperty(window, 'localStorage', {
   writable: true,
-  value: {
-    getItem: vi.fn(),
-    setItem: vi.fn(),
-    removeItem: vi.fn(),
-    clear: vi.fn(),
-  },
+  value: localStorageMock,
 })

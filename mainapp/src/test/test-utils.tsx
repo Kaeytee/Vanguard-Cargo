@@ -27,19 +27,14 @@ const MockAuthProvider = ({ children }: { children: React.ReactNode }) => {
   return <AuthContext.Provider value={mockAuthContext}>{children}</AuthContext.Provider>
 }
 
-// Global mock for AuthProvider
-vi.mock('../context/AuthProvider', () => ({
-  useAuth: () => mockAuthContext,
-  AuthProvider: MockAuthProvider,
-}))
+// NOTE: Removed global mock for AuthProvider to allow AuthProvider tests to work with real implementation
+// Components that need mocked AuthProvider should import and use mockAuthContext directly
 
-// Minimal wrapper that doesn't interfere with mocks
+// Minimal wrapper that includes auth providers but allows real AuthProvider to be used
 const AllTheProviders = ({ children }: { children: React.ReactNode }) => {
   return (
     <div data-testid="test-wrapper">
-      <MockAuthProvider>
-        {children}
-      </MockAuthProvider>
+      {children}
     </div>
   )
 }

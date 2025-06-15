@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { render, screen, act } from '../../test/test-utils'
+import { render, screen, act, waitFor } from '../../test/test-utils'
 import { AuthProvider, useAuth } from '../AuthProvider'
 
 // Test component to interact with AuthProvider
@@ -59,13 +59,20 @@ function TestComponent() {
 
 describe('AuthProvider', () => {
   beforeEach(() => {
-    // Clear localStorage before each test
+    // Clear localStorage before each test and reset the mock
     localStorage.clear()
     vi.clearAllMocks()
+    // Also manually clear the store in case of mock issues
+    if (localStorage.store && localStorage.store.clear) {
+      localStorage.store.clear()
+    }
   })
 
   afterEach(() => {
     localStorage.clear()
+    if (localStorage.store && localStorage.store.clear) {
+      localStorage.store.clear()
+    }
   })
 
   it('provides initial state with no user', () => {
@@ -78,7 +85,6 @@ describe('AuthProvider', () => {
     expect(screen.getByTestId('user-info')).toHaveTextContent('No user')
     expect(screen.getByTestId('loading-state')).toHaveTextContent('Not loading')
   })
-
   it('allows setting a user', async () => {
     render(
       <AuthProvider>
@@ -92,9 +98,10 @@ describe('AuthProvider', () => {
       setUserButton.click()
     })
     
-    expect(screen.getByTestId('user-info')).toHaveTextContent('Test User (test@example.com)')
+    await waitFor(() => {
+      expect(screen.getByTestId('user-info')).toHaveTextContent('Test User (test@example.com)')
+    })
   })
-
   it('allows setting a user with image', async () => {
     render(
       <AuthProvider>
@@ -108,9 +115,10 @@ describe('AuthProvider', () => {
       setUserButton.click()
     })
     
-    expect(screen.getByTestId('user-info')).toHaveTextContent('Another User (another@example.com)')
+    await waitFor(() => {
+      expect(screen.getByTestId('user-info')).toHaveTextContent('Another User (another@example.com)')
+    })
   })
-
   it('manages loading state', async () => {
     render(
       <AuthProvider>
@@ -126,16 +134,19 @@ describe('AuthProvider', () => {
       setLoadingButton.click()
     })
     
-    expect(screen.getByTestId('loading-state')).toHaveTextContent('Loading')
+    await waitFor(() => {
+      expect(screen.getByTestId('loading-state')).toHaveTextContent('Loading')
+    })
     
     // Set loading to false
     await act(async () => {
       clearLoadingButton.click()
     })
     
-    expect(screen.getByTestId('loading-state')).toHaveTextContent('Not loading')
+    await waitFor(() => {
+      expect(screen.getByTestId('loading-state')).toHaveTextContent('Not loading')
+    })
   })
-
   it('persists user to localStorage when set', async () => {
     render(
       <AuthProvider>
@@ -149,18 +160,19 @@ describe('AuthProvider', () => {
       setUserButton.click()
     })
     
-    const storedUser = localStorage.getItem('user')
-    expect(storedUser).toBeTruthy()
-    
-    const parsedUser = JSON.parse(storedUser!)
-    expect(parsedUser).toEqual({
-      id: '1',
-      name: 'Test User',
-      email: 'test@example.com'
+    await waitFor(() => {
+      const storedUser = localStorage.getItem('user')
+      expect(storedUser).toBeTruthy()
+      
+      const parsedUser = JSON.parse(storedUser!)
+      expect(parsedUser).toEqual({
+        id: '1',
+        name: 'Test User',
+        email: 'test@example.com'
+      })
     })
   })
-
-  it('loads user from localStorage on initialization', () => {
+  it('loads user from localStorage on initialization', async () => {
     // Pre-populate localStorage
     const testUser = {
       id: '1',
@@ -175,10 +187,11 @@ describe('AuthProvider', () => {
       </AuthProvider>
     )
     
-    expect(screen.getByTestId('user-info')).toHaveTextContent('Stored User (stored@example.com)')
+    await waitFor(() => {
+      expect(screen.getByTestId('user-info')).toHaveTextContent('Stored User (stored@example.com)')
+    })
   })
-
-  it('handles corrupted localStorage data gracefully', () => {
+  it('handles corrupted localStorage data gracefully', async () => {
     // Set invalid JSON in localStorage
     localStorage.setItem('user', 'invalid-json-data')
     
@@ -190,9 +203,10 @@ describe('AuthProvider', () => {
     
     // Should start with no user and localStorage should be cleared
     expect(screen.getByTestId('user-info')).toHaveTextContent('No user')
-    expect(localStorage.getItem('user')).toBeNull()
+    await waitFor(() => {
+      expect(localStorage.getItem('user')).toBeNull()
+    })
   })
-
   it('logs out user and clears localStorage', async () => {
     // Start with a user
     const testUser = {
@@ -209,7 +223,9 @@ describe('AuthProvider', () => {
     )
     
     // Verify user is loaded
-    expect(screen.getByTestId('user-info')).toHaveTextContent('Test User (test@example.com)')
+    await waitFor(() => {
+      expect(screen.getByTestId('user-info')).toHaveTextContent('Test User (test@example.com)')
+    })
     
     // Logout
     const logoutButton = screen.getByTestId('logout')
@@ -219,10 +235,11 @@ describe('AuthProvider', () => {
     })
     
     // Verify user is cleared
-    expect(screen.getByTestId('user-info')).toHaveTextContent('No user')
-    expect(localStorage.getItem('user')).toBeNull()
+    await waitFor(() => {
+      expect(screen.getByTestId('user-info')).toHaveTextContent('No user')
+      expect(localStorage.getItem('user')).toBeNull()
+    })
   })
-
   it('removes user from localStorage when set to null', async () => {
     // Start with a user
     render(
@@ -235,8 +252,12 @@ describe('AuthProvider', () => {
     
     await act(async () => {
       setUserButton.click()
-    })      // Verify user is stored
-    expect(localStorage.getItem('user')).toBeTruthy()
+    })
+    
+    // Verify user is stored
+    await waitFor(() => {
+      expect(localStorage.getItem('user')).toBeTruthy()
+    })
     
     // Clear user by setting to null
     const logoutButton = screen.getByTestId('logout')
@@ -244,7 +265,9 @@ describe('AuthProvider', () => {
       logoutButton.click()
     })
     
-    expect(localStorage.getItem('user')).toBeNull()
+    await waitFor(() => {
+      expect(localStorage.getItem('user')).toBeNull()
+    })
   })
 
   it('throws error when useAuth is used outside of provider', () => {
@@ -252,7 +275,6 @@ describe('AuthProvider', () => {
     // We'll skip this test for now as it requires complex error boundary setup
     expect(true).toBe(true)
   })
-
   it('handles multiple rapid user updates correctly', async () => {
     render(
       <AuthProvider>
@@ -270,13 +292,14 @@ describe('AuthProvider', () => {
     })
     
     // Should end up with the last user set
-    expect(screen.getByTestId('user-info')).toHaveTextContent('Another User (another@example.com)')
-    
-    const storedUser = localStorage.getItem('user')
-    const parsedUser = JSON.parse(storedUser!)
-    expect(parsedUser.name).toBe('Another User')
+    await waitFor(() => {
+      expect(screen.getByTestId('user-info')).toHaveTextContent('Another User (another@example.com)')
+      
+      const storedUser = localStorage.getItem('user')
+      const parsedUser = JSON.parse(storedUser!)
+      expect(parsedUser.name).toBe('Another User')
+    })
   })
-
   it('preserves user data structure integrity', async () => {
     render(
       <AuthProvider>
@@ -290,25 +313,26 @@ describe('AuthProvider', () => {
       setUserWithImageButton.click()
     })
     
-    const storedUser = localStorage.getItem('user')
-    const parsedUser = JSON.parse(storedUser!)
-    
-    expect(parsedUser).toEqual({
-      id: '2',
-      name: 'Another User',
-      email: 'another@example.com',
-      image: 'https://example.com/avatar.jpg'
+    await waitFor(() => {
+      const storedUser = localStorage.getItem('user')
+      const parsedUser = JSON.parse(storedUser!)
+      
+      expect(parsedUser).toEqual({
+        id: '2',
+        name: 'Another User',
+        email: 'another@example.com',
+        image: 'https://example.com/avatar.jpg'
+      })
+      
+      // Verify all expected properties exist
+      expect(parsedUser).toHaveProperty('id')
+      expect(parsedUser).toHaveProperty('name')
+      expect(parsedUser).toHaveProperty('email')
+      expect(parsedUser).toHaveProperty('image')
     })
-    
-    // Verify all expected properties exist
-    expect(parsedUser).toHaveProperty('id')
-    expect(parsedUser).toHaveProperty('name')
-    expect(parsedUser).toHaveProperty('email')
-    expect(parsedUser).toHaveProperty('image')
   })
 
-  describe('User Interface Type Safety', () => {
-    it('enforces required user properties', async () => {
+  describe('User Interface Type Safety', () => {    it('enforces required user properties', async () => {
       render(
         <AuthProvider>
           <TestComponent />
@@ -323,8 +347,10 @@ describe('AuthProvider', () => {
         setUserButton.click()
       })
       
-      const userInfo = screen.getByTestId('user-info')
-      expect(userInfo.textContent).toMatch(/Test User \(test@example\.com\)/)
+      await waitFor(() => {
+                const userInfo = screen.getByTestId('user-info')
+        expect(userInfo.textContent).toMatch(/Test User \(test@example\.com\)/)
+      })
     })
 
     it('handles optional image property correctly', async () => {
@@ -342,17 +368,21 @@ describe('AuthProvider', () => {
         setUserButton.click()
       })
       
-      let storedUser = JSON.parse(localStorage.getItem('user')!)
-      expect(storedUser).not.toHaveProperty('image')
+      await waitFor(() => {
+        let storedUser = JSON.parse(localStorage.getItem('user')!)
+        expect(storedUser).not.toHaveProperty('image')
+      })
       
       // User with image
       await act(async () => {
         setUserWithImageButton.click()
       })
       
-      storedUser = JSON.parse(localStorage.getItem('user')!)
-      expect(storedUser).toHaveProperty('image')
-      expect(storedUser.image).toBe('https://example.com/avatar.jpg')
+      await waitFor(() => {
+        let storedUser = JSON.parse(localStorage.getItem('user')!)
+        expect(storedUser).toHaveProperty('image')
+        expect(storedUser.image).toBe('https://example.com/avatar.jpg')
+      })
     })
   })
 })
