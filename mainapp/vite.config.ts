@@ -1,13 +1,8 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-import tailwindcss from '@tailwindcss/vite'
 
 export default defineConfig({
-  plugins: [
-    react(),
-    tailwindcss(), // Remove the configuration object
-  ],
-  // Ensure consistent CSS processing in development and production
+  plugins: [react()],
   css: {
     devSourcemap: true,
   },
