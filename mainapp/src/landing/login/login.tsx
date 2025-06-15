@@ -242,7 +242,6 @@ export default function Login() {
 						</AnimateInView>
 					</motion.div>
 				</AnimateInView>
-			</section>
-		</div>
+			</section>		</div>
 	);
 }

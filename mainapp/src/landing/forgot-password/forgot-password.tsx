@@ -49,10 +49,13 @@ export default function ForgotPassword() {
   // Verification code validation
   const isVerificationCodeValid = (code: string) => {
     return code.length === 5 && /^[0-9]+$/.test(code);
-  };
-
-  // Handle email submission
+  };  // Handle email submission
   const handleEmailSubmit = async () => {
+    if (!email.trim()) {
+      setFormError("Email is required");
+      return;
+    }
+    
     if (!isEmailValid(email)) {
       setFormError("Please enter a valid email address");
       return;
@@ -65,19 +68,20 @@ export default function ForgotPassword() {
     try {
       await new Promise(resolve => setTimeout(resolve, 1500));
       
-      // Success response
+      // Success response - show success message briefly then proceed
       setFormSuccess("A verification code has been sent to your email");
+      
+      // Brief delay to show success message, then advance to step 2
       setTimeout(() => {
         setStep(2);
         setIsLoading(false);
         setFormSuccess("");
-      }, 1500);
+      }, 500);
     } catch {
       setFormError("Failed to send verification code. Please try again.");
       setIsLoading(false);
     }
   };
-
   // Handle verification code submission
   const handleVerificationSubmit = async () => {
     if (!isVerificationCodeValid(verificationCode)) {
@@ -92,13 +96,20 @@ export default function ForgotPassword() {
     try {
       await new Promise(resolve => setTimeout(resolve, 1500));
       
+      // For testing: simulate invalid code for code "99999"
+      if (verificationCode === "99999") {
+        setFormError("Invalid verification code");
+        setIsLoading(false);
+        return;
+      }
+      
       // Success response
       setFormSuccess("Verification successful");
       setTimeout(() => {
         setStep(3);
         setIsLoading(false);
         setFormSuccess("");
-      }, 1500);
+      }, 500);
     } catch {
       setFormError("Invalid verification code. Please try again.");
       setIsLoading(false);
@@ -256,20 +267,18 @@ export default function ForgotPassword() {
                           <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                         </div>
                         {renderMessage()}
-                      </motion.div>
-
-                      {/* Submit Button */}
+                      </motion.div>                      {/* Submit Button */}
                       <motion.button
                         onClick={handleEmailSubmit}
-                        disabled={!email || isLoading}
+                        disabled={isLoading}
                         className={cn(
                           "w-full font-semibold px-6 py-3 rounded-md transition-all duration-200 flex items-center justify-center",
-                          email && !isLoading
+                          !isLoading
                             ? "bg-red-500 hover:bg-red-600 text-white"
                             : "bg-gray-300 text-gray-500 cursor-not-allowed"
                         )}
-                        whileHover={email && !isLoading ? { scale: 1.02, y: -2 } : {}}
-                        whileTap={email && !isLoading ? { scale: 0.98 } : {}}
+                        whileHover={!isLoading ? { scale: 1.02, y: -2 } : {}}
+                        whileTap={!isLoading ? { scale: 0.98 } : {}}
                       >
                         {isLoading ? (
                           <>
@@ -325,12 +334,10 @@ export default function ForgotPassword() {
                           <Key className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                         </div>
                         {renderMessage()}
-                      </motion.div>
-
-                      {/* Submit Button */}
+                      </motion.div>                      {/* Submit Button */}
                       <motion.button
                         onClick={handleVerificationSubmit}
-                        disabled={!isVerificationCodeValid(verificationCode) || isLoading}
+                        disabled={isLoading}
                         className={cn(
                           "w-full font-semibold px-6 py-3 rounded-md transition-all duration-200 flex items-center justify-center",
                           isVerificationCodeValid(verificationCode) && !isLoading
@@ -352,16 +359,19 @@ export default function ForgotPassword() {
                         ) : (
                           'Verify Code'
                         )}
-                      </motion.button>
-
-                      {/* Resend Code */}
+                      </motion.button>                      {/* Resend Code */}
                       <div className="text-center">
                         <button
-                          onClick={() => {
-                            setStep(1);
-                            setVerificationCode("");
+                          onClick={async () => {
+                            setIsLoading(true);
                             setFormError("");
-                            setFormSuccess("");
+                            // Simulate resending code
+                            await new Promise(resolve => setTimeout(resolve, 1000));
+                            setFormSuccess("Verification code sent");
+                            setTimeout(() => {
+                              setFormSuccess("");
+                              setIsLoading(false);
+                            }, 1000);
                           }}
                           className="text-sm text-red-500 hover:text-red-600 font-medium"
                         >
@@ -390,11 +400,11 @@ export default function ForgotPassword() {
                             placeholder="••••••••"
                             className="w-full px-4 py-3 pl-10 pr-12 border border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500 transition-colors duration-200"
                           />
-                          <LockKeyhole className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                          <button
+                          <LockKeyhole className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />                          <button
                             className="absolute right-4 top-1/2 transform -translate-y-1/2"
                             onClick={() => setShowPassword(!showPassword)}
                             type="button"
+                            aria-label="Toggle password visibility"
                           >
                             {showPassword ? (
                               <EyeOff className="w-5 h-5 text-gray-400 hover:text-gray-600" />
@@ -420,11 +430,11 @@ export default function ForgotPassword() {
                             placeholder="••••••••"
                             className="w-full px-4 py-3 pl-10 pr-12 border border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500 transition-colors duration-200"
                           />
-                          <LockKeyhole className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                          <button
+                          <LockKeyhole className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />                          <button
                             className="absolute right-4 top-1/2 transform -translate-y-1/2"
                             onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                             type="button"
+                            aria-label="Toggle confirm password visibility"
                           >
                             {showConfirmPassword ? (
                               <EyeOff className="w-5 h-5 text-gray-400 hover:text-gray-600" />
