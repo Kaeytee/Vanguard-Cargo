@@ -21,12 +21,6 @@ export const mockAuthContext = {
   logout: vi.fn(),
 }
 
-// Mock AuthProvider that provides the auth context
-const MockAuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const AuthContext = React.createContext(mockAuthContext)
-  return <AuthContext.Provider value={mockAuthContext}>{children}</AuthContext.Provider>
-}
-
 // NOTE: Removed global mock for AuthProvider to allow AuthProvider tests to work with real implementation
 // Components that need mocked AuthProvider should import and use mockAuthContext directly
 

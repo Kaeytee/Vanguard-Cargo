@@ -1,18 +1,8 @@
 import { describe, it, expect, vi } from 'vitest'
 import userEvent from '@testing-library/user-event'
-import { render, screen, fireEvent } from '../../test/test-utils'
+import { render, screen } from '../../test/test-utils'
 import PackageOriginForm from '../PackageOriginForm'
 import { mockFormData } from '../../test/test-utils'
-
-// Mock the address suggestions
-const mockSuggestions = [
-  {
-    display_name: 'Ghana',
-    lat: '7.9465',
-    lon: '-1.0232',
-    address: { country: 'Ghana', city: 'Accra' }
-  }
-]
 
 describe('PackageOriginForm Component', () => {
   const mockProps = {

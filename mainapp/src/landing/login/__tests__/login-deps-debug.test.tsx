@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect } from 'vitest'
 import { render } from '../../../test/test-utils'
 import React from 'react'
 
@@ -31,28 +31,38 @@ describe('Login Component Dependencies Debug', () => {
       render(React.createElement(EyeOff))
     }).not.toThrow()
   })
-
   it('should use useAuth hook', async () => {
     const { useAuth } = await import('../../../context/AuthProvider')
+    const { AuthProvider } = await import('../../../context/AuthProvider')
+    const { renderHook } = await import('@testing-library/react')
+    
     expect(() => {
-      const authResult = useAuth()
-      expect(authResult).toBeDefined()
+      renderHook(() => useAuth(), {
+        wrapper: AuthProvider
+      })
     }).not.toThrow()
   })
-
   it('should use useNavigate hook', async () => {
     const { useNavigate } = await import('react-router-dom')
+    const { renderHook } = await import('@testing-library/react')
+    const { BrowserRouter } = await import('react-router-dom')
+    
     expect(() => {
-      const navigate = useNavigate()
-      expect(navigate).toBeDefined()
+      renderHook(() => useNavigate(), {
+        wrapper: BrowserRouter
+      })
     }).not.toThrow()
   })
 
   it('should use useLocation hook', async () => {
     const { useLocation } = await import('react-router-dom')
+    const { renderHook } = await import('@testing-library/react')
+    const { BrowserRouter } = await import('react-router-dom')
+    
     expect(() => {
-      const location = useLocation()
-      expect(location).toBeDefined()
+      renderHook(() => useLocation(), {
+        wrapper: BrowserRouter
+      })
     }).not.toThrow()
   })
 })

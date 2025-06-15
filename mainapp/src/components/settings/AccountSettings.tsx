@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { FaUser, FaTrash } from "react-icons/fa6";
+import { FaUser } from "react-icons/fa6";
 import { FaCloudUploadAlt } from "react-icons/fa";
 import { initialUserData } from "../../lib/constants";
 import { useAuth } from '../../context/AuthProvider';

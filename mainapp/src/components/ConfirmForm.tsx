@@ -31,9 +31,6 @@ interface ConfirmFormProps {
     [key: string]: any;
   };
   
-  onInputChange: (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
-  ) => void;
   onBack: () => void;
   
   // Accepts a form event for proper form submission handling
@@ -49,7 +46,6 @@ interface ConfirmFormProps {
  */
 const ConfirmForm: React.FC<ConfirmFormProps> = ({
   formData,
-  onInputChange,
   onBack,
   onSubmit,
   isSubmitting

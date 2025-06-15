@@ -4,7 +4,7 @@ import { AuthProvider, useAuth } from '../AuthProvider'
 
 // Test component that uses the AuthProvider
 function TestComponent() {
-  const { user, setUser, loading, setLoading, logout } = useAuth()
+  const { user, setUser, loading } = useAuth()
   
   return (
     <div>

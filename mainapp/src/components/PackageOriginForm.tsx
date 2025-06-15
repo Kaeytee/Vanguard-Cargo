@@ -1,5 +1,5 @@
 import React from "react";
-import { FaCheckCircle, FaInfoCircle, FaGlobe, FaFlag, FaLock } from "react-icons/fa";
+import { FaInfoCircle, FaGlobe, FaLock } from "react-icons/fa";
 
 // Interface for address suggestions from OpenStreetMap API
 interface AddressSuggestion {
@@ -70,13 +70,13 @@ interface PackageOriginFormProps {
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
     >
   ) => void;
-  onOriginCountryInput: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  onOriginCountryKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void;
-  countrySuggestions: AddressSuggestion[];
-  countryLoading: boolean;
-  countryError: string | null;
-  suggestionIndex: number;
-  onSuggestionSelect: (suggestion: AddressSuggestion) => void;
+  onOriginCountryInput?: (value: string) => void;
+  onOriginCountryKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
+  countrySuggestions?: AddressSuggestion[];
+  countryLoading?: boolean;
+  countryError?: string | null;
+  suggestionIndex?: number;
+  onSuggestionSelect?: (suggestion: AddressSuggestion) => void;
 }
 
 /**
@@ -89,13 +89,6 @@ interface PackageOriginFormProps {
 const PackageOriginForm: React.FC<PackageOriginFormProps> = ({
   formData,
   onInputChange,
-  onOriginCountryInput,
-  onOriginCountryKeyDown,
-  countrySuggestions,
-  countryLoading,
-  countryError,
-  suggestionIndex,
-  onSuggestionSelect,
 }) => {
   // Determine the country flag for the phone number display
   const getCountryFlag = () => {

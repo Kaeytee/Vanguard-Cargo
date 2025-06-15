@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from '../../../test/test-utils'
-import React from 'react'
+import { AuthProvider } from '../../../context/AuthProvider'
 
 // Mock the problematic image import directly in the test file
 vi.mock('../../images/delivery-man.png', () => ({
@@ -10,6 +10,10 @@ vi.mock('../../images/delivery-man.png', () => ({
 vi.mock('../../images/register-bg.jpg', () => ({
   default: 'mocked-register-bg.jpg'
 }))
+
+// Mock image imports
+vi.mock('../../../images/delivery-man.png', () => ({ default: 'mock-delivery-man.png' }))
+vi.mock('../../../images/register-bg.jpg', () => ({ default: 'mock-register-bg.jpg' }))
 
 // Test the Login component with mocked dependencies
 describe('Login Component Simple Test', () => {
@@ -21,7 +25,11 @@ describe('Login Component Simple Test', () => {
     // Dynamically import Login after mocks are set up
     const { default: Login } = await import('../login')
     
-    render(<Login />)
+    render(
+      <AuthProvider>
+        <Login />
+      </AuthProvider>
+    )
     
     // Test basic elements that should be present
     expect(screen.getByText(/welcome back/i)).toBeInTheDocument()

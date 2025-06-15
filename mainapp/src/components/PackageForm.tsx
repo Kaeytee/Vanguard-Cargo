@@ -78,7 +78,6 @@ interface PackageFormProps {
       HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
     >
   ) => void;
-  onPackageDescriptionChange: (event: React.ChangeEvent<HTMLTextAreaElement>) => void;
 }
 
 /**
@@ -88,7 +87,6 @@ interface PackageFormProps {
 const PackageForm: React.FC<PackageFormProps> = ({
   formData,
   onInputChange,
-  onPackageDescriptionChange,
 }) => {
   // Auto-select Air delivery type if none is selected
   useEffect(() => {

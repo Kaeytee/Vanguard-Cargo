@@ -42,8 +42,8 @@ describe('Register Component', () => {
     expect(screen.getByLabelText(/last name/i)).toBeInTheDocument()
     expect(screen.getByLabelText(/email address/i)).toBeInTheDocument()
     expect(screen.getByTestId('phone-input')).toBeInTheDocument()
-    expect(screen.getByLabelText(/^password/i)).toBeInTheDocument()
-    expect(screen.getByLabelText(/confirm password/i)).toBeInTheDocument()
+    expect(screen.getByLabelText('Password *')).toBeInTheDocument()
+    expect(screen.getByLabelText('Confirm Password *')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /create account/i })).toBeInTheDocument()
   })
 
@@ -106,7 +106,7 @@ describe('Register Component', () => {
     const user = userEvent.setup()
     renderRegister()
     
-    const passwordInput = screen.getByLabelText(/^password/i)
+    const passwordInput = screen.getByLabelText('Password *')
     const submitButton = screen.getByRole('button', { name: /create account/i })
     
     // Weak password
@@ -120,8 +120,8 @@ describe('Register Component', () => {
     const user = userEvent.setup()
     renderRegister()
     
-    const passwordInput = screen.getByLabelText(/^password/i)
-    const confirmPasswordInput = screen.getByLabelText(/confirm password/i)
+    const passwordInput = screen.getByLabelText('Password *')
+    const confirmPasswordInput = screen.getByLabelText('Confirm Password *')
     
     await user.type(passwordInput, 'Password123!')
     await user.type(confirmPasswordInput, 'DifferentPassword')
@@ -135,7 +135,7 @@ describe('Register Component', () => {
     const user = userEvent.setup()
     renderRegister()
     
-    const passwordInput = screen.getByLabelText(/^password/i)
+    const passwordInput = screen.getByLabelText('Password *')
     
     // Initially password should be hidden
     expect(passwordInput).toHaveAttribute('type', 'password')
@@ -175,8 +175,8 @@ describe('Register Component', () => {
     const lastNameInput = screen.getByLabelText(/last name/i)
     const emailInput = screen.getByLabelText(/email address/i)
     const phoneInput = screen.getByTestId('phone-input')
-    const passwordInput = screen.getByLabelText(/^password/i)
-    const confirmPasswordInput = screen.getByLabelText(/confirm password/i)
+    const passwordInput = screen.getByLabelText('Password *')
+    const confirmPasswordInput = screen.getByLabelText('Confirm Password *')
     const termsCheckbox = screen.getByRole('checkbox', { name: /terms of service/i })
     const submitButton = screen.getByRole('button', { name: /create account/i })
     

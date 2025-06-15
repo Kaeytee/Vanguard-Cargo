@@ -5,11 +5,10 @@ import SubmitShipmentPage from '../submitShipment'
 
 // Mock the form components
 vi.mock('../../components/PackageOriginForm', () => ({
-  default: ({ formData, onInputChange }: any) => (
+  default: ({ onInputChange }: any) => (
     <div data-testid="package-origin-form">
       <input
         name="originCountry"
-        value={formData.originCountry}
         onChange={onInputChange}
         placeholder="Origin Country"
       />
@@ -18,11 +17,10 @@ vi.mock('../../components/PackageOriginForm', () => ({
 }))
 
 vi.mock('../../components/PackageForm', () => ({
-  default: ({ formData, onInputChange }: any) => (
+  default: ({ onInputChange }: any) => (
     <div data-testid="package-form">
       <input
         name="packageType"
-        value={formData.packageType}
         onChange={onInputChange}
         placeholder="Package Type"
       />
@@ -31,7 +29,7 @@ vi.mock('../../components/PackageForm', () => ({
 }))
 
 vi.mock('../../components/ConfirmForm', () => ({
-  default: ({ formData, onSubmit, isSubmitting }: any) => (
+  default: ({ onSubmit, isSubmitting }: any) => (
     <div data-testid="confirm-form">
       <button onClick={onSubmit} disabled={isSubmitting}>
         {isSubmitting ? 'Submitting...' : 'Submit'}
@@ -163,16 +161,6 @@ describe('SubmitShipmentPage Component', () => {
     render(<SubmitShipmentPage />)
     
     // Test that validation errors are cleared when user starts typing
-    expect(screen.getByTestId('package-origin-form')).toBeInTheDocument()
-  })
-
-  it('scrolls to top when step changes', () => {
-    const scrollToSpy = vi.spyOn(window, 'scrollTo')
-    
-    render(<SubmitShipmentPage />)
-    
-    // Test that scrollTo is called when step changes
-    // (This would require actually changing steps)
     expect(screen.getByTestId('package-origin-form')).toBeInTheDocument()
   })
 })
