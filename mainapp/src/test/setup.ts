@@ -79,7 +79,7 @@ vi.mock('framer-motion', () => {
     });
   };
 
-  const MockMotion = {
+const MockMotion = {
     div: createMotionComponent('div'),
     section: createMotionComponent('section'),
     form: createMotionComponent('form'),
@@ -96,7 +96,7 @@ vi.mock('framer-motion', () => {
     ul: createMotionComponent('ul'),
     nav: createMotionComponent('nav'),
     label: createMotionComponent('label'),
-  };
+};
 
   return {
     motion: MockMotion,
@@ -224,7 +224,7 @@ vi.mock('react-phone-number-input', () => {
   });
   return {
     default: MockPhoneInput,
-    isValidPhoneNumber: vi.fn((phone: string) => {
+    isValidPhoneNumber: vi.fn(() => {
       // Mock always returns true for testing
       return true
     }),

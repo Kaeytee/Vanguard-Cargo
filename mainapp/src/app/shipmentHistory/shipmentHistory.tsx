@@ -7,9 +7,8 @@
  * -- Cascade AI
  */
 
-import React, { useState, useEffect, useMemo, useRef } from "react";
-import { Search, PackageCheck, Filter, Calendar } from "lucide-react";
-// Removed the useAwaitingShipments import since we're now handling the data fetching ourselves
+import { useState, useEffect, useMemo, useRef } from "react";
+import { Search, Calendar } from "lucide-react";
 
 /**
  * ShipmentHistoryPage component
@@ -487,19 +486,6 @@ export default function ShipmentHistoryPage() {
       default:
         // Gray fallback for any unrecognized status
         return `${baseStyles} bg-gray-100 text-gray-800`;
-    }
-  };
-
-  // Get status icon color
-  const getStatusIconColor = (status: string) => {
-    switch (status) {
-      case "all": return "text-yellow-500";
-      case "pending": return "text-yellow-500";
-      case "delivered": return "text-yellow-500";
-      case "arrived": return "text-yellow-500";
-      case "received": return "text-blue-500";
-      case "transit": return "text-blue-500";
-      default: return "text-gray-500";
     }
   };
 
