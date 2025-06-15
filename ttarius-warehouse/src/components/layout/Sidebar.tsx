@@ -118,7 +118,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onToggle }) => {
       <nav className="flex-1 py-6">
         <div>
           <NavItem icon={<FiGrid size={20} />} to="/dashboard" label="Dashboard" />
-          <NavItem icon={<FiPackage size={20} />} to="/create-shipment" label="Create Shipment" />
+          {/* <NavItem icon={<FiPackage size={20} />} to="/create-shipment" label="Create Shipment" /> */}
+          {/* // Removed as per workflow update: shipment requests are now initiated by clients, not warehouse/admin. */}
           <NavItem icon={<FiFileText size={20} />} to="/incoming-request" label="Incoming Request" />
           <NavItem icon={<FiClock size={20} />} to="/shipment-history" label="Shipment History" />
           <NavItem icon={<FiUsers size={20} />} to="/client-management" label="Client Management" />
@@ -131,10 +132,10 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onToggle }) => {
         
         {/* Secondary navigation */}
         <div className="mt-auto">
-          <NavItem icon={<FiInfo size={20} />} to="/about" label="About us" />
-          <NavItem icon={<FiHeadphones size={20} />} to="/support" label="Support" />
-          <NavItem icon={<FiSettings size={20} />} to="/settings" label="Settings" />
-          
+          {/* <NavItem icon={<FiInfo size={20} />} to="/about" label="About us" /> */}
+          {/* // Removed for admin context */}
+          {/* <NavItem icon={<FiHeadphones size={20} />} to="/support" label="Support" /> */}
+{/* // Removed for admin context: support/complaints not needed for admin */}
           {/* Logout button */}
           <button 
             onClick={handleLogout}

@@ -236,9 +236,11 @@ const ShipmentHistory: React.FC = () => {
                 className="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
               >
                 <option value="all">All Status</option>
+                <option value="pending">Pending</option>
                 <option value="delivered">Delivered</option>
-                <option value="in-transit">In Transit</option>
-                <option value="processing">Processing</option>
+                <option value="arrived">Arrived</option>
+                <option value="received">Received</option>
+                <option value="in-transit">In Transit</option> // Updated as per workflow: these are the only valid shipment statuses
               </select>
             </div>
             
