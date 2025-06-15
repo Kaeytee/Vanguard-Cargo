@@ -117,8 +117,6 @@ describe('SubmitShipmentPage Component', () => {
   })
 
   it('goes back to previous step when Back button is clicked', async () => {
-    const user = userEvent.setup()
-    
     render(<SubmitShipmentPage />)
     
     // Manually advance to step 2 (this would require proper form data)
@@ -127,8 +125,6 @@ describe('SubmitShipmentPage Component', () => {
   })
 
   it('shows loading popup during form submission', async () => {
-    const user = userEvent.setup()
-    
     render(<SubmitShipmentPage />)
     
     // Navigate to final step and submit
@@ -138,8 +134,6 @@ describe('SubmitShipmentPage Component', () => {
   })
 
   it('handles form submission success', async () => {
-    const user = userEvent.setup()
-    
     render(<SubmitShipmentPage />)
     
     // Test form submission flow
@@ -148,8 +142,6 @@ describe('SubmitShipmentPage Component', () => {
   })
 
   it('handles form submission error', async () => {
-    const user = userEvent.setup()
-    
     render(<SubmitShipmentPage />)
     
     // Test error handling
