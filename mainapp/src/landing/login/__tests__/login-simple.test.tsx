@@ -17,7 +17,8 @@ vi.mock('../../../context/AuthProvider', () => ({
 }))
 
 vi.mock('../../../lib/utils', () => ({
-  cn: (...classes: any[]) => classes.filter(Boolean).join(' '),
+  // Use 'unknown[]' for variadic classnames utility
+  cn: (...classes: unknown[]) => classes.filter(Boolean).join(' '),
 }))
 
 vi.mock('../../../components/ui/animate-in-view', () => ({
@@ -29,11 +30,12 @@ vi.mock('../../../images/delivery-man.png', () => ({ default: 'mock-image.png' }
 
 vi.mock('framer-motion', () => ({
   motion: {
-    div: ({ children, ...props }: any) => <div {...props}>{children}</div>,
-    section: ({ children, ...props }: any) => <section {...props}>{children}</section>,
-    form: ({ children, ...props }: any) => <form {...props}>{children}</form>,
-    input: (props: any) => <input {...props} />,
-    button: ({ children, ...props }: any) => <button {...props}>{children}</button>,
+    // Use React.PropsWithChildren and appropriate generics for props
+    div: ({ children, ...props }: React.PropsWithChildren<Record<string, unknown>>) => <div {...props}>{children}</div>,
+    section: ({ children, ...props }: React.PropsWithChildren<Record<string, unknown>>) => <section {...props}>{children}</section>,
+    form: ({ children, ...props }: React.PropsWithChildren<Record<string, unknown>>) => <form {...props}>{children}</form>,
+    input: (props: React.InputHTMLAttributes<HTMLInputElement>) => <input {...props} />, 
+    button: ({ children, ...props }: React.PropsWithChildren<Record<string, unknown>>) => <button {...props}>{children}</button>,
   },
   AnimatePresence: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }))

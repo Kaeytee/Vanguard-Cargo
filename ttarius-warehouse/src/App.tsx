@@ -12,7 +12,7 @@ import ClientManagement from './app/pages/ClientManagement/ClientManagement';
 import AnalysisReport from './app/pages/AnalysisReport/AnalysisReport';
 import Inventory from './app/pages/Inventory/Inventory';
 import About from './app/pages/About/About';
-import Support from './app/pages/Support/Support';
+import GroupManagementDashboard from './app/pages/GroupManagement/GroupManagementDashboard';
 
 /**
  * Protected Route Component
@@ -101,11 +101,22 @@ const App = (): React.ReactElement => {
           <Route path="/analysis-report" element={<AnalysisReport />} />
           <Route path="/inventory" element={<Inventory />} />
           <Route path="/about" element={<About />} />
+          <Route path="/group-management" element={<GroupManagementDashboard />} />
           {/* <Route path="/support" element={<Support />} /> */}
 // Removed for admin context: /support now returns 404 as required
         </Route>
         
-        {/* Default route - redirect to dashboard if authenticated, otherwise to login */}
+        {/* Index route - redirect to dashboard if authenticated, otherwise to login */}
+        <Route 
+          path="/" 
+          element={
+            sessionStorage.getItem('isAuthenticated') === 'true' ? 
+              <Navigate to="/dashboard" replace /> : 
+              <Navigate to="/login" replace />
+          } 
+        />
+        
+        {/* Catch-all route for any undefined paths */}
         <Route 
           path="*" 
           element={

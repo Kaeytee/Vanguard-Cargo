@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FiPackage, FiClock, FiCheck, FiX, FiFilter, FiSearch, FiChevronDown, FiCalendar } from 'react-icons/fi';
+import { FiPackage, FiFilter, FiSearch, FiChevronDown } from 'react-icons/fi';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import ProcessIncomingRequestModal from './ProcessIncomingRequestModal';
@@ -126,46 +126,6 @@ const IncomingRequest: React.FC = () => {
       );
     }
     return filtered;
-  };
-
-  
-  /**
-   * Handle request approval
-   * 
-   * @param {string} id - Request ID
-   */
-  const handleApprove = (id: string) => {
-    console.log(`Approved request: ${id}`);
-    // Implement approval logic here
-  };
-  
-  /**
-   * Handle request rejection
-   * 
-   * @param {string} id - Request ID
-   */
-  const handleReject = (id: string) => {
-    console.log(`Rejected request: ${id}`);
-    // Implement rejection logic here
-  };
-  
-  /**
-   * Get priority badge style based on priority level
-   * 
-   * @param {string} priority - Priority level
-   * @returns {string} CSS class string
-   */
-  const getPriorityBadgeClass = (priority: string): string => {
-    switch (priority) {
-      case 'high':
-        return 'bg-red-100 text-red-800';
-      case 'medium':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'low':
-        return 'bg-green-100 text-green-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
   };
 
   return (

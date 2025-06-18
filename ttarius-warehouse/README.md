@@ -1,11 +1,16 @@
-# React + TypeScript + Vite
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## Features
 
-Currently, two official plugins are available:
-
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- User authentication (register, login, forgot password)
+- Protected client dashboard
+- Shipment creation and tracking
+- Admin shipment management
+- Responsive layout with sidebar and navbar
+- **Admin Shipment History Barcode & Advanced Filter UI**
+  - Barcode column displays a scannable PNG barcode for each shipment, generated from the tracking URL using `generateTrackingBarcode` utility.
+  - Professional filter UI with status tabs, live search, and animated date filter dropdown, matching the "Awaiting Shipment List" reference exactly.
+  - All filter state (status, search, date) handled with robust React state and clean OOP code.
+  - Code is thoroughly commented and follows best practices for maintainability and extensibility.
 
 ## Expanding the ESLint configuration
 
@@ -30,8 +35,6 @@ export default tseslint.config({
   },
 })
 ```
-
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
 
 ```js
 // eslint.config.js

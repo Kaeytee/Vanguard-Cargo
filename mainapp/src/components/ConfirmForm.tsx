@@ -56,7 +56,8 @@ const ConfirmForm: React.FC<ConfirmFormProps> = ({
   );
   
   // Helper function to format values properly
-  const formatValue = (value: any): string => {
+  // Use 'unknown' for value and type guard for formatting
+  const formatValue = (value: unknown): string => {
     if (value === undefined || value === null || value === '') return "-";
     if (typeof value === 'boolean') return value ? "Yes" : "No";
     return String(value);

@@ -11,12 +11,18 @@ vi.mock('../../../images/delivery-man.png', () => ({ default: 'mock-delivery-man
 
 // Mock phone input
 vi.mock('react-phone-number-input', () => ({
-  default: ({ value, onChange, placeholder, ...props }: any) => (
+  // Use explicit types for props and event
+  default: ({ value, onChange, placeholder, ...props }: {
+    value?: string;
+    onChange?: (value: string) => void;
+    placeholder?: string;
+    [key: string]: unknown;
+  }) => (
     <input
       {...props}
       type="tel"
       value={value || ''}
-      onChange={(e) => onChange?.(e.target.value)}
+      onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange?.(e.target.value)}
       placeholder={placeholder}
       data-testid="phone-input"
     />
@@ -28,13 +34,17 @@ vi.mock('react-phone-number-input', () => ({
 
 // Mock utils
 vi.mock('../../../lib/utils', () => ({
-  cn: (...classes: any[]) => classes.filter(Boolean).join(' '),
+  // Use 'unknown[]' for variadic classnames utility
+  cn: (...classes: unknown[]) => classes.filter(Boolean).join(' '),
 }))
 
 // Mock AnimateInView component
 vi.mock('../../../components/ui/animate-in-view', () => ({
-  default: React.forwardRef<HTMLDivElement, any>(({ children, className, ...props }, ref) => 
-    React.createElement('div', { className: className || '', 'data-testid': 'animate-in-view', ref, ...props }, children)
+  // Use explicit types for props
+  // Explicitly type children as React.ReactNode for React.createElement compatibility
+  default: React.forwardRef<HTMLDivElement, { className?: string; children?: React.ReactNode; [key: string]: unknown }>(
+    ({ children, className, ...props }, ref) =>
+      React.createElement('div', { className: className || '', 'data-testid': 'animate-in-view', ref, ...props }, children)
   ),
 }))
 

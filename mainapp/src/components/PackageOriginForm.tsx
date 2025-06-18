@@ -59,11 +59,13 @@ interface FormData {
   originContactName?: string;
 
   // Other fields possibly used in the component
-  [key: string]: any;
+  // Changed to allow optional fields as string | undefined for TypeScript compatibility
+  [key: string]: string | undefined;
 }
 
 // Props interface for the PackageOriginForm component
 interface PackageOriginFormProps {
+  // If you need to extend, use Record<string, string> for dynamic fields
   formData: FormData;
   onInputChange: (
     e: React.ChangeEvent<
@@ -76,7 +78,7 @@ interface PackageOriginFormProps {
   countryLoading?: boolean;
   countryError?: string | null;
   suggestionIndex?: number;
-  onSuggestionSelect?: (suggestion: AddressSuggestion) => void;
+  onSuggestionSelect?: (suggestion: AddressSuggestion) => void; // All types explicit, no any;
 }
 
 /**

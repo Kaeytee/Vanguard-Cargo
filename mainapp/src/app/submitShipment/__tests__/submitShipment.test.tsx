@@ -4,8 +4,12 @@ import { render, screen, waitFor } from '../../../test/test-utils'
 import SubmitShipmentPage from '../submitShipment'
 
 // Mock the form components
+// Use a minimal interface for the mock props, following best practices
+interface MockPackageOriginFormProps {
+  onInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+}
 vi.mock('../../components/PackageOriginForm', () => ({
-  default: ({ onInputChange }: any) => (
+  default: ({ onInputChange }: MockPackageOriginFormProps) => (
     <div data-testid="package-origin-form">
       <input
         name="originCountry"
@@ -16,8 +20,12 @@ vi.mock('../../components/PackageOriginForm', () => ({
   )
 }))
 
+// Use a minimal interface for the mock props, following best practices
+interface MockPackageFormProps {
+  onInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+}
 vi.mock('../../components/PackageForm', () => ({
-  default: ({ onInputChange }: any) => (
+  default: ({ onInputChange }: MockPackageFormProps) => (
     <div data-testid="package-form">
       <input
         name="packageType"
@@ -28,23 +36,28 @@ vi.mock('../../components/PackageForm', () => ({
   )
 }))
 
+// Use a minimal interface for the mock props, following best practices
+interface MockConfirmFormProps {
+  onSubmit: () => void;
+  isSubmitting: boolean;
+}
 vi.mock('../../components/ConfirmForm', () => ({
-  default: ({ onSubmit, isSubmitting }: any) => (
+  default: ({ onSubmit, isSubmitting }: MockConfirmFormProps) => (
     <div data-testid="confirm-form">
       <button onClick={onSubmit} disabled={isSubmitting}>
         {isSubmitting ? 'Submitting...' : 'Submit'}
       </button>
     </div>
   )
-}))
+}));
 
 describe('SubmitShipmentPage Component', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     // Reset window.location
-    delete (window as any).location
-    window.location = { href: '/' } as any
-  })
+    // Use type assertion for window.location
+    delete (window as unknown as { location?: Location }).location;
+    (window as unknown as { location: { href: string } }).location = { href: '/' };
 
   it('renders the page title and description', () => {
     render(<SubmitShipmentPage />)

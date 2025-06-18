@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FiUsers, FiUserPlus, FiEdit2, FiTrash2, FiMail, FiPhone, FiMapPin, FiSearch } from 'react-icons/fi';
+import { FiUserPlus, FiEdit2, FiTrash2, FiMail, FiPhone, FiMapPin, FiSearch } from 'react-icons/fi';
 
 /**
  * ClientManagement Component

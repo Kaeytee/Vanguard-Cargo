@@ -1,14 +1,33 @@
 import React, { useState } from 'react';
 import { postAccountingRecord } from './accounting';
 import type { AccountingRecord } from './accounting'; // type-only import for lint compliance
+import WhatsAppImageSender from '../../components/WhatsAppImageSender';
+import PackageImageCapture from '../../components/PackageImageCapture';
 
 // Type definition for modal props
 // Props for the modal component
 interface ProcessIncomingRequestModalProps {
   open: boolean;
   onClose: () => void;
-  onMarkReceived: (data: any) => void;
-  request: any;
+  onMarkReceived: (data: {
+    weight: string;
+    packageType: string;
+    currency: string;
+    amountPaid: string;
+    dimensions: string;
+    notes: string;
+    barcode: string;
+    packageId: string;
+    packageImages: string[]; // Add package images array
+    [key: string]: unknown; // For any additional fields from ...request
+  }) => void;
+  request: {
+    id: string;
+    client: string;
+    weight?: number | string;
+    phoneNumber?: string; // Add phone number for WhatsApp functionality
+    [key: string]: unknown;
+  };
 }
 // Validation error type
 interface ValidationErrors {
@@ -54,6 +73,12 @@ const ProcessIncomingRequestModal: React.FC<ProcessIncomingRequestModalProps> = 
   const [touched, setTouched] = useState<{[k:string]:boolean}>({});
   // Error boundary state
   const [hasError, setHasError] = useState<boolean>(false);
+  // WhatsApp image sender state
+  const [showWhatsAppSender, setShowWhatsAppSender] = useState<boolean>(false);
+  // Package images state (up to 3 images)
+  const [capturedImages, setCapturedImages] = useState<string[]>([]);
+  const [showImageCapture, setShowImageCapture] = useState<boolean>(false);
+  const [imageError, setImageError] = useState<string | null>(null);
 
   // Validate individual field
   const validateField = (field: string, value: string): string | undefined => {
@@ -68,7 +93,7 @@ const ProcessIncomingRequestModal: React.FC<ProcessIncomingRequestModalProps> = 
           return 'Select a package type';
         }
         break;
-      case 'amountPaid':
+      case 'amountPaid': {
         // Allow users to enter just numbers or with currency prefix
         if (!value) {
           return 'Enter an amount';
@@ -79,6 +104,7 @@ const ProcessIncomingRequestModal: React.FC<ProcessIncomingRequestModalProps> = 
           return 'Enter a valid amount (e.g. 100 or 100.50)';
         }
         break;
+      }
       case 'dimensions':
         if (!value || !/^\d+x\d+x\d+$/.test(value)) {
           return 'Format: Length x Breadth x Height (e.g. 30x22x2)';
@@ -198,8 +224,11 @@ const ProcessIncomingRequestModal: React.FC<ProcessIncomingRequestModalProps> = 
       postAccountingRecord(accountingRecord);
       
       // Continue with parent handler
+      // Extract weight from request to avoid type conflicts, use form weight instead
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { weight: _requestWeight, ...restRequest } = request;
       onMarkReceived({
-        weight,
+        weight: String(weight ?? ''),
         packageType,
         currency,
         amountPaid,
@@ -207,9 +236,10 @@ const ProcessIncomingRequestModal: React.FC<ProcessIncomingRequestModalProps> = 
         notes,
         barcode,
         packageId,
-        ...request,
+        packageImages: capturedImages, // Include captured images
+        ...restRequest,
       });
-    } catch (e) {
+    } catch {
       setHasError(true);
     }
   };
@@ -299,6 +329,85 @@ const ProcessIncomingRequestModal: React.FC<ProcessIncomingRequestModalProps> = 
           onChange={e => setNotes(e.target.value)}
         />
         
+        {/* Package Images Section */}
+        <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <h3 className="font-medium text-blue-800 mb-2">📷 Package Images</h3>
+          <p className="text-blue-600 text-sm mb-3">
+            Take up to 3 photos of the package (max 10MB each)
+          </p>
+          
+          {capturedImages.length > 0 ? (
+            <div className="space-y-3">
+              <div className="grid grid-cols-3 gap-2">
+                {capturedImages.map((image, index) => (
+                  <div key={index} className="relative group">
+                    <img
+                      src={image}
+                      alt={`Package image ${index + 1}`}
+                      className="w-full h-20 object-cover rounded border"
+                    />
+                    <button
+                      onClick={() => {
+                        const newImages = capturedImages.filter((_, i) => i !== index);
+                        setCapturedImages(newImages);
+                      }}
+                      className="absolute -top-1 -right-1 bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setShowImageCapture(true)}
+                  disabled={capturedImages.length >= 3}
+                  className={`px-4 py-2 rounded-lg font-medium text-sm ${
+                    capturedImages.length >= 3 
+                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
+                      : 'bg-blue-600 hover:bg-blue-700 text-white'
+                  }`}
+                >
+                  {capturedImages.length >= 3 ? 'Maximum reached' : `Add More (${capturedImages.length}/3)`}
+                </button>
+                <button
+                  onClick={() => setCapturedImages([])}
+                  className="px-4 py-2 rounded-lg font-medium text-sm border border-gray-300 text-gray-700 hover:bg-gray-50"
+                >
+                  Clear All
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button
+              onClick={() => setShowImageCapture(true)}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2"
+            >
+              📷 Take Package Photos
+            </button>
+          )}
+          
+          {imageError && (
+            <div className="mt-2 text-red-600 text-sm">{imageError}</div>
+          )}
+        </div>
+        
+        {/* WhatsApp Image Sender Button - Only show if phone number is available */}
+        {request.phoneNumber && (
+          <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+            <h3 className="font-medium text-green-800 mb-2">📱 Send Package Image via WhatsApp</h3>
+            <p className="text-green-600 text-sm mb-3">
+              Capture and send a package image to {request.client} at {request.phoneNumber}
+            </p>
+            <button
+              onClick={() => setShowWhatsAppSender(true)}
+              className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2"
+            >
+              📷 Take & Send Photo
+            </button>
+          </div>
+        )}
+        
         <div className="flex justify-end gap-3">
           <button onClick={onClose} className="border border-gray-300 px-5 py-2 rounded-lg text-gray-700 font-medium bg-white hover:bg-gray-50">Cancel</button>
           <button
@@ -310,6 +419,33 @@ const ProcessIncomingRequestModal: React.FC<ProcessIncomingRequestModalProps> = 
           </button>
         </div>
       </div>
+      
+      {/* Package Image Capture Modal */}
+      <PackageImageCapture
+        isOpen={showImageCapture}
+        onClose={() => {
+          setShowImageCapture(false);
+          setImageError(null);
+        }}
+        onImagesCapture={(images) => {
+          setCapturedImages(images);
+          setShowImageCapture(false);
+          setImageError(null);
+        }}
+        maxImages={3}
+        maxSizeMB={10}
+      />
+      
+      {/* WhatsApp Image Sender Modal */}
+      {request.phoneNumber && (
+        <WhatsAppImageSender
+          isOpen={showWhatsAppSender}
+          onClose={() => setShowWhatsAppSender(false)}
+          phoneNumber={request.phoneNumber}
+          packageId={request.id}
+          clientName={request.client}
+        />
+      )}
     </div>
   );
 };

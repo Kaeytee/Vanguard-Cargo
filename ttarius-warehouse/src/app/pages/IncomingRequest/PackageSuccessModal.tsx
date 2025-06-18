@@ -1,7 +1,5 @@
 import React from 'react';
-import { createRoot } from 'react-dom/client';
-import type { Root } from 'react-dom/client';
-import ReactDOMServer from 'react-dom/server';
+import { printPackageTicket, generatePrintHTML, type PrintablePackageInfo } from '../../utils/printTemplateUtils';
 
 export interface PackageInfo {
   requestId: string;
@@ -25,133 +23,84 @@ interface PackageSuccessModalProps {
   packageInfo: PackageInfo | null;
 }
 
-/**
- * PackagePrintTemplate
- * Renders a professional template for printing or downloading package details.
- * @component
- * @param {PackageInfo} packageInfo
- * @returns {JSX.Element}
- */
-const PackagePrintTemplate: React.FC<{ packageInfo: PackageInfo }> = ({ packageInfo }) => {
-  return (
-    <div style={{
-      fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif',
-      padding: '40px',
-      background: '#fff',
-      width: '595px', // A4 width in points at 72dpi
-      minHeight: '842px', // A4 height in points
-      boxSizing: 'border-box',
-      color: '#333',
-    }}>
-      <div style={{ textAlign: 'center', marginBottom: '20px' }}>
-        <h1 style={{ fontSize: '24px', fontWeight: 'bold', color: '#003366' }}>Package Details</h1>
-        <hr style={{ border: '0.5px solid #003366', width: '50%', margin: '10px auto' }} />
-      </div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '30px' }}>
-        <div style={{ width: '45%' }}>
-          <h2 style={{ fontSize: '16px', fontWeight: 'bold', color: '#003366', marginBottom: '10px' }}>Package Information</h2>
-          <p style={{ fontSize: '12px', margin: '5px 0' }}>Request ID: <strong>{packageInfo.requestId}</strong></p>
-          <p style={{ fontSize: '12px', margin: '5px 0' }}>Weight: <strong>{packageInfo.weight}kg</strong></p>
-          <p style={{ fontSize: '12px', margin: '5px 0' }}>Package Type: <strong>{packageInfo.type}</strong></p>
-          <p style={{ fontSize: '12px', margin: '5px 0' }}>Value: <strong>GHS {packageInfo.value}</strong></p>
-          <p style={{ fontSize: '12px', margin: '5px 0' }}>Dimensions: <strong>{packageInfo.dimensions}</strong></p>
-          <p style={{ fontSize: '12px', margin: '5px 0' }}>Status: <strong>Received</strong></p>
-        </div>
-        <div style={{ width: '45%' }}>
-          <h2 style={{ fontSize: '16px', fontWeight: 'bold', color: '#003366', marginBottom: '10px' }}>Client & Shipping</h2>
-          <p style={{ fontSize: '12px', margin: '5px 0' }}>Client: <strong>{packageInfo.client}</strong></p>
-          <p style={{ fontSize: '12px', margin: '5px 0' }}>Submitted: <strong>{packageInfo.submitted}</strong></p>
-          <p style={{ fontSize: '12px', margin: '5px 0' }}>Destination: <strong>{packageInfo.destination}</strong></p>
-          <p style={{ fontSize: '12px', margin: '5px 0' }}>Time: <strong>{packageInfo.time}</strong></p>
-          <p style={{ fontSize: '12px', margin: '5px 0' }}>Description: <strong>{packageInfo.description}</strong></p>
-        </div>
-      </div>
-      <div style={{ textAlign: 'center', marginTop: '30px' }}>
-        <h2 style={{ fontSize: '16px', fontWeight: 'bold', color: '#003366', marginBottom: '10px' }}>Package Barcode</h2>
-        <p style={{ fontSize: '12px', marginBottom: '10px' }}>Package ID: <strong>{packageInfo.packageId}</strong></p>
-        <img
-          src={packageInfo.barcodeImage}
-          alt="Barcode"
-          style={{ width: '80%', maxWidth: '450px', height: 'auto', margin: '10px auto' }}
-        />
-        <p style={{ fontSize: '12px' }}>Barcode: <strong>{packageInfo.barcode}</strong></p>
-      </div>
-      <div style={{ textAlign: 'center', marginTop: '30px', fontSize: '10px', color: '#666' }}>
-        <hr style={{ border: '0.5px solid #003366', width: '50%', margin: '10px auto' }} />
-        <p>Generated on {new Date().toLocaleDateString()}</p>
-        <p>Powered by TTarius Logistics</p>
-      </div>
-    </div>
-  );
-};
-
 const PackageSuccessModal: React.FC<PackageSuccessModalProps> = ({ open, onClose, packageInfo }) => {
   if (!open || !packageInfo) return null;
 
+  /**
+   * Handle PDF download functionality
+   * Converts package information to printable format and generates HTML for download
+   */
   const handleDownload = async () => {
     try {
-      const [html2canvas, jsPDF] = await Promise.all([
-        import('html2canvas'),
-        import('jspdf')
-      ]);
-      const printDiv = document.createElement('div');
-      printDiv.id = 'package-print-download-root';
-      printDiv.style.position = 'absolute';
-      printDiv.style.left = '-9999px';
-      printDiv.style.top = '0';
-      printDiv.style.width = '595px';
-      printDiv.style.background = '#fff';
-      printDiv.style.zIndex = '0';
-      document.body.appendChild(printDiv);
-      let root: Root | undefined;
-      try {
-        root = createRoot(printDiv);
-        root.render(<PackagePrintTemplate packageInfo={packageInfo} />);
-        await new Promise(resolve => setTimeout(resolve, 600));
-        const canvas = await html2canvas.default(printDiv, { backgroundColor: '#fff', useCORS: true });
-        if (!canvas) throw new Error('Canvas generation failed');
-        const imgData = canvas.toDataURL('image/png');
-        if (!imgData) throw new Error('Image data generation failed');
-        const pdf = new jsPDF.default({ orientation: 'portrait', unit: 'pt', format: 'a4' });
-        const pageWidth = pdf.internal.pageSize.getWidth();
-        const imgWidth = pageWidth - 40;
-        const imgHeight = canvas.height * (imgWidth / canvas.width);
-        pdf.addImage(imgData, 'PNG', 20, 20, imgWidth, imgHeight);
-        pdf.save(`${packageInfo.packageId || 'package-details'}.pdf`);
-      } catch (err) {
-        alert('Failed to generate PDF. Please try again.');
-        console.error('Download PDF error:', err);
-      } finally {
-        if (root) {
-          root.unmount();
-        }
-        printDiv.remove();
-      }
+      // Convert package info to printable format
+      const printablePackageInfo: PrintablePackageInfo = {
+        packageId: packageInfo.packageId,
+        requestId: packageInfo.requestId,
+        weight: packageInfo.weight,
+        type: packageInfo.type,
+        value: packageInfo.value,
+        dimensions: packageInfo.dimensions,
+        client: packageInfo.client,
+        submitted: packageInfo.submitted,
+        destination: packageInfo.destination,
+        time: packageInfo.time,
+        description: packageInfo.description,
+        barcode: packageInfo.barcode,
+        barcodeImage: packageInfo.barcodeImage,
+      };
+      
+      // Generate HTML content for download
+      const htmlContent = generatePrintHTML(printablePackageInfo, {
+        title: 'Package Receipt',
+        showTrackingInfo: true
+      });
+      
+      // Create and download HTML file
+      const blob = new Blob([htmlContent], { type: 'text/html' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `package-receipt-${packageInfo.packageId || 'details'}.html`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
     } catch (err) {
-      alert('Failed to generate PDF. Please try again.');
-      console.error('Download PDF error:', err);
+      alert('Failed to generate download. Please try again.');
+      console.error('Download error:', err);
     }
   };
 
+  /**
+   * Handle print functionality
+   * Uses the centralized print utility to open print dialog
+   */
   const handlePrint = async () => {
     try {
-      const htmlString = ReactDOMServer.renderToString(<PackagePrintTemplate packageInfo={packageInfo} />);
-      const printWindow = window.open('', '_blank');
-      if (printWindow) {
-        printWindow.document.write('<!DOCTYPE html><html><head><title>Print Package Details</title>');
-        printWindow.document.write('<meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />');
-        printWindow.document.write('</head><body style="margin:0;padding:0;background:#fff;">');
-        printWindow.document.write(htmlString);
-        printWindow.document.write('</body></html>');
-        printWindow.document.close();
-        setTimeout(() => {
-          printWindow.focus();
-          printWindow.print();
-          setTimeout(() => printWindow.close(), 500);
-        }, 500);
-      }
+      // Convert package info to printable format
+      const printablePackageInfo: PrintablePackageInfo = {
+        packageId: packageInfo.packageId,
+        requestId: packageInfo.requestId,
+        weight: packageInfo.weight,
+        type: packageInfo.type,
+        value: packageInfo.value,
+        dimensions: packageInfo.dimensions,
+        client: packageInfo.client,
+        submitted: packageInfo.submitted,
+        destination: packageInfo.destination,
+        time: packageInfo.time,
+        description: packageInfo.description,
+        barcode: packageInfo.barcode,
+        barcodeImage: packageInfo.barcodeImage,
+      };
+      
+      // Use centralized print utility
+      printPackageTicket(printablePackageInfo, {
+        title: 'Package Receipt',
+        showTrackingInfo: true
+      });
     } catch (err) {
-      alert('Failed to open print window. Please try again.');
+      alert('Failed to print. Please try again.');
       console.error('Print error:', err);
     }
   };
