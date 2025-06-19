@@ -39,7 +39,7 @@ interface AddressSuggestion {
 
 export default function SubmitShipmentPage() {
   // Initialize form with simplified data structure
-  const { formData, setFormData, handleInputChange: baseHandleInputChange, resetForm } = useShipmentForm(initialFormData);
+  const { formData, setFormData, handleInputChange: baseHandleInputChange } = useShipmentForm(initialFormData);
 
   // Enhanced handleInputChange: clears stepValidationError if set, for instant UX feedback
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -58,11 +58,8 @@ export default function SubmitShipmentPage() {
   const [stepValidationError, setStepValidationError] = useState<string | null>(null);
 
   // Address auto-complete for package origin (with keyboard nav)
-  const handleOriginCountryInput = async (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
+  const handleOriginCountryInput = async (value: string) => {
     // Handle address/country input for package origin
-    const value = e.target.value;
     setFormData((prev) => ({ ...prev, originCountry: value }));
     setOriginAddressError(null);
     setOriginAddressLoading(true);
@@ -201,13 +198,37 @@ export default function SubmitShipmentPage() {
 
   // Step Rendering
   const renderStepContent = () => {
+    // Fix stringifiedFormData to include all required properties
+    const stringifiedFormData = {
+      clientName: formData.clientName || "",
+      clientEmail: formData.clientEmail || "",
+      clientPhone: formData.clientPhone || "",
+      clientAddress: formData.clientAddress || "",
+      clientCity: formData.clientCity || "",
+      clientState: formData.clientState || "",
+      clientZip: formData.clientZip || "",
+      clientCountry: formData.clientCountry || "",
+      originCountry: formData.originCountry || "",
+      originCity: formData.originCity || "",
+      originAddress: formData.originAddress || "",
+      originState: formData.originState || "",
+      packageType: formData.packageType || "",
+      packageCategory: formData.packageCategory || "",
+      packageDescription: formData.packageDescription || "",
+      freightType: formData.freightType || "",
+      packageWeight: formData.packageWeight || "",
+      ...Object.fromEntries(
+        Object.entries(formData).map(([key, value]) => [key, typeof value === 'boolean' ? String(value) : value])
+      )
+    };
+
     switch (step) {
       case 1:
         return (
           <PackageOriginForm
-            formData={formData}
+            formData={stringifiedFormData}
             onInputChange={handleInputChange}
-            onOriginCountryInput={(value: string) => handleOriginCountryInput({ target: { value } } as React.ChangeEvent<HTMLInputElement>)}
+            onOriginCountryInput={handleOriginCountryInput}
             onOriginCountryKeyDown={handleOriginCountryKeyDown}
             countrySuggestions={originAddressSuggestions}
             countryLoading={originAddressLoading}
@@ -219,15 +240,14 @@ export default function SubmitShipmentPage() {
       case 2:
         return (
           <PackageForm
-            formData={formData}
+            formData={stringifiedFormData}
             onInputChange={handleInputChange}
-            onPackageDescriptionChange={handleInputChange}
           />
         );
       case 3:
         return (
           <ConfirmForm 
-            formData={formData} 
+            formData={stringifiedFormData}
             onBack={goToPreviousStep} 
             onSubmit={handleSubmit}
             isSubmitting={isSubmitting}
@@ -236,49 +256,6 @@ export default function SubmitShipmentPage() {
       default:
         return null; // Handle unexpected step values
     }
-  };
-
-  // Form validation function
-  const validateForm = () => {
-    // Required fields validation
-    const requiredFields = {
-      // Client information
-      clientName: "Your Name", 
-      clientEmail: "Your Email",
-      clientPhone: "Your Phone",
-      
-      // Origin information
-      originCountry: "Origin Country",
-      
-      // Package information
-      packageType: "Package Type",
-      packageCategory: "Package Category",
-      packageDescription: "Package Description",
-      freightType: "Delivery Type",
-    };
-
-    const missingFields: string[] = [];
-
-    for (const [field, label] of Object.entries(requiredFields)) {
-      // @ts-expect-error: dynamic access
-      if (!formData[field]) {
-        missingFields.push(label);
-      }
-    }
-
-    if (missingFields.length > 0) {
-      setValidationErrors([`Please fill in all required fields: ${missingFields.join(", ")}`]);
-      return false;
-    }
-
-    // Email validation
-    if (!EMAIL_REGEX.test(formData.clientEmail)) {
-      setValidationErrors(["Please enter a valid email address"]);
-      return false;
-    }
-
-    setValidationErrors([]);
-    return true;
   };
 
   // Initialize router for navigation
