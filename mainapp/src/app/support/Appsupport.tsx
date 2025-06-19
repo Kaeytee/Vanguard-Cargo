@@ -13,17 +13,6 @@ import ContactSection from "../../components/support/ContactSection";
  * @returns {JSX.Element} The AppSupport component
  */
 const AppSupport: React.FC = () => {
-  // Form state
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [subject, setSubject] = useState("");
-  const [message, setMessage] = useState("");
-  const [category, setCategory] = useState("general");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSubmitted, setIsSubmitted] = useState(false);
-  // FAQ state
-  const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
-
   // Active section state
   const [activeSection, setActiveSection] = useState<"faq" | "contact">("faq");
 
@@ -47,46 +36,6 @@ const AppSupport: React.FC = () => {
         duration: 0.4,
       },
     },
-  };
-
-  /**
-   * Handle form submission
-   * @param {React.FormEvent} e - Form event
-   */
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-
-    // Simulate API call
-    setTimeout(() => {
-      console.log("Support ticket submitted:", {
-        name,
-        email,
-        subject,
-        message,
-        category,
-      });
-      setIsSubmitting(false);
-      setIsSubmitted(true);
-
-      // Reset form after submission
-      setName("");
-      setEmail("");
-      setSubject("");
-      setMessage("");
-      setCategory("general");
-
-      // Reset submission status after 5 seconds
-      setTimeout(() => setIsSubmitted(false), 5000);
-    }, 1500);
-  };
-
-  /**
-   * Toggle FAQ expansion
-   * @param {number} index - FAQ index to toggle
-   */
-  const toggleFaq = (index: number) => {
-    setExpandedFaq(expandedFaq === index ? null : index);
   };
 
   return (
