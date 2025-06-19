@@ -66,13 +66,8 @@ const PACKAGE_CATEGORIES: PackageCategoryOption[] = [
 
 // Interface for the form data in PackageForm
 interface PackageFormProps {
-  formData: {
-    freightType: string;
-    packageType: string;
-    packageCategory: string; 
-    packageDescription: string;
-    [key: string]: any; // Allow for additional properties
-  };
+  // Replaced 'any' with explicit types and used Record<string, string> for flexible fields
+  formData: Record<string, string>;
   onInputChange: (
     event: React.ChangeEvent<
       HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement

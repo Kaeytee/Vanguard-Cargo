@@ -26,7 +26,7 @@ const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const [mounted, setMounted] = useState(false);
   const [animatedValues, setAnimatedValues] = useState<{[key: string]: number}>({});
-  const [hoveredCard, setHoveredCard] = useState<string | null>(null);
+  // Hover state and handlers completely removed as they were unused
   const chartRef = useRef<HTMLDivElement>(null);
   const [chartVisible, setChartVisible] = useState(false);
 
@@ -82,7 +82,7 @@ const Dashboard: React.FC = () => {
     subtitle: string;
     iconColor: string;
     index: number;
-  }> = ({ icon, title, value, subtitle, iconColor, index }) => {
+  }> = ({ icon, title, subtitle, iconColor, index }) => {
     const animatedValue = animatedValues[title] || 0;
     
     const handleDetailsClick = () => {
@@ -104,14 +104,15 @@ const Dashboard: React.FC = () => {
       }
     };
 
+    // setHoveredCard function removed as it was unused
+
     return (
       <div 
         className={`bg-white rounded-xl p-6 shadow-sm border border-gray-200 transform transition-all duration-700 ease-out hover:shadow-lg hover:scale-105 cursor-pointer group relative overflow-hidden ${
           mounted ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
         }`}
         style={{ transitionDelay: `${index * 100}ms` }}
-        onMouseEnter={() => setHoveredCard(title)}
-        onMouseLeave={() => setHoveredCard(null)}
+        // Mouse event handlers removed as they referenced removed state
       >
         {/* Animated background gradient */}
         <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />

@@ -103,7 +103,7 @@ describe('ForgotPassword Component', () => {
     })
 
     it('navigates back to login', async () => {
-      const user = userEvent.setup()
+      // Render the ForgotPassword component for this test
       render(<ForgotPassword />)
       
       const backButton = screen.getByText(/back to login/i)

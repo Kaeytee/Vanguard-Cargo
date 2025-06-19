@@ -70,12 +70,12 @@ export default function ForgotPassword() {
       
       // Success response - show success message briefly then proceed
       setFormSuccess("A verification code has been sent to your email");
-      
       // Brief delay to show success message, then advance to step 2
       setTimeout(() => {
         setStep(2);
         setIsLoading(false);
         setFormSuccess("");
+        setFormError(""); // Clear errors on step transition
       }, 500);
     } catch {
       setFormError("Failed to send verification code. Please try again.");
@@ -100,6 +100,7 @@ export default function ForgotPassword() {
       if (verificationCode === "99999") {
         setFormError("Invalid verification code");
         setIsLoading(false);
+        setFormSuccess(""); // Clear any lingering success
         return;
       }
       
@@ -109,6 +110,7 @@ export default function ForgotPassword() {
         setStep(3);
         setIsLoading(false);
         setFormSuccess("");
+        setFormError(""); // Clear errors on step transition
       }, 500);
     } catch {
       setFormError("Invalid verification code. Please try again.");
@@ -140,6 +142,7 @@ export default function ForgotPassword() {
       setTimeout(() => {
         setStep(4);
         setIsLoading(false);
+        setFormError(""); // Clear errors on step transition
       }, 1500);
     } catch {
       setFormError("Failed to reset password. Please try again.");
@@ -259,6 +262,7 @@ export default function ForgotPassword() {
                           <input
                             type="email"
                             id="email"
+                            aria-label="Email Address"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             placeholder="you@example.com"
@@ -326,6 +330,7 @@ export default function ForgotPassword() {
                           <input
                             type="text"
                             id="verificationCode"
+                            aria-label="Verification Code"
                             value={verificationCode}
                             onChange={handleVerificationCodeChange}
                             placeholder="Enter 5-digit code"
@@ -363,14 +368,17 @@ export default function ForgotPassword() {
                       <div className="text-center">
                         <button
                           onClick={async () => {
+                            // Reset loading and error states before resending code
                             setIsLoading(true);
                             setFormError("");
+                            setFormSuccess("");
                             // Simulate resending code
                             await new Promise(resolve => setTimeout(resolve, 1000));
                             setFormSuccess("Verification code sent");
                             setTimeout(() => {
                               setFormSuccess("");
                               setIsLoading(false);
+                              setFormError("");
                             }, 1000);
                           }}
                           className="text-sm text-red-500 hover:text-red-600 font-medium"

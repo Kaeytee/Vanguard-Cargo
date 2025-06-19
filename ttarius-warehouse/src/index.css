@@ -12,11 +12,11 @@
 /* Apply Roboto font to all elements */
 @layer base {
   html {
-    font-family: 'Roboto', system-ui, sans-serif;
+    font-family: "Roboto", sans-serif;
   }
   
   body {
-    font-family: 'Roboto', system-ui, sans-serif;
+    font-family: "Roboto", sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }

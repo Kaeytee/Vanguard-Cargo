@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { FiPackage, FiMapPin, FiCalendar, FiUser, FiTruck } from 'react-icons/fi';
+import { FiPackage, FiMapPin, FiCalendar } from 'react-icons/fi';
 // Import the barcode utility
 import { generateTrackingBarcode } from '../../utils/barcodeUtils';
 
@@ -75,7 +75,7 @@ const CreateShipment: React.FC = () => {
       body: JSON.stringify(packageData),
     })
       .then(res => res.json())
-      .then(data => {
+      .then(() => {
         // Handle success (show confirmation, redirect, etc.)
         alert('Shipment created successfully!');
       })

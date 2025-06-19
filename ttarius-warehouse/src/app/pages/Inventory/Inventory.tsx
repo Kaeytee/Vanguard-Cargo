@@ -10,7 +10,7 @@
 */
 import React, { useState } from 'react';
 import { FiPackage, FiCheckCircle, FiFilter, FiSearch, FiEye, FiCalendar } from 'react-icons/fi';
-import DatePicker from 'react-datepicker';
+// DatePicker import removed as it was unused
 import 'react-datepicker/dist/react-datepicker.css';
 
 /**
@@ -20,10 +20,7 @@ import 'react-datepicker/dist/react-datepicker.css';
  */
 const Inventory: React.FC = () => {
   // State for date filter
-  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
-  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
-  const [showStartDatePicker, setShowStartDatePicker] = useState(false);
-  const [showEndDatePicker, setShowEndDatePicker] = useState(false);
+  // Date filtering state variables removed as they were unused
 
   // Mock summary data
   const summary = {
