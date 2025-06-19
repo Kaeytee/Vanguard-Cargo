@@ -112,8 +112,11 @@ const CameraCapture: React.FC<{
     } else {
       stopCamera();
     }
-    
-    return () => stopCamera();
+
+    // Ensure the camera stops only when the component unmounts
+    return () => {
+      stopCamera();
+    };
   }, [isOpen, startCamera, stopCamera]);
 
   if (!isOpen) return null;
