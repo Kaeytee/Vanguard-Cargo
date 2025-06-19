@@ -28,7 +28,7 @@ interface ConfirmFormProps {
     packageWeight?: string;
     
     // Any other properties
-    [key: string]: any;
+    [key: string]: unknown;
   };
   
   onBack: () => void;
@@ -76,7 +76,8 @@ const ConfirmForm: React.FC<ConfirmFormProps> = ({
   };
 
   // Component to display a row of information
-  const InfoRow = ({ label, value }: { label: string; value: any }) => (    <div className="flex flex-col sm:flex-row py-2 border-b border-gray-100 last:border-b-0">
+  const InfoRow = ({ label, value }: { label: string; value: unknown }) => (
+    <div className="flex flex-col sm:flex-row py-2 border-b border-gray-100 last:border-b-0">
       <div className="font-medium text-gray-600 w-full sm:w-1/3 mb-1 sm:mb-0">{label}:</div>
       <div className="text-gray-900 w-full sm:w-2/3">{formatValue(value)}</div>
     </div>
@@ -162,7 +163,7 @@ const ConfirmForm: React.FC<ConfirmFormProps> = ({
             {/* Submit Button with Loading State - Using red color scheme */}            <button
               type="submit"
               disabled={isSubmitting}
-              className="px-6 py-3 bg-red-600 hover:bg-red-600/90 text-primary-foreground rounded-lg transition-all duration-200 disabled:opacity-80 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+              className="px-6 py-3 bg-red-600 hover:bg-red-600/90 text-white rounded-lg transition-all duration-200 disabled:opacity-80 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
             >
               {isSubmitting ? (
                 <>
