@@ -54,7 +54,7 @@ const FaqSection: React.FC<FaqSectionProps> = ({
 
   return (
     <motion.div
-      className="lg:col-span-3"
+      className="lg:col-span-3 w-full"
       variants={containerVariants}
       initial="hidden"
       animate="visible"
@@ -62,9 +62,9 @@ const FaqSection: React.FC<FaqSectionProps> = ({
       {/* FAQs */}
       <motion.div
         variants={itemVariants}
-        className="bg-white rounded-lg shadow-md p-6"
+        className="bg-white rounded-lg shadow-md p-4 sm:p-6 w-full max-w-full"
       >
-        <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
+        <h2 className="text-lg sm:text-xl font-bold text-gray-800 mb-4 flex items-center">
           <FileText className="mr-2 text-red-500" size={20} />
           Frequently Asked Questions
         </h2>
@@ -75,13 +75,13 @@ const FaqSection: React.FC<FaqSectionProps> = ({
               className="border border-gray-200 rounded-md overflow-hidden"
             >
               <button
-                className="w-full text-left p-4 flex justify-between items-center bg-gray-50 hover:bg-gray-100 transition-colors"
+                className="w-full text-left p-3 sm:p-4 flex justify-between items-center bg-gray-50 hover:bg-gray-100 transition-colors"
                 onClick={() => toggleFaq(index)}
               >
-                <span className="font-medium text-gray-800">
+                <span className="font-medium text-gray-800 text-base sm:text-lg">
                   {faq.question}
                 </span>
-                <span className="text-gray-500 transform transition-transform">
+                <span className="text-gray-500 transform transition-transform text-xl sm:text-2xl">
                   {expandedFaq === index ? "−" : "+"}
                 </span>
               </button>
@@ -91,30 +91,31 @@ const FaqSection: React.FC<FaqSectionProps> = ({
                   animate={{ height: "auto", opacity: 1 }}
                   exit={{ height: 0, opacity: 0 }}
                   transition={{ duration: 0.3 }}
-                  className="p-4 bg-white border-t border-gray-200"
+                  className="p-3 sm:p-4 bg-white border-t border-gray-200"
                 >
-                  <p className="text-gray-600">{faq.answer}</p>
+                  <p className="text-gray-600 text-sm sm:text-base">
+                    {faq.answer}
+                  </p>
                 </motion.div>
               )}
             </div>
           ))}
-          <div className="flex flex-col md:flex-row items-center justify-between border border-gray-200 rounded-md p-4 bg-[#B3B8CE] mt-4">
-            <div>
-              <span className="text-[#1A2B6D] font-bold text-lg">
+          <div className="flex flex-col gap-2 sm:gap-0 sm:flex-row items-center justify-between border border-gray-200 rounded-md p-3 sm:p-4 bg-[#B3B8CE] mt-4">
+            <div className="flex-1 w-full sm:w-auto">
+              <span className="text-[#1A2B6D] font-bold text-base sm:text-lg">
                 Still have more questions?
               </span>
-              <p className="text-gray-600 md:mt-1 mb-2 md:mb-0">
+              <p className="text-gray-600 mt-1 mb-2 sm:mb-0 text-sm sm:text-base">
                 Our support team is here to help.
               </p>
-            </div>{" "}
+            </div>
             <button
               type="button"
-              className={`flex items-center justify-center px-5 py-2 rounded-md font-medium border transition-colors duration-150 hover:bg-white hover:text-[#1A2B6D] border-[#1A2B6D] bg-[#1A2B6D] text-white`}
+              className="flex items-center justify-center px-4 sm:px-5 py-2 rounded-md font-medium border transition-colors duration-150 hover:bg-white hover:text-[#1A2B6D] border-[#1A2B6D] bg-[#1A2B6D] text-white w-full sm:w-auto"
               onClick={() => {
                 if (onSwitchToContact) {
                   onSwitchToContact();
                 } else {
-                  // Fallback to email if no callback is provided
                   window.location.href = "mailto:support@ttarius.com";
                 }
               }}
