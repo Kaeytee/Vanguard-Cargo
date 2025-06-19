@@ -203,16 +203,9 @@ const GroupManagementDashboard: React.FC = () => {
     }
   }, [loadDashboardData]);
 
-  const handleUpdateGroup = useCallback(async (updateData: GroupUpdateData) => {
+ const handleUpdateGroup = useCallback(async (updateData: GroupUpdateData) => {
     try {
-      await GroupManagementService.updateGroup({
-        id: updateData.id,
-        name: updateData.name,
-        description: updateData.description,
-        priority: updateData.priority,
-        estimatedDelivery: updateData.estimatedDelivery,
-        packageIds: updateData.packageIds
-      });
+      await GroupManagementService.updateGroup(updateData);
       await loadDashboardData();
       setCurrentView(DashboardView.OVERVIEW);
       setSelectedGroupForEdit(null);

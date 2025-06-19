@@ -30,10 +30,38 @@ const IncomingRequest: React.FC = () => {
   const [successModalOpen, setSuccessModalOpen] = useState<boolean>(false);
   // State for request details modal
   const [detailsModalOpen, setDetailsModalOpen] = useState<boolean>(false);
+  // Define a type for incoming requests
+  interface IncomingRequestType {
+    id: string;
+    client: string;
+    type: string;
+    items: number;
+    weight: string;
+    requestDate: string;
+    status: string;
+    priority: string;
+  }
+
   // Currently selected request for modal
-  const [selectedRequest, setSelectedRequest] = useState<any>(null);
+  const [selectedRequest, setSelectedRequest] = useState<IncomingRequestType | null>(null);
+  // Define a type for package info
+  interface PackageInfoType {
+    requestId: string;
+    weight: number;
+    type: string;
+    value: number;
+    dimensions: string;
+    client: string;
+    submitted: string;
+    destination: string;
+    time: string;
+    description: string;
+    packageId: string;
+    barcode: string;
+    barcodeImage: string;
+  }
   // State for package info for success modal
-  const [packageInfo, setPackageInfo] = useState<any>(null);
+  const [packageInfo, setPackageInfo] = useState<PackageInfoType | null>(null);
 
   
   /**
@@ -292,10 +320,12 @@ const IncomingRequest: React.FC = () => {
           setProcessModalOpen(false);
           setTimeout(() => {
             setPackageInfo({
-              requestId: selectedRequest?.id,
-              weight: selectedRequest?.weight || '2.5',
+              requestId: selectedRequest?.id ?? '',
+              weight: selectedRequest?.weight
+                ? parseFloat(selectedRequest.weight)
+                : 2.5,
               type: 'parcel',
-              value: '1,500.00',
+              value: 1500.00,
               dimensions: '30x22x2cm',
               client: 'Carol Johnson',
               submitted: '2024-06-02',
@@ -309,7 +339,20 @@ const IncomingRequest: React.FC = () => {
             setSuccessModalOpen(true);
           }, 500);
         }}
-        request={selectedRequest}
+        request={
+          selectedRequest
+            ? {
+                ...selectedRequest,
+                // Provide any missing required fields with default values if needed
+                phoneNumber: '', // or remove if not required
+              }
+            : {
+                id: '',
+                client: '',
+                weight: '',
+                phoneNumber: '',
+              }
+        }
       />
       {/* Package Success Modal */}
       <PackageSuccessModal

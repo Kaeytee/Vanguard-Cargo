@@ -4,6 +4,7 @@ import { useShipmentForm } from "../../hooks/useShipmentForm";
 import { initialFormData } from "../../lib/constants";
 
 export default function SubmitShipmentPage() {
+  // Refactored SubmitShipmentPage to call useShipmentForm without destructuring
   useShipmentForm(initialFormData);
 
   // Core state variables for the simplified flow
