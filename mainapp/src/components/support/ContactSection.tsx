@@ -93,9 +93,9 @@ const ContactSection: React.FC<ContactSectionProps> = ({
           variants={itemVariants}
           className="bg-white rounded-lg shadow-md p-6"
         >
-          <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
-            <HelpCircle className="mr-2 text-red-500" size={20} />
-            Contact Us
+          <h2 className="text-xl font-bold text-[#1A2B6D] mb-4 flex items-center">
+            <HelpCircle className="mr-2 text-[#1A2B6D]" size={24} />
+            Contact Information
           </h2>
           <div className="space-y-4">
             {contactInfo.map((item, index) => {
