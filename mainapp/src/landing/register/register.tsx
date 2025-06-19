@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { motion } from 'framer-motion';
 import { Eye, EyeOff, Check } from 'lucide-react';
 import PhoneInput, { isValidPhoneNumber } from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
@@ -154,7 +153,7 @@ export default function Register() {
         });
         setTimeout(() => navigate('/login'), 1000);
       }
-    } catch (error) {
+    } catch {
       setErrors((prev) => ({ ...prev, general: 'An error occurred. Please try again.' }));
     } finally {
       setLoading(false);

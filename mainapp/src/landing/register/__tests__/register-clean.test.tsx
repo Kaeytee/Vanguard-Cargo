@@ -44,7 +44,7 @@ vi.mock('../../../components/ui/animate-in-view', () => ({
   // Explicitly type children as React.ReactNode for React.createElement compatibility
   default: React.forwardRef<HTMLDivElement, { className?: string; children?: React.ReactNode; [key: string]: unknown }>(
     ({ children, className, ...props }, ref) =>
-      React.createElement('div', { className: className || '', 'data-testid': 'animate-in-view', ref, ...props }, children)
+      React.createElement('div', { className: className || '', 'data-testid': 'animate-in-view', ref, ...props }, children as React.ReactNode)
   ),
 }))
 

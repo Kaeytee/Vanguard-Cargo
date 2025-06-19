@@ -58,6 +58,7 @@ describe('SubmitShipmentPage Component', () => {
     // Use type assertion for window.location
     delete (window as unknown as { location?: Location }).location;
     (window as unknown as { location: { href: string } }).location = { href: '/' };
+  }); // <-- Add this to close beforeEach
 
   it('renders the page title and description', () => {
     render(<SubmitShipmentPage />)
