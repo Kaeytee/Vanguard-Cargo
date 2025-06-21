@@ -6,14 +6,15 @@ import { cn } from "../lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 // import { useTheme } from "../context/ThemeProvider";
 import { useAuth } from "../context/AuthProvider";
-import Swal from "sweetalert2";
+import { useLogout } from "../hooks/useLogout";
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const location = useLocation();
   const pathname = location.pathname;
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
+  const { confirmLogout } = useLogout();
   const navRef = useRef<HTMLDivElement>(null);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
 
@@ -139,24 +140,9 @@ export default function Navbar() {
                   <span className="text-sm text-gray-600 mr-2">
                     {user.email}
                   </span>
-                )}
+                )}{" "}
                 <Button
-                  onClick={() => {
-                    Swal.fire({
-                      title: "Are you sure?",
-                      text: "Do you want to log out?",
-                      icon: "warning",
-                      showCancelButton: true,
-                      confirmButtonColor: "#ef4444",
-                      cancelButtonColor: "#6b7280",
-                      confirmButtonText: "Yes, log out",
-                      cancelButtonText: "Cancel",
-                    }).then((result: any) => {
-                      if (result.isConfirmed) {
-                        logout();
-                      }
-                    });
-                  }}
+                  onClick={confirmLogout}
                   variant="outline"
                   className="border-primary text-primary hover:bg-red-600/10"
                 >
@@ -255,7 +241,7 @@ export default function Navbar() {
                       </span>
                     )}{" "}
                     <Button
-                      onClick={logout}
+                      onClick={confirmLogout}
                       variant="outline"
                       className="w-full border-primary text-primary hover:bg-red-600/10"
                     >
