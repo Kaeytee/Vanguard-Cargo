@@ -269,13 +269,6 @@ const AppNavbar: React.FC<AppNavbarProps> = ({
                 </div>
                 <div className="p-2">
                   <Link
-                    to="/app/profile"
-                    className="flex items-center p-3 text-gray-700 hover:bg-gray-100 rounded-md text-sm font-medium transition-colors"
-                  >
-                    <User size={18} className="mr-3" />
-                    <span>My Profile</span>
-                  </Link>
-                  <Link
                     to="/app/settings"
                     className="flex items-center p-3 text-gray-700 hover:bg-gray-100 rounded-md text-sm font-medium transition-colors"
                   >
