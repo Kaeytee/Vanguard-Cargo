@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Search, Bell, User, Settings, LogOut, Menu, X } from "lucide-react";
+import { Search, Bell, Settings, LogOut, Menu, X } from "lucide-react";
 import { useAuth } from "../context/AuthProvider";
+import Swal from "sweetalert2";
 
 interface AppNavbarProps {
   onToggleSidebar?: () => void;
@@ -277,10 +278,23 @@ const AppNavbar: React.FC<AppNavbarProps> = ({
                   </Link>
                   <button
                     onClick={() => {
-                      logout();
-                      localStorage.removeItem("isAuthenticated");
-                      console.log("User logged out successfully");
-                      navigate("/login");
+                      Swal.fire({
+                        title: "Are you sure?",
+                        text: "Do you really want to logout?",
+                        icon: "warning",
+                        showCancelButton: true,
+                        confirmButtonColor: "#ef4444",
+                        cancelButtonColor: "#6b7280",
+                        confirmButtonText: "Yes, logout",
+                        cancelButtonText: "Cancel",
+                      }).then((result) => {
+                        if (result.isConfirmed) {
+                          logout();
+                          localStorage.removeItem("isAuthenticated");
+                          console.log("User logged out successfully");
+                          navigate("/login");
+                        }
+                      });
                     }}
                     className="flex w-full items-center p-3 text-gray-700 hover:bg-gray-100 rounded-md text-sm font-medium transition-colors"
                   >
