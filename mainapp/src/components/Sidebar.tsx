@@ -1,5 +1,5 @@
 import React from "react";
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 import {
   BarChart3,
   Package,
@@ -10,7 +10,7 @@ import {
   LogOut,
 } from "lucide-react";
 import { useAuth } from "../context/AuthProvider";
-import Swal from "sweetalert2";
+import { useLogout } from "../hooks/useLogout";
 
 /**
  * Sidebar - Navigation sidebar component for the application
@@ -22,11 +22,9 @@ import Swal from "sweetalert2";
  * @returns {JSX.Element} The Sidebar component
  */
 const Sidebar: React.FC = () => {
-  // Navigation hook for programmatic navigation
-  const navigate = useNavigate();
-
   // Get user data and logout function from auth context
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
+  const { confirmLogout } = useLogout();
 
   // Fallback user data if auth context user is null
   const userData = user || {
@@ -34,25 +32,6 @@ const Sidebar: React.FC = () => {
     email: "guest@example.com",
     image: "",
   };
-
-  /**
-   * Handle logout functionality
-   * Uses the AuthProvider context to logout and redirects user to login page
-   */
-  const handleLogout = () => {
-    // Call the logout function from auth context
-    logout();
-
-    // Also clear any additional auth data that might be in localStorage
-    localStorage.removeItem("isAuthenticated");
-
-    // Log the logout action
-    console.log("User logged out successfully");
-
-    // Redirect to login page
-    navigate("/login");
-  };
-
   /**
    * Navigation menu items configuration
    */
@@ -149,26 +128,10 @@ const Sidebar: React.FC = () => {
               <span className="font-medium text-sm">{item.label}</span>
             </NavLink>
           );
-        })}
-
+        })}{" "}
         {/* Logout button */}
         <button
-          onClick={() => {
-            Swal.fire({
-              title: "Are you sure?",
-              text: "Do you want to log out?",
-              icon: "warning",
-              showCancelButton: true,
-              confirmButtonColor: "#ef4444",
-              cancelButtonColor: "#6b7280",
-              confirmButtonText: "Yes, log out",
-              cancelButtonText: "Cancel",
-            }).then((result: any) => {
-              if (result.isConfirmed) {
-                handleLogout();
-              }
-            });
-          }}
+          onClick={confirmLogout}
           className="w-full flex items-center px-6 py-3 text-white bg-transparent border-0 cursor-pointer text-left text-sm font-medium hover:bg-white/10 transition-all duration-200 group hover:translate-x-1"
         >
           <LogOut
