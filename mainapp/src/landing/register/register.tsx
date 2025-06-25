@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Eye, EyeOff, Check } from 'lucide-react';
 import PhoneInput, { isValidPhoneNumber } from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
+import { parsePhoneNumber } from 'libphonenumber-js';
 import { cn } from '../../lib/utils';
 import AnimateInView from '../../components/ui/animate-in-view';
 import registerbg from '../../images/register-bg.jpg';
@@ -19,6 +20,11 @@ export default function Register() {
     lastName: '',
     email: '',
     phoneNumber: '',
+    address: '',
+    city: '',
+    state: '',
+    zip: '',
+    country: '',
     password: '',
     confirmPassword: '',
     agreeToTerms: false,
@@ -36,6 +42,11 @@ export default function Register() {
     password: string;
     confirmPassword: string;
     phoneNumber: string;
+    address: string;
+    city: string;
+    state: string;
+    zip: string;
+    country: string;
     agreeToTerms: string;
     general: string;
   }>({
@@ -45,6 +56,11 @@ export default function Register() {
     password: '',
     confirmPassword: '',
     phoneNumber: '',
+    address: '',
+    city: '',
+    state: '',
+    zip: '',
+    country: '',
     agreeToTerms: '',
     general: '',
   });
@@ -56,6 +72,11 @@ export default function Register() {
     email: boolean;
     password: boolean;
     confirmPassword: boolean;
+    address: boolean;
+    city: boolean;
+    state: boolean;
+    zip: boolean;
+    country: boolean;
     agreeToTerms: boolean;
   }>({
     firstName: false,
@@ -63,6 +84,11 @@ export default function Register() {
     email: false,
     password: false,
     confirmPassword: false,
+    address: false,
+    city: false,
+    state: false,
+    zip: false,
+    country: false,
     agreeToTerms: false,
   });
   const navigate = useNavigate();
@@ -79,11 +105,53 @@ export default function Register() {
 
   // Handle phone number change
   const handlePhoneChange = (value?: string) => {
+    // First update the phone number in the form data
     setFormData((prev) => ({ ...prev, phoneNumber: value || '' }));
+    
+    // Validate the phone number
     if (value && !isValidPhoneNumber(value)) {
       setPhoneError('Please enter a valid phone number');
-    } else {
-      setPhoneError('');
+      return; // Exit early if invalid
+    }
+    
+    // Clear any phone error
+    setPhoneError('');
+    
+    // Auto-set country based on phone number using libphonenumber-js
+    if (value) {
+      try {
+        // Parse the phone number to get country information
+        const phoneNumberData = parsePhoneNumber(value);
+        
+        if (phoneNumberData && phoneNumberData.country) {
+          // Get the country name from the country code
+          const countryName = new Intl.DisplayNames(['en'], { type: 'region' }).of(phoneNumberData.country);
+          
+          if (countryName) {
+            console.log('Setting country to:', countryName); // Debug log
+            
+            // Update the country field with the detected country name
+            // Use a separate state update to ensure it renders properly
+            setTimeout(() => {
+              setFormData((prev) => {
+                console.log('Previous form data:', prev); // Debug log
+                const updated = { ...prev, country: countryName };
+                console.log('Updated form data:', updated); // Debug log
+                return updated;
+              });
+              
+              // Mark the country field as touched to trigger validation
+              setTouched((prev) => ({ ...prev, country: true }));
+              
+              // Clear any country field error since we've set it automatically
+              setErrors((prev) => ({ ...prev, country: '' }));
+            }, 0);
+          }
+        }
+      } catch (error) {
+        // If there's an error parsing the phone number, don't update the country
+        console.log('Error detecting country from phone number:', error);
+      }
     }
   };
 
@@ -99,6 +167,11 @@ export default function Register() {
       password: '',
       confirmPassword: '',
       phoneNumber: '',
+      address: '',
+      city: '',
+      state: '',
+      zip: '',
+      country: '',
       agreeToTerms: '',
       general: '',
     };
@@ -113,6 +186,7 @@ export default function Register() {
       newErrors.confirmPassword = 'Passwords do not match';
     if (!formData.phoneNumber || !isValidPhoneNumber(formData.phoneNumber))
       newErrors.phoneNumber = 'Valid phone number is required';
+    if (!formData.country) newErrors.country = 'Country is required';
     if (!formData.agreeToTerms) newErrors.agreeToTerms = 'You must agree to the terms of service';
     return newErrors;
   };
@@ -132,12 +206,35 @@ export default function Register() {
       if (formData.email === 'test@example.com' || formData.email === 'existing@example.com') {
         setErrors((prev) => ({ ...prev, general: 'Email already exists' }));
       } else {
+        // Create user object with all collected information
+        const userId = `user_${Date.now()}`; // Generate a simple unique ID
+        const user = {
+          id: userId,
+          name: `${formData.firstName} ${formData.lastName}`,
+          email: formData.email,
+          phone: formData.phoneNumber,
+          address: formData.address,
+          city: formData.city,
+          state: formData.state,
+          zip: formData.zip,
+          country: formData.country
+        };
+        
+        // Save user to localStorage for demo purposes
+        // In a real app, this would be sent to a backend API
+        localStorage.setItem('user', JSON.stringify(user));
+        
         setSuccess(true);
         setFormData({
           firstName: '',
           lastName: '',
           email: '',
           phoneNumber: '',
+          address: '',
+          city: '',
+          state: '',
+          zip: '',
+          country: '',
           password: '',
           confirmPassword: '',
           agreeToTerms: false,
@@ -149,6 +246,11 @@ export default function Register() {
           email: false,
           password: false,
           confirmPassword: false,
+          address: false,
+          city: false,
+          state: false,
+          zip: false,
+          country: false,
           agreeToTerms: false,
         });
         setTimeout(() => navigate('/login'), 1000);
@@ -331,6 +433,144 @@ export default function Register() {
                         {phoneError}
                       </p>
                     )}
+                  </div>
+                  
+                  {/* Address Information Section */}
+                  <div className="mt-4 mb-2">
+                    <h3 className="text-md font-semibold text-gray-700">Address Information</h3>
+                    <p className="text-sm text-gray-500 mb-3">This information will be used for shipping documents</p>
+                  </div>
+                  
+                  <div>
+                    <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-1">
+                      Address
+                    </label>
+                    <input
+                      type="text"
+                      id="address"
+                      name="address"
+                      value={formData.address}
+                      onChange={handleInputChange}
+                      onBlur={handleBlur}
+                      placeholder="123 Main St"
+                      className={cn(
+                        'w-full px-4 py-2 border rounded-md transition-colors duration-200',
+                        errors.address && touched.address ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-red-500 focus:border-red-500'
+                      )}
+                      aria-invalid={!!errors.address}
+                      aria-describedby="address-error"
+                    />
+                    {errors.address && touched.address && (
+                      <p id="address-error" className="mt-1 text-sm text-red-600">
+                        {errors.address}
+                      </p>
+                    )}
+                  </div>
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-1">
+                        City
+                      </label>
+                      <input
+                        type="text"
+                        id="city"
+                        name="city"
+                        value={formData.city}
+                        onChange={handleInputChange}
+                        onBlur={handleBlur}
+                        placeholder="New York"
+                        className={cn(
+                          'w-full px-4 py-2 border rounded-md transition-colors duration-200',
+                          errors.city && touched.city ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-red-500 focus:border-red-500'
+                        )}
+                        aria-invalid={!!errors.city}
+                        aria-describedby="city-error"
+                      />
+                      {errors.city && touched.city && (
+                        <p id="city-error" className="mt-1 text-sm text-red-600">
+                          {errors.city}
+                        </p>
+                      )}
+                    </div>
+                    <div>
+                      <label htmlFor="state" className="block text-sm font-medium text-gray-700 mb-1">
+                        State/Province
+                      </label>
+                      <input
+                        type="text"
+                        id="state"
+                        name="state"
+                        value={formData.state}
+                        onChange={handleInputChange}
+                        onBlur={handleBlur}
+                        placeholder="NY"
+                        className={cn(
+                          'w-full px-4 py-2 border rounded-md transition-colors duration-200',
+                          errors.state && touched.state ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-red-500 focus:border-red-500'
+                        )}
+                        aria-invalid={!!errors.state}
+                        aria-describedby="state-error"
+                      />
+                      {errors.state && touched.state && (
+                        <p id="state-error" className="mt-1 text-sm text-red-600">
+                          {errors.state}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label htmlFor="zip" className="block text-sm font-medium text-gray-700 mb-1">
+                        Postal/ZIP Code
+                      </label>
+                      <input
+                        type="text"
+                        id="zip"
+                        name="zip"
+                        value={formData.zip}
+                        onChange={handleInputChange}
+                        onBlur={handleBlur}
+                        placeholder="10001"
+                        className={cn(
+                          'w-full px-4 py-2 border rounded-md transition-colors duration-200',
+                          errors.zip && touched.zip ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-red-500 focus:border-red-500'
+                        )}
+                        aria-invalid={!!errors.zip}
+                        aria-describedby="zip-error"
+                      />
+                      {errors.zip && touched.zip && (
+                        <p id="zip-error" className="mt-1 text-sm text-red-600">
+                          {errors.zip}
+                        </p>
+                      )}
+                    </div>
+                    <div>
+                      <label htmlFor="country" className="block text-sm font-medium text-gray-700 mb-1">
+                        Country *
+                      </label>
+                      <input
+                        type="text"
+                        id="country"
+                        name="country"
+                        value={formData.country}
+                        onChange={handleInputChange}
+                        onBlur={handleBlur}
+                        placeholder="United States"
+                        className={cn(
+                          'w-full px-4 py-2 border rounded-md transition-colors duration-200',
+                          errors.country && touched.country ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-red-500 focus:border-red-500'
+                        )}
+                        aria-invalid={!!errors.country}
+                        aria-describedby="country-error"
+                      />
+                      {errors.country && touched.country && (
+                        <p id="country-error" className="mt-1 text-sm text-red-600">
+                          {errors.country}
+                        </p>
+                      )}
+                    </div>
                   </div>
                   <div>
                     <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">

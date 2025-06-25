@@ -36,17 +36,10 @@ const Sidebar: React.FC = () => {
    * Navigation menu items configuration
    */
   const navigationItems = [
-<<<<<<< HEAD
-    { to: '/app/dashboard', icon: BarChart3, label: 'Dashboard' },
-    { to: '/app/submit-shipment', icon: Package, label: 'Submit Request' },
-    { to: '/app/shipment-history', icon: Clock, label: 'Shipment History' },
-    { to: '/app/settings', icon: Settings, label: 'Settings' }
-=======
     { to: "/app/dashboard", icon: BarChart3, label: "Dashboard" },
     { to: "/app/submit-shipment", icon: Package, label: "Submit Shipment" },
     { to: "/app/shipment-history", icon: Clock, label: "Shipment History" },
     { to: "/app/settings", icon: Settings, label: "Settings" },
->>>>>>> bdd3f68fd1166eee271f8bc058d9570173b086eb
   ];
 
   /**

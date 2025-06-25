@@ -25,7 +25,7 @@ interface ConfirmFormProps {
     packageCategory: string;
     packageDescription: string;
     freightType: string;
-    packageWeight?: string;
+    
     
     // Any other properties
     [key: string]: unknown;
@@ -115,8 +115,6 @@ const ConfirmForm: React.FC<ConfirmFormProps> = ({
             <div className="space-y-1">
               <InfoRow label="Origin Country" value={formData.originCountry} />
               <InfoRow label="Origin City" value={formData.originCity} />
-              <InfoRow label="Origin Address" value={formData.originAddress} />
-              <InfoRow label="Origin State" value={formData.originState} />
             </div>
           </div>
 
@@ -128,7 +126,6 @@ const ConfirmForm: React.FC<ConfirmFormProps> = ({
               <InfoRow label="Package Category" value={formData.packageCategory} />
               <InfoRow label="Description" value={formData.packageDescription} />
               <InfoRow label="Delivery Type" value={getDeliveryTypeLabel(formData.freightType)} />
-              <InfoRow label="Weight" value={formData.packageWeight ? `${formData.packageWeight} kg` : '-'} />
             </div>
           </div>
         </div>

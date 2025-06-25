@@ -5,6 +5,12 @@ interface User {
   name: string;
   email: string;
   image?: string;
+  phone: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  zip?: string;
+  country?: string;
 }
 
 interface AuthContextType {

@@ -16,10 +16,8 @@ const DELIVERY_TYPES = [
 ];
 
 const PACKAGE_TYPES = [
-  { id: "box", label: "Box" },
-  { id: "envelope", label: "Envelope" },
-  { id: "pallet", label: "Pallet" },
-  { id: "tube", label: "Tube" }
+  { id: "document", label: "Document" },
+  { id: "non-document", label: "Non-Document" }
 ];
 
 // Define the structure for package category options, including color for UI
