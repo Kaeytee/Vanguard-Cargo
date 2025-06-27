@@ -8,7 +8,7 @@ type DashboardCardConfig = Omit<DashboardCardProps, 'onClick'> & { href: string 
 // Dashboard card configuration array with title, icon, and action
 const dashboardCards: DashboardCardConfig[] = [
   {
-    title: "Submit Shipment",
+    title: "Submit Request",
     description: "Create a new delivery",
     imageSrc: "/submit-girl.png", // Person signing for package
     href: "/app/submit-shipment",

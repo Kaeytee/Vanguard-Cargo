@@ -1,14 +1,18 @@
 import React, { useState } from "react";
 import { FaUser } from "react-icons/fa6";
 import { FaCloudUploadAlt } from "react-icons/fa";
+import PhoneInput, { isValidPhoneNumber } from 'react-phone-number-input';
+import 'react-phone-number-input/style.css';
+import { parsePhoneNumber } from 'libphonenumber-js';
 import { initialUserData } from "../../lib/constants";
 import { useAuth } from '../../context/AuthProvider';
 
 export default function AccountSettings() {
   const [formData, setFormData] = useState(initialUserData);
   const [profileImage, setProfileImage] = useState<string | null>(null);
+  const [phoneError, setPhoneError] = useState('');
 
-    const { user } = useAuth();
+  const { user } = useAuth();
 
     const userData = user || {
     id: '',
@@ -20,6 +24,43 @@ export default function AccountSettings() {
   const onInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+  
+  // Handle phone number change with country auto-detection
+  const handlePhoneChange = (value?: string) => {
+    setFormData((prev) => ({ ...prev, senderPhone: value || '' }));
+    
+    // Validate the phone number
+    if (value && !isValidPhoneNumber(value)) {
+      setPhoneError('Please enter a valid phone number');
+      return; // Exit early if invalid
+    }
+    
+    // Clear any phone error
+    setPhoneError('');
+    
+    // Auto-set country based on phone number using libphonenumber-js
+    if (value) {
+      try {
+        // Parse the phone number to get country information
+        const phoneNumberData = parsePhoneNumber(value);
+        
+        if (phoneNumberData && phoneNumberData.country) {
+          // Get the country name from the country code
+          const countryName = new Intl.DisplayNames(['en'], { type: 'region' }).of(phoneNumberData.country);
+          
+          if (countryName) {
+            console.log('Setting country to:', countryName); // Debug log
+            
+            // Update the country field with the detected country name
+            setFormData((prev) => ({ ...prev, senderCountry: countryName }));
+          }
+        }
+      } catch (error) {
+        // If there's an error parsing the phone number, don't update the country
+        console.log('Error detecting country from phone number:', error);
+      }
+    }
   };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -163,16 +204,23 @@ export default function AccountSettings() {
             <label htmlFor="senderPhone" className="block text-sm font-semibold text-gray-700">
               Phone Number <span className="text-primary text-lg">*</span>
             </label>
-            <input
-              type="tel"
-              id="senderPhone"
-              name="senderPhone"
-              required
-              value={formData.senderPhone}
-              onChange={onInputChange}
-              placeholder="(233) 245-678-901"
-              className="w-full rounded-lg border border-gray-300 px-4 py-3 text-gray-900 bg-white shadow-sm focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all placeholder-gray-400 text-sm sm:text-base"
-            />
+            <div className="phone-input-container">
+              <PhoneInput
+                id="senderPhone"
+                name="senderPhone"
+                international
+                countryCallingCodeEditable={true}
+                defaultCountry="GH"
+                value={formData.senderPhone}
+                onChange={handlePhoneChange}
+                placeholder="Enter phone number"
+                className="w-full rounded-lg border border-gray-300 px-4 py-3 text-gray-900 bg-white shadow-sm focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all placeholder-gray-400 text-sm sm:text-base"
+                error={phoneError ? phoneError : undefined}
+              />
+              {phoneError && (
+                <p className="mt-1 text-sm text-red-600">{phoneError}</p>
+              )}
+            </div>
           </div>
 
           <div className="space-y-2">

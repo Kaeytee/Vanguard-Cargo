@@ -25,12 +25,35 @@ export default function Login() {
 
 		// Simulate login process
 		setTimeout(() => {
-			const mockUser = {
-				id: "1",
-				name: email.split("@")[0],
-				email: email,
-				image: "https://www.pngall.com/wp-content/uploads/12/Avatar-PNG-Background.png"
-			};
+			// Check if there's a stored user with this email in localStorage
+			// In a real app, this would be a server authentication request
+			const storedUserData = localStorage.getItem('user');
+			let mockUser;
+			
+			if (storedUserData) {
+				// If we have stored user data, parse it and use it
+				const storedUser = JSON.parse(storedUserData);
+				// Only use the stored user if the email matches
+				if (storedUser.email === email) {
+					mockUser = storedUser;
+				}
+			}
+			
+			// If no stored user was found or email didn't match, create a default user
+			if (!mockUser) {
+				mockUser = {
+					id: "user_" + Date.now(),
+					name: email.split("@")[0],
+					email: email,
+					image: "https://www.pngall.com/wp-content/uploads/12/Avatar-PNG-Background.png",
+					phone: "",
+					address: "",
+					city: "",
+					state: "",
+					zip: "",
+					country: ""
+				};
+			}
 
 			// Set user in AuthContext
 			setUser(mockUser);

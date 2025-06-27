@@ -1,0 +1,87 @@
+# Dependencies
+node_modules
+/.pnp
+.pnp.js
+.yarn/install-state.gz
+
+# Testing
+/coverage
+
+# Production
+/build
+/dist
+/dist-ssr
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+.idea
+.DS_Store
+.fleet
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# TypeScript
+*.tsbuildinfo
+
+# Compiled output
+*.compiled
+*.compiled.js
+*.min.js
+*.min.css
+
+# Cache
+.eslintcache
+.stylelintcache
+.cache
+.parcel-cache
+.rollup.cache
+.next
+.nuxt
+
+# Misc
+.sass-cache/
+.tmp/
+out/
+*.local
+temp/
+.temp
+
+# Debug
+.debug
+debug
+debug.log
+
+# Package managers
+yarn.lock
+package-lock.json
+# Comment the above lines if you want to commit the lock files
+
+# Build tooling
+.turbo
+.vercel
+.netlify
+.firebase/
+firebase-debug.log*

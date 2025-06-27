@@ -25,6 +25,29 @@ mainapp/
 
 ## About Page Implementation
 
+## Client Information Auto-Population Feature
+
+The application now collects comprehensive client information during registration and automatically uses this data throughout the application:
+
+1. **Enhanced Registration Form** - Collects additional client information including:
+   - Address
+   - City
+   - State
+   - ZIP/Postal Code
+   - Country
+
+2. **User Profile Storage** - All client information is stored in the user profile via the authentication context
+
+3. **Auto-Population in Shipment Forms** - When creating a new shipment, the ConfirmForm component automatically displays the client's information from their profile, eliminating the need to re-enter data
+
+4. **Implementation Details**:
+   - User interface in registration form organized with clear section headers
+   - Form validation ensures data completeness
+   - Data persisted in localStorage (in production would use secure backend storage)
+   - SubmitShipmentPage component handles auto-population of form data from user profile
+
+## About Page Implementation
+
 The About page has been implemented with the following sections:
 
 1. **Header Section** - Features company description and key benefits with checkmarks

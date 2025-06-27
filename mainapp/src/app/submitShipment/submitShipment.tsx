@@ -1,7 +1,8 @@
 // EMAIL_REGEX: File-level constant for robust email validation (clean code best practice)
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useAuth } from "../../context/AuthProvider";
 
 const useRouter = () => {
   return {
@@ -38,8 +39,29 @@ interface AddressSuggestion {
 }
 
 export default function SubmitShipmentPage() {
+  // Get user data from auth context
+  const { user } = useAuth();
+  
   // Initialize form with simplified data structure
   const { formData, setFormData, handleInputChange: baseHandleInputChange } = useShipmentForm(initialFormData);
+  
+  // Auto-populate client information from user profile when component mounts
+  useEffect(() => {
+    if (user) {
+      // Update form data with user information
+      setFormData(prevData => ({
+        ...prevData,
+        clientName: user.name || prevData.clientName,
+        clientEmail: user.email || prevData.clientEmail,
+        clientPhone: user.phone || prevData.clientPhone,
+        clientAddress: user.address || prevData.clientAddress,
+        clientCity: user.city || prevData.clientCity,
+        clientState: user.state || prevData.clientState,
+        clientZip: user.zip || prevData.clientZip,
+        clientCountry: user.country || prevData.clientCountry
+      }));
+    }
+  }, [user, setFormData]);
 
   // Enhanced handleInputChange: clears stepValidationError if set, for instant UX feedback
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -199,7 +221,9 @@ export default function SubmitShipmentPage() {
   // Step Rendering
   const renderStepContent = () => {
     // Fix stringifiedFormData to include all required properties
+    // Ensure all client information from the user profile is included
     const stringifiedFormData = {
+      // Client information - already auto-populated from user profile
       clientName: formData.clientName || "",
       clientEmail: formData.clientEmail || "",
       clientPhone: formData.clientPhone || "",
@@ -208,6 +232,8 @@ export default function SubmitShipmentPage() {
       clientState: formData.clientState || "",
       clientZip: formData.clientZip || "",
       clientCountry: formData.clientCountry || "",
+      
+      // Package information
       originCountry: formData.originCountry || "",
       originCity: formData.originCity || "",
       originAddress: formData.originAddress || "",
@@ -217,6 +243,8 @@ export default function SubmitShipmentPage() {
       packageDescription: formData.packageDescription || "",
       freightType: formData.freightType || "",
       packageWeight: formData.packageWeight || "",
+      
+      // Convert any boolean values to strings
       ...Object.fromEntries(
         Object.entries(formData).map(([key, value]) => [key, typeof value === 'boolean' ? String(value) : value])
       )

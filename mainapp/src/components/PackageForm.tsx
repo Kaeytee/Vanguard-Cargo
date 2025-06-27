@@ -16,10 +16,8 @@ const DELIVERY_TYPES = [
 ];
 
 const PACKAGE_TYPES = [
-  { id: "box", label: "Box" },
-  { id: "envelope", label: "Envelope" },
-  { id: "pallet", label: "Pallet" },
-  { id: "tube", label: "Tube" }
+  { id: "document", label: "Document" },
+  { id: "non-document", label: "Non-Document" }
 ];
 
 // Define the structure for package category options, including color for UI
@@ -209,7 +207,7 @@ const PackageForm: React.FC<PackageFormProps> = ({
               value={formData.packageDescription || ""}
               onChange={onInputChange}
               className="w-full rounded-lg border border-gray-400 px-4 py-3 text-gray-900 bg-white shadow-sm focus:border-navy-500 focus:ring-2 focus:ring-navy-200 transition-all placeholder-gray-400"
-              placeholder="Describe the package contents"
+              placeholder="What is inside the package"
               rows={4}
               required
             /></div>
