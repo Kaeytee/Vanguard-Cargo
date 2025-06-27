@@ -18,7 +18,8 @@ function TestComponent() {
         onClick={() => setUser({
           id: '1',
           name: 'Test User',
-          email: 'test@example.com'
+          email: 'test@example.com',
+          phone: '+1234567890'
         })}
         data-testid="set-user"
       >
@@ -29,7 +30,8 @@ function TestComponent() {
           id: '2',
           name: 'Another User',
           email: 'another@example.com',
-          image: 'https://example.com/avatar.jpg'
+          image: 'https://example.com/avatar.jpg',
+          phone: '+0987654321'
         })}
         data-testid="set-user-with-image"
       >
@@ -369,7 +371,7 @@ describe('AuthProvider', () => {
       })
       
       await waitFor(() => {
-        let storedUser = JSON.parse(localStorage.getItem('user')!)
+        const storedUser = JSON.parse(localStorage.getItem('user')!)
         expect(storedUser).not.toHaveProperty('image')
       })
       
@@ -379,7 +381,7 @@ describe('AuthProvider', () => {
       })
       
       await waitFor(() => {
-        let storedUser = JSON.parse(localStorage.getItem('user')!)
+        const storedUser = JSON.parse(localStorage.getItem('user')!)
         expect(storedUser).toHaveProperty('image')
         expect(storedUser.image).toBe('https://example.com/avatar.jpg')
       })
