@@ -20,7 +20,8 @@ function TestComponent() {
           setUser({
             id: '1',
             name: 'Test User',
-            email: 'test@example.com'
+            email: 'test@example.com',
+            phone: '+1234567890'
           })
         }}
         data-testid="set-user"

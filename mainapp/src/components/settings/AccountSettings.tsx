@@ -28,7 +28,7 @@ export default function AccountSettings() {
   
   // Handle phone number change with country auto-detection
   const handlePhoneChange = (value?: string) => {
-    setFormData((prev) => ({ ...prev, senderPhone: value || '' }));
+    setFormData((prev) => ({ ...prev, phoneNumber: value || '' }));
     
     // Validate the phone number
     if (value && !isValidPhoneNumber(value)) {
@@ -201,17 +201,17 @@ export default function AccountSettings() {
           </div>
 
           <div className="space-y-2">
-            <label htmlFor="senderPhone" className="block text-sm font-semibold text-gray-700">
+            <label htmlFor="phoneNumber" className="block text-sm font-semibold text-gray-700">
               Phone Number <span className="text-primary text-lg">*</span>
             </label>
             <div className="phone-input-container">
               <PhoneInput
-                id="senderPhone"
-                name="senderPhone"
+                id="phoneNumber"
+                name="phoneNumber"
                 international
                 countryCallingCodeEditable={true}
                 defaultCountry="GH"
-                value={formData.senderPhone}
+                value={formData.phoneNumber}
                 onChange={handlePhoneChange}
                 placeholder="Enter phone number"
                 className="w-full rounded-lg border border-gray-300 px-4 py-3 text-gray-900 bg-white shadow-sm focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all placeholder-gray-400 text-sm sm:text-base"
