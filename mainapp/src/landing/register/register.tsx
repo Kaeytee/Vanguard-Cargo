@@ -128,15 +128,15 @@ export default function Register() {
           const countryName = new Intl.DisplayNames(['en'], { type: 'region' }).of(phoneNumberData.country);
           
           if (countryName) {
-            console.log('Setting country to:', countryName); // Debug log
+            // Removed debug log for production
             
             // Update the country field with the detected country name
             // Use a separate state update to ensure it renders properly
             setTimeout(() => {
               setFormData((prev) => {
-                console.log('Previous form data:', prev); // Debug log
+                // Removed debug log for production
                 const updated = { ...prev, country: countryName };
-                console.log('Updated form data:', updated); // Debug log
+                // Removed debug log for production
                 return updated;
               });
               
