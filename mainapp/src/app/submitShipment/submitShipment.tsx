@@ -244,14 +244,14 @@ export default function SubmitShipmentPage() {
       freightType: formData.freightType || "",
       packageWeight: formData.packageWeight || "",
       
-      // Handle type conversions for API compatibility
+      // Include remaining form data while preserving data types
       ...Object.fromEntries(
         Object.entries(formData).map(([key, value]) => {
           // Keep boolean values as booleans for proper API handling
           if (typeof value === 'boolean') {
             return [key, value];
           }
-          // Convert other values to strings if needed
+          // Return other values unmodified
           return [key, value];
         })
       )
