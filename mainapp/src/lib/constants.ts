@@ -43,7 +43,7 @@ export const initialFormData = {
 	senderAddress: DUMMY_USER.address,
 	senderContact: DUMMY_USER.email,
 	senderEmail: DUMMY_USER.email,
-	senderPhone: DUMMY_USER.phone,
+	phoneNumber: DUMMY_USER.phone,
 	senderCity: DUMMY_USER.city,
 	senderState: DUMMY_USER.state,
 	senderZip: DUMMY_USER.zip,
@@ -81,7 +81,7 @@ export const initialUserData = {
 	senderContact: DUMMY_USER.phone,
 	// senderEmail represents the email address of the sender
 	senderEmail: DUMMY_USER.email,
-	senderPhone: DUMMY_USER.phone,
+	phoneNumber: DUMMY_USER.phone,
 	senderCity: DUMMY_USER.city,
 	senderState: DUMMY_USER.state,
 	senderZip: DUMMY_USER.zip,

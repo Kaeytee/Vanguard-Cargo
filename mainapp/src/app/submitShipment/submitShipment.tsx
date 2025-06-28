@@ -244,9 +244,16 @@ export default function SubmitShipmentPage() {
       freightType: formData.freightType || "",
       packageWeight: formData.packageWeight || "",
       
-      // Convert any boolean values to strings
+      // Handle type conversions for API compatibility
       ...Object.fromEntries(
-        Object.entries(formData).map(([key, value]) => [key, typeof value === 'boolean' ? String(value) : value])
+        Object.entries(formData).map(([key, value]) => {
+          // Keep boolean values as booleans for proper API handling
+          if (typeof value === 'boolean') {
+            return [key, value];
+          }
+          // Convert other values to strings if needed
+          return [key, value];
+        })
       )
     };
 
