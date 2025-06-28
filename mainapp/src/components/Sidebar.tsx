@@ -37,7 +37,7 @@ const Sidebar: React.FC = () => {
    */
   const navigationItems = [
     { to: "/app/dashboard", icon: BarChart3, label: "Dashboard" },
-    { to: "/app/submit-shipment", icon: Package, label: "Submit Shipment" },
+    { to: "/app/submit-shipment", icon: Package, label: "Submit package" },
     { to: "/app/shipment-history", icon: Clock, label: "Shipment History" },
     { to: "/app/settings", icon: Settings, label: "Settings" },
   ];
