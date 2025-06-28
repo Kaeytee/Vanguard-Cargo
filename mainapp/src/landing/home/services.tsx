@@ -69,7 +69,7 @@ export default function Services() {
                     onMouseLeave={() => setHoveredIndex(null)}
                   >
                     {/* Image Section with Icon Overlay */}
-                    <div className="relative h-48 overflow-hidden">
+                    <div className="relative h-48 ">
                       <img
                         src={service.image}
                         alt={`${service.title} image`}
