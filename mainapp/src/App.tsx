@@ -19,6 +19,8 @@ import AppAbout from "./app/about/Appabout";
 import AppSupport from "./app/support/Appsupport";
 import ProtectedRoutes from "./components/protectedRoutes";
 import AppLayout from "./components/AppLayout";
+import SmartNotFound from "./components/SmartNotFound";
+import AppNotFoundWithLayout from "./app/layouts/AppNotFoundWithLayout";
 
 /**
  * App - Main application component
@@ -127,6 +129,9 @@ export default function App() {
         
         {/* Default route for /app path */}
         <Route index element={<Dashboard />} />
+        
+        {/* 404 route for /app paths */}
+        <Route path="*" element={<AppNotFoundWithLayout />} />
       </Route>
 
       {/* Legacy routes - redirect to new structure for backward compatibility */}
@@ -140,7 +145,7 @@ export default function App() {
       <Route path="/tracking" element={<Navigate to="/app/tracking" replace />} />
 
       {/* 404 Route */}
-      <Route path="*" element={<div>404 Not Found</div>} />
+      <Route path="*" element={<SmartNotFound />} />
     </Routes>
   );
 }

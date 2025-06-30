@@ -3,6 +3,10 @@ import { Outlet } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import AppNavbar from './AppNavbar';
 
+interface AppLayoutProps {
+  children?: React.ReactNode;
+}
+
 /**
  * AppLayout - Main layout component for the application dashboard
  * 
@@ -10,17 +14,20 @@ import AppNavbar from './AppNavbar';
  * It follows the clean code architecture principles by separating concerns:
  * - Sidebar: Navigation component with responsive behavior
  * - AppNavbar: Top navigation bar component
- * - Outlet: Content area where child routes will be rendered
+ * - Outlet: Content area where child routes will be rendered (when used with Router)
+ * - Children: Content area for direct component rendering (when used without Router)
  * 
  * Features:
  * - Responsive design with mobile-first approach
  * - Collapsible sidebar on mobile/tablet
  * - Overlay sidebar on smaller screens
  * - Persistent sidebar state
+ * - Supports both Router Outlet and direct children rendering
  * 
+ * @param {AppLayoutProps} props - Component props
  * @returns {JSX.Element} The AppLayout component
  */
-const AppLayout: React.FC = () => {
+const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   // State for sidebar visibility on mobile/tablet
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
   
@@ -119,7 +126,7 @@ const AppLayout: React.FC = () => {
           <div className="h-full overflow-y-auto">
             <div className="p-4 sm:p-6 lg:p-8 min-h-full bg-gray-50">
               <div className="max-w-full">
-                <Outlet />
+                {children ? children : <Outlet />}
               </div>
             </div>
           </div>
