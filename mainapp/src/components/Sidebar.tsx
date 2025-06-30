@@ -8,6 +8,7 @@ import {
   Headphones,
   Info,
   LogOut,
+  Search,
 } from "lucide-react";
 import { useAuth } from "../context/AuthProvider";
 import { useLogout } from "../hooks/useLogout";
@@ -39,6 +40,7 @@ const Sidebar: React.FC = () => {
     { to: "/app/dashboard", icon: BarChart3, label: "Dashboard" },
     { to: "/app/submit-shipment", icon: Package, label: "Submit package" },
     { to: "/app/shipment-history", icon: Clock, label: "Shipment History" },
+    { to: "/app/tracking", icon: Search, label: "Track Package" },
     { to: "/app/settings", icon: Settings, label: "Settings" },
   ];
 

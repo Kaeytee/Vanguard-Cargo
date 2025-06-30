@@ -169,6 +169,19 @@ export default function SubmitShipmentPage() {
       return false;
     }
 
+    // International logistics validation - client cannot select their own country as origin
+    if (formData.originCountry && formData.clientCountry) {
+      const originCountry = formData.originCountry.toLowerCase();
+      const clientCountry = formData.clientCountry.toLowerCase();
+      
+      if (originCountry === clientCountry || 
+          (clientCountry === 'united states' && originCountry === 'united states') ||
+          (clientCountry === 'ghana' && originCountry === 'ghana')) {
+        setStepValidationError("International logistics only: You cannot select your own country as the package origin");
+        return false;
+      }
+    }
+
     setStepValidationError(null);
     return true;
   };

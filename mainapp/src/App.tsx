@@ -14,6 +14,7 @@ import Settings from "./app/settings/settings";
 import Profile from "./app/profile/profile";
 import ShipmentHistory from "./app/shipmentHistory/shipmentHistory";
 import SubmitShipment from "./app/submitShipment/submitShipment";
+import TrackingPage from "./app/tracking/tracking";
 import AppAbout from "./app/about/Appabout";
 import AppSupport from "./app/support/Appsupport";
 import ProtectedRoutes from "./components/protectedRoutes";
@@ -120,6 +121,7 @@ export default function App() {
         <Route path="settings" element={<Settings />} />
         <Route path="shipment-history" element={<ShipmentHistory />} />
         <Route path="submit-shipment" element={<SubmitShipment />} />
+        <Route path="tracking" element={<TrackingPage />} />
         <Route path="about" element={<AppAbout />} />
         <Route path="support" element={<AppSupport />} />
         
@@ -133,6 +135,7 @@ export default function App() {
       <Route path="/settings" element={<Navigate to="/app/settings" replace />} />
       <Route path="/shipmentHistory" element={<Navigate to="/app/shipment-history" replace />} />
       <Route path="/submitShipment" element={<Navigate to="/app/submit-shipment" replace />} />
+      <Route path="/tracking" element={<Navigate to="/app/tracking" replace />} />
 
       {/* 404 Route */}
       <Route path="*" element={<div>404 Not Found</div>} />

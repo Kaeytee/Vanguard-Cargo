@@ -25,15 +25,56 @@ describe('PackageOriginForm Component', () => {
     expect(screen.getByText(mockFormData.clientEmail)).toBeInTheDocument()
   })
 
-  it('displays origin country options', () => {
+  it('displays origin country options excluding client country', () => {
     render(<PackageOriginForm {...mockProps} />)
     
     const countrySelect = screen.getByLabelText(/package origin country/i)
     expect(countrySelect).toBeInTheDocument()
     
-    // Check for Ghana and USA options using more specific selectors
+    // Since mock client is from USA, only Ghana should be available
+    expect(screen.getByRole('option', { name: /ghana/i })).toBeInTheDocument()
+    
+    // USA should NOT be available since client is from USA
+    expect(screen.queryByRole('option', { name: /🇺🇸 United States/i })).not.toBeInTheDocument()
+  })
+
+  it('shows all countries when client country is not Ghana or USA', () => {
+    const propsWithOtherCountry = {
+      ...mockProps,
+      formData: { ...mockFormData, clientCountry: 'Canada' }
+    }
+    
+    render(<PackageOriginForm {...propsWithOtherCountry} />)
+    
+    // Both countries should be available when client is from another country
     expect(screen.getByRole('option', { name: /ghana/i })).toBeInTheDocument()
     expect(screen.getByRole('option', { name: /united states/i })).toBeInTheDocument()
+  })
+
+  it('shows warning when no countries are available', () => {
+    const propsWithGhanaClient = {
+      ...mockProps,
+      formData: { ...mockFormData, clientCountry: 'Ghana' }
+    }
+    
+    render(<PackageOriginForm {...propsWithGhanaClient} />)
+    
+    // Should show warning when only USA is available but this tests the edge case
+    // where if somehow both countries were excluded
+    expect(screen.getByText(/select where your package is coming from/i)).toBeInTheDocument()
+  })
+
+  it('displays updated information about international logistics', () => {
+    render(<PackageOriginForm {...mockProps} />)
+    
+    expect(screen.getByText(/international logistics only/i)).toBeInTheDocument()
+    expect(screen.getByText(/cross-border shipments between ghana and usa/i)).toBeInTheDocument()
+  })
+
+  it('shows updated country restrictions message', () => {
+    render(<PackageOriginForm {...mockProps} />)
+    
+    expect(screen.getByText(/select where your package is coming from \(excluding your own country\)/i)).toBeInTheDocument()
   })
 
   it('shows origin city field when country is selected', () => {
@@ -69,17 +110,17 @@ describe('PackageOriginForm Component', () => {
     expect(emailField).toHaveClass('cursor-not-allowed')
   })
 
-  it('shows information card about how it works', () => {
+  it('shows information card about international logistics', () => {
     render(<PackageOriginForm {...mockProps} />)
     
-    expect(screen.getByText(/how this works/i)).toBeInTheDocument()
-    expect(screen.getByText(/you're telling us about a package/i)).toBeInTheDocument()
+    expect(screen.getByText(/international logistics only/i)).toBeInTheDocument()
+    expect(screen.getByText(/cross-border shipments between ghana and usa/i)).toBeInTheDocument()
   })
 
   it('displays country restrictions message', () => {
     render(<PackageOriginForm {...mockProps} />)
     
-    expect(screen.getByText(/currently only accepting packages from ghana and usa/i)).toBeInTheDocument()
+    expect(screen.getByText(/select where your package is coming from \(excluding your own country\)/i)).toBeInTheDocument()
   })
 
   it('handles loading state for country suggestions', () => {

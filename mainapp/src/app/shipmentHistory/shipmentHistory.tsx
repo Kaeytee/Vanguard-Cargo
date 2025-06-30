@@ -7,8 +7,10 @@
  * -- Cascade AI
  */
 
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { Search, Calendar } from "lucide-react";
+import { getAllShipments } from "../../lib/mockShipmentData";
 
 /**
  * ShipmentHistoryPage component
@@ -18,6 +20,9 @@ import { Search, Calendar } from "lucide-react";
  * - Detailed shipment information table
  */
 export default function ShipmentHistoryPage() {
+  // Navigation hook for routing
+  const navigate = useNavigate();
+
   /**
    * Define the ShipmentType interface to ensure type safety and consistency
    * This defines the exact structure our data should have, making it easy to
@@ -38,7 +43,7 @@ export default function ShipmentHistoryPage() {
    * into the ShipmentType interface structure
    * @returns {Promise<ShipmentType[]>} A promise that resolves to an array of shipments
    */
-  const fetchShipments = async (): Promise<ShipmentType[]> => {
+  const fetchShipments = useCallback(async (): Promise<ShipmentType[]> => {
     // In a real implementation, we would call an API endpoint like this:
     // const response = await fetch('/api/shipments');
     // const data = await response.json();
@@ -51,66 +56,17 @@ export default function ShipmentHistoryPage() {
     //   status: item.currentStatus.toLowerCase()
     // }));
 
-    // For now, return static dummy data that matches our UI
-    return [
-      {
-        id: "SHIP2132",
-        date: "Feb 18, 2025",
-        destination: "Washington, DC",
-        recipient: "James Simmons",
-        type: "Box",
-        status: "pending",
-      },
-      {
-        id: "SHIP2132",
-        date: "Feb 17 2025",
-        destination: "Philadelphia, PA",
-        recipient: "Shirely Wong",
-        type: "parcel",
-        status: "delivered",
-      },
-      {
-        id: "SHIP2132",
-        date: "Feb 10, 2025",
-        destination: "Dallas, TX",
-        recipient: "Nicholas Anderson",
-        type: "Box",
-        status: "transit",
-      },
-      {
-        id: "SHIP2132",
-        date: "Jan 28, 2025",
-        destination: "Washington, DC",
-        recipient: "Joseph Smith",
-        type: "parcel",
-        status: "received",
-      },
-      {
-        id: "SHIP2132",
-        date: "Jan 18, 2025",
-        destination: "Las Vegas, NV",
-        recipient: "Dorothy Gray",
-        type: "Document",
-        status: "arrived",
-      },
-      {
-        id: "SHIP2132",
-        date: "Dec 28, 2025",
-        destination: "Minneapolis, MN",
-        recipient: "Robert King",
-        type: "parcel",
-        status: "received",
-      },
-      {
-        id: "SHIP2132",
-        date: "Nov 7, 2025",
-        destination: "Boston, MA",
-        recipient: "Kimberly Martin",
-        type: "Document",
-        status: "arrived",
-      },
-    ];
-  };
+    // Use shared mock data
+    const mockShipments = getAllShipments();
+    return mockShipments.map(shipment => ({
+      id: shipment.id,
+      date: shipment.date,
+      destination: shipment.destination,
+      recipient: shipment.recipient,
+      type: shipment.type,
+      status: shipment.status
+    }));
+  }, []);
 
   /**
    * Application state variables
@@ -294,7 +250,7 @@ export default function ShipmentHistoryPage() {
 
     // Call the function immediately
     getShipments();
-  }, []);
+  }, [fetchShipments]);
 
   // Define all possible shipment statuses
   const statuses = {
@@ -504,6 +460,15 @@ export default function ShipmentHistoryPage() {
         // Gray fallback for any unrecognized status
         return `${baseStyles} bg-gray-100 text-gray-800`;
     }
+  };
+
+  /**
+   * Handle shipment row click - navigate to tracking page with tracking ID
+   * @param {string} trackingId The tracking ID of the clicked shipment
+   */
+  const handleShipmentClick = (trackingId: string) => {
+    // Navigate to tracking page with the tracking ID as a URL parameter
+    navigate(`/app/tracking?id=${encodeURIComponent(trackingId)}`);
   };
 
   return (
@@ -828,7 +793,12 @@ export default function ShipmentHistoryPage() {
                 <tbody className="bg-white divide-y divide-gray-200">
                   {/* Display only the current page items using paginationData.currentItems */}
                   {paginationData.currentItems.map((shipment, index) => (
-                    <tr key={index} className="hover:bg-gray-50">
+                    <tr
+                      key={index}
+                      className="hover:bg-gray-50 cursor-pointer transition-colors duration-200"
+                      onClick={() => handleShipmentClick(shipment.id)}
+                      title={`Click to track shipment ${shipment.id}`}
+                    >
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                         {shipment.id}
                       </td>
