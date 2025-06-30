@@ -1,7 +1,69 @@
-import React from 'react';
+import { useState } from 'react';
 import { FaShieldAlt } from 'react-icons/fa';
+import { apiService } from '../../services/api';
 
-const SecuritySettings: React.FC = () => {
+function SecuritySettings() {
+  const [passwords, setPasswords] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setPasswords(prev => ({ ...prev, [name]: value }));
+    // Clear messages on input change
+    setError(null);
+    setSuccessMessage(null);
+  };
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    
+    // Validation
+    if (passwords.newPassword !== passwords.confirmPassword) {
+      setError('New passwords do not match');
+      return;
+    }
+    
+    if (passwords.newPassword.length < 8) {
+      setError('Password must be at least 8 characters long');
+      return;
+    }
+    
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const response = await apiService.changePassword({
+        currentPassword: passwords.currentPassword,
+        newPassword: passwords.newPassword,
+        confirmPassword: passwords.confirmPassword
+      });
+      
+      if (response.success) {
+        setSuccessMessage('Password changed successfully!');
+        // Clear form
+        setPasswords({
+          currentPassword: '',
+          newPassword: '',
+          confirmPassword: ''
+        });
+        // Auto-clear success message after 3 seconds
+        setTimeout(() => setSuccessMessage(null), 3000);
+      } else {
+        setError(response.error || 'Failed to change password');
+      }
+    } catch {
+      setError('Failed to change password. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="max-w-3xl mx-auto">
       <div className="flex text-xl font-semibold mb-2">
@@ -10,38 +72,67 @@ const SecuritySettings: React.FC = () => {
       </div>
       <p className="text-gray-500 mb-6">Manage your account security</p>
       
-      <form className="space-y-6">
+      {/* Error State */}
+      {error && (
+        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+          <p className="text-red-800 text-sm">{error}</p>
+        </div>
+      )}
+
+      {/* Success State */}
+      {successMessage && (
+        <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+          <p className="text-green-800 text-sm">{successMessage}</p>
+        </div>
+      )}
+      
+      <form onSubmit={handleSubmit} className="space-y-6">
         <div>
-          <label htmlFor="current-password" className="block text-md font-semibold mb-2">
+          <label htmlFor="currentPassword" className="block text-md font-semibold mb-2">
             Current Password
           </label>
           <input
             type="password"
-            id="current-password"
+            id="currentPassword"
+            name="currentPassword"
+            value={passwords.currentPassword}
+            onChange={handlePasswordChange}
+            required
             className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
             placeholder="Enter current password"
           />
         </div>
 
         <div>
-          <label htmlFor="new-password" className="block text-md font-semibold mb-2">
+          <label htmlFor="newPassword" className="block text-md font-semibold mb-2">
             New Password
           </label>
           <input
             type="password"
-            id="new-password"
+            id="newPassword"
+            name="newPassword"
+            value={passwords.newPassword}
+            onChange={handlePasswordChange}
+            required
+            minLength={8}
             className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
             placeholder="Enter new password"
           />
+          <p className="text-xs text-gray-500 mt-1">Password must be at least 8 characters long</p>
         </div>
 
         <div>
-          <label htmlFor="confirm-password" className="block text-md font-semibold mb-2">
+          <label htmlFor="confirmPassword" className="block text-md font-semibold mb-2">
             Confirm New Password
           </label>
           <input
             type="password"
-            id="confirm-password"
+            id="confirmPassword"
+            name="confirmPassword"
+            value={passwords.confirmPassword}
+            onChange={handlePasswordChange}
+            required
+            minLength={8}
             className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
             placeholder="Confirm new password"
           />
@@ -49,29 +140,10 @@ const SecuritySettings: React.FC = () => {
 
         <button
           type="submit"
-          className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-secondary hover:text-primary border-2 border-primary hover:border-2 transition-colors mt-2"
+          disabled={loading}
+          className="w-full bg-red-500 text-white py-2 px-4 rounded-lg hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          Update Password
-        </button>
-
-        <div>
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-md font-semibold">Two-Factor Authentication</h3>
-              <p className="text-gray-400">Add an extra layer of security</p>
-            </div>
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input type="checkbox" className="sr-only peer" />
-              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-600"></div>
-            </label>
-          </div>
-        </div>
-
-        <button
-          type="submit"
-          className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-secondary hover:text-primary border-2 border-primary hover:border-2 transition-colors"
-        >
-          Update Security Settings
+          {loading ? 'Changing Password...' : 'Change Password'}
         </button>
       </form>
     </div>

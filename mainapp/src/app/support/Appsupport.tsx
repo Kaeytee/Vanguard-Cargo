@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { Phone, HelpCircle } from "lucide-react";
 import FaqSection from "../../components/support/FaqSection";
 import ContactSection from "../../components/support/ContactSection";
+import { useTranslation } from "../../lib/translations";
 
 /**
  * AppSupport - Client app support page
@@ -15,6 +16,7 @@ import ContactSection from "../../components/support/ContactSection";
 const AppSupport: React.FC = () => {
   // Active section state
   const [activeSection, setActiveSection] = useState<"faq" | "contact">("faq");
+  const { t } = useTranslation();
 
   // Animation variants
   const containerVariants = {
@@ -47,9 +49,9 @@ const AppSupport: React.FC = () => {
         transition={{ duration: 0.5 }}
         className="mb-10"
       >
-        <h1 className="text-3xl font-bold text-gray-800 mb-2">Support</h1>
+        <h1 className="text-3xl font-bold text-gray-800 mb-2">{t('supportCenter')}</h1>
         <p className="text-gray-600 text-lg">
-          Get help with your shipments, and services.
+          {t('howCanWeHelp')}
         </p>{" "}
       </motion.div>{" "}
       <motion.div

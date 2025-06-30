@@ -1,312 +1,276 @@
-import React, { useState } from "react";
-import { FaUser } from "react-icons/fa6";
-import { FaCloudUploadAlt } from "react-icons/fa";
-import PhoneInput, { isValidPhoneNumber } from 'react-phone-number-input';
-import 'react-phone-number-input/style.css';
-import { parsePhoneNumber } from 'libphonenumber-js';
-import { initialUserData } from "../../lib/constants";
-import { useAuth } from '../../context/AuthProvider';
+import { useState, useEffect } from 'react';
+import { apiService } from '../../services/api';
 
 export default function AccountSettings() {
-  const [formData, setFormData] = useState(initialUserData);
-  const [profileImage, setProfileImage] = useState<string | null>(null);
-  const [phoneError, setPhoneError] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  const { user } = useAuth();
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    address: '',
+    city: '',
+    state: '',
+    zip: '',
+    country: ''
+  });
 
-    const userData = user || {
-    id: '',
-    name: 'Guest User',
-    email: 'guest@example.com',
-    image: ''
-  };
+  useEffect(() => {
+    loadUserProfile();
+  }, []);
 
-  const onInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-  
-  // Handle phone number change with country auto-detection
-  const handlePhoneChange = (value?: string) => {
-    setFormData((prev) => ({ ...prev, phoneNumber: value || '' }));
-    
-    // Validate the phone number
-    if (value && !isValidPhoneNumber(value)) {
-      setPhoneError('Please enter a valid phone number');
-      return; // Exit early if invalid
-    }
-    
-    // Clear any phone error
-    setPhoneError('');
-    
-    // Auto-set country based on phone number using libphonenumber-js
-    if (value) {
-      try {
-        // Parse the phone number to get country information
-        const phoneNumberData = parsePhoneNumber(value);
-        
-        if (phoneNumberData && phoneNumberData.country) {
-          // Get the country name from the country code
-          const countryName = new Intl.DisplayNames(['en'], { type: 'region' }).of(phoneNumberData.country);
-          
-          if (countryName) {
-            console.log('Setting country to:', countryName); // Debug log
-            
-            // Update the country field with the detected country name
-            setFormData((prev) => ({ ...prev, senderCountry: countryName }));
-          }
-        }
-      } catch (error) {
-        // If there's an error parsing the phone number, don't update the country
-        console.log('Error detecting country from phone number:', error);
+  const loadUserProfile = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await apiService.getUserProfile();
+      
+      if (response.success && response.data) {
+        setFormData({
+          firstName: response.data.firstName || '',
+          lastName: response.data.lastName || '',
+          email: response.data.email || '',
+          phone: response.data.phone || '',
+          address: response.data.address || '',
+          city: response.data.city || '',
+          state: response.data.state || '',
+          zip: response.data.zip || '',
+          country: response.data.country || ''
+        });
+      } else {
+        setError(response.message || 'Failed to load profile');
       }
+    } catch (err) {
+      setError('Failed to load user profile');
+      console.error('Error loading profile:', err);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        setProfileImage(event.target?.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
   };
 
-  const handleDeleteImage = () => {
-    setProfileImage(null);
-  };
-
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle form submission here
-    console.log("Form submitted:", formData);
+    setSaving(true);
+    setError(null);
+    setSuccessMessage(null);
+
+    try {
+      const response = await apiService.updateUserProfile(formData);
+      
+      if (response.success) {
+        setSuccessMessage('Profile updated successfully!');
+        // Reload the form with updated data
+        await loadUserProfile();
+      } else {
+        setError(response.message || 'Failed to update profile');
+      }
+    } catch (err) {
+      setError('Failed to update profile');
+      console.error('Error updating profile:', err);
+    } finally {
+      setSaving(false);
+    }
   };
-  return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div className="mb-6">
-        <h2 className="flex items-center text-xl sm:text-2xl font-semibold mb-2">
-          Account Settings
-        </h2>
-        <p className="text-gray-500 text-sm sm:text-base">
-          Manage your account details and preferences
-        </p>
-      </div>
 
-      {/* Profile Picture Section */}
-      <div className="bg-white rounded-lg mb-6">
-        <div className="flex flex-col sm:flex-row items-center sm:items-start space-y-4 sm:space-y-0 sm:space-x-6">          {/* Profile Picture */}
-          <div className="relative flex-shrink-0">
-            <label className="cursor-pointer">
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleImageUpload}
-                className="hidden"
-              />
-              <div className="w-14 h-14 sm:w-18 sm:h-18 rounded-full bg-gradient-to-br from-primary/20 to-primary/40 flex items-center justify-center overflow-hidden border-4 border-white shadow-lg hover:shadow-xl transition-shadow">
-                {profileImage ? (
-                  <img
-                    src={profileImage}
-                    alt="Profile"
-                    className="w-full h-full object-cover"
-                  />
-                ) : userData.image ? (
-                  <img
-                    src={userData.image}
-                    alt="User"
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(userData.name)}&background=ef4444&color=ffffff&size=64`;
-                    }}
-                  />
-                ) : (
-                  <FaUser className="text-gray-400 text-4xl" />
-                )}
-              </div>
-              {/* Small upload indicator */}
-              <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center border-2 bg-primary border-white hover:bg-primary/90 transition-colors">
-                <FaCloudUploadAlt className="text-white text-xs" />
-              </div>
-            </label>
-          </div>
-
-          {/* User Info and Buttons */}
-          <div className="flex-1 text-center sm:text-left">
-            <h3 className="text-lg font-semibold text-gray-900">
-              {formData.senderName || 'Austin Bediako'}
-            </h3>
-            <p className="text-gray-500 text-sm">
-              {formData.senderEmail || 'test@example.com'}
-            </p>
-            
-            <div className="flex flex-col sm:flex-row gap-3 mt-4">
-              <label className="cursor-pointer">
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageUpload}
-                  className="hidden"
-                />
-                <span className="inline-flex items-center justify-center w-full sm:w-auto px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 transition-colors">
-                  Upload New Photo
-                </span>
-              </label>
-              
-              <button
-                type="button"
-                onClick={handleDeleteImage}
-                disabled={!profileImage}
-                className="inline-flex items-center justify-center w-full sm:w-auto px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Delete
-              </button>
-            </div>
+  if (loading) {
+    return (
+      <div className="bg-white rounded-lg shadow-md">
+        <div className="p-6 border-b border-gray-200">
+          <h2 className="text-xl font-semibold text-gray-900">Account Settings</h2>
+        </div>
+        <div className="p-6">
+          <div className="flex items-center justify-center p-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            <span className="ml-2">Loading profile...</span>
           </div>
         </div>
-      </div>      <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="space-y-2">
-            <label htmlFor="senderName" className="block text-sm font-semibold text-gray-700">
-              Full Name <span className="text-primary text-lg">*</span>
-            </label>
-            <input
-              type="text"
-              id="senderName"
-              name="senderName"
-              required
-              value={formData.senderName}
-              onChange={onInputChange}
-              placeholder="Enter your full name"
-              className="w-full rounded-lg border border-gray-300 px-4 py-3 text-gray-900 bg-white shadow-sm focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all placeholder-gray-400 text-sm sm:text-base"
-            />
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-white rounded-lg shadow-md">
+      <div className="p-6 border-b border-gray-200">
+        <h2 className="text-xl font-semibold text-gray-900">Account Settings</h2>
+      </div>
+      <div className="p-6">
+        {error && (
+          <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-md">
+            <p className="text-red-800">{error}</p>
+          </div>
+        )}
+        
+        {successMessage && (
+          <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-md">
+            <p className="text-green-800">{successMessage}</p>
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="firstName" className="block text-sm font-medium text-gray-700">
+                First Name
+              </label>
+              <input
+                type="text"
+                name="firstName"
+                id="firstName"
+                value={formData.firstName}
+                onChange={handleInputChange}
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                required
+              />
+            </div>
+
+            <div>
+              <label htmlFor="lastName" className="block text-sm font-medium text-gray-700">
+                Last Name
+              </label>
+              <input
+                type="text"
+                name="lastName"
+                id="lastName"
+                value={formData.lastName}
+                onChange={handleInputChange}
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                required
+              />
+            </div>
           </div>
 
-          <div className="space-y-2">
-            <label htmlFor="senderEmail" className="block text-sm font-semibold text-gray-700">
-              Email <span className="text-primary text-lg">*</span>
+          <div>
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+              Email Address
             </label>
             <input
               type="email"
-              id="senderEmail"
-              name="senderEmail"
+              name="email"
+              id="email"
+              value={formData.email}
+              onChange={handleInputChange}
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
               required
-              value={formData.senderEmail}
-              onChange={onInputChange}
-              placeholder="your.email@example.com"
-              className="w-full rounded-lg border border-gray-300 px-4 py-3 text-gray-900 bg-white shadow-sm focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all placeholder-gray-400 text-sm sm:text-base"
             />
           </div>
 
-          <div className="space-y-2">
-            <label htmlFor="phoneNumber" className="block text-sm font-semibold text-gray-700">
-              Phone Number <span className="text-primary text-lg">*</span>
-            </label>
-            <div className="phone-input-container">
-              <PhoneInput
-                id="phoneNumber"
-                name="phoneNumber"
-                international
-                countryCallingCodeEditable={true}
-                defaultCountry="GH"
-                value={formData.phoneNumber}
-                onChange={handlePhoneChange}
-                placeholder="Enter phone number"
-                className="w-full rounded-lg border border-gray-300 px-4 py-3 text-gray-900 bg-white shadow-sm focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all placeholder-gray-400 text-sm sm:text-base"
-                error={phoneError ? phoneError : undefined}
-              />
-              {phoneError && (
-                <p className="mt-1 text-sm text-red-600">{phoneError}</p>
-              )}
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <label htmlFor="senderAddress" className="block text-sm font-semibold text-gray-700">
-              Address <span className="text-primary text-lg">*</span>
+          <div>
+            <label htmlFor="phone" className="block text-sm font-medium text-gray-700">
+              Phone Number
             </label>
             <input
-              type="text"
-              id="senderAddress"
-              name="senderAddress"
-              required
-              value={formData.senderAddress}
-              onChange={onInputChange}
-              placeholder="Enter your street address"
-              className="w-full rounded-lg border border-gray-300 px-4 py-3 text-gray-900 bg-white shadow-sm focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all placeholder-gray-400 text-sm sm:text-base"
+              type="tel"
+              name="phone"
+              id="phone"
+              value={formData.phone}
+              onChange={handleInputChange}
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <label htmlFor="senderCountry" className="block text-sm font-semibold text-gray-700">
-                Country <span className="text-primary text-lg">*</span>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="md:col-span-2">
+              <label htmlFor="address" className="block text-sm font-medium text-gray-700">
+                Address
               </label>
               <input
                 type="text"
-                id="senderCountry"
-                name="senderCountry"
-                required
-                value={formData.senderCountry}
-                onChange={onInputChange}
-                placeholder="Enter your country"
-                className="w-full rounded-lg border border-gray-300 px-4 py-3 text-gray-900 bg-white shadow-sm focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all placeholder-gray-400 text-sm sm:text-base"
+                name="address"
+                id="address"
+                value={formData.address}
+                onChange={handleInputChange}
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
 
-            <div className="space-y-2">
-              <label htmlFor="senderCity" className="block text-sm font-semibold text-gray-700">
-                City <span className="text-primary text-lg">*</span>
+            <div>
+              <label htmlFor="city" className="block text-sm font-medium text-gray-700">
+                City
               </label>
               <input
                 type="text"
-                id="senderCity"
-                name="senderCity"
-                required
-                value={formData.senderCity}
-                onChange={onInputChange}
-                placeholder="Enter your city"
-                className="w-full rounded-lg border border-gray-300 px-4 py-3 text-gray-900 bg-white shadow-sm focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all placeholder-gray-400 text-sm sm:text-base"
+                name="city"
+                id="city"
+                value={formData.city}
+                onChange={handleInputChange}
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="state" className="block text-sm font-medium text-gray-700">
+                State/Province
+              </label>
+              <input
+                type="text"
+                name="state"
+                id="state"
+                value={formData.state}
+                onChange={handleInputChange}
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="zip" className="block text-sm font-medium text-gray-700">
+                ZIP/Postal Code
+              </label>
+              <input
+                type="text"
+                name="zip"
+                id="zip"
+                value={formData.zip}
+                onChange={handleInputChange}
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="country" className="block text-sm font-medium text-gray-700">
+                Country
+              </label>
+              <input
+                type="text"
+                name="country"
+                id="country"
+                value={formData.country}
+                onChange={handleInputChange}
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
           </div>
 
-          <div className="space-y-2">
-            <label htmlFor="senderZip" className="block text-sm font-semibold text-gray-700">
-              Zip Code <span className="text-primary text-lg">*</span>
-            </label>
-            <input
-              type="text"
-              id="senderZip"
-              name="senderZip"
-              required
-              value={formData.senderZip}
-              onChange={onInputChange}
-              placeholder="Enter your ZIP/postal code"
-              className="w-full rounded-lg border border-gray-300 px-4 py-3 text-gray-900 bg-white shadow-sm focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all placeholder-gray-400 text-sm sm:text-base"
-            />
+          <div className="flex justify-end space-x-3">
+            <button
+              type="button"
+              onClick={loadUserProfile}
+              className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              disabled={loading || saving}
+            >
+              Reset
+            </button>
+            <button
+              type="submit"
+              disabled={saving}
+              className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {saving ? 'Saving...' : 'Save Changes'}
+            </button>
           </div>
-
-        </div>
-
-        <div className="flex flex-col sm:flex-row gap-4 pt-6">
-          <button
-            type="submit"
-            className="w-full sm:w-auto px-6 py-3 bg-red-600 text-white text-sm sm:text-base font-medium rounded-lg hover:bg-red-600/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 transition-colors"
-          >
-            Save Account Settings
-          </button>
-          
-          <button
-            type="button"
-            className="w-full sm:w-auto px-6 py-3 bg-gray-100 text-gray-700 text-sm sm:text-base font-medium rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors"
-          >
-            Cancel
-          </button>
-        </div>
-      </form>
+        </form>
+      </div>
     </div>
   );
 }

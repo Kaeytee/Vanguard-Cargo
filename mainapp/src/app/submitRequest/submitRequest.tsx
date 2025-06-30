@@ -38,7 +38,7 @@ interface AddressSuggestion {
   };
 }
 
-export default function SubmitShipmentPage() {
+export default function SubmitRequestPage() {
   // Get user data from auth context
   const { user } = useAuth();
   
@@ -330,8 +330,7 @@ export default function SubmitShipmentPage() {
     setIsSubmitting(true);
     setValidationErrors([]);
     setLoaderStatus('loading');
-    setShowLoader(true);
-    setLoaderMessage('Processing your shipment request...');
+    setShowLoader(true);      setLoaderMessage('Processing your package request...');
 
     try {
       // In a real application, this would submit to an API
@@ -347,13 +346,13 @@ export default function SubmitShipmentPage() {
 
       // Wait a moment before redirecting to shipment-history
       setTimeout(() => {
-        // Navigate to shipment history page to see the new shipment
+        // Navigate to shipment history page to see the new request
         router.push('/app/shipment-history');
       }, 1500);
 
     } catch (error) {
       // Handle submission errors gracefully
-      console.error("Error submitting shipment request:", error);
+      console.error("Error submitting package request:", error);
       setLoaderStatus('error');
       setLoaderMessage('There was an error submitting your request. Please try again.');
 
@@ -379,9 +378,9 @@ export default function SubmitShipmentPage() {
 
   return (
     <div className="min-h-screen px-4 sm:px-10 py-6 bg-gray-100 transition-colors duration-300">
-      <h1 className="text-2xl font-bold mb-2">Submit a New Shipment</h1>
+      <h1 className="text-2xl font-bold mb-2">Submit a New Request</h1>
       <p className="mb-6 text-gray-400">
-        Fill out the form below to create a new shipment request.
+        Fill out the form below to create a new package request.
       </p>
 
       {/* Popup Loader */}
@@ -420,7 +419,7 @@ export default function SubmitShipmentPage() {
                   onClick={closeLoader}
                   className="px-4 py-2 bg-[#1A2B6D] text-white rounded-md hover:bg-[#0F1A45] transition-colors duration-200"
                 >
-                  {loaderStatus === 'success' ? 'View Shipments' : 'Try Again'}
+                  {loaderStatus === 'success' ? 'View Requests' : 'Try Again'}
                 </button>
               )}
             </div>

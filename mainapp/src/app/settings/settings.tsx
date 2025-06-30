@@ -11,18 +11,20 @@ import AccountSettings from "../../components/settings/AccountSettings";
 import NotificationSettings from "../../components/settings/NotificationSettings";
 import PreferencesSettings from "../../components/settings/PreferencesSettings";
 import SecuritySettings from "../../components/settings/SecuritySettings";
+import { useTranslation } from "../../lib/translations";
 
 const ClientSettingsPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<
     "account" | "notification" | "preferences" | "security"
   >("account");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const { t } = useTranslation();
 
   const menuItems = [
-    { id: "account", icon: FaUser, label: "Account" },
-    { id: "notification", icon: MdNotificationsNone, label: "Notification" },
-    { id: "preferences", icon: FaGlobeAsia, label: "Preferences" },
-    { id: "security", icon: MdOutlineLockPerson, label: "Security" },
+    { id: "account", icon: FaUser, label: t("accountSettings") },
+    { id: "notification", icon: MdNotificationsNone, label: t("notificationSettings") },
+    { id: "preferences", icon: FaGlobeAsia, label: t("preferencesSettings") },
+    { id: "security", icon: MdOutlineLockPerson, label: t("securitySettings") },
   ];
 
   const handleTabChange = (tabId: typeof activeTab) => {
@@ -48,11 +50,11 @@ const ClientSettingsPage: React.FC = () => {
   const activeMenuItem = menuItems.find((item) => item.id === activeTab);
 
   return (
-    <div className="min-h-screen px-4 sm:px-10 py-6transition-colors duration-300">
+    <div className="min-h-screen px-4 sm:px-10 py-6 transition-colors duration-300">
       <div>
         <div>
-          <h1 className="text-2xl font-bold mb-2">Settings</h1>
-      <p className="mb-6 text-gray-400">Set up your preferences</p>
+          <h1 className="text-2xl font-bold mb-2">{t("settings")}</h1>
+          <p className="mb-6 text-gray-400">Set up your preferences</p>
         </div>
 
         <div>

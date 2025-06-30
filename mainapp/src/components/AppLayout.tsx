@@ -100,7 +100,7 @@ const AppLayout: React.FC = () => {
         ${isLargeScreen ? 'block' : ''}
       `}>
         <div className="h-full">
-          <Sidebar />
+          <Sidebar onNavigate={closeSidebar} />
         </div>
       </div>
       

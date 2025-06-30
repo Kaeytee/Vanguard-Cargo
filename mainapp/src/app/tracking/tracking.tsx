@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Search, Package, MapPin, Clock, CheckCircle, AlertCircle, Truck, Ship, Calendar, User, Phone, Mail, Copy, RefreshCw } from "lucide-react";
-import { getShipmentById, type MockShipmentData } from "../../lib/mockShipmentData";
+import { apiService, type ShipmentData } from "../../services/api";
+import { usePreferences } from "../../context/PreferencesProvider";
+import { useTranslation } from "../../lib/translations";
 
 // Interface for tracking events
 interface TrackingEvent {
@@ -42,6 +44,8 @@ interface ShipmentDetails {
 
 const TrackingPage: React.FC = () => {
   const [searchParams] = useSearchParams();
+  const { formatWeight } = usePreferences();
+  const { t } = useTranslation();
   const [trackingNumber, setTrackingNumber] = useState<string>("");
   const [shipmentData, setShipmentData] = useState<ShipmentDetails | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
@@ -59,7 +63,7 @@ const TrackingPage: React.FC = () => {
 
   // Generate tracking events based on shipment status and data
   // This reflects the warehouse-to-warehouse business model: Foreign warehouse → Local warehouse → Customer pickup
-  const generateTrackingEvents = useCallback((shipment: MockShipmentData): TrackingEvent[] => {
+  const generateTrackingEvents = useCallback((shipment: ShipmentData): TrackingEvent[] => {
     const events: TrackingEvent[] = [];
     const createdDate = new Date(shipment.created);
 
@@ -232,44 +236,7 @@ const TrackingPage: React.FC = () => {
     return events.reverse();
   }, []);
 
-  // Get shipment data from shared mock data
-  const getMockShipmentData = useCallback((trackingId: string): ShipmentDetails | null => {
-    const shipment = getShipmentById(trackingId);
-    if (!shipment) {
-      return null;
-    }
-
-    // Map status to our tracking status
-    const mapStatus = (status: string): 'pending' | 'in-transit' | 'delivered' | 'exception' => {
-      switch (status) {
-        case 'pending': return 'pending'; // Request created, waiting for package drop-off
-        case 'transit': return 'in-transit'; // Package received at foreign warehouse and in transit
-        case 'arrived': return 'in-transit'; // Package arrived at local warehouse but not picked up yet
-        case 'received': return 'delivered'; // Package picked up by customer
-        case 'delivered': return 'delivered'; // Package picked up by customer
-        default: return 'pending';
-      }
-    };
-
-    const trackingData: ShipmentDetails = {
-      id: shipment.id,
-      status: mapStatus(shipment.status),
-      origin: shipment.origin,
-      destination: shipment.destination,
-      estimatedDelivery: shipment.estimatedDelivery,
-      packageType: shipment.type,
-      weight: shipment.weight,
-      service: shipment.service,
-      recipient: shipment.recipientDetails,
-      warehouse: shipment.warehouseDetails,
-      created: shipment.created,
-      events: generateTrackingEvents(shipment)
-    };
-
-    return trackingData;
-  }, [generateTrackingEvents]);
-
-  // Shared search logic for both manual search and URL parameter search
+  // Shared search logic using the simplified API service
   const performSearch = useCallback(async (searchId: string) => {
     if (!searchId.trim()) {
       setError("Please enter a tracking number");
@@ -286,22 +253,43 @@ const TrackingPage: React.FC = () => {
     setError(null);
 
     try {
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
-
-      // Check if tracking number exists (for demo, accept any number with at least 4 characters)
-      if (searchId.length < 4) {
-        throw new Error("Tracking number not found. Please check and try again.");
-      }
-
-      const data = getMockShipmentData(searchId.toUpperCase());
-      if (!data) {
-        throw new Error("Tracking number not found. Please check and try again.");
-      }
+      // Use the simplified API service (handles mock data toggle automatically)
+      const response = await apiService.trackShipment(searchId.trim());
       
-      setShipmentData(data);
+      if (response.success) {
+        // Map API response to tracking data
+        const mapStatus = (status: string): 'pending' | 'in-transit' | 'delivered' | 'exception' => {
+          switch (status) {
+            case 'pending': return 'pending';
+            case 'transit': return 'in-transit';
+            case 'arrived': return 'in-transit';
+            case 'received': return 'delivered';
+            case 'delivered': return 'delivered';
+            default: return 'pending';
+          }
+        };
 
-      // Update search history using functional update to avoid dependency issues
+        const trackingData: ShipmentDetails = {
+          id: response.data.id,
+          status: mapStatus(response.data.status),
+          origin: response.data.origin,
+          destination: response.data.destination,
+          estimatedDelivery: response.data.estimatedDelivery,
+          packageType: response.data.type,
+          weight: response.data.weight,
+          service: response.data.service,
+          recipient: response.data.recipientDetails,
+          warehouse: response.data.warehouseDetails,
+          created: response.data.created,
+          events: generateTrackingEvents(response.data)
+        };
+
+        setShipmentData(trackingData);
+      } else {
+        throw new Error(response.error || "Tracking number not found. Please check and try again.");
+      }
+
+      // Update search history
       setSearchHistory(prevHistory => {
         const updatedHistory = [searchId.toUpperCase(), ...prevHistory.filter(item => item !== searchId.toUpperCase())].slice(0, 5);
         localStorage.setItem('trackingHistory', JSON.stringify(updatedHistory));
@@ -315,7 +303,7 @@ const TrackingPage: React.FC = () => {
       setLoading(false);
       searchInProgressRef.current = false;
     }
-  }, [getMockShipmentData]);
+  }, [generateTrackingEvents]);
 
   // Handle search triggered from URL parameters
   const handleSearchWithId = useCallback(async (trackingId: string) => {
@@ -384,8 +372,8 @@ const TrackingPage: React.FC = () => {
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Track Your Shipment</h1>
-          <p className="text-gray-600">Enter your tracking number to track your package from foreign warehouse to local warehouse pickup.</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">{t('trackYourPackage')}</h1>
+          <p className="text-gray-600">{t('enterTrackingNumber')}</p>
         </div>
 
         {/* Search Section */}
@@ -401,7 +389,7 @@ const TrackingPage: React.FC = () => {
                 value={trackingNumber}
                 onChange={(e) => setTrackingNumber(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder="Enter tracking number (e.g. SHIP2132)"
+                placeholder={`${t('trackingNumber')} (e.g. SHIP2132)`}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors"
                 disabled={loading}
               />
@@ -417,7 +405,7 @@ const TrackingPage: React.FC = () => {
                 ) : (
                   <Search className="w-5 h-5" />
                 )}
-                {loading ? 'Tracking...' : 'Track'}
+                {loading ? t('loading') : t('trackPackage')}
               </button>
             </div>
           </div>
@@ -544,8 +532,13 @@ const TrackingPage: React.FC = () => {
                     <span className="font-medium text-gray-900">{shipmentData.packageType}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Weight:</span>
-                    <span className="font-medium text-gray-900">{shipmentData.weight}</span>
+                    <span className="text-gray-600">{t('weight')}:</span>
+                    <span className="font-medium text-gray-900">
+                      {typeof shipmentData.weight === 'string' 
+                        ? shipmentData.weight 
+                        : formatWeight(parseFloat(shipmentData.weight) || 0)
+                      }
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Service:</span>

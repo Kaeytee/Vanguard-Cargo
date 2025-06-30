@@ -10,7 +10,8 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search, Calendar } from "lucide-react";
-import { getAllShipments } from "../../lib/mockShipmentData";
+import { apiService } from "../../services/api";
+import { useTranslation } from "../../lib/translations";
 
 /**
  * ShipmentHistoryPage component
@@ -22,6 +23,7 @@ import { getAllShipments } from "../../lib/mockShipmentData";
 export default function ShipmentHistoryPage() {
   // Navigation hook for routing
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   /**
    * Define the ShipmentType interface to ensure type safety and consistency
@@ -36,37 +38,6 @@ export default function ShipmentHistoryPage() {
     type: string; // Type of shipment (Box, Document, etc.)
     status: string; // Current status (pending, delivered, etc.)
   }
-
-  /**
-   * For now we're using dummy data, but this function mimics an API call
-   * In the future, replace this with a real API fetch and format the data
-   * into the ShipmentType interface structure
-   * @returns {Promise<ShipmentType[]>} A promise that resolves to an array of shipments
-   */
-  const fetchShipments = useCallback(async (): Promise<ShipmentType[]> => {
-    // In a real implementation, we would call an API endpoint like this:
-    // const response = await fetch('/api/shipments');
-    // const data = await response.json();
-    // return data.map(item => ({
-    //   id: item.trackingId,
-    //   date: new Date(item.createdAt).toLocaleDateString(),
-    //   destination: item.destinationAddress,
-    //   recipient: item.recipientName,
-    //   type: item.packageType,
-    //   status: item.currentStatus.toLowerCase()
-    // }));
-
-    // Use shared mock data
-    const mockShipments = getAllShipments();
-    return mockShipments.map(shipment => ({
-      id: shipment.id,
-      date: shipment.date,
-      destination: shipment.destination,
-      recipient: shipment.recipient,
-      type: shipment.type,
-      status: shipment.status
-    }));
-  }, []);
 
   /**
    * Application state variables
@@ -95,6 +66,34 @@ export default function ShipmentHistoryPage() {
   // Reference to the date filter button for positioning the dropdown
   const dateFilterButtonRef = useRef<HTMLButtonElement>(null);
   const dateFilterDropdownRef = useRef<HTMLDivElement>(null);
+
+  /**
+   * Simplified API call function using the new API service
+   * The API service automatically handles mock data toggle
+   * @returns {Promise<ShipmentType[]>} A promise that resolves to an array of shipments
+   */
+  const fetchShipments = useCallback(async (): Promise<ShipmentType[]> => {
+    // Use the simplified API service
+    const response = await apiService.getUserShipments(
+      currentPage, 
+      itemsPerPage, 
+      activeTab !== 'all' ? activeTab : undefined, 
+      searchQuery || undefined
+    );
+    
+    if (response.success) {
+      return response.data.items.map(shipment => ({
+        id: shipment.id,
+        date: shipment.date,
+        destination: shipment.destination,
+        recipient: shipment.recipient,
+        type: shipment.type,
+        status: shipment.status
+      }));
+    } else {
+      throw new Error(response.error || 'Failed to fetch shipments');
+    }
+  }, [currentPage, itemsPerPage, activeTab, searchQuery]);
 
   // Add CSS animations for the date filter dropdown
   useEffect(() => {
@@ -476,10 +475,10 @@ export default function ShipmentHistoryPage() {
       {/* Page Header */}
       <div className="mb-4 px-4 sm:px-10">
         <h1 className="text-2xl font-bold text-gray-900">
-          Awaiting Shipment List
+          {t('shipmentHistoryTitle')}
         </h1>
         <p className="text-sm text-gray-500">
-          Shipments that are being processed
+          {t('viewShipmentHistory')}
         </p>
       </div>
 
@@ -727,12 +726,12 @@ export default function ShipmentHistoryPage() {
                   />
                 </svg>
                 <h3 className="mt-2 text-sm font-medium text-gray-900">
-                  No shipments found
+                  {t('noShipments')}
                 </h3>
                 <p className="mt-1 text-sm text-gray-500">
                   {activeTab !== "all"
                     ? "Try switching to a different status filter"
-                    : "No shipments match your search criteria"}
+                    : t('noShipmentsMatch')}
                 </p>
                 {searchQuery && (
                   <div className="mt-6">

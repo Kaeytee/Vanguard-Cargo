@@ -1,6 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import AnimatedCounter from "../../components/ui/AnimatedCounter";
+import { useTranslation } from "../../lib/translations";
 
 /**
  * AppAbout - Client app about page
@@ -12,6 +13,7 @@ import AnimatedCounter from "../../components/ui/AnimatedCounter";
  * @returns {JSX.Element} The AppAbout component
  */
 const AppAbout: React.FC = () => {
+  const { t } = useTranslation();
   // Animation variants for staggered animations
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -92,11 +94,10 @@ const AppAbout: React.FC = () => {
         className="mb-8 sm:mb-10"
       >
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">
-          About Our Company
+          {t('aboutCompany')}
         </h1>
         <p className="text-gray-600 text-base sm:text-lg">
-          Explore our story, our purpose, and the vision driving everything we
-          do.
+          {t('aboutUs')}
         </p>
       </motion.div>
 

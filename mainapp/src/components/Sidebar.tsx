@@ -12,6 +12,14 @@ import {
 } from "lucide-react";
 import { useAuth } from "../context/AuthProvider";
 import { useLogout } from "../hooks/useLogout";
+import { useTranslation } from "../lib/translations";
+
+/**
+ * Props interface for the Sidebar component
+ */
+interface SidebarProps {
+  onNavigate?: () => void;
+}
 
 /**
  * Sidebar - Navigation sidebar component for the application
@@ -20,12 +28,15 @@ import { useLogout } from "../hooks/useLogout";
  * of the application. It implements OOP principles by encapsulating all sidebar-related
  * functionality within this component.
  *
+ * @param {SidebarProps} props - The component props
+ * @param {() => void} props.onNavigate - Optional callback to trigger when navigation occurs
  * @returns {JSX.Element} The Sidebar component
  */
-const Sidebar: React.FC = () => {
+const Sidebar: React.FC<SidebarProps> = ({ onNavigate }) => {
   // Get user data and logout function from auth context
   const { user } = useAuth();
   const { confirmLogout } = useLogout();
+  const { t } = useTranslation();
 
   // Fallback user data if auth context user is null
   const userData = user || {
@@ -37,19 +48,19 @@ const Sidebar: React.FC = () => {
    * Navigation menu items configuration
    */
   const navigationItems = [
-    { to: "/app/dashboard", icon: BarChart3, label: "Dashboard" },
-    { to: "/app/submit-shipment", icon: Package, label: "Submit package" },
-    { to: "/app/shipment-history", icon: Clock, label: "Shipment History" },
-    { to: "/app/tracking", icon: Search, label: "Track Package" },
-    { to: "/app/settings", icon: Settings, label: "Settings" },
+    { to: "/app/dashboard", icon: BarChart3, label: t('dashboard') },
+    { to: "/app/submit-request", icon: Package, label: t('submitRequest') },
+    { to: "/app/shipment-history", icon: Clock, label: t('shipmentHistory') },
+    { to: "/app/tracking", icon: Search, label: t('tracking') },
+    { to: "/app/settings", icon: Settings, label: t('settings') },
   ];
 
   /**
    * Footer navigation items configuration
    */
   const footerItems = [
-    { to: "/app/support", icon: Headphones, label: "Support" },
-    { to: "/app/about", icon: Info, label: "About" },
+    { to: "/app/support", icon: Headphones, label: t('support') },
+    { to: "/app/about", icon: Info, label: t('about') },
   ];
 
   /**
@@ -59,7 +70,7 @@ const Sidebar: React.FC = () => {
     <div className="w-64 bg-red-600 text-white flex flex-col h-full overflow-y-auto shadow-lg transition-all duration-300 ease-in-out lg:w-64 md:w-60 sm:w-56">
       {/* Logo and app name */}
       <div className="p-6 text-center border-red-500/20">
-        <h1 className="text-2xl font-bold m-0 tracking-wide">Logistics.</h1>
+        <h1 className="text-2xl font-bold m-0 tracking-wide">{t('logistics')}</h1>
       </div>
 
       {/* User profile section */}
@@ -95,6 +106,7 @@ const Sidebar: React.FC = () => {
             <NavLink
               key={item.to}
               to={item.to}
+              onClick={() => onNavigate?.()} // Close sidebar on mobile when navigation link is clicked
               className={({ isActive }) =>
                 `flex items-center px-6 py-3 text-white no-underline transition-all duration-200 group ${
                   isActive
@@ -121,6 +133,7 @@ const Sidebar: React.FC = () => {
             <NavLink
               key={item.to}
               to={item.to}
+              onClick={() => onNavigate?.()} // Close sidebar on mobile when navigation link is clicked
               className="flex items-center px-6 py-3 text-white no-underline transition-all duration-200 group hover:bg-white/10 hover:translate-x-1"
             >
               <IconComponent
@@ -140,7 +153,7 @@ const Sidebar: React.FC = () => {
             size={20}
             className="mr-4 transition-transform duration-200 group-hover:scale-110"
           />
-          <span>Log out</span>
+          <span>{t('logout')}</span>
         </button>
       </div>
     </div>
