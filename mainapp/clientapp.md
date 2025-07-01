@@ -211,6 +211,7 @@ Authentication:
 POST /api/client/auth/register     # Register new client
 POST /api/client/auth/login        # Client login
 POST /api/client/auth/forgot-password  # Request password reset
+POST /api/client/auth/verify-reset-code # Verify reset code before password reset
 POST /api/client/auth/reset-password   # Reset password with token
 GET  /api/client/auth/me          # Get current client info
 POST /api/client/auth/logout      # Logout and invalidate token
@@ -264,6 +265,118 @@ GET  /api/client/routes/supported     # Get supported international shipping rou
 Tracking:
 GET  /api/client/requests/{id}/history      # Get detailed tracking history for a request
 GET  /api/client/requests/{id}/real-time    # Get real-time tracking updates for a request
+```
+
+### Forgot Password Flow Endpoints
+
+```
+Three-Step Password Reset Process:
+
+Step 1 - Request Password Reset:
+POST /api/client/auth/forgot-password
+Request Body:
+{
+  "email": "user@example.com"
+}
+Response:
+{
+  "success": true,
+  "data": {
+    "message": "A verification code has been sent to your email address.",
+    "success": true
+  }
+}
+
+Step 2 - Verify Reset Code:
+POST /api/client/auth/verify-reset-code
+Request Body:
+{
+  "email": "user@example.com",
+  "code": "12345"
+}
+Response:
+{
+  "success": true,
+  "data": {
+    "message": "Verification code is valid.",
+    "success": true
+  }
+}
+
+Step 3 - Reset Password:
+POST /api/client/auth/reset-password
+Request Body:
+{
+  "email": "user@example.com",
+  "code": "12345",
+  "newPassword": "newpassword123",
+  "confirmPassword": "newpassword123"
+}
+Response:
+{
+  "success": true,
+  "data": {
+    "message": "Your password has been successfully reset.",
+    "success": true
+  }
+}
+
+Security Requirements:
+- Verification codes expire after 15 minutes
+- Maximum 3 attempts per code
+- Rate limiting: 1 request per minute per email
+- Codes are single-use only
+- Previous codes invalidated when new code is generated
+```
+
+### Registration and Marketing Preferences Integration
+
+```
+Client Registration with Marketing Preferences:
+
+POST /api/client/auth/register
+Request Body:
+{
+  "firstName": "John",
+  "lastName": "Doe", 
+  "email": "john.doe@example.com",
+  "password": "securepassword123",
+  "phone": "+1234567890",
+  "address": "123 Main Street, City",
+  "country": "USA",
+  "agreeToMarketing": true  // Marketing communications preference
+}
+
+Response:
+{
+  "success": true,
+  "data": {
+    "token": "jwt-token-here",
+    "user": {
+      "id": "user123",
+      "firstName": "John",
+      "lastName": "Doe",
+      "email": "john.doe@example.com",
+      "phone": "+1234567890",
+      "country": "USA",
+      "address": "123 Main Street, City",
+      "createdAt": "2024-01-01T00:00:00Z",
+      "updatedAt": "2024-01-01T00:00:00Z"
+    }
+  }
+}
+
+Marketing Preference Integration Logic:
+- During registration, if agreeToMarketing = true, user's notification settings are initialized with marketingNotifications = true
+- If agreeToMarketing = false or undefined, marketingNotifications = false
+- This setting can later be modified in the user's notification preferences
+- Ensures consistency between registration consent and actual marketing communications
+
+Backend Requirements:
+- Store marketing preference during user creation
+- Initialize NotificationSettings table with preference
+- Link marketing consent to actual communication delivery
+- Respect user preference changes in settings page
 ```
 
 ### International Request Validation Endpoints

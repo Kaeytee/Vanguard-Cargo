@@ -89,6 +89,7 @@ export interface RegisterRequest {
   phone: string;
   address: string;
   country: string;
+  agreeToMarketing?: boolean; // Marketing communications preference
 }
 
 export interface ForgotPasswordRequest {
@@ -574,9 +575,28 @@ class ApiService {
           user: newUser
         };
         
-        // Store token in localStorage for mock mode
+        // Store token and user in localStorage for mock mode
         localStorage.setItem('authToken', authResponse.token);
         localStorage.setItem('user', JSON.stringify(authResponse.user));
+        
+        // Store initial notification preferences based on marketing agreement
+        const initialNotificationSettings: NotificationSettings = {
+          id: 'notif-' + Date.now(),
+          userId: newUser.id,
+          shipmentUpdates: true, // Always enabled for logistics
+          deliveryAlerts: true, // Always enabled for logistics
+          delayNotifications: true, // Always enabled for logistics
+          marketingNotifications: userData.agreeToMarketing ?? false, // Based on registration choice
+          emailNotifications: true, // Default enabled
+          smsNotifications: false, // Default disabled
+          pushNotifications: true, // Default enabled
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        };
+        
+        // Store notification settings for the new user
+        localStorage.setItem(`notificationSettings_${newUser.id}`, JSON.stringify(initialNotificationSettings));
+        
         return authResponse;
       },
       // Real API function
@@ -699,13 +719,23 @@ class ApiService {
     return this.callApiOrMock(
       // Mock data function
       () => {
+        // Try to get user-specific settings first
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        const userSettingsKey = `notificationSettings_${user.id}`;
+        const storedSettings = localStorage.getItem(userSettingsKey);
+        
+        if (storedSettings) {
+          return JSON.parse(storedSettings);
+        }
+        
+        // Fallback to default settings
         const mockSettings: NotificationSettings = {
           id: 'notif-001',
-          userId: 'user-001',
+          userId: user.id || 'user-001',
           shipmentUpdates: true,
           deliveryAlerts: true,
           delayNotifications: true,
-          marketingNotifications: false,
+          marketingNotifications: false, // Default to false if no preference stored
           emailNotifications: true,
           smsNotifications: false,
           pushNotifications: true,
@@ -736,19 +766,28 @@ class ApiService {
     return this.callApiOrMock(
       // Mock data function
       () => {
+        // Get current user and their settings
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        const userSettingsKey = `notificationSettings_${user.id}`;
+        const currentSettings = JSON.parse(localStorage.getItem(userSettingsKey) || '{}');
+        
         const updatedSettings: NotificationSettings = {
-          id: 'notif-001',
-          userId: 'user-001',
-          shipmentUpdates: settings.shipmentUpdates ?? true,
-          deliveryAlerts: settings.deliveryAlerts ?? true,
-          delayNotifications: settings.delayNotifications ?? true,
-          marketingNotifications: settings.marketingNotifications ?? false,
-          emailNotifications: settings.emailNotifications ?? true,
-          smsNotifications: settings.smsNotifications ?? false,
-          pushNotifications: settings.pushNotifications ?? true,
-          createdAt: '2024-01-01T00:00:00Z',
+          id: currentSettings.id || 'notif-001',
+          userId: user.id || 'user-001',
+          shipmentUpdates: settings.shipmentUpdates ?? currentSettings.shipmentUpdates ?? true,
+          deliveryAlerts: settings.deliveryAlerts ?? currentSettings.deliveryAlerts ?? true,
+          delayNotifications: settings.delayNotifications ?? currentSettings.delayNotifications ?? true,
+          marketingNotifications: settings.marketingNotifications ?? currentSettings.marketingNotifications ?? false,
+          emailNotifications: settings.emailNotifications ?? currentSettings.emailNotifications ?? true,
+          smsNotifications: settings.smsNotifications ?? currentSettings.smsNotifications ?? false,
+          pushNotifications: settings.pushNotifications ?? currentSettings.pushNotifications ?? true,
+          createdAt: currentSettings.createdAt || '2024-01-01T00:00:00Z',
           updatedAt: new Date().toISOString()
         };
+        
+        // Persist the updated settings
+        localStorage.setItem(userSettingsKey, JSON.stringify(updatedSettings));
+        
         return updatedSettings;
       },
       // Real API function

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Eye, EyeOff, Check } from 'lucide-react';
 import PhoneInput, { isValidPhoneNumber } from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
@@ -7,8 +7,9 @@ import { cn } from '../../lib/utils';
 import AnimateInView from '../../components/ui/animate-in-view';
 import registerbg from '../../images/register-bg.jpg';
 import { useNavigate } from 'react-router-dom';
-import DeliveryImage from '../../images/deliveryparcel.jpg';
+import DeliveryImage from '../../images/delivery-man.png';
 import { apiService } from '../../services/api';
+import { RegisterSuccessStep } from './RegisterSuccessStep';
 
 /**
  * Register component - Displays the Register/Signup page with animations
@@ -67,6 +68,11 @@ export default function Register() {
   });
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [registeredUser, setRegisteredUser] = useState<{
+    email: string;
+    firstName: string;
+    lastName: string;
+  } | null>(null);
   const [touched, setTouched] = useState<{
     firstName: boolean;
     lastName: boolean;
@@ -93,6 +99,11 @@ export default function Register() {
     agreeToTerms: false,
   });
   const navigate = useNavigate();
+
+  // Navigation handler for going to login
+  const handleGoToLogin = () => {
+    navigate('/login');
+  };
 
   // Handle form input changes
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -210,13 +221,26 @@ export default function Register() {
         password: formData.password,
         phone: formData.phoneNumber,
         address: formData.address,
-        country: formData.country
+        country: formData.country,
+        agreeToMarketing: formData.agreeToMarketing // Include marketing preference
       };
 
       const response = await apiService.register(registerRequest);
       
       if (response.success && response.data) {
+        // Store user data before clearing form
+        setRegisteredUser({
+          email: formData.email,
+          firstName: formData.firstName,
+          lastName: formData.lastName
+        });
+        
         setSuccess(true);
+        setRegisteredUser({
+          email: formData.email,
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+        });
         
         // Clear form
         setFormData({
@@ -248,8 +272,8 @@ export default function Register() {
           agreeToTerms: false,
         });
         
-        // Redirect to login after successful registration
-        setTimeout(() => navigate('/login'), 1000);
+        // Show success step instead of immediate redirect
+        // The success step will handle navigation to login
       } else {
         setErrors((prev) => ({ ...prev, general: response.error || 'Registration failed. Please try again.' }));
       }
@@ -317,20 +341,23 @@ export default function Register() {
             <img src={DeliveryImage} alt="Delivery person with parcels" className="w-full lg:w-1/2  object-cover object-center" />
             <AnimateInView variant="fadeInRight" delay={0.4} className="w-full lg:w-1/2 p-4 sm:p-6 lg:p-8">
               <div className="bg-white p-6 sm:p-8 rounded-lg w-full max-w-md mx-auto">
-                <div className="mb-6 text-center">
-                  <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">Create Account</h2>
-                  <p className="text-gray-600 mt-2 text-sm sm:text-base">Begin your logistics journey here</p>
-                </div>
-                {success && (
-                  <div className="mb-4 text-green-600 text-sm text-center bg-green-50 p-3 rounded-md">
-                    Account created successfully!
-                  </div>
-                )}
-                {errors.general && (
-                  <div className="mb-4 text-red-600 text-sm text-center bg-red-50 p-3 rounded-md error-shake">
-                    {errors.general}
-                  </div>
-                )}
+                {success ? (
+                  <RegisterSuccessStep
+                    email={registeredUser?.email || formData.email}
+                    userName={registeredUser ? `${registeredUser.firstName} ${registeredUser.lastName}` : `${formData.firstName} ${formData.lastName}`}
+                    onGoToLogin={handleGoToLogin}
+                  />
+                ) : (
+                  <React.Fragment>
+                    <div className="mb-6 text-center">
+                      <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">Create Account</h2>
+                      <p className="text-gray-600 mt-2 text-sm sm:text-base">Begin your logistics journey here</p>
+                    </div>
+                    {errors.general && (
+                      <div className="mb-4 text-red-600 text-sm text-center bg-red-50 p-3 rounded-md error-shake">
+                        {errors.general}
+                      </div>
+                    )}
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
@@ -383,6 +410,7 @@ export default function Register() {
                         </p>
                       )}
                     </div>
+                  </div>
                   </div>
                   <div>
                     <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
@@ -647,7 +675,7 @@ export default function Register() {
                       </p>
                     )}
                   </div>
-                  <div className="space-y-3">
+                  <div className="space-y-3 pt-4">
                     <label className="flex items-start space-x-3 cursor-pointer">
                       <div className="relative">
                         <input
@@ -690,14 +718,14 @@ export default function Register() {
                         />
                         <div
                           className={cn(
-                            'w-5 h-5 border-2 rounded flex items-center justify-center transition-colors duration-200',
+                            'w-5 h-5 border-2 rounded flex items-center justify-center transition-colors duration-200 p',
                             formData.agreeToMarketing ? 'bg-red-500 border-red-500' : 'border-gray-300'
                           )}
                         >
                           {formData.agreeToMarketing && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
                         </div>
                       </div>
-                      <span className="text-sm text-gray-700">I agree to receive marketing communications</span>
+                      <span className="text-sm text-gray-700 pb-4">I agree to receive marketing communications</span>
                     </label>
                   </div>
                   <button
@@ -742,7 +770,8 @@ export default function Register() {
                       </a>
                     </p>
                   </div>
-                </div>
+                </React.Fragment>
+                )}
               </div>
             </AnimateInView>
           </div>
