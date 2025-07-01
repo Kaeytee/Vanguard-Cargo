@@ -14,6 +14,7 @@ import { cn } from '../../lib/utils';
 import AnimateInView from '../../components/ui/animate-in-view';
 import loginbg from '../../images/register-bg.jpg';
 import Image from '../../images/forgot.jpg';
+import { apiService } from '../../services/api';
 /**
  * ForgotPassword component - Displays the multi-step forgot password flow
  * @returns {JSX.Element} The ForgotPassword page component
@@ -64,21 +65,25 @@ export default function ForgotPassword() {
     setIsLoading(true);
     setFormError("");
 
-    // Simulate API call to request password reset
     try {
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      const response = await apiService.forgotPassword(email);
       
-      // Success response - show success message briefly then proceed
-      setFormSuccess("A verification code has been sent to your email");
-      // Brief delay to show success message, then advance to step 2
-      setTimeout(() => {
-        setStep(2);
+      if (response.success && response.data) {
+        setFormSuccess(response.data.message);
+        // Brief delay to show success message, then advance to step 2
+        setTimeout(() => {
+          setStep(2);
+          setIsLoading(false);
+          setFormSuccess("");
+          setFormError("");
+        }, 500);
+      } else {
+        setFormError(response.error || "Failed to send verification code. Please try again.");
         setIsLoading(false);
-        setFormSuccess("");
-        setFormError(""); // Clear errors on step transition
-      }, 500);
-    } catch {
-      setFormError("Failed to send verification code. Please try again.");
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Failed to send verification code. Please try again.";
+      setFormError(errorMessage);
       setIsLoading(false);
     }
   };
@@ -92,28 +97,24 @@ export default function ForgotPassword() {
     setIsLoading(true);
     setFormError("");
 
-    // Simulate API call to verify code
     try {
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      const response = await apiService.verifyResetCode(email, verificationCode);
       
-      // For testing: simulate invalid code for code "99999"
-      if (verificationCode === "99999") {
-        setFormError("Invalid verification code");
+      if (response.success && response.data) {
+        setFormSuccess(response.data.message);
+        setTimeout(() => {
+          setStep(3);
+          setIsLoading(false);
+          setFormSuccess("");
+          setFormError("");
+        }, 500);
+      } else {
+        setFormError(response.error || "Invalid verification code. Please try again.");
         setIsLoading(false);
-        setFormSuccess(""); // Clear any lingering success
-        return;
       }
-      
-      // Success response
-      setFormSuccess("Verification successful");
-      setTimeout(() => {
-        setStep(3);
-        setIsLoading(false);
-        setFormSuccess("");
-        setFormError(""); // Clear errors on step transition
-      }, 500);
-    } catch {
-      setFormError("Invalid verification code. Please try again.");
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Invalid verification code. Please try again.";
+      setFormError(errorMessage);
       setIsLoading(false);
     }
   };
@@ -133,19 +134,23 @@ export default function ForgotPassword() {
     setIsLoading(true);
     setFormError("");
 
-    // Simulate API call to reset password
     try {
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      const response = await apiService.resetPassword(email, verificationCode, newPassword, confirmPassword);
       
-      // Success response
-      setFormSuccess("Your password has been successfully reset");
-      setTimeout(() => {
-        setStep(4);
+      if (response.success && response.data) {
+        setFormSuccess(response.data.message);
+        setTimeout(() => {
+          setStep(4);
+          setIsLoading(false);
+          setFormError("");
+        }, 1500);
+      } else {
+        setFormError(response.error || "Failed to reset password. Please try again.");
         setIsLoading(false);
-        setFormError(""); // Clear errors on step transition
-      }, 1500);
-    } catch {
-      setFormError("Failed to reset password. Please try again.");
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Failed to reset password. Please try again.";
+      setFormError(errorMessage);
       setIsLoading(false);
     }
   };

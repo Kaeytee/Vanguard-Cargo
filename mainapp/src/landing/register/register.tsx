@@ -8,6 +8,7 @@ import AnimateInView from '../../components/ui/animate-in-view';
 import registerbg from '../../images/register-bg.jpg';
 import { useNavigate } from 'react-router-dom';
 import DeliveryImage from '../../images/deliveryparcel.jpg';
+import { apiService } from '../../services/api';
 
 /**
  * Register component - Displays the Register/Signup page with animations
@@ -201,30 +202,23 @@ export default function Register() {
     setErrors((prev) => ({ ...prev, general: '' }));
 
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1200));
-      if (formData.email === 'test@example.com' || formData.email === 'existing@example.com') {
-        setErrors((prev) => ({ ...prev, general: 'Email already exists' }));
-      } else {
-        // Create user object with all collected information
-        const userId = `user_${Date.now()}`; // Generate a simple unique ID
-        const user = {
-          id: userId,
-          name: `${formData.firstName} ${formData.lastName}`,
-          email: formData.email,
-          phone: formData.phoneNumber,
-          address: formData.address,
-          city: formData.city,
-          state: formData.state,
-          zip: formData.zip,
-          country: formData.country
-        };
-        
-        // Save user to localStorage for demo purposes
-        // In a real app, this would be sent to a backend API
-        localStorage.setItem('user', JSON.stringify(user));
-        
+      // Prepare registration data according to API interface
+      const registerRequest = {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        password: formData.password,
+        phone: formData.phoneNumber,
+        address: formData.address,
+        country: formData.country
+      };
+
+      const response = await apiService.register(registerRequest);
+      
+      if (response.success && response.data) {
         setSuccess(true);
+        
+        // Clear form
         setFormData({
           firstName: '',
           lastName: '',
@@ -253,10 +247,15 @@ export default function Register() {
           country: false,
           agreeToTerms: false,
         });
+        
+        // Redirect to login after successful registration
         setTimeout(() => navigate('/login'), 1000);
+      } else {
+        setErrors((prev) => ({ ...prev, general: response.error || 'Registration failed. Please try again.' }));
       }
-    } catch {
-      setErrors((prev) => ({ ...prev, general: 'An error occurred. Please try again.' }));
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Registration failed. Please try again.';
+      setErrors((prev) => ({ ...prev, general: errorMessage }));
     } finally {
       setLoading(false);
     }

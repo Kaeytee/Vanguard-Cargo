@@ -91,6 +91,27 @@ export interface RegisterRequest {
   country: string;
 }
 
+export interface ForgotPasswordRequest {
+  email: string;
+}
+
+export interface VerifyResetCodeRequest {
+  email: string;
+  code: string;
+}
+
+export interface ResetPasswordRequest {
+  email: string;
+  code: string;
+  newPassword: string;
+  confirmPassword: string;
+}
+
+export interface ForgotPasswordResponse {
+  message: string;
+  success: boolean;
+}
+
 // Notification settings types
 export interface NotificationSettings {
   id: string;
@@ -585,6 +606,90 @@ class ApiService {
         localStorage.removeItem('user');
         return result;
       }
+    );
+  }
+
+  async forgotPassword(email: string): Promise<ApiResponse<ForgotPasswordResponse>> {
+    return this.callApiOrMock(
+      // Mock data function
+      () => {
+        // Mock validation - simulate sending reset code
+        const mockResponse: ForgotPasswordResponse = {
+          message: 'A verification code has been sent to your email address.',
+          success: true
+        };
+        // Store the email temporarily for mock verification
+        localStorage.setItem('resetEmail', email);
+        return mockResponse;
+      },
+      // Real API function
+      () => this.request<ForgotPasswordResponse>('/auth/forgot-password', {
+        method: 'POST',
+        body: JSON.stringify({ email }),
+      })
+    );
+  }
+
+  async verifyResetCode(email: string, code: string): Promise<ApiResponse<ForgotPasswordResponse>> {
+    return this.callApiOrMock(
+      // Mock data function
+      () => {
+        const storedEmail = localStorage.getItem('resetEmail');
+        // Mock validation - accept any 5-digit code except '99999' for testing
+        if (email === storedEmail && code.length === 5 && code !== '99999') {
+          const mockResponse: ForgotPasswordResponse = {
+            message: 'Verification code is valid.',
+            success: true
+          };
+          // Store verified status
+          localStorage.setItem('resetCodeVerified', 'true');
+          return mockResponse;
+        } else {
+          throw new Error('Invalid verification code. Please try again.');
+        }
+      },
+      // Real API function
+      () => this.request<ForgotPasswordResponse>('/auth/verify-reset-code', {
+        method: 'POST',
+        body: JSON.stringify({ email, code }),
+      })
+    );
+  }
+
+  async resetPassword(email: string, code: string, newPassword: string, confirmPassword: string): Promise<ApiResponse<ForgotPasswordResponse>> {
+    return this.callApiOrMock(
+      // Mock data function
+      () => {
+        const storedEmail = localStorage.getItem('resetEmail');
+        const codeVerified = localStorage.getItem('resetCodeVerified');
+        
+        // Validate input
+        if (newPassword !== confirmPassword) {
+          throw new Error('Passwords do not match.');
+        }
+        
+        if (newPassword.length < 8) {
+          throw new Error('Password must be at least 8 characters long.');
+        }
+        
+        if (email === storedEmail && codeVerified === 'true') {
+          const mockResponse: ForgotPasswordResponse = {
+            message: 'Your password has been successfully reset.',
+            success: true
+          };
+          // Clean up temporary data
+          localStorage.removeItem('resetEmail');
+          localStorage.removeItem('resetCodeVerified');
+          return mockResponse;
+        } else {
+          throw new Error('Invalid reset request. Please start the process again.');
+        }
+      },
+      // Real API function
+      () => this.request<ForgotPasswordResponse>('/auth/reset-password', {
+        method: 'POST',
+        body: JSON.stringify({ email, code, newPassword, confirmPassword }),
+      })
     );
   }
 
