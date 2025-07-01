@@ -234,6 +234,9 @@ GET  /api/client/settings/notifications   # Get notification settings
 PUT  /api/client/settings/notifications   # Update notification settings
 GET  /api/client/settings/privacy         # Get privacy settings
 PUT  /api/client/settings/privacy         # Update privacy settings
+GET  /api/client/settings/account-deletion  # Get account deletion settings
+POST /api/client/settings/account-deletion  # Request account deletion
+PUT  /api/client/settings/language          # Update language preference
 
 Notifications Management:
 GET  /api/client/notifications            # Get user notifications (paginated)
@@ -243,6 +246,7 @@ PUT  /api/client/notifications/{id}/unread # Mark notification as unread
 DELETE /api/client/notifications/{id}     # Delete notification
 POST /api/client/notifications/mark-all-read # Mark all notifications as read
 GET  /api/client/notifications/stats      # Get notification statistics
+POST /api/client/notifications/push         # Send push notification (real-time updates)
 
 International Package Requests:
 POST /api/client/requests         # Submit new international request
@@ -256,6 +260,10 @@ Origin Country Validation:
 GET  /api/client/countries/available  # Get available origin countries for current client
 POST /api/client/requests/validate   # Validate international request before submission
 GET  /api/client/routes/supported     # Get supported international shipping routes
+
+Tracking:
+GET  /api/client/requests/{id}/history      # Get detailed tracking history for a request
+GET  /api/client/requests/{id}/real-time    # Get real-time tracking updates for a request
 ```
 
 ### International Request Validation Endpoints
