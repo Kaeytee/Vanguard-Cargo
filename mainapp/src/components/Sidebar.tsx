@@ -9,6 +9,7 @@ import {
   Info,
   LogOut,
   Search,
+  Bell,
 } from "lucide-react";
 import { useAuth } from "../context/AuthProvider";
 import { useLogout } from "../hooks/useLogout";
@@ -52,6 +53,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate }) => {
     { to: "/app/submit-request", icon: Package, label: t('submitRequest') },
     { to: "/app/shipment-history", icon: Clock, label: t('shipmentHistory') },
     { to: "/app/tracking", icon: Search, label: t('tracking') },
+    { to: "/app/notifications", icon: Bell, label: t('notifications') },
     { to: "/app/settings", icon: Settings, label: t('settings') },
   ];
 

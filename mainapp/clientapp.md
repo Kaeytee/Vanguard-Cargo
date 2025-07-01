@@ -210,17 +210,47 @@ EXCEPTION                   →    PROCESSING (with notes)
 Authentication:
 POST /api/client/auth/register     # Register new client
 POST /api/client/auth/login        # Client login
+POST /api/client/auth/forgot-password  # Request password reset
+POST /api/client/auth/reset-password   # Reset password with token
 GET  /api/client/auth/me          # Get current client info
+POST /api/client/auth/logout      # Logout and invalidate token
+POST /api/client/auth/refresh     # Refresh JWT token
+
+Email Verification:
+POST /api/client/auth/send-verification  # Send email verification
+POST /api/client/auth/verify-email       # Verify email with token
+POST /api/client/auth/resend-verification # Resend verification email
 
 Profile Management:
 GET  /api/client/profile          # Get client profile
 PUT  /api/client/profile          # Update client profile
+POST /api/client/profile/change-password # Change password
+POST /api/client/profile/upload-avatar   # Upload profile picture
+
+Settings & Preferences:
+GET  /api/client/settings/preferences     # Get user preferences
+PUT  /api/client/settings/preferences     # Update user preferences
+GET  /api/client/settings/notifications   # Get notification settings
+PUT  /api/client/settings/notifications   # Update notification settings
+GET  /api/client/settings/privacy         # Get privacy settings
+PUT  /api/client/settings/privacy         # Update privacy settings
+
+Notifications Management:
+GET  /api/client/notifications            # Get user notifications (paginated)
+GET  /api/client/notifications/unread     # Get unread notifications
+PUT  /api/client/notifications/{id}/read  # Mark notification as read
+PUT  /api/client/notifications/{id}/unread # Mark notification as unread
+DELETE /api/client/notifications/{id}     # Delete notification
+POST /api/client/notifications/mark-all-read # Mark all notifications as read
+GET  /api/client/notifications/stats      # Get notification statistics
 
 International Package Requests:
 POST /api/client/requests         # Submit new international request
 GET  /api/client/requests         # Get user's international requests
 GET  /api/client/requests/{id}    # Get specific international request
 GET  /api/client/requests/{id}/track # Track international request status
+DELETE /api/client/requests/{id}  # Cancel request (if allowed)
+PUT  /api/client/requests/{id}    # Update request (if allowed)
 
 Origin Country Validation:
 GET  /api/client/countries/available  # Get available origin countries for current client

@@ -1,22 +1,26 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Bell, CheckCircle, AlertCircle, Info, Trash2, Eye } from 'lucide-react';
+import { useTranslation } from '../../lib/translations';
 import { apiService, type Notification } from '../../services/api';
 
 /**
  * NotificationsPage - Comprehensive notifications management page
  * 
  * This component displays all user notifications with filtering, marking as read/unread,
- * and deletion functionality.
+ * and deletion functionality. It integrates with the API service and translation system.
  * 
  * Features:
  * - Filter notifications by category and read status
  * - Mark individual or bulk notifications as read/unread
  * - Delete notifications
+ * - Real-time updates
  * - Responsive design
  * 
  * @returns {JSX.Element} The NotificationsPage component
  */
 const NotificationsPage: React.FC = () => {
+  const { t } = useTranslation();
+  
   // State management
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -27,46 +31,37 @@ const NotificationsPage: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [totalPages, setTotalPages] = useState<number>(1);
   const [totalNotifications, setTotalNotifications] = useState<number>(0);
-  const [pageSize] = useState<number>(10);
 
-  // Load notifications from API
-  const loadNotifications = useCallback(async (page: number = 1) => {
+  // Load notifications on component mount and when filters change
+  const loadNotifications = React.useCallback(async () => {
     try {
       setLoading(true);
       const response = await apiService.getNotifications(
-        page,
-        pageSize,
-        filter === 'all' ? undefined : filter,
-        categoryFilter === 'all' ? undefined : categoryFilter
+        currentPage,
+        10,
+        filter,
+        categoryFilter
       );
       
       if (response.success) {
         setNotifications(response.data.items);
         setTotalPages(response.data.totalPages);
         setTotalNotifications(response.data.total);
-        setCurrentPage(response.data.currentPage);
       }
     } catch (error) {
       console.error('Error loading notifications:', error);
     } finally {
       setLoading(false);
     }
-  }, [filter, categoryFilter, pageSize]);
+  }, [currentPage, filter, categoryFilter]);
 
-  // Load notifications on component mount and when filters change
   useEffect(() => {
-    loadNotifications(1);
-    setCurrentPage(1);
-  }, [filter, categoryFilter, loadNotifications]);
+    loadNotifications();
+  }, [loadNotifications]);
 
-  // Load notifications when page changes
-  useEffect(() => {
-    if (currentPage > 1) {
-      loadNotifications(currentPage);
-    }
-  }, [currentPage, loadNotifications]);
-
-  // Get notification icon based on type
+  /**
+   * Get notification icon based on type
+   */
   const getNotificationIcon = (type: Notification['type']) => {
     switch (type) {
       case 'success':
@@ -80,7 +75,9 @@ const NotificationsPage: React.FC = () => {
     }
   };
 
-  // Format notification date
+  /**
+   * Format notification date
+   */
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
@@ -97,109 +94,79 @@ const NotificationsPage: React.FC = () => {
     }
   };
 
-  // Filter notifications based on current filters
-  const filteredNotifications = notifications;
-
-  // Toggle notification read status
+  /**
+   * Toggle notification read status
+   */
   const toggleReadStatus = async (notificationId: string) => {
     try {
       const notification = notifications.find(n => n.id === notificationId);
       if (!notification) return;
 
-      // Update local state optimistically
-      setNotifications(prev => 
-        prev.map(n => 
-          n.id === notificationId ? { ...n, isRead: !n.isRead } : n
-        )
-      );
-
-      // Call API
       if (notification.isRead) {
         await apiService.markNotificationAsUnread(notificationId);
       } else {
         await apiService.markNotificationAsRead(notificationId);
       }
-    } catch (error) {
-      console.error('Error updating notification:', error);
-      // Revert local state on error
+
       setNotifications(prev => 
         prev.map(n => 
           n.id === notificationId ? { ...n, isRead: !n.isRead } : n
         )
       );
+    } catch (error) {
+      console.error('Error updating notification:', error);
     }
   };
 
-  // Delete notification
+  /**
+   * Delete notification
+   */
   const deleteNotification = async (notificationId: string) => {
     try {
-      // Update local state optimistically
+      await apiService.deleteNotification(notificationId);
       setNotifications(prev => prev.filter(n => n.id !== notificationId));
       setSelectedNotifications(prev => prev.filter(id => id !== notificationId));
-
-      // Call API
-      await apiService.deleteNotification(notificationId);
     } catch (error) {
       console.error('Error deleting notification:', error);
-      // Reload notifications on error
-      loadNotifications(currentPage);
     }
   };
 
-  // Handle bulk actions
+  /**
+   * Handle bulk actions
+   */
   const handleBulkAction = async (action: 'markRead' | 'markUnread' | 'delete') => {
     if (selectedNotifications.length === 0) return;
 
     try {
       setBulkActionLoading(true);
       
-      // Update local state optimistically
-      switch (action) {
-        case 'markRead':
-          setNotifications(prev => 
-            prev.map(n => 
-              selectedNotifications.includes(n.id) ? { ...n, isRead: true } : n
-            )
-          );
-          // Call API for each notification
-          await Promise.all(
-            selectedNotifications.map(id => apiService.markNotificationAsRead(id))
-          );
-          break;
-        case 'markUnread':
-          setNotifications(prev => 
-            prev.map(n => 
-              selectedNotifications.includes(n.id) ? { ...n, isRead: false } : n
-            )
-          );
-          // Call API for each notification
-          await Promise.all(
-            selectedNotifications.map(id => apiService.markNotificationAsUnread(id))
-          );
-          break;
-        case 'delete':
-          setNotifications(prev => 
-            prev.filter(n => !selectedNotifications.includes(n.id))
-          );
-          // Call API for each notification
-          await Promise.all(
-            selectedNotifications.map(id => apiService.deleteNotification(id))
-          );
-          break;
+      for (const notificationId of selectedNotifications) {
+        switch (action) {
+          case 'markRead':
+            await apiService.markNotificationAsRead(notificationId);
+            break;
+          case 'markUnread':
+            await apiService.markNotificationAsUnread(notificationId);
+            break;
+          case 'delete':
+            await apiService.deleteNotification(notificationId);
+            break;
+        }
       }
       
-      // Clear selection after successful bulk action
+      // Reload notifications after bulk action
+      await loadNotifications();
       setSelectedNotifications([]);
     } catch (error) {
       console.error('Error performing bulk action:', error);
-      // Reload notifications on error to sync with server state
-      loadNotifications(currentPage);
     } finally {
       setBulkActionLoading(false);
     }
   };
 
-  // Toggle notification selection
+  /**
+   * Toggle notification selection
+   */
   const toggleNotificationSelection = (notificationId: string) => {
     setSelectedNotifications(prev => 
       prev.includes(notificationId) 
@@ -208,15 +175,17 @@ const NotificationsPage: React.FC = () => {
     );
   };
 
-  // Select all filtered notifications
+  /**
+   * Select all notifications on current page
+   */
   const selectAllNotifications = () => {
-    const allIds = filteredNotifications.map(n => n.id);
+    const allIds = notifications.map(n => n.id);
     setSelectedNotifications(
       selectedNotifications.length === allIds.length ? [] : allIds
     );
   };
 
-  if (loading) {
+  if (loading && currentPage === 1) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600"></div>
@@ -231,7 +200,9 @@ const NotificationsPage: React.FC = () => {
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-2">
             <Bell className="w-8 h-8 text-red-600" />
-            <h1 className="text-3xl font-bold text-gray-900">Notifications</h1>
+            <h1 className="text-3xl font-bold text-gray-900">
+              {t('notifications')} ({totalNotifications})
+            </h1>
           </div>
           <p className="text-gray-600">
             Stay updated with your shipments and account activities
@@ -245,7 +216,10 @@ const NotificationsPage: React.FC = () => {
             <div className="flex flex-wrap gap-3">
               <select
                 value={filter}
-                onChange={(e) => setFilter(e.target.value as 'all' | 'unread' | 'read')}
+                onChange={(e) => {
+                  setFilter(e.target.value as 'all' | 'unread' | 'read');
+                  setCurrentPage(1);
+                }}
                 className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
               >
                 <option value="all">All</option>
@@ -255,7 +229,10 @@ const NotificationsPage: React.FC = () => {
 
               <select
                 value={categoryFilter}
-                onChange={(e) => setCategoryFilter(e.target.value as 'all' | 'shipment' | 'payment' | 'system' | 'security')}
+                onChange={(e) => {
+                  setCategoryFilter(e.target.value as typeof categoryFilter);
+                  setCurrentPage(1);
+                }}
                 className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
               >
                 <option value="all">All Categories</option>
@@ -295,16 +272,16 @@ const NotificationsPage: React.FC = () => {
           </div>
 
           {/* Select All */}
-          {filteredNotifications.length > 0 && (
+          {notifications.length > 0 && (
             <div className="mt-4 pt-4 border-t border-gray-200">
               <label className="flex items-center gap-2 text-sm text-gray-600">
                 <input
                   type="checkbox"
-                  checked={selectedNotifications.length === filteredNotifications.length && filteredNotifications.length > 0}
+                  checked={selectedNotifications.length === notifications.length && notifications.length > 0}
                   onChange={selectAllNotifications}
                   className="rounded border-gray-300 text-red-600 focus:ring-red-500"
                 />
-                Select all notifications
+                Select all notifications on this page
                 {selectedNotifications.length > 0 && (
                   <span className="text-red-600 font-medium">
                     ({selectedNotifications.length} selected)
@@ -317,7 +294,11 @@ const NotificationsPage: React.FC = () => {
 
         {/* Notifications List */}
         <div className="space-y-3">
-          {filteredNotifications.length === 0 ? (
+          {loading ? (
+            <div className="bg-white rounded-lg shadow-sm border p-8 text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600 mx-auto"></div>
+            </div>
+          ) : notifications.length === 0 ? (
             <div className="bg-white rounded-lg shadow-sm border p-8 text-center">
               <Bell className="w-12 h-12 text-gray-400 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">
@@ -328,7 +309,7 @@ const NotificationsPage: React.FC = () => {
               </p>
             </div>
           ) : (
-            filteredNotifications.map((notification) => (
+            notifications.map((notification) => (
               <div
                 key={notification.id}
                 className={`bg-white rounded-lg shadow-sm border p-4 transition-all hover:shadow-md ${
@@ -409,52 +390,24 @@ const NotificationsPage: React.FC = () => {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="mt-8 flex items-center justify-between">
-            <div className="text-sm text-gray-700">
-              Showing {((currentPage - 1) * pageSize) + 1} to {Math.min(currentPage * pageSize, totalNotifications)} of {totalNotifications} notifications
-            </div>
-            <div className="flex items-center gap-2">
+          <div className="mt-8 flex justify-center">
+            <div className="flex gap-2">
               <button
-                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                 disabled={currentPage === 1}
-                className="px-3 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 disabled:opacity-50 transition-colors"
               >
                 Previous
               </button>
               
-              <div className="flex items-center gap-1">
-                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                  let pageNum;
-                  if (totalPages <= 5) {
-                    pageNum = i + 1;
-                  } else if (currentPage <= 3) {
-                    pageNum = i + 1;
-                  } else if (currentPage >= totalPages - 2) {
-                    pageNum = totalPages - 4 + i;
-                  } else {
-                    pageNum = currentPage - 2 + i;
-                  }
-                  
-                  return (
-                    <button
-                      key={pageNum}
-                      onClick={() => setCurrentPage(pageNum)}
-                      className={`px-3 py-2 text-sm border rounded-md ${
-                        currentPage === pageNum
-                          ? 'bg-red-600 text-white border-red-600'
-                          : 'border-gray-300 hover:bg-gray-50'
-                      }`}
-                    >
-                      {pageNum}
-                    </button>
-                  );
-                })}
-              </div>
+              <span className="px-4 py-2 bg-red-600 text-white rounded-md">
+                {currentPage} of {totalPages}
+              </span>
               
               <button
-                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                 disabled={currentPage === totalPages}
-                className="px-3 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 disabled:opacity-50 transition-colors"
               >
                 Next
               </button>

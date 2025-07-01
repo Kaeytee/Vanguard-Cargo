@@ -17,6 +17,7 @@ import SubmitRequest from "./app/submitRequest/submitRequest";
 import TrackingPage from "./app/tracking/tracking";
 import AppAbout from "./app/about/Appabout";
 import AppSupport from "./app/support/Appsupport";
+import NotificationsPage from "./app/notification/notification";
 import ProtectedRoutes from "./components/protectedRoutes";
 import AppLayout from "./components/AppLayout";
 import SmartNotFound from "./components/SmartNotFound";
@@ -124,6 +125,7 @@ export default function App() {
         <Route path="shipment-history" element={<ShipmentHistory />} />
         <Route path="submit-request" element={<SubmitRequest />} />
         <Route path="tracking" element={<TrackingPage />} />
+        <Route path="notifications" element={<NotificationsPage />} />
         <Route path="about" element={<AppAbout />} />
         <Route path="support" element={<AppSupport />} />
         
