@@ -12,7 +12,7 @@ import ClientManagement from './app/pages/ClientManagement/ClientManagement';
 import AnalysisReport from './app/pages/AnalysisReport/AnalysisReport';
 import Inventory from './app/pages/Inventory/Inventory';
 import About from './app/pages/About/About';
-import GroupManagementDashboard from './app/pages/GroupManagement/GroupManagementDashboard';
+// import GroupManagementDashboard from './app/pages/GroupManagement/GroupManagementDashboard'; // Removed from routing
 
 /**
  * Protected Route Component
@@ -101,7 +101,8 @@ const App = (): React.ReactElement => {
           <Route path="/analysis-report" element={<AnalysisReport />} />
           <Route path="/inventory" element={<Inventory />} />
           <Route path="/about" element={<About />} />
-          <Route path="/group-management" element={<GroupManagementDashboard />} />
+          {/* <Route path="/group-management" element={<GroupManagementDashboard />} /> */}
+          {/* // Removed from routing: group-management functionality is not part of current workflow */}
           {/* <Route path="/support" element={<Support />} /> */}
 // Removed for admin context: /support now returns 404 as required
         </Route>

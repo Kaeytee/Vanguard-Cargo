@@ -8,7 +8,6 @@ import {
   FiBarChart2, 
   FiDatabase,
   FiLogOut,
-  FiLayers,
   FiX
 } from 'react-icons/fi';
 
@@ -121,7 +120,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onToggle }) => {
           <NavItem icon={<FiUsers size={20} />} to="/client-management" label="Client Management" />
           <NavItem icon={<FiBarChart2 size={20} />} to="/analysis-report" label="Analysis Report" />
           <NavItem icon={<FiDatabase size={20} />} to="/inventory" label="Inventory" />
-          <NavItem icon={<FiLayers size={20} />} to="/group-management" label="Group Management" />
+          {/* <NavItem icon={<FiLayers size={20} />} to="/group-management" label="Group Management" /> */}
+          {/* // Removed from sidebar: group-management functionality is not part of current workflow */}
         </div>
         
         {/* Divider */}
