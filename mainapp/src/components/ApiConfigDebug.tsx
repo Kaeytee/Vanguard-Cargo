@@ -8,8 +8,8 @@ import { getApiConfig } from '../services/api';
 export const ApiConfigDebug: React.FC = () => {
   const config = getApiConfig();
   
-  // Only show in development mode
-  if (config.environment === 'production') {
+  // Only show in development mode (when not using real API base URL)
+  if (config.apiBaseUrl && !config.apiBaseUrl.includes('localhost')) {
     return null;
   }
 

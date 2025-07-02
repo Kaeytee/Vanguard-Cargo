@@ -7,18 +7,8 @@
 import React, { useEffect } from "react";
 import { FaPlane } from "react-icons/fa";
 
-// Only Air delivery type is available as per admin requirements
-const DELIVERY_TYPES = [
-  { id: "air", label: "Air", icon: <FaPlane className="text-blue-500" />, available: true },
-  { id: "ground", label: "Ground", available: false },
-  { id: "sea", label: "Sea", available: false },
-  { id: "express", label: "Express", available: false }
-];
-
-const PACKAGE_TYPES = [
-  { id: "document", label: "Document" },
-  { id: "non-document", label: "Non-Document" }
-];
+// Import constants from centralized location to ensure alignment with warehouse system
+import { DELIVERY_TYPES, PACKAGE_TYPES } from "../lib/constants";
 
 // Define the structure for package category options, including color for UI
 interface PackageCategoryOption {
@@ -81,9 +71,9 @@ const PackageForm: React.FC<PackageFormProps> = ({
   formData,
   onInputChange,
 }) => {
-  // Auto-select Air delivery type if none is selected
+  // Auto-select Air delivery type if none is selected (align with warehouse system)
   useEffect(() => {
-    // If freightType is not set or not 'air', set it to 'air'
+    // If freightType is not set or not 'air', set it to 'air' (only available delivery type)
     if (!formData.freightType || formData.freightType !== 'air') {
       const fakeEvent = {
         target: {
@@ -110,7 +100,7 @@ const PackageForm: React.FC<PackageFormProps> = ({
                 <FaPlane className="ml-2 text-blue-500" />
               </label>
               
-              {/* Delivery Type Selector - Air Only */}
+              {/* Delivery Type Selector - Air Only (aligned with warehouse system) */}
               <div className="relative">
                 <select
                   id="freightType"
@@ -125,9 +115,9 @@ const PackageForm: React.FC<PackageFormProps> = ({
                     <option 
                       key={type.id} 
                       value={type.id} 
-                      disabled={!type.available}
+                      disabled={type.disabled}
                     >
-                      {type.label} {type.id === 'air' && '✓'}
+                      {type.label} {type.primary && '✓'}
                     </option>
                   ))}
                 </select>
@@ -155,9 +145,13 @@ const PackageForm: React.FC<PackageFormProps> = ({
                 className="w-full rounded-lg border border-gray-400 px-4 py-3 text-gray-900 bg-white shadow-sm focus:border-navy-500 focus:ring-2 focus:ring-navy-200 transition-all placeholder-gray-400"
                 required
               >
+                {/* Package Type - Must align with warehouse system (DOCUMENT/NON_DOCUMENT only) */}
                 <option value="">Select package type</option>
                 {PACKAGE_TYPES.map(type => (
-                  <option key={type.id} value={type.id}>{type.label}</option>
+                  <option key={type.id} value={type.id}>
+                    {type.label}
+                    {type.description && ` - ${type.description}`}
+                  </option>
                 ))}
               </select>
             </div>

@@ -53,6 +53,7 @@ The client app is essentially a user interface that communicates with this wareh
 10. [Data Models & Database Design](#data-models--database-design)
 11. [API Endpoints](#api-endpoints)
 12. [Security & Access Control](#security--access-control)
+13. [Frontend Integration Requirements](#frontend-integration-requirements)
 
 ## Business Logic Framework: Pure International Logistics
 
@@ -889,202 +890,347 @@ GET  /api/warehouse/analytics/trends            # Operational trends
 
 ---
 
-## Backend Implementation Roadmap
+## Frontend Integration Requirements: Client App Alignment
 
-### Phase 1: Core Infrastructure (Foundation)
-**Database Setup:**
-- Implement all entity models exactly as specified in Data Models section
-- Set up foreign key relationships and constraints
-- Create database indexes for tracking numbers, status fields, and foreign keys
-- Implement audit logging triggers for all status changes
+### CRITICAL: Frontend Must Enforce All Warehouse Business Rules
 
-**Authentication & Authorization:**
-- Implement JWT-based authentication system
-- Create role-based access control (RBAC) middleware
-- Set up session management and token refresh mechanisms
-- Implement API rate limiting and security headers
+**This section defines the EXACT requirements for the client app frontend to ensure complete alignment with the warehouse system. Every rule, validation, UI element, and data structure defined here is NON-NEGOTIABLE and must be implemented exactly as specified.**
 
-**Basic API Framework:**
-- Set up Spring Boot application structure
-- Implement base controller classes with common functionality
-- Create exception handling and error response standardization
-- Set up request/response logging and monitoring
+### Business Rules Enforcement in Frontend
 
-### Phase 2: Request Processing System
-**Request Reception:**
-- Implement webhook endpoints to receive client app notifications
-- Create request validation and feasibility checking logic
-- Build request approval/rejection workflow
-- Set up automated client notifications for request status changes
+#### Package Types - Frontend Implementation Requirements
+```typescript
+// CRITICAL: Only these 2 package types are allowed in the entire system
+export const PACKAGE_TYPES = [
+  { id: "DOCUMENT", label: "Document", description: "Legal documents, contracts, certificates, official papers" },
+  { id: "NON_DOCUMENT", label: "Non-Document", description: "Everything else - goods, products, personal items, equipment" }
+];
 
-**Package Creation:**
-- Implement package creation from approved requests
-- Build tracking number generation system (TT + 12 digits with check digit)
-- Create barcode generation and management
-- Set up initial status assignment and notification triggers
+// Frontend MUST NOT allow any other package types
+// UI MUST show descriptions to help users choose correctly
+// Validation MUST reject any values not in this exact list
+```
 
-### Phase 3: Package Management Core
-**Package Lifecycle:**
-- Implement all package status transitions and validation
-- Create package receiving and inspection workflows
-- Build package processing and preparation systems
-- Set up package location tracking and inventory management
+#### Delivery Types - Frontend Implementation Requirements
+```typescript
+// CRITICAL: Air is the only available service, others are future expansion
+export const DELIVERY_TYPES = [
+  { id: "air", label: "Air Freight (Primary)", primary: true, description: "International air freight - fast, reliable cross-border shipping" },
+  { id: "ground", label: "Ground (Future)", disabled: true, description: "Cross-border ground transportation (coming soon)" },
+  { id: "sea", label: "Sea Freight (Future)", disabled: true, description: "International sea freight for large shipments (coming soon)" },
+  { id: "express", label: "Express (Future)", disabled: true, description: "Premium express international service (coming soon)" }
+];
 
-**Status Management:**
-- Implement unified status system with client app synchronization
-- Create status history tracking and audit trails
-- Build real-time status update mechanisms
-- Set up exception handling and alert systems
+// Frontend MUST:
+// 1. Auto-select "air" as default and only available option
+// 2. Show disabled options with "(Future)" labels for transparency
+// 3. Disable/hide non-air options in UI
+// 4. Prevent form submission with disabled delivery types
+```
 
-### Phase 4: Shipment Orchestration
-**Shipment Creation:**
-- Implement intelligent package grouping algorithms
-- Create shipment assembly and documentation systems
-- Build resource assignment (vehicle, driver, route) management
-- Set up shipment departure and tracking coordination
+#### International Logistics - Frontend Validation Requirements
+```typescript
+// CRITICAL: Origin country MUST be different from client country
+export const SUPPORTED_COUNTRIES = [
+  { code: "GH", name: "Ghana", flag: "🇬🇭" },
+  { code: "US", name: "United States", flag: "🇺🇸" }
+];
 
-**Logistics Coordination:**
-- Implement delivery type specific workflows (Ground/Air/Sea/Express)
-- Create shipment tracking and location updates
-- Build delivery confirmation and completion workflows
-- Set up client notification and communication systems
+// Frontend MUST implement this exact validation logic:
+export const getAvailableOriginCountries = (clientCountry: string) => {
+  return SUPPORTED_COUNTRIES.filter(country => country.code !== clientCountry);
+};
 
-### Phase 5: Advanced Features
-**Communication Systems:**
-- Implement WhatsApp integration for client communication
-- Create automated notification templates and triggers
-- Build custom communication workflows for exceptions
-- Set up multi-channel notification management
+export const validateInternationalRequest = (clientCountry: string, originCountry: string) => {
+  const errors = [];
+  
+  if (!clientCountry) {
+    errors.push("Client country is required");
+  }
+  
+  if (!originCountry) {
+    errors.push("Origin country is required");
+  }
+  
+  if (clientCountry === originCountry) {
+    errors.push("Origin country must be different from your country (international logistics only)");
+  }
+  
+  const supportedCountries = SUPPORTED_COUNTRIES.map(c => c.code);
+  if (clientCountry && !supportedCountries.includes(clientCountry)) {
+    errors.push("Client country not supported");
+  }
+  
+  if (originCountry && !supportedCountries.includes(originCountry)) {
+    errors.push("Origin country not supported");
+  }
+  
+  return {
+    isValid: errors.length === 0,
+    errors
+  };
+};
+```
 
-**Reporting & Analytics:**
-- Implement operational reporting dashboards
-- Create performance metrics and KPI tracking
-- Build trend analysis and predictive analytics
-- Set up automated report generation and distribution
+### Frontend UI Requirements
 
-### Implementation Priorities
+#### Form Validation - Mandatory Implementation
+```typescript
+// Frontend MUST validate these fields before submission:
+const REQUIRED_FIELDS = {
+  client: ["clientName", "clientEmail", "clientPhone", "clientCountry"],
+  origin: ["originCountry", "originCity"],
+  package: ["packageType", "packageCategory", "packageDescription", "freightType"]
+};
 
-**Week 1-2: Foundation**
-- Database schema and models
-- Basic authentication and authorization
-- Core API framework setup
+// Email validation MUST use this exact pattern:
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-**Week 3-4: Request Processing**
-- Request reception and validation
-- Package creation workflows
-- Basic status management
+// International request validation MUST be enforced at form level:
+// - Origin country dropdown MUST exclude client's country
+// - Form MUST show error if user somehow selects same country
+// - Submit button MUST be disabled until all validations pass
+```
 
-**Week 5-6: Package Management**
-- Package lifecycle implementation
-- Status synchronization with client app
-- Inventory and location tracking
+#### Status Display - Client View Mapping
+```typescript
+// Frontend MUST map warehouse statuses to simplified client view:
+export const CLIENT_STATUS = {
+  SUBMITTED: 'SUBMITTED',
+  UNDER_REVIEW: 'UNDER_REVIEW', 
+  PROCESSING: 'PROCESSING',
+  READY_FOR_PICKUP: 'READY_FOR_PICKUP',
+  COMPLETED: 'COMPLETED'
+} as const;
 
-**Week 7-8: Shipment System**
-- Shipment creation and grouping
-- Basic logistics coordination
-- Delivery workflows
+export const STATUS_LABELS = {
+  [CLIENT_STATUS.SUBMITTED]: 'Request Submitted',
+  [CLIENT_STATUS.UNDER_REVIEW]: 'Under Review',
+  [CLIENT_STATUS.PROCESSING]: 'Processing',
+  [CLIENT_STATUS.READY_FOR_PICKUP]: 'Ready for Pickup',
+  [CLIENT_STATUS.COMPLETED]: 'Completed'
+};
 
-**Week 9-10: Integration & Testing**
-- Client app integration testing
-- End-to-end workflow validation
-- Performance optimization
+// Warehouse Status → Client Status Mapping (MUST be implemented exactly):
+// AWAITING_PICKUP → UNDER_REVIEW
+// RECEIVED → PROCESSING  
+// PROCESSING → PROCESSING
+// PROCESSED → PROCESSING
+// GROUPED → READY_FOR_PICKUP
+// SHIPPED → READY_FOR_PICKUP
+// IN_TRANSIT → READY_FOR_PICKUP
+// DELIVERED → COMPLETED
+// EXCEPTION → PROCESSING (with error notes)
+```
 
-**Week 11-12: Advanced Features**
-- Communication systems
-- Reporting and analytics
-- System monitoring and alerting
+#### Tracking Number Format - Frontend Display
+```typescript
+// Frontend MUST display tracking numbers in this exact format:
+export const generateTrackingNumber = () => {
+  const randomDigits = Math.floor(Math.random() * 1000000000000).toString().padStart(12, '0');
+  return `TT${randomDigits}`;
+};
 
-### Critical Success Metrics
+// Format: TT + 12 digits (e.g., TT123456789012)
+// Frontend MUST validate this format when accepting tracking input
+// Frontend MUST generate mock tracking numbers for demo purposes using this format
+```
 
-**Functional Requirements:**
-- 100% request-to-package conversion rate
-- Real-time status synchronization with client app
-- Zero package loss or misplacement
-- Complete audit trail for all operations
+### Form Component Requirements
 
-**Performance Requirements:**
-- < 2 second response time for all API calls
-- Handle 10,000+ packages per day
-- 99.9% system uptime
-- Automatic failover and recovery
+#### PackageOriginForm Requirements
+```typescript
+// MUST implement exactly:
+interface PackageOriginFormProps {
+  formData: {
+    clientCountry: string;
+    originCountry: string;
+    originCity: string;
+    // ...other fields
+  };
+  onInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
+}
 
-**Integration Requirements:**
-- Seamless client app integration
-- Real-time database synchronization
-- Automated notification delivery
-- Cross-platform data consistency
+// UI Requirements:
+// 1. Origin country dropdown MUST exclude client's own country
+// 2. MUST show warning if no countries available
+// 3. MUST display international logistics explanation
+// 4. City field MUST only appear after country selection
+// 5. MUST validate origin ≠ client country before allowing next step
+```
 
----
+#### PackageForm Requirements
+```typescript
+// MUST implement exactly:
+interface PackageFormProps {
+  formData: {
+    packageType: string;
+    packageCategory: string;
+    packageDescription: string;
+    freightType: string;
+    // ...other fields
+  };
+  onInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => void;
+}
 
-## Summary: The Complete Operational Blueprint
+// UI Requirements:
+// 1. Delivery type MUST default to "air" and be disabled
+// 2. Package type MUST only show DOCUMENT/NON_DOCUMENT options
+// 3. MUST show package type descriptions to help users
+// 4. Package description MUST be required with minimum length
+// 5. MUST validate all required fields before allowing next step
+```
 
-### What This Document Provides
+#### ConfirmForm Requirements
+```typescript
+// MUST implement exactly:
+interface ConfirmFormProps {
+  formData: CompleteFormData;
+  onBack: () => void;
+  onSubmit: (e: React.FormEvent) => Promise<void>;
+  isSubmitting: boolean;
+}
 
-**For Backend Developers:**
-- Complete implementation roadmap with phased approach
-- Detailed API specifications for all warehouse operations
-- Database schema with relationships and constraints
-- Business logic rules and validation requirements
-- Integration points with client app and external systems
+// UI Requirements:
+// 1. MUST display all form data for review
+// 2. MUST show international logistics confirmation
+// 3. MUST display next steps explanation
+// 4. Submit button MUST be disabled during submission
+// 5. MUST show loading state during form processing
+```
 
-**For System Architects:**
-- End-to-end workflow definitions
-- Data flow architecture with normalized database design
-- Status synchronization mechanisms across platforms
-- Scalability and performance requirements
-- Security and access control specifications
+### Data Submission Format - API Integration
 
-**For Business Stakeholders:**
-- Complete operational workflow from request to delivery
-- Business rules and exception handling procedures
-- Staff roles and responsibility definitions
-- Client communication and notification systems
-- Performance metrics and success criteria
+#### Request Payload Structure
+```typescript
+// Frontend MUST submit data in this exact format:
+interface PackageRequestPayload {
+  // Client information (from user profile)
+  userId: string;
+  clientCountry: string;
+  
+  // Origin information (user-selected)
+  originCountry: string;
+  originCity: string;
+  
+  // Package information (user-provided)
+  packageType: "DOCUMENT" | "NON_DOCUMENT";
+  deliveryType: "air"; // Only air is available
+  packageCategory: string;
+  packageDescription: string;
+  
+  // Optional fields
+  specialRequirements?: string;
+}
 
-### Platform Integration Truth
+// Frontend MUST validate this structure before API call
+// Frontend MUST handle API validation errors gracefully
+// Frontend MUST show success/error states appropriately
+```
 
-**The warehouse system IS the platform:**
-- Client app: User interface for request submission and tracking
-- Warehouse system: Complete operational backbone managing all logistics
-- Admin system: Management interface for system configuration and oversight
+### Error Handling Requirements
 
-**Data flow reality:**
-1. Client submits minimal data (user ID, package details, delivery preferences)
-2. Warehouse creates complete operational records (packages, tracking, processing)
-3. All status updates, notifications, and business logic flow through warehouse
-4. Client app displays warehouse-generated data via real-time synchronization
+#### Validation Error Messages
+```typescript
+// Frontend MUST use these exact error messages:
+const ERROR_MESSAGES = {
+  REQUIRED_FIELD: "This field is required",
+  INVALID_EMAIL: "Please enter a valid email address",
+  INTERNATIONAL_ONLY: "Origin country must be different from your country (international logistics only)",
+  COUNTRY_NOT_SUPPORTED: "Selected country is not supported",
+  PACKAGE_TYPE_INVALID: "Please select a valid package type (Document or Non-Document)",
+  DELIVERY_TYPE_INVALID: "Only Air delivery is currently available",
+  DESCRIPTION_TOO_SHORT: "Package description must be at least 10 characters",
+  FORM_INCOMPLETE: "Please fill in all required fields marked with *"
+};
 
-### Critical Implementation Notes
+// Error display requirements:
+// 1. Field-level errors MUST appear below each input
+// 2. Form-level errors MUST appear at top of form
+// 3. Step validation errors MUST prevent step progression
+// 4. API errors MUST be displayed clearly with retry option
+```
 
-**Package Types - Absolute Truth:**
-- Only DOCUMENT and NON_DOCUMENT types exist
-- This is definitive and unchangeable
-- Any other references are errors
+#### Success Handling Requirements
+```typescript
+// Frontend MUST handle success states:
+interface SuccessFlow {
+  submission: {
+    showLoader: boolean;
+    showSuccess: boolean;
+    redirectTo: "/app/shipment-history";
+    message: "Success! Your package request has been submitted.";
+  };
+  tracking: {
+    generateTrackingNumber: boolean;
+    displayFormat: "TT############";
+    copyToClipboard: boolean;
+  };
+}
+```
 
-**Status Flows - Immutable Sequence:**
-- Client app status maps to warehouse status
-- Packages progress forward only through defined states
-- Status history provides complete audit trail
+### Multi-Step Form Requirements
 
-**Database Architecture - Normalized Design:**
-- No data duplication across systems
-- Foreign key relationships ensure data integrity
-- JOINs provide complete data views when needed
-- Efficient data transfer between systems
+#### Step Navigation Logic
+```typescript
+// Frontend MUST implement exact step progression:
+const FORM_STEPS = [
+  {
+    id: 1,
+    name: "Origin & Client",
+    component: "PackageOriginForm",
+    validation: "validateOriginStep",
+    requiredFields: ["originCountry", "originCity", "clientName", "clientEmail", "clientPhone"]
+  },
+  {
+    id: 2,
+    name: "Package",
+    component: "PackageForm", 
+    validation: "validatePackageStep",
+    requiredFields: ["packageType", "packageCategory", "packageDescription", "freightType"]
+  },
+  {
+    id: 3,
+    name: "Confirm",
+    component: "ConfirmForm",
+    validation: "validateFinalStep",
+    action: "submitForm"
+  }
+];
 
-### Next Steps for Implementation
+// Step indicator MUST show current progress
+// Back button MUST be available on steps 2 and 3
+// Next button MUST validate current step before proceeding
+// Submit MUST only be available on final step
+```
 
-1. **Start with database schema** - This is the foundation everything builds on
-2. **Implement core request processing** - This is where client requests become warehouse operations
-3. **Build package lifecycle management** - This is the heart of the logistics operation
-4. **Add shipment orchestration** - This is how packages get delivered
-5. **Integrate communication systems** - This is how everyone stays informed
-6. **Implement reporting and analytics** - This is how operations are optimized
+### Testing Requirements
 
-**This document contains everything needed to build and operate the complete Ttarius Logistics warehouse system. Every business rule, workflow, data model, and integration point has been defined to serve as the definitive implementation guide.**
+#### Frontend Unit Tests
+```typescript
+// MUST test these scenarios:
+describe('Package Type Validation', () => {
+  it('should only allow DOCUMENT and NON_DOCUMENT types');
+  it('should reject invalid package types');
+  it('should show package type descriptions');
+});
 
----
+describe('International Logistics Validation', () => {
+  it('should exclude client country from origin options');
+  it('should show error for same origin and client country');
+  it('should validate supported countries only');
+});
 
-*Last Updated: January 2025*  
-*Document Version: 2.0 - Complete Operational Blueprint*  
-*Status: Ready for Backend Implementation*
+describe('Form Submission', () => {
+  it('should validate all required fields');
+  it('should show loading state during submission');
+  it('should handle API errors gracefully');
+  it('should redirect on successful submission');
+});
+```
+
+#### Integration Tests
+```typescript
+// MUST test complete user flows:
+describe('Complete Package Request Flow', () => {
+  it('should complete Ghana client requesting from USA');

@@ -1,5 +1,6 @@
 import React from "react";
 import { FaInfoCircle, FaGlobe, FaLock } from "react-icons/fa";
+import { SUPPORTED_COUNTRIES } from "../lib/constants";
 
 // Interface for address suggestions from OpenStreetMap API
 interface AddressSuggestion {
@@ -22,22 +23,9 @@ interface AddressSuggestion {
 
 /**
  * Available countries for package origin selection
- * Restricted to Ghana and USA as per business requirements
+ * Now using centralized constants from lib/constants.ts to ensure alignment with warehouse system
  */
-const AVAILABLE_COUNTRIES = [
-  {
-    code: "GH",
-    name: "Ghana",
-    flag: "🇬🇭",
-    phoneCode: "+233"
-  },
-  {
-    code: "US",
-    name: "United States",
-    flag: "🇺🇸",
-    phoneCode: "+1"
-  }
-];
+const AVAILABLE_COUNTRIES = SUPPORTED_COUNTRIES;
 
 // Interface for the form data in the simplified shipment flow
 interface FormData {
