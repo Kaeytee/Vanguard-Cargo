@@ -79,8 +79,29 @@ export default function App() {
           </>
         }
       />
-      <Route path="/login" element={<Login />} />
-      <Route path="/register" element={<Register />} />
+      {/* Authentication Routes */}
+      <Route path="/auth" element={<Navigate to="/login" replace />} />
+      <Route
+        path="/login"
+        element={
+          <>
+            <Navbar />
+            <Login />
+            <Footer />
+          </>
+        }
+      />
+      <Route
+        path="/register"
+        element={
+          <>
+            <Navbar />
+            <Register />
+            <Footer />
+          </>
+        }
+      />
+      
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/verify-email" element={<EmailVerification />} />
 
