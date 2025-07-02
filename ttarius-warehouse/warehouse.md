@@ -54,6 +54,7 @@ The client app is essentially a user interface that communicates with this wareh
 11. [API Endpoints](#api-endpoints)
 12. [Security & Access Control](#security--access-control)
 13. [Frontend Integration Requirements](#frontend-integration-requirements)
+14. [Currency Handling & Pricing System](#currency-handling--pricing-system)
 
 ## Business Logic Framework: Pure International Logistics
 
@@ -528,6 +529,38 @@ EXCEPTION           →    PROCESSING (with notes)
 - System configuration and optimization
 - Reporting and analytics
 - Integration with other systems
+
+### Warehouse Staff Hierarchy & Organizational Structure
+
+**Executive Level Management:**
+- **Transportation Manager**: Oversees all shipping and logistics operations
+  - **Transportation Coordinator**: Reports to Transportation Manager, handles day-to-day shipping coordination
+- **Warehouse Manager**: Manages warehouse operations and staff
+- **Inventory Analyst**: Tracks and analyzes inventory levels and movements
+- **Logistics Analyst**: Analyzes logistics performance and optimization opportunities
+- **Customer Service Representative**: Handles customer inquiries and communication
+- **Export Documentation Specialist**: Manages all international shipping documentation and customs requirements
+
+**Operational Level Staff:**
+- **Order Fulfillment Specialists**: Report to Transportation Coordinator, handle package preparation and fulfillment
+- **Warehouse Workers**: Handle physical package operations and movements
+- **Quality Control Staff**: Ensure package condition and processing standards
+- **Security Personnel**: Maintain warehouse security and access control
+
+**Role-Specific Permissions Matrix:**
+
+| Role | Package View | Status Update | Shipment Creation | Customer Release | System Admin |
+|------|-------------|---------------|-------------------|------------------|--------------|
+| Transportation Manager | All | Yes | Yes | Yes | Limited |
+| Transportation Coordinator | Assigned | Yes | Yes | Yes | No |
+| Warehouse Manager | All | Yes | Yes | Yes | Limited |
+| Order Fulfillment Specialists | Assigned | Limited | No | No | No |
+| Inventory Analyst | All | Limited | No | No | No |
+| Logistics Analyst | All | No | No | No | No |
+| Customer Service Rep | Customer-specific | Limited | No | Yes | No |
+| Export Documentation | International | Limited | No | No | No |
+| Warehouse Workers | Assigned | Limited | No | No | No |
+| Warehouse Admin | All | Yes | Yes | Yes | Full |
 
 ## Client Communication System
 
@@ -1234,3 +1267,412 @@ describe('Form Submission', () => {
 // MUST test complete user flows:
 describe('Complete Package Request Flow', () => {
   it('should complete Ghana client requesting from USA');
+```
+## Currency Handling & Pricing System
+
+### Base Currency Framework
+**All prices in the Ttarius Logistics system are stored in Ghana Cedis (GHC) in the database.**
+
+**Currency Conversion Rules:**
+- **USD Payments**: Converted to GHC using current exchange rate before database storage
+- **Other Currencies**: All converted to GHC as the universal base currency
+- **Exchange Rates**: Updated daily via financial API integration
+- **Historical Tracking**: Complete audit trail of exchange rates used for each transaction
+
+### In-Person Pricing Determination
+**All package pricing is determined in-person by warehouse staff during physical package inspection.**
+
+**Pricing Factors:**
+1. **Physical Measurements**: Length × Width × Height (cm), Weight (kg)
+2. **Package Type**: Document vs Non-Document pricing tiers
+3. **Delivery Service**: Air freight (primary), future expansion services
+4. **Origin/Destination**: International route-specific pricing
+5. **Special Handling**: Fragile, hazardous, oversized, or valuable items
+6. **Insurance Value**: Optional insurance based on declared package value
+
+### Pricing Structure Framework
+```
+Base Pricing Calculation (in GHC):
+Base Rate + Weight Fee + Dimension Fee + Service Fee + Special Handling + Insurance
+
+Base Rates (GHC):
+- Document Package (Ghana ↔ USA): 50 GHC base
+- Non-Document Package (Ghana ↔ USA): 80 GHC base
+
+Weight Tiers (per kg):
+- 0-2kg: 15 GHC per kg
+- 2-5kg: 20 GHC per kg  
+- 5-10kg: 25 GHC per kg
+- 10kg+: 30 GHC per kg
+
+Volume Pricing (if exceeds weight calculation):
+- Per cubic meter: 150 GHC
+
+Service Fees:
+- Air Freight: Included in base rate
+- Express Handling: +50 GHC
+- Special Handling: +25-100 GHC (staff determined)
+
+Insurance Options:
+- Basic Coverage: Included (up to 500 GHC)
+- Extended Coverage: 2% of declared value
+```
+
+### Currency Conversion API Integration
+```typescript
+// Exchange Rate Management
+interface ExchangeRate {
+  id: UUID;
+  fromCurrency: string; // USD, EUR, etc.
+  toCurrency: "GHC"; // Always GHC as base
+  rate: number;
+  dateRecorded: timestamp;
+  sourceAPI: string;
+  isActive: boolean;
+}
+
+// Pricing Calculation API
+POST /api/warehouse/pricing/calculate
+{
+  weight: number; // kg
+  dimensions: {
+    length: number; // cm
+    width: number;  // cm
+    height: number; // cm
+  };
+  packageType: "DOCUMENT" | "NON_DOCUMENT";
+  originCountry: string;
+  destinationCountry: string;
+  declaredValue: number; // in original currency
+  originalCurrency: string; // USD, GHC, etc.
+  specialHandling: string[]; // fragile, hazardous, etc.
+}
+
+Response:
+{
+  pricing: {
+    baseRate: number; // GHC
+    weightFee: number; // GHC
+    dimensionFee: number; // GHC
+    serviceFee: number; // GHC
+    specialHandlingFee: number; // GHC
+    insuranceFee: number; // GHC
+    totalGHC: number; // Final price in GHC
+    exchangeRateUsed?: ExchangeRate; // If conversion applied
+  };
+  breakdown: string[]; // Detailed cost explanation
+}
+```
+
+### Staff Pricing Workflow
+**When Physical Package Arrives:**
+1. **Measurement**: Staff measures exact dimensions and weight
+2. **Assessment**: Evaluate package condition and special requirements
+3. **Calculation**: Use warehouse system to calculate pricing in real-time
+4. **Currency Handling**: If customer paid in USD, convert to GHC for storage
+5. **Documentation**: Record final GHC price in package record
+6. **Receipt**: Generate receipt showing both original currency and GHC equivalent
+
+### Currency Storage & Reporting
+```sql
+-- All monetary values stored in GHC
+CREATE TABLE package_pricing (
+  id UUID PRIMARY KEY,
+  package_id UUID REFERENCES packages(id),
+  total_price_ghc DECIMAL(10,2) NOT NULL, -- Always in GHC
+  original_currency VARCHAR(3), -- USD, GHC, etc.
+  original_amount DECIMAL(10,2), -- Original payment amount
+  exchange_rate_id UUID REFERENCES exchange_rates(id),
+  pricing_breakdown JSONB, -- Detailed cost components
+  determined_by UUID REFERENCES users(id), -- Staff who set price
+  determined_at TIMESTAMP NOT NULL,
+  payment_status VARCHAR(20) DEFAULT 'PENDING'
+);
+```
+
+## Customer Identification & Package Release System
+
+### Customer Lookup & Verification System
+**Warehouse staff can identify customers and their packages using multiple methods:**
+
+**Primary Identification Methods:**
+1. **Customer ID**: Unique system-generated ID for each customer
+2. **Phone Number**: Customer's registered phone number
+3. **Email Address**: Customer's registered email address
+4. **National ID**: Government-issued identification number
+5. **Tracking Number**: Specific package tracking number (TT############)
+
+### Package Lookup Workflow
+**Staff Interface for Customer Service:**
+
+```typescript
+// Customer Lookup API
+GET /api/warehouse/customers/lookup
+Query Parameters:
+- customerId?: string
+- phoneNumber?: string
+- emailAddress?: string
+- nationalId?: string
+- trackingNumber?: string
+
+Response:
+{
+  customer: {
+    id: UUID;
+    name: string;
+    email: string;
+    phone: string;
+    country: string;
+    registrationDate: timestamp;
+  };
+  packages: [
+    {
+      id: UUID;
+      trackingNumber: string;
+      status: PackageStatus;
+      shipmentId?: UUID;
+      shipmentNumber?: string;
+      estimatedArrival: timestamp;
+      currentLocation: string;
+      readyForPickup: boolean;
+      canBeReleased: boolean;
+    }
+  ];
+  shipments: [
+    {
+      id: UUID;
+      shipmentNumber: string;
+      status: ShipmentStatus;
+      packageCount: number;
+      estimatedDelivery: timestamp;
+      actualArrival?: timestamp;
+    }
+  ];
+}
+```
+
+### Package Status Verification & Management
+**Before Package Release, Staff Must Verify:**
+
+1. **Customer Identity**: Confirm customer matches package owner
+2. **Package Status**: Ensure package is "READY_FOR_PICKUP" or "DELIVERED"
+3. **Location Verification**: Confirm package is physically in the warehouse
+4. **Payment Status**: Verify all fees have been paid
+5. **Special Requirements**: Check for any special handling or documentation needs
+
+```typescript
+// Package Status Check API
+GET /api/warehouse/packages/{packageId}/release-eligibility
+
+Response:
+{
+  eligible: boolean;
+  requirements: {
+    statusCheck: boolean; // Is status READY_FOR_PICKUP?
+    paymentCheck: boolean; // Are all fees paid?
+    identityCheck: boolean; // Customer identity confirmed?
+    locationCheck: boolean; // Package physically available?
+    documentationCheck: boolean; // All docs complete?
+  };
+  blockers: string[]; // Reasons if not eligible
+  actions: string[]; // Required actions before release
+}
+```
+
+### Secure Package Release Process
+**Multi-Step Verification Workflow:**
+
+**Step 1: Customer Arrival & Initial Verification**
+```typescript
+// Staff initiates customer check-in
+POST /api/warehouse/release/initiate
+{
+  customerIdentifier: string; // ID, phone, email, etc.
+  verificationType: "CUSTOMER_ID" | "PHONE" | "EMAIL" | "NATIONAL_ID" | "TRACKING_NUMBER";
+  staffId: UUID; // Staff member handling release
+}
+```
+
+**Step 2: Identity Confirmation**
+```typescript
+// Verify customer identity with multiple methods
+POST /api/warehouse/release/verify-identity
+{
+  sessionId: UUID; // From initiation
+  primaryId: string; // Main identifier used
+  secondaryVerification: {
+    method: "PHONE_SMS" | "EMAIL_CODE" | "PHOTO_ID" | "BIOMETRIC";
+    value: string; // Code, photo, etc.
+  };
+  photoIdCapture?: string; // Base64 image of customer ID
+}
+```
+
+**Step 3: Package Selection & Status Update**
+```typescript
+// Select specific packages for release
+POST /api/warehouse/release/select-packages
+{
+  sessionId: UUID;
+  packageIds: UUID[];
+  releaseReason: "NORMAL_PICKUP" | "EARLY_RELEASE" | "SPECIAL_CIRCUMSTANCES";
+  managerApproval?: UUID; // Required for non-normal releases
+}
+```
+
+**Step 4: Final Release & Documentation**
+```typescript
+// Complete package release with full documentation
+POST /api/warehouse/release/complete
+{
+  sessionId: UUID;
+  customerSignature: string; // Base64 image
+  staffSignature: string; // Base64 image
+  customerPhoto: string; // Base64 image for verification
+  packagePhotos: string[]; // Base64 images of packages being released
+  releaseNotes?: string; // Any special notes
+  witnessStaffId?: UUID; // Second staff member if required
+}
+```
+
+### Package Release Authorization Matrix
+
+| Package Value (GHC) | Staff Level Required | Manager Approval | Photo Documentation | Witness Required |
+|---------------------|---------------------|------------------|-------------------|------------------|
+| 0 - 500 | Warehouse Worker | No | Customer ID + Signature | No |
+| 501 - 2000 | Warehouse Worker | No | Customer ID + Signature + Package Photos | No |
+| 2001 - 5000 | Order Fulfillment Specialist | No | Full Documentation | Yes |
+| 5000+ | Warehouse Manager | Yes | Full Documentation | Yes |
+| Special Circumstances | Warehouse Manager | Yes | Full Documentation | Yes |
+
+### Shipment Tracking Integration
+**When customer has multiple packages in a shipment:**
+
+```typescript
+// Get shipment details with all packages
+GET /api/warehouse/shipments/{shipmentId}/customer-packages/{customerId}
+
+Response:
+{
+  shipment: {
+    id: UUID;
+    number: string;
+    status: ShipmentStatus;
+    totalPackages: number;
+    customerPackages: number;
+    estimatedDelivery: timestamp;
+    actualArrival?: timestamp;
+  };
+  customerPackages: [
+    {
+      id: UUID;
+      trackingNumber: string;
+      status: PackageStatus;
+      canBeReleased: boolean;
+      requiresSpecialHandling: boolean;
+    }
+  ];
+  releaseOptions: {
+    releaseIndividually: boolean; // Can release packages one by one
+    releaseAsGroup: boolean; // Must release all together
+    partialReleaseAllowed: boolean; // Some packages ready, others not
+  };
+}
+```
+
+### Release Documentation & Audit Trail
+**Every package release generates comprehensive documentation:**
+
+```sql
+CREATE TABLE package_releases (
+  id UUID PRIMARY KEY,
+  package_id UUID REFERENCES packages(id),
+  customer_id UUID REFERENCES users(id),
+  release_session_id UUID, -- Links all packages released together
+  
+  -- Staff Information
+  releasing_staff_id UUID REFERENCES users(id),
+  witness_staff_id UUID REFERENCES users(id),
+  manager_approval_id UUID REFERENCES users(id),
+  
+  -- Verification Details
+  identity_verification_method VARCHAR(50),
+  identity_verification_value VARCHAR(255), -- Phone, email, etc.
+  photo_id_captured BOOLEAN DEFAULT FALSE,
+  
+  -- Documentation
+  customer_signature_image TEXT, -- Base64
+  staff_signature_image TEXT, -- Base64
+  customer_photo_image TEXT, -- Base64
+  package_photos JSONB, -- Array of base64 images
+  
+  -- Release Details
+  release_type VARCHAR(50), -- NORMAL, EARLY, SPECIAL
+  release_reason TEXT,
+  release_notes TEXT,
+  
+  -- Timing
+  initiated_at TIMESTAMP,
+  completed_at TIMESTAMP,
+  
+  -- Status
+  status VARCHAR(20) DEFAULT 'COMPLETED', -- INITIATED, VERIFIED, COMPLETED, CANCELLED
+  
+  CONSTRAINT valid_release_type CHECK (release_type IN ('NORMAL_PICKUP', 'EARLY_RELEASE', 'SPECIAL_CIRCUMSTANCES'))
+);
+```
+
+### Error Handling & Special Situations
+
+**Common Scenarios & Solutions:**
+
+1. **Customer Lost ID**: 
+   - Use secondary verification (phone SMS + email)
+   - Require manager approval
+   - Enhanced photo documentation
+
+2. **Package Not Ready**: 
+   - Show expected ready date
+   - Offer notification signup
+   - Explain current status
+
+3. **Payment Pending**: 
+   - Block release until payment
+   - Direct to payment processing
+   - Hold package securely
+
+4. **Damaged Package**: 
+   - Document damage thoroughly
+   - Get customer acknowledgment
+   - Process insurance claim if applicable
+
+5. **Wrong Customer**: 
+   - Verify identity more thoroughly
+   - Check for similar names/details
+   - Require additional documentation
+
+### Customer Communication During Release
+```typescript
+// Automated notifications during release process
+POST /api/warehouse/notifications/release-status
+{
+  customerId: UUID;
+  packageIds: UUID[];
+  status: "ARRIVAL_CONFIRMED" | "READY_FOR_PICKUP" | "PICKUP_SCHEDULED" | "RELEASED";
+  channel: "SMS" | "EMAIL" | "WHATSAPP" | "ALL";
+  customMessage?: string;
+}
+
+// WhatsApp integration for real-time updates
+POST /api/warehouse/whatsapp/release-notification
+{
+  customerPhone: string;
+  packageTrackingNumbers: string[];
+  messageTemplate: "PACKAGE_READY" | "PLEASE_BRING_ID" | "PACKAGE_RELEASED";
+  warehouseLocation: {
+    address: string;
+    hours: string;
+    contactNumber: string;
+  };
+}
+```
