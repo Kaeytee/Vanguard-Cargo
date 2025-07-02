@@ -29,7 +29,7 @@ const Dashboard: React.FC = () => {
       title: t('tracking'),
       description: t('receiveLiveUpdates'),
       imageSrc: "/track.png", // Map with pins
-      href: "/app/track-shipment",
+      href: "/app/tracking",
       iconComponent: "location" // Using the location icon from the image
     },
     {
