@@ -11,6 +11,8 @@ interface User {
   state?: string;
   zip?: string;
   country?: string;
+  emailVerified?: boolean;
+  accountStatus?: 'ACTIVE' | 'PENDING_VERIFICATION' | 'SUSPENDED' | 'RESTRICTED' | 'BANNED' | 'DORMANT';
 }
 
 interface AuthContextType {

@@ -40,7 +40,9 @@ export default function Login() {
 					city: response.data.user.city,
 					state: response.data.user.state,
 					zip: response.data.user.zip,
-					country: response.data.user.country
+					country: response.data.user.country,
+					emailVerified: response.data.user.emailVerified,
+					accountStatus: response.data.user.accountStatus
 				};
 				
 				// Set user in AuthContext

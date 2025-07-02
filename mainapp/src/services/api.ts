@@ -49,6 +49,8 @@ export interface UserProfile {
   state?: string;
   zip?: string;
   profileImage?: string;
+  emailVerified?: boolean;
+  accountStatus?: 'ACTIVE' | 'PENDING_VERIFICATION' | 'SUSPENDED' | 'RESTRICTED' | 'BANNED' | 'DORMANT';
   createdAt: string;
   updatedAt: string;
 }
@@ -106,6 +108,19 @@ export interface ResetPasswordRequest {
   code: string;
   newPassword: string;
   confirmPassword: string;
+}
+
+export interface VerifyEmailRequest {
+  token: string;
+}
+
+export interface SendVerificationRequest {
+  email: string;
+}
+
+export interface VerificationResponse {
+  message: string;
+  success: boolean;
 }
 
 export interface ForgotPasswordResponse {
@@ -557,7 +572,7 @@ class ApiService {
   async register(userData: RegisterRequest): Promise<ApiResponse<AuthResponse>> {
     return this.callApiOrMock(
       // Mock data function
-      () => {
+      async () => {
         const newUser: UserProfile = {
           id: 'user' + Date.now(),
           firstName: userData.firstName,
@@ -566,6 +581,8 @@ class ApiService {
           phone: userData.phone,
           country: userData.country,
           address: userData.address,
+          emailVerified: false, // New users start unverified
+          accountStatus: 'PENDING_VERIFICATION', // Account requires verification
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString()
         };
@@ -597,13 +614,25 @@ class ApiService {
         // Store notification settings for the new user
         localStorage.setItem(`notificationSettings_${newUser.id}`, JSON.stringify(initialNotificationSettings));
         
+        // Automatically send verification email
+        await this.sendVerificationEmail(userData.email);
+        
         return authResponse;
       },
       // Real API function
-      () => this.request<AuthResponse>('/auth/register', {
-        method: 'POST',
-        body: JSON.stringify(userData),
-      })
+      async () => {
+        const result = await this.request<AuthResponse>('/auth/register', {
+          method: 'POST',
+          body: JSON.stringify(userData),
+        });
+        
+        // After successful registration, send verification email
+        if (result.success && result.data?.user?.email) {
+          await this.sendVerificationEmail(result.data.user.email);
+        }
+        
+        return result;
+      }
     );
   }
 
@@ -685,11 +714,11 @@ class ApiService {
         
         // Validate input
         if (newPassword !== confirmPassword) {
-          throw new Error('Passwords do not match.');
+          throw new Error('Passwords do not match');
         }
         
         if (newPassword.length < 8) {
-          throw new Error('Password must be at least 8 characters long.');
+          throw new Error('Password must be at least 8 characters long');
         }
         
         if (email === storedEmail && codeVerified === 'true') {
@@ -709,6 +738,92 @@ class ApiService {
       () => this.request<ForgotPasswordResponse>('/auth/reset-password', {
         method: 'POST',
         body: JSON.stringify({ email, code, newPassword, confirmPassword }),
+      })
+    );
+  }
+
+  // ===== EMAIL VERIFICATION ENDPOINTS =====
+
+  async sendVerificationEmail(email: string): Promise<ApiResponse<VerificationResponse>> {
+    return this.callApiOrMock(
+      // Mock data function
+      () => {
+        // Store the email temporarily for mock verification
+        localStorage.setItem('verificationEmail', email);
+        // Generate a mock verification token
+        const mockToken = `mock-verification-token-${Date.now()}`;
+        localStorage.setItem('verificationToken', mockToken);
+        
+        const mockResponse: VerificationResponse = {
+          message: 'Verification email sent successfully. Please check your inbox.',
+          success: true
+        };
+        return mockResponse;
+      },
+      // Real API function
+      () => this.request<VerificationResponse>('/auth/send-verification', {
+        method: 'POST',
+        body: JSON.stringify({ email }),
+      })
+    );
+  }
+
+  async verifyEmail(token: string): Promise<ApiResponse<VerificationResponse>> {
+    return this.callApiOrMock(
+      // Mock data function
+      () => {
+        const storedToken = localStorage.getItem('verificationToken');
+        const verificationEmail = localStorage.getItem('verificationEmail');
+        
+        if (token === storedToken && verificationEmail) {
+          // Mark user as verified in localStorage
+          const user = JSON.parse(localStorage.getItem('user') || '{}');
+          if (user.email === verificationEmail) {
+            user.emailVerified = true;
+            user.accountStatus = 'ACTIVE';
+            localStorage.setItem('user', JSON.stringify(user));
+          }
+          
+          // Clean up verification data
+          localStorage.removeItem('verificationEmail');
+          localStorage.removeItem('verificationToken');
+          
+          const mockResponse: VerificationResponse = {
+            message: 'Email verified successfully! Your account is now active.',
+            success: true
+          };
+          return mockResponse;
+        } else {
+          throw new Error('Invalid or expired verification token.');
+        }
+      },
+      // Real API function
+      () => this.request<VerificationResponse>('/auth/verify-email', {
+        method: 'POST',
+        body: JSON.stringify({ token }),
+      })
+    );
+  }
+
+  async resendVerificationEmail(email: string): Promise<ApiResponse<VerificationResponse>> {
+    return this.callApiOrMock(
+      // Mock data function
+      () => {
+        // Generate a new mock verification token
+        const mockToken = `mock-verification-token-${Date.now()}`;
+        localStorage.setItem('verificationToken', mockToken);
+        localStorage.setItem('verificationEmail', email);
+        
+        const mockResponse: VerificationResponse = {
+          message: 'Verification email resent successfully. Please check your inbox.',
+          success: true
+        };
+        return mockResponse;
+      },
+      // Real API function
+      () => this.request<VerificationResponse>('/auth/resend-verification', {
+        method: 'POST',
+        body: JSON.stringify({ email }),
       })
     );
   }

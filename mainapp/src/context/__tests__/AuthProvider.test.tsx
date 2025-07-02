@@ -19,7 +19,9 @@ function TestComponent() {
           id: '1',
           name: 'Test User',
           email: 'test@example.com',
-          phone: '+1234567890'
+          phone: '+1234567890',
+          emailVerified: true,
+          accountStatus: 'ACTIVE'
         })}
         data-testid="set-user"
       >
@@ -31,7 +33,9 @@ function TestComponent() {
           name: 'Another User',
           email: 'another@example.com',
           image: 'https://example.com/avatar.jpg',
-          phone: '+0987654321'
+          phone: '+0987654321',
+          emailVerified: false,
+          accountStatus: 'PENDING_VERIFICATION'
         })}
         data-testid="set-user-with-image"
       >
@@ -179,7 +183,10 @@ describe('AuthProvider', () => {
     const testUser = {
       id: '1',
       name: 'Stored User',
-      email: 'stored@example.com'
+      email: 'stored@example.com',
+      phone: '+1234567890',
+      emailVerified: true,
+      accountStatus: 'ACTIVE' as const
     }
     localStorage.setItem('user', JSON.stringify(testUser))
     
@@ -214,7 +221,10 @@ describe('AuthProvider', () => {
     const testUser = {
       id: '1',
       name: 'Test User',
-      email: 'test@example.com'
+      email: 'test@example.com',
+      phone: '+1234567890',
+      emailVerified: false,
+      accountStatus: 'PENDING_VERIFICATION' as const
     }
     localStorage.setItem('user', JSON.stringify(testUser))
     

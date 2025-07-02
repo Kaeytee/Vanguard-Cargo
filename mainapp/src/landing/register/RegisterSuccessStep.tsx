@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { CheckCircle, Mail, ArrowRight } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 interface RegisterSuccessStepProps {
   email: string;
@@ -13,6 +14,7 @@ export const RegisterSuccessStep: React.FC<RegisterSuccessStepProps> = ({
   userName, 
   onGoToLogin 
 }) => {
+  const navigate = useNavigate();
   return (
     <motion.div 
       key="register-success"
@@ -83,17 +85,27 @@ export const RegisterSuccessStep: React.FC<RegisterSuccessStepProps> = ({
       {/* Action Buttons */}
       <div className="space-y-3">
         <motion.button
-          onClick={onGoToLogin}
-          className="w-full font-semibold px-6 py-3 rounded-lg transition-all duration-200 bg-red-500 hover:bg-red-600 text-white flex items-center justify-center space-x-2"
+          onClick={() => navigate('/verify-email')}
+          className="w-full font-semibold px-6 py-3 rounded-lg transition-all duration-200 bg-blue-500 hover:bg-blue-600 text-white flex items-center justify-center space-x-2"
           whileHover={{ scale: 1.02, y: -2 }}
           whileTap={{ scale: 0.98 }}
         >
-          <span>Continue to Login</span>
+          <Mail className="h-4 w-4" />
+          <span>Verify Email Now</span>
+        </motion.button>
+
+        <motion.button
+          onClick={onGoToLogin}
+          className="w-full font-semibold px-6 py-3 rounded-lg transition-all duration-200 bg-gray-100 hover:bg-gray-200 text-gray-700 flex items-center justify-center space-x-2"
+          whileHover={{ scale: 1.02, y: -2 }}
+          whileTap={{ scale: 0.98 }}
+        >
+          <span>Skip for Now</span>
           <ArrowRight className="h-4 w-4" />
         </motion.button>
 
-        <p className="text-xs text-gray-500">
-          You can log in even before verifying your email, but some features may be limited.
+        <p className="text-xs text-gray-500 text-center">
+          You can verify your email later, but some features may be limited until verification.
         </p>
       </div>
     </motion.div>
