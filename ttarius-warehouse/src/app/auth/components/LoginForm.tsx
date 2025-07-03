@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Eye, EyeOff, LogIn } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
+import { logger } from '../../../config/environment';
 
 interface LoginFormProps {
   onSuccess?: () => void;
@@ -24,7 +25,8 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
       await login(credentials.employeeId, credentials.password);
       onSuccess?.();
     } catch (error) {
-      console.error('Login failed:', error);
+      // Error logging is handled by the auth service
+      logger.error('Login form error:', error instanceof Error ? error.message : 'Unknown error');
     } finally {
       setIsLoading(false);
     }
