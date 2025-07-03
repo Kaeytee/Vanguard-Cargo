@@ -4,7 +4,6 @@ export { AuthProvider } from './app/auth/components/AuthProvider';
 export { useAuth } from './app/auth/hooks/useAuth';
 
 // Dashboard Components
-export { default as DashboardCard } from './app/dashboard/components/DashboardCard';
 
 // Package Management Components
 export { default as PackageCard } from './app/packages/components/PackageCard';

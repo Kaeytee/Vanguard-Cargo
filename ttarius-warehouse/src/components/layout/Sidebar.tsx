@@ -8,7 +8,8 @@ import {
   FiBarChart2, 
   FiDatabase,
   FiLogOut,
-  FiX
+  FiX,
+  FiPackage
 } from 'react-icons/fi';
 
 /**
@@ -113,8 +114,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onToggle }) => {
       <nav className="flex-1 py-6">
         <div>
           <NavItem icon={<FiGrid size={20} />} to="/dashboard" label="Dashboard" />
-          {/* <NavItem icon={<FiPackage size={20} />} to="/create-shipment" label="Create Shipment" /> */}
-          {/* // Removed as per workflow update: shipment requests are now initiated by clients, not warehouse/admin. */}
+          <NavItem icon={<FiPackage size={20} />} to="/create-shipment" label="Create Shipment" />
           <NavItem icon={<FiFileText size={20} />} to="/incoming-request" label="Incoming Request" />
           <NavItem icon={<FiClock size={20} />} to="/shipment-history" label="Shipment History" />
           <NavItem icon={<FiUsers size={20} />} to="/client-management" label="Client Management" />

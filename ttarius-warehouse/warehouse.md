@@ -55,6 +55,10 @@ The client app is essentially a user interface that communicates with this wareh
 12. [Security & Access Control](#security--access-control)
 13. [Frontend Integration Requirements](#frontend-integration-requirements)
 14. [Currency Handling & Pricing System](#currency-handling--pricing-system)
+15. [Scalability and Performance](#scalability-and-performance)
+16. [International Expansion Plan](#international-expansion-plan)
+17. [Monitoring and Alerts](#monitoring-and-alerts)
+18. [Future Production](#future-production)
 
 ## Business Logic Framework: Pure International Logistics
 
@@ -160,7 +164,7 @@ Client Request → Package Creation → Physical Receipt → Processing → Ship
      │               │                    │              │           │              │                    │
      │               │                    │              │           │              │                    │
    CLIENT         WAREHOUSE           WAREHOUSE      WAREHOUSE   WAREHOUSE      WAREHOUSE           CLIENT
-   SUBMITS        CREATES             RECEIVES       PROCESSES   SHIPS          STORES             COLLECTS
+   SUBMITS        CREATES             RECEIVES       PROCESSES   SHIPS          STORES             PACKAGE
    REQUEST        PACKAGE             PACKAGE        PACKAGE     PACKAGE        PACKAGE            PACKAGE
 ```
 
@@ -172,6 +176,43 @@ Client Request → Package Creation → Physical Receipt → Processing → Ship
 4. **Status Communication**: Keep all stakeholders informed of progress
 5. **Customer Pickup Coordination**: Notify customers when packages arrive at local warehouse for pickup
 6. **Exception Handling**: Manage delays, issues, and special requirements
+
+### Exception Handling Workflows
+
+**Critical Edge Cases and Resolution Protocols:**
+
+**Customs Delays and Rejections:**
+```
+1. Customs Rejection Detection
+   ↓
+2. Immediate Notification to Both Warehouses
+   ↓
+3. Document Request from Client
+   ↓
+4. Re-submission Process
+   ↓
+5. Resolution Tracking and Communication
+```
+
+**Lost Package Protocol:**
+1. **Initial Investigation**: 24-hour trace across all warehouse locations
+2. **Cross-Border Coordination**: Contact partner warehouses in origin/destination countries
+3. **Client Notification**: Immediate alert with investigation timeline
+4. **Insurance Claim**: Process compensation if package cannot be located
+5. **System Update**: Mark package as "LOST" with complete audit trail
+
+**Partial Shipment Arrivals:**
+1. **Shipment Reconciliation**: Compare manifest against physical arrivals
+2. **Missing Package Identification**: Log discrepancies immediately
+3. **Origin Warehouse Contact**: Coordinate with sending facility
+4. **Client Communication**: Notify affected customers of delays
+5. **Expedited Processing**: Priority handling for delayed packages when they arrive
+
+**Escalation Matrix for Cross-Border Issues:**
+- **Level 1**: Warehouse Staff (0-4 hours)
+- **Level 2**: Warehouse Manager (4-24 hours)
+- **Level 3**: Transportation Manager + International Coordinator (24+ hours)
+- **Level 4**: Executive Team + Legal (Critical issues)
 
 ### Critical Success Factors
 
@@ -362,6 +403,60 @@ AWAITING_PICKUP → RECEIVED → PROCESSING → PROCESSED → GROUPED → SHIPPE
 - **High-Value Items**: Additional security measures, insurance documentation
 - **International Packages**: Customs documentation, compliance checks
 
+### Mixed Package Handling
+
+**Edge Case: Client Submits Mixed Document/Non-Document Items**
+
+When a client attempts to submit a single request containing both document and non-document items, the warehouse system implements the following protocol:
+
+**Automatic Separation Workflow:**
+1. **Intake Detection**: Staff identifies mixed package contents during physical inspection
+2. **Package Splitting**: Create separate DOCUMENT and NON_DOCUMENT package records
+3. **New Tracking Numbers**: Generate distinct tracking numbers for each separated package
+4. **Client Notification**: Automatically notify client of package separation
+5. **Individual Processing**: Each separated package follows its respective workflow
+
+**Implementation Details:**
+```typescript
+// API Endpoint for Package Separation
+POST /api/warehouse/packages/{id}/separate
+{
+  originalPackageId: UUID;
+  separatedPackages: [
+    {
+      packageType: "DOCUMENT";
+      description: string;
+      items: string[];
+    },
+    {
+      packageType: "NON_DOCUMENT";
+      description: string;
+      items: string[];
+    }
+  ];
+  staffId: UUID;
+  separationReason: string;
+}
+
+Response: {
+  originalPackageId: UUID;
+  newPackages: [
+    {
+      id: UUID;
+      trackingNumber: string;
+      packageType: string;
+    }
+  ];
+  clientNotificationSent: boolean;
+}
+```
+
+**Client Communication for Separated Packages:**
+- Immediate SMS/email notification explaining separation
+- New tracking numbers provided for each separated package
+- Clear explanation of different processing timelines
+- Updated pricing calculation for each separated package
+
 ## Shipment Creation & Management
 
 ### Shipment Grouping Logic
@@ -464,16 +559,73 @@ EXCEPTION           →    PROCESSING (with notes)
 
 ### Tracking Number System
 
-**Format**: TT + 12 digits (e.g., TT123456789012)
+**Enhanced Format**: TT + 12 digits with check digits (e.g., TT123456789012)
 - **TT**: Ttarius Logistics identifier
-- **12 digits**: Unique sequential number with check digits
+- **12 digits**: UUID-based or sequential number with Luhn algorithm check digits for validation
+
+**Production-Ready Generation Algorithm:**
+```typescript
+// Secure tracking number generation
+export class TrackingNumberGenerator {
+  private static counter = 0;
+  
+  static generateTrackingNumber(): string {
+    // Use timestamp + counter + random for uniqueness
+    const timestamp = Date.now().toString().slice(-6);
+    const counter = (++this.counter % 1000).toString().padStart(3, '0');
+    const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+    
+    const baseNumber = timestamp + counter + random;
+    const checkDigit = this.calculateLuhnCheckDigit(baseNumber);
+    
+    return `TT${baseNumber}${checkDigit}`;
+  }
+  
+  private static calculateLuhnCheckDigit(number: string): string {
+    const digits = number.split('').reverse().map(Number);
+    let sum = 0;
+    
+    for (let i = 0; i < digits.length; i++) {
+      let digit = digits[i];
+      if (i % 2 === 1) {
+        digit *= 2;
+        if (digit > 9) digit -= 9;
+      }
+      sum += digit;
+    }
+    
+    return ((10 - (sum % 10)) % 10).toString();
+  }
+  
+  static validateTrackingNumber(trackingNumber: string): boolean {
+    if (!trackingNumber.match(/^TT\d{12}$/)) return false;
+    
+    const numberPart = trackingNumber.slice(2);
+    const checkDigit = numberPart.slice(-1);
+    const baseNumber = numberPart.slice(0, -1);
+    
+    return checkDigit === this.calculateLuhnCheckDigit(baseNumber);
+  }
+}
+```
+
+**Database Constraints:**
+```sql
+-- Ensure tracking number uniqueness
+ALTER TABLE packages ADD CONSTRAINT unique_tracking_number UNIQUE (trackingNumber);
+
+-- Add check constraint for format validation
+ALTER TABLE packages ADD CONSTRAINT valid_tracking_format 
+  CHECK (trackingNumber ~ '^TT\d{12}$');
+```
 
 **Tracking Capabilities:**
-- Real-time status updates
-- Location tracking
-- Estimated delivery times
-- Exception notifications
-- Delivery confirmation
+- Real-time status updates across international borders
+- Location tracking with GPS coordinates
+- Estimated delivery times with customs delays factored
+- Exception notifications with automatic escalation
+- Delivery confirmation with digital signature capture
+- Multi-language tracking interface
 
 ## Inventory & Warehouse Operations
 
@@ -606,6 +758,255 @@ EXCEPTION           →    PROCESSING (with notes)
 - Pickup scheduling messages (with warehouse address and hours)
 - Exception notification messages
 - Pickup confirmation messages
+
+### WhatsApp Integration Details
+
+**Rate Limits and Cost Management:**
+- **Message Limits**: 1,000 messages per day per phone number (WhatsApp Business API)
+- **Cost Structure**: $0.0055 per message for service messages, $0.0395 for marketing messages
+- **Rate Limiting**: Maximum 50 messages per minute per recipient
+- **Cost Optimization**: Use template messages to reduce costs by 60%
+
+**Message Security and Encryption:**
+```typescript
+// Encrypted tracking number transmission
+interface SecureWhatsAppMessage {
+  recipient: string;
+  templateName: string;
+  parameters: {
+    trackingNumber: string; // Encrypted before transmission
+    customerName: string;
+    status: string;
+    estimatedDate?: string;
+  };
+  encryptionKey: string;
+  messageType: 'STATUS_UPDATE' | 'PICKUP_READY' | 'EXCEPTION_ALERT';
+}
+
+// Implementation
+class WhatsAppSecurityManager {
+  static encryptTrackingNumber(trackingNumber: string): string {
+    // Use AES-256 encryption for tracking numbers
+    return CryptoJS.AES.encrypt(trackingNumber, process.env.WHATSAPP_ENCRYPTION_KEY).toString();
+  }
+  
+  static generateSecureDeepLink(trackingNumber: string): string {
+    const encrypted = this.encryptTrackingNumber(trackingNumber);
+    return `https://track.ttarius.com/secure/${encrypted}`;
+  }
+}
+```
+
+**Fallback Communication Channels:**
+1. **Primary**: WhatsApp Business API
+2. **Secondary**: SMS via Twilio (if WhatsApp delivery fails)
+3. **Tertiary**: Email notification
+4. **Emergency**: Voice call for high-value packages
+
+**Delivery Status Monitoring:**
+```typescript
+// API Endpoint for WhatsApp delivery tracking
+GET /api/warehouse/whatsapp/delivery-status
+Query Parameters:
+- messageId: string
+- startDate: ISO date
+- endDate: ISO date
+- recipient?: string
+
+Response: {
+  deliveryStats: {
+    sent: number;
+    delivered: number;
+    read: number;
+    failed: number;
+  };
+  failureReasons: [
+    {
+      recipient: string;
+      reason: string;
+      fallbackUsed: boolean;
+      retryCount: number;
+    }
+  ];
+  costAnalysis: {
+    totalCost: number;
+    averageCostPerMessage: number;
+    monthlyProjection: number;
+  };
+}
+```
+
+**Template-Based Messaging System:**
+```typescript
+// Standard message templates
+const WHATSAPP_TEMPLATES = {
+  PACKAGE_CREATED: {
+    name: "package_created",
+    text: "Hello {{1}}! Your package {{2}} has been created and is being processed. Track it at: {{3}}",
+    variables: ["customerName", "trackingNumber", "trackingLink"]
+  },
+  READY_FOR_PICKUP: {
+    name: "ready_for_pickup",
+    text: "📦 Good news {{1}}! Package {{2}} is ready for pickup at our {{3}} warehouse. Address: {{4}}. Hours: {{5}}",
+    variables: ["customerName", "trackingNumber", "warehouseLocation", "address", "hours"]
+  },
+  CUSTOMS_DELAY: {
+    name: "customs_delay",
+    text: "⚠️ {{1}}, package {{2}} is delayed at customs. Additional documentation needed: {{3}}. Please contact us.",
+    variables: ["customerName", "trackingNumber", "requiredDocs"]
+  }
+};
+```
+
+**Retry Mechanism with Exponential Backoff:**
+```typescript
+class WhatsAppRetryManager {
+  private static readonly MAX_RETRIES = 3;
+  private static readonly BASE_DELAY = 1000; // 1 second
+  
+  static async sendWithRetry(message: WhatsAppMessage, attempt = 1): Promise<boolean> {
+    try {
+      const result = await WhatsAppAPI.send(message);
+      return result.success;
+    } catch (error) {
+      if (attempt >= this.MAX_RETRIES) {
+        // Use fallback channel
+        await this.useFallbackChannel(message);
+        return false;
+      }
+      
+      const delay = this.BASE_DELAY * Math.pow(2, attempt - 1);
+      await new Promise(resolve => setTimeout(resolve, delay));
+      
+      return this.sendWithRetry(message, attempt + 1);
+    }
+  }
+}
+```
+
+### Multilingual Notifications
+
+**Language Support Framework:**
+- **Primary Languages**: English (default), Twi (Ghana), Spanish (USA Hispanic communities)
+- **Future Expansion**: French, Yoruba, Igbo (Nigeria preparation), Arabic (Middle East expansion)
+
+**Database Schema for Notification Preferences:**
+```sql
+CREATE TABLE notification_preferences (
+  id UUID PRIMARY KEY,
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  channel VARCHAR(20) CHECK (channel IN ('WHATSAPP', 'SMS', 'EMAIL', 'VOICE')),
+  language VARCHAR(10) DEFAULT 'en',
+  is_active BOOLEAN DEFAULT true,
+  priority_order INTEGER DEFAULT 1,
+  time_preference JSONB, -- {"start": "08:00", "end": "20:00", "timezone": "GMT"}
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW(),
+  
+  UNIQUE(user_id, channel)
+);
+
+-- Indexes for performance
+CREATE INDEX idx_notification_preferences_user ON notification_preferences(user_id);
+CREATE INDEX idx_notification_preferences_active ON notification_preferences(is_active);
+```
+
+**Multilingual Message Templates:**
+```typescript
+// Localized message templates
+const MULTILINGUAL_TEMPLATES = {
+  PACKAGE_READY: {
+    en: "Hello {{customerName}}! Your package {{trackingNumber}} is ready for pickup at {{location}}.",
+    tw: "Akwaaba {{customerName}}! Wo package {{trackingNumber}} ato hɔ wɔ {{location}}.",
+    es: "¡Hola {{customerName}}! Tu paquete {{trackingNumber}} está listo para recoger en {{location}}."
+  },
+  CUSTOMS_DELAY: {
+    en: "Package {{trackingNumber}} is delayed at customs. Documents needed: {{documents}}",
+    tw: "Package {{trackingNumber}} gyina customs so. Documents a ehia: {{documents}}",
+    es: "El paquete {{trackingNumber}} está retrasado en aduana. Documentos necesarios: {{documents}}"
+  }
+};
+
+// Implementation
+class MultilingualNotificationService {
+  static async sendLocalizedNotification(
+    userId: string, 
+    templateKey: string, 
+    variables: Record<string, string>
+  ): Promise<void> {
+    const preferences = await this.getUserNotificationPreferences(userId);
+    
+    for (const preference of preferences.filter(p => p.is_active)) {
+      const template = MULTILINGUAL_TEMPLATES[templateKey][preference.language] 
+        || MULTILINGUAL_TEMPLATES[templateKey]['en']; // Fallback to English
+      
+      const message = this.interpolateTemplate(template, variables);
+      
+      try {
+        await this.sendViaChannel(preference.channel, userId, message);
+      } catch (error) {
+        // Use retry mechanism with next priority channel
+        await this.retryWithFallback(userId, message, preference);
+      }
+    }
+  }
+}
+```
+
+**Retry Mechanism with Exponential Backoff:**
+```typescript
+class NotificationRetryManager {
+  private static readonly MAX_RETRIES = 3;
+  private static readonly RETRY_DELAYS = [1000, 3000, 9000]; // 1s, 3s, 9s
+  
+  static async retryWithExponentialBackoff(
+    notification: NotificationPayload,
+    attempt: number = 1
+  ): Promise<boolean> {
+    try {
+      const result = await NotificationService.send(notification);
+      
+      // Log successful delivery
+      await this.logDeliveryStatus(notification.id, 'DELIVERED', attempt);
+      return true;
+      
+    } catch (error) {
+      await this.logDeliveryStatus(notification.id, 'FAILED', attempt, error.message);
+      
+      if (attempt >= this.MAX_RETRIES) {
+        // Final fallback: Add to manual review queue
+        await this.addToManualReviewQueue(notification);
+        return false;
+      }
+      
+      // Wait before retry
+      const delay = this.RETRY_DELAYS[attempt - 1];
+      await new Promise(resolve => setTimeout(resolve, delay));
+      
+      return this.retryWithExponentialBackoff(notification, attempt + 1);
+    }
+  }
+  
+  private static async addToManualReviewQueue(notification: NotificationPayload): Promise<void> {
+    await DatabaseService.insert('failed_notifications', {
+      notification_id: notification.id,
+      user_id: notification.userId,
+      content: notification.message,
+      channel: notification.channel,
+      failure_reason: 'MAX_RETRIES_EXCEEDED',
+      requires_manual_intervention: true,
+      created_at: new Date()
+    });
+    
+    // Alert staff to manual intervention
+    await StaffAlertService.send({
+      type: 'NOTIFICATION_FAILURE',
+      priority: 'HIGH',
+      message: `Manual intervention required for notification ${notification.id}`,
+      userId: notification.userId
+    });
+  }
+}
 
 ## Staff Management & Roles
 
@@ -815,6 +1216,144 @@ StatusHistory {
 - Cascade deletion rules for related entities
 - Audit trails preserved even after entity deletion
 
+### Customs Documentation
+
+**International Shipping Documentation Schema:**
+```sql
+CREATE TABLE customs_documentation (
+  id UUID PRIMARY KEY,
+  package_id UUID REFERENCES packages(id) ON DELETE CASCADE,
+  
+  -- Export Documentation (Origin Country)
+  export_permit VARCHAR(255),
+  export_declaration_number VARCHAR(100),
+  hs_code VARCHAR(50) NOT NULL, -- Harmonized System Code
+  commodity_description TEXT NOT NULL,
+  declared_value DECIMAL(10,2) NOT NULL,
+  currency VARCHAR(3) NOT NULL,
+  
+  -- Import Documentation (Destination Country)
+  import_permit VARCHAR(255),
+  import_declaration_number VARCHAR(100),
+  
+  -- Status Tracking
+  customs_status VARCHAR(20) DEFAULT 'PENDING' 
+    CHECK (customs_status IN ('PENDING', 'SUBMITTED', 'APPROVED', 'REJECTED', 'UNDER_REVIEW')),
+  rejection_reason TEXT,
+  additional_docs_required JSONB,
+  
+  -- Document Storage
+  documents JSONB, -- {"invoice": "url", "packing_list": "url", "certificate": "url"}
+  
+  -- Audit Trail
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW(),
+  created_by UUID REFERENCES users(id),
+  last_updated_by UUID REFERENCES users(id),
+  
+  -- Indexes for performance
+  CONSTRAINT valid_hs_code CHECK (hs_code ~ '^\d{4,10}$')
+);
+
+-- Performance indexes
+CREATE INDEX idx_customs_package_id ON customs_documentation(package_id);
+CREATE INDEX idx_customs_status ON customs_documentation(customs_status);
+CREATE INDEX idx_customs_created_at ON customs_documentation(created_at);
+```
+
+### Performance Optimizations
+
+**Critical Database Indexes for Scale:**
+```sql
+-- Package tracking performance
+CREATE INDEX idx_packages_tracking_number ON packages(trackingNumber);
+CREATE INDEX idx_packages_status ON packages(status);
+CREATE INDEX idx_packages_created_at ON packages(createdAt);
+CREATE INDEX idx_packages_user_id ON packages(userId);
+
+-- Request processing optimization  
+CREATE INDEX idx_package_requests_user_id ON package_requests(userId);
+CREATE INDEX idx_package_requests_status ON package_requests(status);
+CREATE INDEX idx_package_requests_origin_country ON package_requests(originCountry);
+
+-- Status history optimization
+CREATE INDEX idx_status_history_entity ON status_history(entityId, entityType);
+CREATE INDEX idx_status_history_timestamp ON status_history(statusTimestamp);
+CREATE INDEX idx_status_history_status ON status_history(newStatus);
+
+-- Shipment performance
+CREATE INDEX idx_shipments_status ON shipments(status);
+CREATE INDEX idx_shipments_destination ON shipments(destinationRegion);
+CREATE INDEX idx_shipments_departure ON shipments(departureTime);
+
+-- Composite indexes for common queries
+CREATE INDEX idx_packages_user_status ON packages(userId, status);
+CREATE INDEX idx_packages_country_type ON packages(originCountry, packageType);
+```
+
+**Partitioning Strategy for Large Tables:**
+```sql
+-- Partition status_history by month for performance
+CREATE TABLE status_history (
+  id UUID,
+  entityId UUID,
+  entityType VARCHAR(20),
+  previousStatus VARCHAR(50),
+  newStatus VARCHAR(50),
+  statusTimestamp TIMESTAMP,
+  location JSONB,
+  updatedBy UUID,
+  updateReason TEXT,
+  notes TEXT,
+  automaticUpdate BOOLEAN,
+  systemSource VARCHAR(50),
+  createdAt TIMESTAMP
+) PARTITION BY RANGE (createdAt);
+
+-- Create monthly partitions
+CREATE TABLE status_history_2025_01 PARTITION OF status_history
+  FOR VALUES FROM ('2025-01-01') TO ('2025-02-01');
+  
+CREATE TABLE status_history_2025_02 PARTITION OF status_history
+  FOR VALUES FROM ('2025-02-01') TO ('2025-03-01');
+
+-- Auto-create future partitions with pg_partman extension
+```
+
+**Archive Strategy for Data Retention:**
+```sql
+-- Archive completed packages after 2 years
+CREATE TABLE packages_archive (LIKE packages INCLUDING ALL);
+
+-- Archive function
+CREATE OR REPLACE FUNCTION archive_old_packages()
+RETURNS INTEGER AS $$
+DECLARE
+  archived_count INTEGER;
+BEGIN
+  -- Move packages completed more than 2 years ago to archive
+  WITH moved_packages AS (
+    DELETE FROM packages 
+    WHERE status = 'DELIVERED' 
+    AND updatedAt < NOW() - INTERVAL '2 years'
+    RETURNING *
+  )
+  INSERT INTO packages_archive SELECT * FROM moved_packages;
+  
+  GET DIAGNOSTICS archived_count = ROW_COUNT;
+  
+  -- Log archival activity
+  INSERT INTO system_logs (action, details, timestamp)
+  VALUES ('PACKAGE_ARCHIVE', json_build_object('count', archived_count), NOW());
+  
+  RETURN archived_count;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Schedule monthly archival
+SELECT cron.schedule('archive-packages', '0 2 1 * *', 'SELECT archive_old_packages();');
+```
+
 ## API Endpoints
 
 ### Request Processing API Endpoints (International Focus)
@@ -825,6 +1364,74 @@ POST /api/warehouse/requests/{id}/reject       # Reject international request wi
 GET  /api/warehouse/requests/{id}/details      # Get complete international request details with client info
 GET  /api/warehouse/requests/international     # Get cross-border requests for current warehouse
 PUT  /api/warehouse/requests/{id}/export       # Mark request ready for international export
+```
+
+### Exception Handling API Endpoints
+```
+POST /api/warehouse/exceptions/report          # Log issues like customs rejections or missing packages
+PUT  /api/warehouse/exceptions/{id}/update     # Update exception status and resolution steps
+GET  /api/warehouse/exceptions                 # Get all active exceptions with filters
+POST /api/warehouse/exceptions/{id}/resolve    # Mark exception as resolved with details
+GET  /api/warehouse/exceptions/escalated       # Get exceptions requiring management attention
+```
+
+**Example Payloads for Exception Handling:**
+
+**Report Exception:**
+```json
+POST /api/warehouse/exceptions/report
+
+Request:
+{
+  "packageId": "550e8400-e29b-41d4-a716-446655440000",
+  "exceptionType": "CUSTOMS_DELAY",
+  "severity": "HIGH",
+  "details": "Customs rejected due to missing HS code classification",
+  "reportedBy": "550e8400-e29b-41d4-a716-446655440001",
+  "timestamp": "2025-07-02T10:00:00Z",
+  "affectedServices": ["EXPORT_PROCESSING", "CUSTOMER_NOTIFICATION"],
+  "estimatedResolutionTime": "24_HOURS"
+}
+
+Response:
+{
+  "exceptionId": "550e8400-e29b-41d4-a716-446655440002",
+  "status": "REPORTED",
+  "assignedTo": "550e8400-e29b-41d4-a716-446655440003",
+  "escalationLevel": "LEVEL_1",
+  "createdAt": "2025-07-02T10:00:00Z",
+  "expectedResolution": "2025-07-03T10:00:00Z"
+}
+```
+
+**Resolve Exception:**
+```json
+POST /api/warehouse/exceptions/{id}/resolve
+
+Request:
+{
+  "exceptionId": "550e8400-e29b-41d4-a716-446655440002",
+  "resolution": "Provided missing HS code 8517.12.00 for mobile phones",
+  "resolutionSteps": [
+    "Contacted client for product specifications",
+    "Researched correct HS code classification", 
+    "Updated customs documentation",
+    "Resubmitted to customs authority"
+  ],
+  "resolvedBy": "550e8400-e29b-41d4-a716-446655440003",
+  "timestamp": "2025-07-02T12:00:00Z",
+  "preventiveActions": "Added HS code validation to intake process"
+}
+
+Response:
+{
+  "exceptionId": "550e8400-e29b-41d4-a716-446655440002", 
+  "status": "RESOLVED",
+  "resolutionTime": "2 hours 15 minutes",
+  "updatedAt": "2025-07-02T12:00:00Z",
+  "packageStatus": "PROCESSING_RESUMED",
+  "clientNotified": true
+}
 ```
 
 ### International Package Management
@@ -845,6 +1452,77 @@ POST /api/warehouse/international/handoff      # Send package data to destinatio
 GET  /api/warehouse/international/arrivals     # Get international packages arriving from other countries
 PUT  /api/warehouse/international/{id}/customs # Update customs clearance status
 POST /api/warehouse/international/{id}/ready-for-pickup # Mark international package ready for customer pickup
+POST /api/warehouse/customs/generate-documents # Generate customs forms and documentation
+PUT  /api/warehouse/customs/update-status      # Update customs processing status
+GET  /api/warehouse/customs/{id}/documents     # Retrieve customs documentation
+```
+
+**Customs Documentation API Examples:**
+
+**Generate Customs Documents:**
+```json
+POST /api/warehouse/customs/generate-documents
+
+Request:
+{
+  "packageId": "550e8400-e29b-41d4-a716-446655440000",
+  "hsCode": "8517.12.00",
+  "commodityDescription": "Mobile phones and smartphones",
+  "declaredValue": 500.00,
+  "currency": "USD",
+  "exportPermitRequired": true,
+  "destinationCountry": "GH",
+  "generatedBy": "550e8400-e29b-41d4-a716-446655440001"
+}
+
+Response:
+{
+  "documentationId": "550e8400-e29b-41d4-a716-446655440002",
+  "generatedDocuments": [
+    {
+      "type": "EXPORT_DECLARATION",
+      "reference": "EXP-2025-001234",
+      "downloadUrl": "https://api.ttarius.com/docs/export-declarations/EXP-2025-001234.pdf"
+    },
+    {
+      "type": "COMMERCIAL_INVOICE", 
+      "reference": "INV-2025-001234",
+      "downloadUrl": "https://api.ttarius.com/docs/invoices/INV-2025-001234.pdf"
+    }
+  ],
+  "submissionDeadline": "2025-07-05T15:00:00Z",
+  "estimatedClearanceTime": "24-48 hours"
+}
+```
+
+**Update Customs Status:**
+```json
+PUT /api/warehouse/customs/update-status
+
+Request:
+{
+  "packageId": "550e8400-e29b-41d4-a716-446655440000",
+  "customsStatus": "APPROVED",
+  "clearanceReference": "GH-CUSTOM-2025-5678",
+  "rejectionReason": null,
+  "additionalFees": {
+    "dutyAmount": 75.50,
+    "currency": "GHC",
+    "paidBy": "CONSIGNEE"
+  },
+  "updatedBy": "550e8400-e29b-41d4-a716-446655440003",
+  "timestamp": "2025-07-02T14:30:00Z"
+}
+
+Response:
+{
+  "packageId": "550e8400-e29b-41d4-a716-446655440000",
+  "customsStatus": "APPROVED", 
+  "clearanceDate": "2025-07-02T14:30:00Z",
+  "totalProcessingTime": "18 hours 30 minutes",
+  "nextStep": "WAREHOUSE_DELIVERY",
+  "updatedAt": "2025-07-02T14:30:00Z"
+}
 ```
 
 ### Origin Country Validation Endpoints
@@ -901,101 +1579,65 @@ GET  /api/warehouse/analytics/efficiency        # Warehouse efficiency metrics
 GET  /api/warehouse/analytics/trends            # Operational trends
 ```
 
-## Security & Access Control
+### Development Guidelines
 
-### Authentication & Authorization
-- JWT-based authentication shared with client app
-- Role-based access control (RBAC) for warehouse functions
-- Session management and token refresh
-- API rate limiting and security headers
+**API Development Standards:**
 
-### Data Protection
-- Encryption for sensitive package information
-- Secure image storage and access controls
-- Audit logging for all critical operations
-- Backup and disaster recovery procedures
-
-### Access Levels
-- **Public**: Tracking information for package owners
-- **Staff**: Operational access based on role
-- **Management**: Supervisory and reporting access  
-- **Admin**: Full system configuration and control
-
----
-
-## Frontend Integration Requirements: Client App Alignment
-
-### CRITICAL: Frontend Must Enforce All Warehouse Business Rules
-
-**This section defines the EXACT requirements for the client app frontend to ensure complete alignment with the warehouse system. Every rule, validation, UI element, and data structure defined here is NON-NEGOTIABLE and must be implemented exactly as specified.**
-
-### Business Rules Enforcement in Frontend
-
-#### Package Types - Frontend Implementation Requirements
-```typescript
-// CRITICAL: Only these 2 package types are allowed in the entire system
-export const PACKAGE_TYPES = [
-  { id: "DOCUMENT", label: "Document", description: "Legal documents, contracts, certificates, official papers" },
-  { id: "NON_DOCUMENT", label: "Non-Document", description: "Everything else - goods, products, personal items, equipment" }
-];
-
-// Frontend MUST NOT allow any other package types
-// UI MUST show descriptions to help users choose correctly
-// Validation MUST reject any values not in this exact list
+**OpenAPI/Swagger Documentation:**
+```yaml
+# Example OpenAPI specification
+openapi: 3.0.0
+info:
+  title: Ttarius Logistics Warehouse API
+  version: 1.0.0
+  description: International logistics warehouse management system
+paths:
+  /api/warehouse/packages/{id}/status:
+    put:
+      summary: Update package status
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StatusUpdate'
+      responses:
+        '200':
+          description: Status updated successfully
+        '400':
+          description: Invalid status transition
+        '404':
+          description: Package not found
 ```
 
-#### Delivery Types - Frontend Implementation Requirements
+**Input Validation Requirements:**
 ```typescript
-// CRITICAL: Air is the only available service, others are future expansion
-export const DELIVERY_TYPES = [
-  { id: "air", label: "Air Freight (Primary)", primary: true, description: "International air freight - fast, reliable cross-border shipping" },
-  { id: "ground", label: "Ground (Future)", disabled: true, description: "Cross-border ground transportation (coming soon)" },
-  { id: "sea", label: "Sea Freight (Future)", disabled: true, description: "International sea freight for large shipments (coming soon)" },
-  { id: "express", label: "Express (Future)", disabled: true, description: "Premium express international service (coming soon)" }
-];
-
-// Frontend MUST:
-// 1. Auto-select "air" as default and only available option
-// 2. Show disabled options with "(Future)" labels for transparency
-// 3. Disable/hide non-air options in UI
-// 4. Prevent form submission with disabled delivery types
-```
-
-#### International Logistics - Frontend Validation Requirements
-```typescript
-// CRITICAL: Origin country MUST be different from client country
-export const SUPPORTED_COUNTRIES = [
-  { code: "GH", name: "Ghana", flag: "🇬🇭" },
-  { code: "US", name: "United States", flag: "🇺🇸" }
-];
-
-// Frontend MUST implement this exact validation logic:
-export const getAvailableOriginCountries = (clientCountry: string) => {
-  return SUPPORTED_COUNTRIES.filter(country => country.code !== clientCountry);
-};
-
-export const validateInternationalRequest = (clientCountry: string, originCountry: string) => {
-  const errors = [];
+// Strict validation for international requests
+const validateInternationalRequest = (req: Request): ValidationResult => {
+  const errors: string[] = [];
   
-  if (!clientCountry) {
-    errors.push("Client country is required");
+  // Origin country cannot equal client country
+  if (req.body.originCountry === req.user.country) {
+    errors.push("Origin country must be different from client country");
   }
   
-  if (!originCountry) {
-    errors.push("Origin country is required");
-  }
-  
-  if (clientCountry === originCountry) {
-    errors.push("Origin country must be different from your country (international logistics only)");
-  }
-  
-  const supportedCountries = SUPPORTED_COUNTRIES.map(c => c.code);
-  if (clientCountry && !supportedCountries.includes(clientCountry)) {
-    errors.push("Client country not supported");
-  }
-  
-  if (originCountry && !supportedCountries.includes(originCountry)) {
+  // Supported countries validation
+  const supportedCountries = ['GH', 'US']; // Future: load from database
+  if (!supportedCountries.includes(req.body.originCountry)) {
     errors.push("Origin country not supported");
+  }
+  
+  // Package type validation
+  const validPackageTypes = ['DOCUMENT', 'NON_DOCUMENT'];
+  if (!validPackageTypes.includes(req.body.packageType)) {
+    errors.push("Invalid package type");
   }
   
   return {
@@ -1005,674 +1647,623 @@ export const validateInternationalRequest = (clientCountry: string, originCountr
 };
 ```
 
-### Frontend UI Requirements
-
-#### Form Validation - Mandatory Implementation
+**Rate Limiting Implementation:**
 ```typescript
-// Frontend MUST validate these fields before submission:
-const REQUIRED_FIELDS = {
-  client: ["clientName", "clientEmail", "clientPhone", "clientCountry"],
-  origin: ["originCountry", "originCity"],
-  package: ["packageType", "packageCategory", "packageDescription", "freightType"]
-};
-
-// Email validation MUST use this exact pattern:
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-// International request validation MUST be enforced at form level:
-// - Origin country dropdown MUST exclude client's country
-// - Form MUST show error if user somehow selects same country
-// - Submit button MUST be disabled until all validations pass
-```
-
-#### Status Display - Client View Mapping
-```typescript
-// Frontend MUST map warehouse statuses to simplified client view:
-export const CLIENT_STATUS = {
-  SUBMITTED: 'SUBMITTED',
-  UNDER_REVIEW: 'UNDER_REVIEW', 
-  PROCESSING: 'PROCESSING',
-  READY_FOR_PICKUP: 'READY_FOR_PICKUP',
-  COMPLETED: 'COMPLETED'
-} as const;
-
-export const STATUS_LABELS = {
-  [CLIENT_STATUS.SUBMITTED]: 'Request Submitted',
-  [CLIENT_STATUS.UNDER_REVIEW]: 'Under Review',
-  [CLIENT_STATUS.PROCESSING]: 'Processing',
-  [CLIENT_STATUS.READY_FOR_PICKUP]: 'Ready for Pickup',
-  [CLIENT_STATUS.COMPLETED]: 'Completed'
-};
-
-// Warehouse Status → Client Status Mapping (MUST be implemented exactly):
-// AWAITING_PICKUP → UNDER_REVIEW
-// RECEIVED → PROCESSING  
-// PROCESSING → PROCESSING
-// PROCESSED → PROCESSING
-// GROUPED → READY_FOR_PICKUP
-// SHIPPED → READY_FOR_PICKUP
-// IN_TRANSIT → READY_FOR_PICKUP
-// DELIVERED → COMPLETED
-// EXCEPTION → PROCESSING (with error notes)
-```
-
-#### Tracking Number Format - Frontend Display
-```typescript
-// Frontend MUST display tracking numbers in this exact format:
-export const generateTrackingNumber = () => {
-  const randomDigits = Math.floor(Math.random() * 1000000000000).toString().padStart(12, '0');
-  return `TT${randomDigits}`;
-};
-
-// Format: TT + 12 digits (e.g., TT123456789012)
-// Frontend MUST validate this format when accepting tracking input
-// Frontend MUST generate mock tracking numbers for demo purposes using this format
-```
-
-### Form Component Requirements
-
-#### PackageOriginForm Requirements
-```typescript
-// MUST implement exactly:
-interface PackageOriginFormProps {
-  formData: {
-    clientCountry: string;
-    originCountry: string;
-    originCity: string;
-    // ...other fields
-  };
-  onInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
-}
-
-// UI Requirements:
-// 1. Origin country dropdown MUST exclude client's own country
-// 2. MUST show warning if no countries available
-// 3. MUST display international logistics explanation
-// 4. City field MUST only appear after country selection
-// 5. MUST validate origin ≠ client country before allowing next step
-```
-
-#### PackageForm Requirements
-```typescript
-// MUST implement exactly:
-interface PackageFormProps {
-  formData: {
-    packageType: string;
-    packageCategory: string;
-    packageDescription: string;
-    freightType: string;
-    // ...other fields
-  };
-  onInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => void;
-}
-
-// UI Requirements:
-// 1. Delivery type MUST default to "air" and be disabled
-// 2. Package type MUST only show DOCUMENT/NON_DOCUMENT options
-// 3. MUST show package type descriptions to help users
-// 4. Package description MUST be required with minimum length
-// 5. MUST validate all required fields before allowing next step
-```
-
-#### ConfirmForm Requirements
-```typescript
-// MUST implement exactly:
-interface ConfirmFormProps {
-  formData: CompleteFormData;
-  onBack: () => void;
-  onSubmit: (e: React.FormEvent) => Promise<void>;
-  isSubmitting: boolean;
-}
-
-// UI Requirements:
-// 1. MUST display all form data for review
-// 2. MUST show international logistics confirmation
-// 3. MUST display next steps explanation
-// 4. Submit button MUST be disabled during submission
-// 5. MUST show loading state during form processing
-```
-
-### Data Submission Format - API Integration
-
-#### Request Payload Structure
-```typescript
-// Frontend MUST submit data in this exact format:
-interface PackageRequestPayload {
-  // Client information (from user profile)
-  userId: string;
-  clientCountry: string;
-  
-  // Origin information (user-selected)
-  originCountry: string;
-  originCity: string;
-  
-  // Package information (user-provided)
-  packageType: "DOCUMENT" | "NON_DOCUMENT";
-  deliveryType: "air"; // Only air is available
-  packageCategory: string;
-  packageDescription: string;
-  
-  // Optional fields
-  specialRequirements?: string;
-}
-
-// Frontend MUST validate this structure before API call
-// Frontend MUST handle API validation errors gracefully
-// Frontend MUST show success/error states appropriately
-```
-
-### Error Handling Requirements
-
-#### Validation Error Messages
-```typescript
-// Frontend MUST use these exact error messages:
-const ERROR_MESSAGES = {
-  REQUIRED_FIELD: "This field is required",
-  INVALID_EMAIL: "Please enter a valid email address",
-  INTERNATIONAL_ONLY: "Origin country must be different from your country (international logistics only)",
-  COUNTRY_NOT_SUPPORTED: "Selected country is not supported",
-  PACKAGE_TYPE_INVALID: "Please select a valid package type (Document or Non-Document)",
-  DELIVERY_TYPE_INVALID: "Only Air delivery is currently available",
-  DESCRIPTION_TOO_SHORT: "Package description must be at least 10 characters",
-  FORM_INCOMPLETE: "Please fill in all required fields marked with *"
-};
-
-// Error display requirements:
-// 1. Field-level errors MUST appear below each input
-// 2. Form-level errors MUST appear at top of form
-// 3. Step validation errors MUST prevent step progression
-// 4. API errors MUST be displayed clearly with retry option
-```
-
-#### Success Handling Requirements
-```typescript
-// Frontend MUST handle success states:
-interface SuccessFlow {
-  submission: {
-    showLoader: boolean;
-    showSuccess: boolean;
-    redirectTo: "/app/shipment-history";
-    message: "Success! Your package request has been submitted.";
-  };
-  tracking: {
-    generateTrackingNumber: boolean;
-    displayFormat: "TT############";
-    copyToClipboard: boolean;
-  };
-}
-```
-
-### Multi-Step Form Requirements
-
-#### Step Navigation Logic
-```typescript
-// Frontend MUST implement exact step progression:
-const FORM_STEPS = [
-  {
-    id: 1,
-    name: "Origin & Client",
-    component: "PackageOriginForm",
-    validation: "validateOriginStep",
-    requiredFields: ["originCountry", "originCity", "clientName", "clientEmail", "clientPhone"]
-  },
-  {
-    id: 2,
-    name: "Package",
-    component: "PackageForm", 
-    validation: "validatePackageStep",
-    requiredFields: ["packageType", "packageCategory", "packageDescription", "freightType"]
-  },
-  {
-    id: 3,
-    name: "Confirm",
-    component: "ConfirmForm",
-    validation: "validateFinalStep",
-    action: "submitForm"
-  }
-];
-
-// Step indicator MUST show current progress
-// Back button MUST be available on steps 2 and 3
-// Next button MUST validate current step before proceeding
-// Submit MUST only be available on final step
-```
-
-### Testing Requirements
-
-#### Frontend Unit Tests
-```typescript
-// MUST test these scenarios:
-describe('Package Type Validation', () => {
-  it('should only allow DOCUMENT and NON_DOCUMENT types');
-  it('should reject invalid package types');
-  it('should show package type descriptions');
+// Rate limiting for tracking endpoints
+const trackingRateLimit = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+  message: "Too many tracking requests, please try again later",
+  standardHeaders: true,
+  legacyHeaders: false,
 });
 
-describe('International Logistics Validation', () => {
-  it('should exclude client country from origin options');
-  it('should show error for same origin and client country');
-  it('should validate supported countries only');
-});
-
-describe('Form Submission', () => {
-  it('should validate all required fields');
-  it('should show loading state during submission');
-  it('should handle API errors gracefully');
-  it('should redirect on successful submission');
-});
+// Apply to tracking routes
+app.use('/api/warehouse/tracking', trackingRateLimit);
 ```
 
-#### Integration Tests
+### Future Production
+
+### Transportation Managers Application
+
+**Real-Time Trip Monitoring and Communication System**
+
+The Transportation Managers Application provides field personnel with comprehensive tools to monitor shipments during transit and maintain real-time communication with warehouse operations.
+
+#### Core Features
+
+**Trip Management Dashboard:**
+- Active shipment tracking with GPS integration
+- Real-time status updates during transit
+- Route optimization and traffic monitoring
+- Delivery schedule management
+- Exception reporting and resolution
+
+**Mobile Application Requirements:**
 ```typescript
-// MUST test complete user flows:
-describe('Complete Package Request Flow', () => {
-  it('should complete Ghana client requesting from USA');
-```
-## Currency Handling & Pricing System
-
-### Base Currency Framework
-**All prices in the Ttarius Logistics system are stored in Ghana Cedis (GHC) in the database.**
-
-**Currency Conversion Rules:**
-- **USD Payments**: Converted to GHC using current exchange rate before database storage
-- **Other Currencies**: All converted to GHC as the universal base currency
-- **Exchange Rates**: Updated daily via financial API integration
-- **Historical Tracking**: Complete audit trail of exchange rates used for each transaction
-
-### In-Person Pricing Determination
-**All package pricing is determined in-person by warehouse staff during physical package inspection.**
-
-**Pricing Factors:**
-1. **Physical Measurements**: Length × Width × Height (cm), Weight (kg)
-2. **Package Type**: Document vs Non-Document pricing tiers
-3. **Delivery Service**: Air freight (primary), future expansion services
-4. **Origin/Destination**: International route-specific pricing
-5. **Special Handling**: Fragile, hazardous, oversized, or valuable items
-6. **Insurance Value**: Optional insurance based on declared package value
-
-### Pricing Structure Framework
-```
-Base Pricing Calculation (in GHC):
-Base Rate + Weight Fee + Dimension Fee + Service Fee + Special Handling + Insurance
-
-Base Rates (GHC):
-- Document Package (Ghana ↔ USA): 50 GHC base
-- Non-Document Package (Ghana ↔ USA): 80 GHC base
-
-Weight Tiers (per kg):
-- 0-2kg: 15 GHC per kg
-- 2-5kg: 20 GHC per kg  
-- 5-10kg: 25 GHC per kg
-- 10kg+: 30 GHC per kg
-
-Volume Pricing (if exceeds weight calculation):
-- Per cubic meter: 150 GHC
-
-Service Fees:
-- Air Freight: Included in base rate
-- Express Handling: +50 GHC
-- Special Handling: +25-100 GHC (staff determined)
-
-Insurance Options:
-- Basic Coverage: Included (up to 500 GHC)
-- Extended Coverage: 2% of declared value
+// Transportation Manager Mobile App Core Features
+interface TransportationManagerApp {
+  tripManagement: {
+    activeShipments: Shipment[];
+    currentLocation: GPSCoordinates;
+    nextDelivery: DeliveryStop;
+    routeOptimization: RouteData;
+  };
+  
+  statusUpdates: {
+    departureConfirmation: boolean;
+    transitUpdates: StatusUpdate[];
+    arrivalConfirmation: boolean;
+    exceptionReporting: ExceptionReport[];
+  };
+  
+  communication: {
+    warehouseChat: ChatInterface;
+    customerNotifications: NotificationSystem;
+    emergencyContacts: ContactList;
+    photoDocumentation: ImageCapture;
+  };
+  
+  documentation: {
+    manifests: ShipmentManifest[];
+    customsForms: CustomsDocumentation[];
+    deliveryReceipts: DigitalSignature[];
+    damageReports: IncidentReport[];
+  };
+}
 ```
 
-### Currency Conversion API Integration
+#### Real-Time Status Updates
+
+**Trip Progress Tracking:**
 ```typescript
-// Exchange Rate Management
-interface ExchangeRate {
+// API for Transportation Manager Updates
+POST /api/transportation/trip/{tripId}/status-update
+{
+  tripId: UUID;
+  managerId: UUID;
+  location: {
+    latitude: number;
+    longitude: number;
+    address: string;
+    timestamp: ISO_DATE;
+  };
+  status: "DEPARTED" | "IN_TRANSIT" | "DELAYED" | "ARRIVED" | "DELIVERED" | "EXCEPTION";
+  estimatedArrival?: ISO_DATE;
+  notes?: string;
+  photos?: string[]; // Base64 encoded images
+  weatherConditions?: string;
+  trafficConditions?: string;
+}
+
+Response:
+{
+  updateId: UUID;
+  acknowledged: boolean;
+  nextCheckIn: ISO_DATE;
+  warehouseInstructions?: string;
+  emergencyContacts?: Contact[];
+}
+```
+
+**Exception Reporting During Transit:**
+```typescript
+// Field Exception Reporting
+POST /api/transportation/exceptions/field-report
+{
+  tripId: UUID;
+  managerId: UUID;
+  exceptionType: "VEHICLE_BREAKDOWN" | "CUSTOMS_DELAY" | "WEATHER_DELAY" | "SECURITY_INCIDENT" | "DAMAGE_DISCOVERED" | "ROUTE_BLOCKED";
+  severity: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
+  description: string;
+  location: GPSCoordinates;
+  photosEvidence: string[];
+  estimatedDelay?: number; // minutes
+  assistanceRequired: boolean;
+  timestamp: ISO_DATE;
+}
+
+Response:
+{
+  reportId: UUID;
+  escalated: boolean;
+  supportDispatch: {
+    contactNumber: string;
+    eta: ISO_DATE;
+    instructions: string[];
+  };
+  alternativeRoutes?: Route[];
+  customerNotificationSent: boolean;
+}
+```
+
+#### Package Condition Monitoring
+
+**In-Transit Package Verification:**
+```typescript
+// Package condition checks during loading/unloading
+POST /api/transportation/packages/{packageId}/condition-check
+{
+  packageId: UUID;
+  tripId: UUID;
+  managerId: UUID;
+  checkType: "PRE_DEPARTURE" | "DURING_TRANSIT" | "PRE_DELIVERY";
+  condition: "EXCELLENT" | "GOOD" | "FAIR" | "DAMAGED" | "MISSING";
+  photos: string[];
+  notes: string;
+  damageSeverity?: "MINOR" | "MODERATE" | "SEVERE";
+  actionTaken?: string;
+  timestamp: ISO_DATE;
+}
+
+Response:
+{
+  checkId: UUID;
+  warehouseNotified: boolean;
+  customerAlerted: boolean;
+  insuranceClaim?: {
+    claimId: UUID;
+    estimatedValue: number;
+    nextSteps: string[];
+  };
+  continueDelivery: boolean;
+}
+```
+
+#### GPS and Route Tracking
+
+**Real-Time Location Monitoring:**
+```sql
+-- Transportation tracking table
+CREATE TABLE transportation_tracking (
+  id UUID PRIMARY KEY,
+  trip_id UUID REFERENCES shipment_trips(id),
+  manager_id UUID REFERENCES users(id),
+  latitude DECIMAL(10, 8) NOT NULL,
+  longitude DECIMAL(11, 8) NOT NULL,
+  speed DECIMAL(5,2), -- km/h
+  heading INTEGER, -- degrees 0-360
+  address TEXT,
+  recorded_at TIMESTAMP DEFAULT NOW(),
+  battery_level INTEGER, -- device battery %
+  signal_strength INTEGER, -- network signal strength
+  
+  -- Indexes for performance
+  INDEX idx_trip_tracking (trip_id, recorded_at),
+  INDEX idx_manager_tracking (manager_id, recorded_at)
+);
+```
+
+**Geofencing and Automated Alerts:**
+```typescript
+// Geofencing system for automated notifications
+interface GeofenceRule {
   id: UUID;
-  fromCurrency: string; // USD, EUR, etc.
-  toCurrency: "GHC"; // Always GHC as base
-  rate: number;
-  dateRecorded: timestamp;
-  sourceAPI: string;
-  isActive: boolean;
-}
-
-// Pricing Calculation API
-POST /api/warehouse/pricing/calculate
-{
-  weight: number; // kg
-  dimensions: {
-    length: number; // cm
-    width: number;  // cm
-    height: number; // cm
+  name: string;
+  coordinates: GPSCoordinates[];
+  type: "WAREHOUSE" | "CUSTOMS" | "DELIVERY_ZONE" | "RESTRICTED_AREA";
+  actions: {
+    onEntry: NotificationAction[];
+    onExit: NotificationAction[];
+    alertThreshold: number; // minutes
   };
-  packageType: "DOCUMENT" | "NON_DOCUMENT";
-  originCountry: string;
-  destinationCountry: string;
-  declaredValue: number; // in original currency
-  originalCurrency: string; // USD, GHC, etc.
-  specialHandling: string[]; // fragile, hazardous, etc.
 }
 
-Response:
+// Automated geofence monitoring
+POST /api/transportation/geofence/event
 {
-  pricing: {
-    baseRate: number; // GHC
-    weightFee: number; // GHC
-    dimensionFee: number; // GHC
-    serviceFee: number; // GHC
-    specialHandlingFee: number; // GHC
-    insuranceFee: number; // GHC
-    totalGHC: number; // Final price in GHC
-    exchangeRateUsed?: ExchangeRate; // If conversion applied
+  tripId: UUID;
+  managerId: UUID;
+  geofenceId: UUID;
+  eventType: "ENTERED" | "EXITED" | "DELAYED_ENTRY" | "UNAUTHORIZED_EXIT";
+  location: GPSCoordinates;
+  timestamp: ISO_DATE;
+}
+```
+
+### Customer Service Application
+
+**Comprehensive Warehouse Customer Support System**
+
+The Customer Service Application provides warehouse staff with powerful tools to assist customers, resolve issues, and maintain high service quality.
+
+#### Customer Service Dashboard
+
+**Unified Customer Information Hub:**
+```typescript
+// Customer Service Interface
+interface CustomerServiceDashboard {
+  customerLookup: {
+    searchBy: "PHONE" | "EMAIL" | "TRACKING_NUMBER" | "NAME" | "ID";
+    customerProfile: CustomerProfile;
+    activePackages: Package[];
+    shipmentHistory: ShipmentHistory[];
+    interactionHistory: ServiceInteraction[];
   };
-  breakdown: string[]; // Detailed cost explanation
-}
-```
-
-### Staff Pricing Workflow
-**When Physical Package Arrives:**
-1. **Measurement**: Staff measures exact dimensions and weight
-2. **Assessment**: Evaluate package condition and special requirements
-3. **Calculation**: Use warehouse system to calculate pricing in real-time
-4. **Currency Handling**: If customer paid in USD, convert to GHC for storage
-5. **Documentation**: Record final GHC price in package record
-6. **Receipt**: Generate receipt showing both original currency and GHC equivalent
-
-### Currency Storage & Reporting
-```sql
--- All monetary values stored in GHC
-CREATE TABLE package_pricing (
-  id UUID PRIMARY KEY,
-  package_id UUID REFERENCES packages(id),
-  total_price_ghc DECIMAL(10,2) NOT NULL, -- Always in GHC
-  original_currency VARCHAR(3), -- USD, GHC, etc.
-  original_amount DECIMAL(10,2), -- Original payment amount
-  exchange_rate_id UUID REFERENCES exchange_rates(id),
-  pricing_breakdown JSONB, -- Detailed cost components
-  determined_by UUID REFERENCES users(id), -- Staff who set price
-  determined_at TIMESTAMP NOT NULL,
-  payment_status VARCHAR(20) DEFAULT 'PENDING'
-);
-```
-
-## Customer Identification & Package Release System
-
-### Customer Lookup & Verification System
-**Warehouse staff can identify customers and their packages using multiple methods:**
-
-**Primary Identification Methods:**
-1. **Customer ID**: Unique system-generated ID for each customer
-2. **Phone Number**: Customer's registered phone number
-3. **Email Address**: Customer's registered email address
-4. **National ID**: Government-issued identification number
-5. **Tracking Number**: Specific package tracking number (TT############)
-
-### Package Lookup Workflow
-**Staff Interface for Customer Service:**
-
-```typescript
-// Customer Lookup API
-GET /api/warehouse/customers/lookup
-Query Parameters:
-- customerId?: string
-- phoneNumber?: string
-- emailAddress?: string
-- nationalId?: string
-- trackingNumber?: string
-
-Response:
-{
-  customer: {
-    id: UUID;
-    name: string;
-    email: string;
-    phone: string;
-    country: string;
-    registrationDate: timestamp;
+  
+  caseManagement: {
+    activeCases: SupportCase[];
+    priorityQueue: UrgentCase[];
+    escalationRules: EscalationRule[];
+    resolutionTemplates: ResponseTemplate[];
   };
-  packages: [
-    {
-      id: UUID;
-      trackingNumber: string;
-      status: PackageStatus;
-      shipmentId?: UUID;
-      shipmentNumber?: string;
-      estimatedArrival: timestamp;
-      currentLocation: string;
-      readyForPickup: boolean;
-      canBeReleased: boolean;
-    }
-  ];
-  shipments: [
-    {
-      id: UUID;
-      shipmentNumber: string;
-      status: ShipmentStatus;
-      packageCount: number;
-      estimatedDelivery: timestamp;
-      actualArrival?: timestamp;
-    }
-  ];
-}
-```
-
-### Package Status Verification & Management
-**Before Package Release, Staff Must Verify:**
-
-1. **Customer Identity**: Confirm customer matches package owner
-2. **Package Status**: Ensure package is "READY_FOR_PICKUP" or "DELIVERED"
-3. **Location Verification**: Confirm package is physically in the warehouse
-4. **Payment Status**: Verify all fees have been paid
-5. **Special Requirements**: Check for any special handling or documentation needs
-
-```typescript
-// Package Status Check API
-GET /api/warehouse/packages/{packageId}/release-eligibility
-
-Response:
-{
-  eligible: boolean;
-  requirements: {
-    statusCheck: boolean; // Is status READY_FOR_PICKUP?
-    paymentCheck: boolean; // Are all fees paid?
-    identityCheck: boolean; // Customer identity confirmed?
-    locationCheck: boolean; // Package physically available?
-    documentationCheck: boolean; // All docs complete?
+  
+  communicationTools: {
+    multiChannelMessaging: MessageInterface;
+    callIntegration: PhoneSystem;
+    emailTemplates: EmailTemplate[];
+    translationService: LanguageSupport;
   };
-  blockers: string[]; // Reasons if not eligible
-  actions: string[]; // Required actions before release
-}
-```
-
-### Secure Package Release Process
-**Multi-Step Verification Workflow:**
-
-**Step 1: Customer Arrival & Initial Verification**
-```typescript
-// Staff initiates customer check-in
-POST /api/warehouse/release/initiate
-{
-  customerIdentifier: string; // ID, phone, email, etc.
-  verificationType: "CUSTOMER_ID" | "PHONE" | "EMAIL" | "NATIONAL_ID" | "TRACKING_NUMBER";
-  staffId: UUID; // Staff member handling release
-}
-```
-
-**Step 2: Identity Confirmation**
-```typescript
-// Verify customer identity with multiple methods
-POST /api/warehouse/release/verify-identity
-{
-  sessionId: UUID; // From initiation
-  primaryId: string; // Main identifier used
-  secondaryVerification: {
-    method: "PHONE_SMS" | "EMAIL_CODE" | "PHOTO_ID" | "BIOMETRIC";
-    value: string; // Code, photo, etc.
-  };
-  photoIdCapture?: string; // Base64 image of customer ID
-}
-```
-
-**Step 3: Package Selection & Status Update**
-```typescript
-// Select specific packages for release
-POST /api/warehouse/release/select-packages
-{
-  sessionId: UUID;
-  packageIds: UUID[];
-  releaseReason: "NORMAL_PICKUP" | "EARLY_RELEASE" | "SPECIAL_CIRCUMSTANCES";
-  managerApproval?: UUID; // Required for non-normal releases
-}
-```
-
-**Step 4: Final Release & Documentation**
-```typescript
-// Complete package release with full documentation
-POST /api/warehouse/release/complete
-{
-  sessionId: UUID;
-  customerSignature: string; // Base64 image
-  staffSignature: string; // Base64 image
-  customerPhoto: string; // Base64 image for verification
-  packagePhotos: string[]; // Base64 images of packages being released
-  releaseNotes?: string; // Any special notes
-  witnessStaffId?: UUID; // Second staff member if required
-}
-```
-
-### Package Release Authorization Matrix
-
-| Package Value (GHC) | Staff Level Required | Manager Approval | Photo Documentation | Witness Required |
-|---------------------|---------------------|------------------|-------------------|------------------|
-| 0 - 500 | Warehouse Worker | No | Customer ID + Signature | No |
-| 501 - 2000 | Warehouse Worker | No | Customer ID + Signature + Package Photos | No |
-| 2001 - 5000 | Order Fulfillment Specialist | No | Full Documentation | Yes |
-| 5000+ | Warehouse Manager | Yes | Full Documentation | Yes |
-| Special Circumstances | Warehouse Manager | Yes | Full Documentation | Yes |
-
-### Shipment Tracking Integration
-**When customer has multiple packages in a shipment:**
-
-```typescript
-// Get shipment details with all packages
-GET /api/warehouse/shipments/{shipmentId}/customer-packages/{customerId}
-
-Response:
-{
-  shipment: {
-    id: UUID;
-    number: string;
-    status: ShipmentStatus;
-    totalPackages: number;
-    customerPackages: number;
-    estimatedDelivery: timestamp;
-    actualArrival?: timestamp;
-  };
-  customerPackages: [
-    {
-      id: UUID;
-      trackingNumber: string;
-      status: PackageStatus;
-      canBeReleased: boolean;
-      requiresSpecialHandling: boolean;
-    }
-  ];
-  releaseOptions: {
-    releaseIndividually: boolean; // Can release packages one by one
-    releaseAsGroup: boolean; // Must release all together
-    partialReleaseAllowed: boolean; // Some packages ready, others not
+  
+  knowledgeBase: {
+    faqDatabase: FAQ[];
+    procedureGuides: Procedure[];
+    escalationPaths: EscalationPath[];
+    documentLibrary: Document[];
   };
 }
 ```
 
-### Release Documentation & Audit Trail
-**Every package release generates comprehensive documentation:**
+#### Multi-Channel Customer Support
 
-```sql
-CREATE TABLE package_releases (
-  id UUID PRIMARY KEY,
-  package_id UUID REFERENCES packages(id),
-  customer_id UUID REFERENCES users(id),
-  release_session_id UUID, -- Links all packages released together
-  
-  -- Staff Information
-  releasing_staff_id UUID REFERENCES users(id),
-  witness_staff_id UUID REFERENCES users(id),
-  manager_approval_id UUID REFERENCES users(id),
-  
-  -- Verification Details
-  identity_verification_method VARCHAR(50),
-  identity_verification_value VARCHAR(255), -- Phone, email, etc.
-  photo_id_captured BOOLEAN DEFAULT FALSE,
-  
-  -- Documentation
-  customer_signature_image TEXT, -- Base64
-  staff_signature_image TEXT, -- Base64
-  customer_photo_image TEXT, -- Base64
-  package_photos JSONB, -- Array of base64 images
-  
-  -- Release Details
-  release_type VARCHAR(50), -- NORMAL, EARLY, SPECIAL
-  release_reason TEXT,
-  release_notes TEXT,
-  
-  -- Timing
-  initiated_at TIMESTAMP,
-  completed_at TIMESTAMP,
-  
-  -- Status
-  status VARCHAR(20) DEFAULT 'COMPLETED', -- INITIATED, VERIFIED, COMPLETED, CANCELLED
-  
-  CONSTRAINT valid_release_type CHECK (release_type IN ('NORMAL_PICKUP', 'EARLY_RELEASE', 'SPECIAL_CIRCUMSTANCES'))
-);
-```
-
-### Error Handling & Special Situations
-
-**Common Scenarios & Solutions:**
-
-1. **Customer Lost ID**: 
-   - Use secondary verification (phone SMS + email)
-   - Require manager approval
-   - Enhanced photo documentation
-
-2. **Package Not Ready**: 
-   - Show expected ready date
-   - Offer notification signup
-   - Explain current status
-
-3. **Payment Pending**: 
-   - Block release until payment
-   - Direct to payment processing
-   - Hold package securely
-
-4. **Damaged Package**: 
-   - Document damage thoroughly
-   - Get customer acknowledgment
-   - Process insurance claim if applicable
-
-5. **Wrong Customer**: 
-   - Verify identity more thoroughly
-   - Check for similar names/details
-   - Require additional documentation
-
-### Customer Communication During Release
+**Integrated Communication System:**
 ```typescript
-// Automated notifications during release process
-POST /api/warehouse/notifications/release-status
+// Omnichannel customer communication
+POST /api/customer-service/communication/send
 {
   customerId: UUID;
-  packageIds: UUID[];
-  status: "ARRIVAL_CONFIRMED" | "READY_FOR_PICKUP" | "PICKUP_SCHEDULED" | "RELEASED";
-  channel: "SMS" | "EMAIL" | "WHATSAPP" | "ALL";
-  customMessage?: string;
+  agentId: UUID;
+  channel: "PHONE" | "EMAIL" | "WHATSAPP" | "SMS" | "CHAT";
+  messageType: "INQUIRY_RESPONSE" | "STATUS_UPDATE" | "ISSUE_RESOLUTION" | "PROACTIVE_ALERT";
+  content: {
+    subject?: string;
+    message: string;
+    attachments?: string[];
+    priority: "LOW" | "MEDIUM" | "HIGH" | "URGENT";
+  };
+  trackingNumbers?: string[];
+  followUpRequired: boolean;
+  escalationTriggered?: boolean;
 }
 
-// WhatsApp integration for real-time updates
-POST /api/warehouse/whatsapp/release-notification
+Response:
 {
-  customerPhone: string;
-  packageTrackingNumbers: string[];
-  messageTemplate: "PACKAGE_READY" | "PLEASE_BRING_ID" | "PACKAGE_RELEASED";
-  warehouseLocation: {
-    address: string;
-    hours: string;
-    contactNumber: string;
+  messageId: UUID;
+  deliveryStatus: "SENT" | "DELIVERED" | "READ" | "FAILED";
+  estimatedResponse: ISO_DATE;
+  caseCreated?: UUID;
+  nextActions: string[];
+}
+```
+
+#### Case Management System
+
+**Support Ticket and Issue Tracking:**
+```sql
+-- Customer service cases table
+CREATE TABLE customer_service_cases (
+  id UUID PRIMARY KEY,
+  case_number VARCHAR(20) UNIQUE NOT NULL, -- CS-2025-001234
+  customer_id UUID REFERENCES users(id),
+  package_ids UUID[], -- Array of related package IDs
+  
+  -- Case Details
+  category VARCHAR(50) NOT NULL CHECK (category IN (
+    'TRACKING_INQUIRY', 'DELIVERY_DELAY', 'PACKAGE_DAMAGE', 
+    'BILLING_QUESTION', 'CUSTOMS_ISSUE', 'GENERAL_INQUIRY',
+    'COMPLAINT', 'REFUND_REQUEST', 'PICKUP_SCHEDULING'
+  )),
+  priority VARCHAR(10) DEFAULT 'MEDIUM' CHECK (priority IN ('LOW', 'MEDIUM', 'HIGH', 'URGENT')),
+  status VARCHAR(20) DEFAULT 'OPEN' CHECK (status IN (
+    'OPEN', 'IN_PROGRESS', 'WAITING_CUSTOMER', 'ESCALATED', 
+    'RESOLVED', 'CLOSED', 'REOPENED'
+  )),
+  
+  -- Content
+  subject TEXT NOT NULL,
+  description TEXT NOT NULL,
+  customer_contact_preference VARCHAR(20),
+  language_preference VARCHAR(10) DEFAULT 'en',
+  
+  -- Assignment and Tracking
+  assigned_agent_id UUID REFERENCES users(id),
+  assigned_team VARCHAR(50),
+  created_by UUID REFERENCES users(id),
+  
+  -- SLA Tracking
+  response_due TIMESTAMP,
+  resolution_due TIMESTAMP,
+  first_response_at TIMESTAMP,
+  resolved_at TIMESTAMP,
+  closed_at TIMESTAMP,
+  
+  -- Metrics
+  customer_satisfaction_rating INTEGER CHECK (customer_satisfaction_rating BETWEEN 1 AND 5),
+  resolution_notes TEXT,
+  
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Performance indexes
+CREATE INDEX idx_cs_cases_customer ON customer_service_cases(customer_id);
+CREATE INDEX idx_cs_cases_agent ON customer_service_cases(assigned_agent_id);
+CREATE INDEX idx_cs_cases_status_priority ON customer_service_cases(status, priority);
+CREATE INDEX idx_cs_cases_category ON customer_service_cases(category);
+```
+
+**Automated Case Routing:**
+```typescript
+// Intelligent case assignment system
+class CaseRoutingSystem {
+  static async assignCase(caseDetails: NewSupportCase): Promise<CaseAssignment> {
+    const routingRules = await this.getRoutingRules();
+    
+    // Determine assignment based on case category and complexity
+    const assignment = this.calculateBestAgent({
+      category: caseDetails.category,
+      priority: caseDetails.priority,
+      language: caseDetails.language,
+      customerTier: caseDetails.customerProfile.tier,
+      agentWorkload: await this.getAgentWorkloads(),
+      agentSkills: await this.getAgentSkills()
+    });
+    
+    return {
+      assignedAgent: assignment.agentId,
+      estimatedResolutionTime: assignment.slaTarget,
+      escalationPath: assignment.escalationRules,
+      responseTemplate: assignment.suggestedTemplate
+    };
+  }
+  
+  private static calculateBestAgent(criteria: AssignmentCriteria): AgentAssignment {
+    // Algorithm to match cases with best available agent
+    // Considers: workload, expertise, language skills, customer history
+    return {
+      agentId: "best-match-agent-id",
+      slaTarget: this.calculateSLA(criteria),
+      escalationRules: this.getEscalationPath(criteria),
+      suggestedTemplate: this.getResponseTemplate(criteria)
+    };
+  }
+}
+```
+
+#### Knowledge Base and FAQ System
+
+**Self-Service and Agent Support:**
+```typescript
+// Knowledge base management
+interface KnowledgeBase {
+  articles: {
+    id: UUID;
+    title: string;
+    content: string;
+    category: string;
+    tags: string[];
+    language: string;
+    lastUpdated: ISO_DATE;
+    views: number;
+    helpfulness: number;
+  }[];
+  
+  procedures: {
+    id: UUID;
+    name: string;
+    steps: ProcedureStep[];
+    category: string;
+    requiredRole: string[];
+    estimatedTime: number;
+  }[];
+  
+  escalationPaths: {
+    trigger: string;
+    condition: string;
+    nextLevel: string;
+    timeframe: number;
+    requiredApproval: boolean;
+  }[];
+}
+
+// Smart search and suggestion system
+GET /api/customer-service/knowledge-base/search
+Query Parameters:
+- query: string (customer question or keywords)
+- category?: string
+- language?: string
+- customerTier?: string
+
+Response:
+{
+  suggestions: [
+    {
+      articleId: UUID;
+      title: string;
+      relevanceScore: number;
+      quickAnswer: string;
+      fullContent?: string;
+    }
+  ];
+  automatedResponses: [
+    {
+      templateId: UUID;
+      suggestedResponse: string;
+      confidence: number;
+    }
+  ];
+  escalationRecommended: boolean;
+}
+```
+
+#### Customer Satisfaction and Quality Assurance
+
+**Service Quality Monitoring:**
+```sql
+-- Customer satisfaction tracking
+CREATE TABLE customer_satisfaction (
+  id UUID PRIMARY KEY,
+  case_id UUID REFERENCES customer_service_cases(id),
+  customer_id UUID REFERENCES users(id),
+  agent_id UUID REFERENCES users(id),
+  
+  -- Ratings (1-5 scale)
+  overall_satisfaction INTEGER CHECK (overall_satisfaction BETWEEN 1 AND 5),
+  response_speed INTEGER CHECK (response_speed BETWEEN 1 AND 5),
+  problem_resolution INTEGER CHECK (problem_resolution BETWEEN 1 AND 5),
+  agent_helpfulness INTEGER CHECK (agent_helpfulness BETWEEN 1 AND 5),
+  
+  -- Feedback
+  positive_feedback TEXT,
+  improvement_suggestions TEXT,
+  would_recommend BOOLEAN,
+  
+  -- Survey metadata
+  survey_method VARCHAR(20), -- EMAIL, SMS, PHONE, IN_APP
+  survey_completed_at TIMESTAMP DEFAULT NOW(),
+  follow_up_permission BOOLEAN DEFAULT false
+);
+
+-- Quality assurance monitoring
+CREATE TABLE quality_assurance_reviews (
+  id UUID PRIMARY KEY,
+  case_id UUID REFERENCES customer_service_cases(id),
+  agent_id UUID REFERENCES users(id),
+  reviewer_id UUID REFERENCES users(id),
+  
+  -- QA Scores (1-10 scale)
+  communication_quality INTEGER CHECK (communication_quality BETWEEN 1 AND 10),
+  problem_solving INTEGER CHECK (problem_solving BETWEEN 1 AND 10),
+  policy_adherence INTEGER CHECK (policy_adherence BETWEEN 1 AND 10),
+  customer_empathy INTEGER CHECK (customer_empathy BETWEEN 1 AND 10),
+  
+  overall_score INTEGER CHECK (overall_score BETWEEN  1 AND 10),
+  feedback TEXT,
+  training_recommended BOOLEAN DEFAULT false,
+  reviewed_at TIMESTAMP DEFAULT NOW()
+);
+```
+
+#### Performance Analytics and Reporting
+
+**Customer Service Metrics Dashboard:**
+```typescript
+// Customer service analytics API
+GET /api/customer-service/analytics/dashboard
+Query Parameters:
+- dateRange: string (7d, 30d, 90d, custom)
+- agentId?: UUID
+- team?: string
+- category?: string
+
+Response:
+{
+  caseMetrics: {
+    totalCases: number;
+    openCases: number;
+    resolvedCases: number;
+    averageResolutionTime: number; // hours
+    firstResponseTime: number; // minutes
+    escalationRate: number; // percentage
+  };
+  
+  customerSatisfaction: {
+    averageRating: number;
+    responseRate: number; // percentage who completed survey
+    npsScore: number; // Net Promoter Score
+    topCompliments: string[];
+    commonComplaints: string[];
+  };
+  
+  agentPerformance: {
+    caseLoad: number;
+    resolutionRate: number;
+    averageRating: number;
+    productivityScore: number;
+  };
+  
+  trendAnalysis: {
+    caseVolumeByDay: TimeSeriesData[];
+    categoriesBreakdown: CategoryData[];
+    peakHours: HourlyData[];
   };
 }
 ```
+
+#### Integration with Warehouse Operations
+
+**Seamless Operational Integration:**
+```typescript
+// Integration with warehouse systems
+interface WarehouseIntegration {
+  packageTracking: {
+    realTimeStatus: (trackingNumber: string) => PackageStatus;
+    locationHistory: (packageId: UUID) => LocationHistory[];
+    estimatedDelivery: (packageId: UUID) => EstimatedDelivery;
+  };
+  
+  inventoryAccess: {
+    warehouseCapacity: () => CapacityInfo;
+    packageLocation: (packageId: UUID) => WarehouseLocation;
+    staffAvailability: () => StaffStatus[];
+  };
+  
+  actionRequests: {
+    expeditePackage: (packageId: UUID, reason: string) => ActionResult;
+    schedulePickup: (customerId: UUID, preferences: PickupPreferences) => ScheduleResult;
+    initiateInvestigation: (packageId: UUID, issue: string) => InvestigationCase;
+  };
+}
+
+// Customer service actions
+POST /api/customer-service/actions/expedite-package
+{
+  packageId: UUID;
+  customerId: UUID;
+  agentId: UUID;
+  reason: string;
+  priority: "STANDARD" | "URGENT" | "EMERGENCY";
+  approvalRequired: boolean;
+  customerNotification: boolean;
+}
+
+Response:
+{
+  actionId: UUID;
+  approved: boolean;
+  newEstimatedDelivery?: ISO_DATE;
+  additionalCost?: number;
+  managerApprovalNeeded: boolean;
+  customerNotified: boolean;
+}
+```
+
+### Future Development Roadmap
+
+**Phase 1: Transportation Management (Q3 2025)**
+- Mobile app development for transportation managers
+- GPS tracking integration
+- Real-time status update system
+- Exception reporting workflow
+
+**Phase 2: Customer Service Platform (Q4 2025)**
+- Omnichannel communication system
+- Case management implementation
+- Knowledge base development
+- Quality assurance framework
+
+**Phase 3: Advanced Analytics (Q1 2026)**
+- Predictive analytics for delivery delays
+- Customer behavior analysis
+- Automated issue resolution
+- Performance optimization algorithms
+
+**Phase 4: AI Integration (Q2 2026)**
+- Chatbot for common inquiries
+- Intelligent case routing
+- Predictive customer service
+- Automated response generation
+
+---
+
+**This Future Production section establishes the framework for enhanced operational visibility and customer service capabilities, supporting the continued growth and excellence of the Ttarius Logistics international warehouse system.**

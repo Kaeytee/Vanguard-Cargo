@@ -6,7 +6,7 @@ import Login from './app/login';
 import Dashboard from './app/pages/dashboard';
 import AppLayout from './components/layout/AppLayout';
 import IncomingRequest from './app/pages/IncomingRequest/IncomingRequest';
-// import CreateShipment from './app/pages/CreateShipment/CreateShipment'; // Removed from routing and sidebar as per workflow update
+import CreateShipment from './app/pages/CreateShipment/CreateShipment';
 import ShipmentHistory from './app/pages/ShipmentHistory/ShipmentHistory';
 import ClientManagement from './app/pages/ClientManagement/ClientManagement';
 import AnalysisReport from './app/pages/AnalysisReport/AnalysisReport';
@@ -94,7 +94,7 @@ const App = (): React.ReactElement => {
           <Route path="/dashboard" element={<Dashboard />} />
           
           {/* Other protected routes will be added here */}
-          {/* <Route path="/create-shipment" element={<CreateShipment />} /> */}
+          <Route path="/create-shipment" element={<CreateShipment />} />
           <Route path="/incoming-request" element={<IncomingRequest />} />
           <Route path="/shipment-history" element={<ShipmentHistory />} />
           <Route path="/client-management" element={<ClientManagement />} />
