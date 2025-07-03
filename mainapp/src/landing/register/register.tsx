@@ -713,7 +713,7 @@ export default function Register() {
                         />
                         <div
                           className={cn(
-                            'w-5 h-5 border-2 rounded flex items-center justify-center transition-colors duration-200 p',
+                            'w-5 h-5 border-2 rounded flex items-center justify-center transition-colors duration-200 p-2',
                             formData.agreeToMarketing ? 'bg-red-500 border-red-500' : 'border-gray-300'
                           )}
                         >
