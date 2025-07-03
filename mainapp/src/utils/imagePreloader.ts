@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 // Import all images to get their bundled URLs
 import aboutImg from '../images/about.png';
 import airImg from '../images/air.png';
-import awaitingDeliveriesImg from '../images/awaitind-deliveries.png';
+import awaitingDeliveriesImg from '../images/awaiting-deliveries.png';
 import customsImg from '../images/customs.png';
 import deliveryManImg from '../images/delivery-man.png';
 import deliveryImg from '../images/delivery.jpg';
