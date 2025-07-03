@@ -236,11 +236,6 @@ export default function Register() {
         });
         
         setSuccess(true);
-        setRegisteredUser({
-          email: formData.email,
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-        });
         
         // Clear form
         setFormData({
