@@ -5,9 +5,17 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:mock": "vite --mode development",
+    "dev:api": "VITE_MOCK_AUTH=false vite --mode development",
     "build": "tsc -b && vite build",
+    "build:dev": "tsc -b && vite build --mode development",
+    "build:prod": "tsc -b && vite build --mode production",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "preview:prod": "vite preview --mode production",
+    "type-check": "tsc -b --noEmit",
+    "clean": "rm -rf dist node_modules/.vite",
+    "start": "npm run build:prod && npm run preview:prod"
   },
   "dependencies": {
     "@fontsource/roboto": "^5.2.6",

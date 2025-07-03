@@ -1,4 +1,3 @@
-
 # Ttarius Logistics - Warehouse Management System
 
 ## Overview
@@ -28,6 +27,42 @@ Ttarius Logistics is a warehouse-to-warehouse international logistics platform t
   - Professional filter UI with status tabs, live search, and animated date filter dropdown, matching the "Awaiting Shipment List" reference exactly.
   - All filter state (status, search, date) handled with robust React state and clean OOP code.
   - Code is thoroughly commented and follows best practices for maintainability and extensibility.
+
+## Authentication & Test Credentials
+
+The warehouse system uses role-based access control (RBAC) with three user roles and mock authentication for testing purposes.
+
+### Login Format
+
+- **Employee ID**: 10-digit number
+- **Password**: 6-character string
+
+### Test Credentials
+
+#### Worker Role
+
+- **Employee ID**: `1234567890` | **Password**: `work01`
+- **Employee ID**: `2345678901` | **Password**: `work02`
+- **Employee ID**: `3456789012` | **Password**: `work03`
+
+**Permissions**: Dashboard, Incoming Requests, Shipment History, Inventory
+
+#### Inventory Analyst Role
+
+- **Employee ID**: `4567890123` | **Password**: `inv001`
+- **Employee ID**: `5678901234` | **Password**: `inv002`
+- **Employee ID**: `6789012345` | **Password**: `inv003`
+
+**Permissions**: Dashboard, Shipment History, Analysis Report, Inventory
+
+#### Manager Role
+
+- **Employee ID**: `7890123456` | **Password**: `mgr001`
+- **Employee ID**: `8901234567` | **Password**: `mgr002`
+- **Employee ID**: `9012345678` | **Password**: `mgr003`
+- **Employee ID**: `0123456789` | **Password**: `mgr004`
+
+**Permissions**: Full access to all features (Dashboard, Incoming Requests, Create Shipment, Shipment History, Analysis Report, Inventory)
 
 ## Expanding the ESLint configuration
 

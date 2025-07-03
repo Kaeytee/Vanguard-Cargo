@@ -1,5 +1,7 @@
 import React, { createContext, useReducer, useEffect } from 'react';
 import type { ReactNode } from 'react';
+import { authApi } from '../../../services/apiService';
+import { logger } from '../../../config/environment';
 
 // Updated User and Role types for RBAC
 export type UserRole = 'WORKER' | 'INVENTORY_ANALYST' | 'MANAGER';
@@ -100,7 +102,7 @@ interface AuthProviderProps {
 }
 
 // Role-based permissions configuration
-const getRolePermissions = (role: UserRole): RolePermissions => {
+export const getRolePermissions = (role: UserRole): RolePermissions => {
   switch (role) {
     case 'WORKER':
       return {
@@ -145,65 +147,8 @@ const getRolePermissions = (role: UserRole): RolePermissions => {
   }
 };
 
-// Dummy user data for testing - Employee IDs (10 digits) and Passwords (6 characters)
-const DUMMY_USERS: Record<string, { role: UserRole; name: string; department: string; password: string }> = {
-  // WORKER Role - 3 employees
-  '1234567890': { role: 'WORKER', name: 'John Michael Doe', department: 'Warehouse Operations', password: 'work01' },
-  '2345678901': { role: 'WORKER', name: 'Maria Elena Santos', department: 'Warehouse Operations', password: 'work02' },
-  '3456789012': { role: 'WORKER', name: 'David Chen Wang', department: 'Warehouse Operations', password: 'work03' },
-  
-  // INVENTORY_ANALYST Role - 3 employees
-  '4567890123': { role: 'INVENTORY_ANALYST', name: 'Sarah Jane Smith', department: 'Inventory Management', password: 'inv001' },
-  '5678901234': { role: 'INVENTORY_ANALYST', name: 'Ahmed Hassan Ali', department: 'Inventory Management', password: 'inv002' },
-  '6789012345': { role: 'INVENTORY_ANALYST', name: 'Emily Rose Johnson', department: 'Inventory Management', password: 'inv003' },
-  
-  // MANAGER Role - 4 employees  
-  '7890123456': { role: 'MANAGER', name: 'Alice Katherine Brown', department: 'Warehouse Management', password: 'mgr001' },
-  '8901234567': { role: 'MANAGER', name: 'Robert James Wilson', department: 'Warehouse Management', password: 'mgr002' },
-  '9012345678': { role: 'MANAGER', name: 'Jennifer Michelle Davis', department: 'Warehouse Management', password: 'mgr003' },
-  '0123456789': { role: 'MANAGER', name: 'Carlos Eduardo Rodriguez', department: 'Warehouse Management', password: 'mgr004' },
-};
-
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [state, dispatch] = useReducer(authReducer, initialState);
-
-  // Mock API function to simulate authentication
-  const mockAuthAPI = async (employeeId: string, password: string): Promise<User> => {
-    // Simulate network delay
-    await new Promise((resolve) => setTimeout(resolve, 800));
-    
-    // Validate employee ID format (must be 10 digits)
-    if (!/^\d{10}$/.test(employeeId)) {
-      throw new Error('Employee ID must be 10 digits');
-    }
-    
-    // Validate password format (must be 6 characters)
-    if (password.length !== 6) {
-      throw new Error('Password must be 6 characters');
-    }
-    
-    // Check if user exists in dummy data
-    const userData = DUMMY_USERS[employeeId];
-    
-    if (!userData || password !== userData.password) {
-      throw new Error('Invalid employee ID or password');
-    }
-    
-    const permissions = getRolePermissions(userData.role);
-    
-    return {
-      id: `emp_${employeeId}`,
-      email: `${employeeId}@ttarius-logistics.com`,
-      name: userData.name,
-      role: userData.role,
-      department: userData.department,
-      permissions,
-      isActive: true,
-      createdAt: new Date().toISOString(),
-      lastLogin: new Date().toISOString(),
-      token: `jwt-${userData.role.toLowerCase()}-${employeeId}`,
-    };
-  };
 
   // Initialize auth state from localStorage on mount
   useEffect(() => {
@@ -242,16 +187,27 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     dispatch({ type: 'LOGIN_START' });
     
     try {
-      const user = await mockAuthAPI(employeeId, password);
+      logger.info('Attempting login for employee:', employeeId);
+      
+      const response = await authApi.login({ employeeId, password });
+      
+      if (!response.success || !response.data) {
+        throw new Error(response.error || 'Login failed');
+      }
+      
+      const { user, token } = response.data;
       
       // Store in localStorage
       localStorage.setItem('warehouse_user', JSON.stringify(user));
-      localStorage.setItem('warehouse_token', user.token);
+      localStorage.setItem('warehouse_token', token);
       localStorage.setItem('isAuthenticated', 'true');
+      
+      logger.info('Login successful for:', user.name);
       
       dispatch({ type: 'LOGIN_SUCCESS', payload: user });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Login failed';
+      logger.error('Login failed:', errorMessage);
       dispatch({ type: 'LOGIN_FAILURE', payload: errorMessage });
     }
   };
