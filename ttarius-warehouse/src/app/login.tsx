@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { BsPerson, BsLock } from 'react-icons/bs';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from './auth/hooks/useAuth';
 import image from '../assets/Login.png';
 
 
@@ -15,69 +16,58 @@ import image from '../assets/Login.png';
 const Login = () => {
   // Navigation hook for redirecting after login
   const navigate = useNavigate();
+  const { login, error, isLoading } = useAuth();
   
   // State for form inputs and UI states
-  const [username, setUsername] = useState('');
+  const [employeeId, setEmployeeId] = useState('');
   const [password, setPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [localError, setLocalError] = useState('');
 
   /**
    * Handle form submission
    * @param {React.FormEvent} e - Form event
    */
 /**
- * Interface for login credentials
- */
-interface LoginCredentials {
-  username: string;
-  password: string;
-}
-
-/**
  * Handles the login form submission
- * Shows loading state, simulates authentication, and navigates to dashboard
- * @param {React.FormEvent<HTMLButtonElement>} e - Form event
+ * Shows loading state, authenticates with the AuthContext, and navigates to dashboard
+ * @param {React.FormEvent<HTMLFormElement>} e - Form event
  */
-const handleSubmit = (e: React.FormEvent<HTMLButtonElement>): void => {
+const handleSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
   // Prevent default form submission behavior
   e.preventDefault();
   
   // Reset any previous errors
-  setError('');
+  setLocalError('');
   
   // Validate form inputs
-  if (!username || !password) {
-    setError('Please enter both username and password');
+  if (!employeeId || !password) {
+    setLocalError('Please enter both employee ID and password');
+    return;
+  }
+
+  // Validate employee ID format (10 digits)
+  if (!/^\d{10}$/.test(employeeId)) {
+    setLocalError('Employee ID must be 10 digits');
+    return;
+  }
+
+  // Validate password format (6 characters)
+  if (password.length !== 6) {
+    setLocalError('Password must be 6 characters');
     return;
   }
   
-  // Set loading state
-  setIsLoading(true);
-  
-  // Create credentials object
-  const credentials: LoginCredentials = { username, password };
-  console.log('Login attempt with:', credentials);
-  
-  // Simulate authentication process with a delay
-  setTimeout(() => {
-    // For demo purposes, we'll consider any login successful
-    // In a real application, you would validate credentials against an API
-    
-    // Set authentication state in session storage
-    sessionStorage.setItem('isAuthenticated', 'true');
-    
-    // Store user info if needed
-    sessionStorage.setItem('user', JSON.stringify({
-      username,
-      role: 'admin',
-      lastLogin: new Date().toISOString()
-    }));
+  try {
+    // Use the AuthContext login function (no logging of sensitive data)
+    await login(employeeId, password);
     
     // Navigate to dashboard after successful login
-    setIsLoading(false);
     navigate('/dashboard');
-  }, 2000); // 2 seconds delay to show the loader
+  } catch (loginError) {
+    // Error is handled by AuthContext, but we can show additional feedback
+    console.error('Login attempt failed:', loginError);
+    setLocalError('Login failed. Please check your credentials.');
+  }
 };
 
   return (
@@ -137,18 +127,20 @@ const handleSubmit = (e: React.FormEvent<HTMLButtonElement>): void => {
             </div>
 
             {/* Login Form */}
-            <div className="space-y-6">
-              {/* Username Input */}
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Employee ID Input */}
               <div className="relative">
                 <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">
                   <BsPerson className="w-5 h-5 text-gray-400" />
                 </div>
                 <input
                   type="text"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
+                  value={employeeId}
+                  onChange={(e) => setEmployeeId(e.target.value)}
+                  maxLength={10}
+                  pattern="\d{10}"
                   className="w-full px-4 pr-12 py-4 bg-gray-50 border-0 rounded-lg text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-0 focus:bg-white focus:shadow-sm transition-all duration-200"
-                  placeholder="Enter ID"
+                  placeholder="Enter Employee ID (10 digits)"
                 />
               </div>
 
@@ -161,22 +153,31 @@ const handleSubmit = (e: React.FormEvent<HTMLButtonElement>): void => {
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  maxLength={6}
                   className="w-full px-4 pr-12 py-4 bg-gray-50 border-0 rounded-lg text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-0 focus:bg-white focus:shadow-sm transition-all duration-200"
-                  placeholder="Enter password"
+                  placeholder="Enter Password (6 characters)"
                 />
               </div>
 
               {/* Error message display */}
-              {error && (
+              {(error || localError) && (
                 <div className="text-red-500 text-sm mt-2 mb-4">
-                  {error}
+                  {error || localError}
                 </div>
               )}
               
+              {/* Test credentials for development */}
+              <div className="bg-blue-50 border border-blue-200 rounded-md p-3 text-xs">
+                <p className="text-blue-900 font-medium mb-1">Test Credentials:</p>
+                <p className="text-blue-800">Worker: 1234567890 / work01</p>
+                <p className="text-blue-800">Analyst: 4567890123 / inv001</p>
+                <p className="text-blue-800">Manager: 7890123456 / mgr001</p>
+              </div>
+              
               {/* Login Button with Loading State */}
               <button
-                onClick={handleSubmit}
-                disabled={isLoading}
+                type="submit"
+                disabled={isLoading || !employeeId || !password}
                 className={`w-full bg-blue-900 text-white py-4 rounded-lg font-semibold text-lg transition-all duration-300 shadow-lg flex items-center justify-center ${isLoading ? 'opacity-90 cursor-not-allowed' : 'hover:bg-blue-800 hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98]'}`}
               >
                 {isLoading ? (
@@ -191,7 +192,7 @@ const handleSubmit = (e: React.FormEvent<HTMLButtonElement>): void => {
                   'Log In'
                 )}
               </button>
-            </div>
+            </form>
           </div>
         </div>
       </div>

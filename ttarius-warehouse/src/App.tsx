@@ -2,16 +2,19 @@
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useEffect } from 'react';
 import type { ReactNode } from 'react';
+import { AuthProvider } from './app/auth/contexts/AuthContext';
+import { useAuth } from './app/auth/hooks/useAuth';
 import Login from './app/login';
 import Dashboard from './app/pages/dashboard';
 import AppLayout from './components/layout/AppLayout';
 import IncomingRequest from './app/pages/IncomingRequest/IncomingRequest';
 import CreateShipment from './app/pages/CreateShipment/CreateShipment';
 import ShipmentHistory from './app/pages/ShipmentHistory/ShipmentHistory';
-import ClientManagement from './app/pages/ClientManagement/ClientManagement';
 import AnalysisReport from './app/pages/AnalysisReport/AnalysisReport';
 import Inventory from './app/pages/Inventory/Inventory';
 import About from './app/pages/About/About';
+import RouteGuard from './components/RouteGuard';
+import UnauthorizedPage from './components/UnauthorizedPage';
 // import GroupManagementDashboard from './app/pages/GroupManagement/GroupManagementDashboard'; // Removed from routing
 
 /**
@@ -19,27 +22,26 @@ import About from './app/pages/About/About';
  * 
  * This component handles protected routes that require authentication.
  * It checks if the user is authenticated and redirects to login if not.
- * 
- * @param {Object} props - Component props
- * @param {ReactNode} props.children - Child components to render if authenticated
- * @returns {JSX.Element} Protected route component
- */
-/**
- * Type definition for ProtectedRoute props
  */
 interface ProtectedRouteProps {
   children: ReactNode;
 }
 
-/**
- * Protected Route Component implementation
- */
 const ProtectedRoute = ({ children }: ProtectedRouteProps): React.ReactElement => {
+  const { isAuthenticated, isLoading } = useAuth();
   const location = useLocation();
   
-  // In a real application, you would check for a valid authentication token
-  // For this demo, we'll just check if the user came from the login page
-  const isAuthenticated = sessionStorage.getItem('isAuthenticated') === 'true';
+  // Show loading while auth is being checked
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-2 text-gray-600">Authenticating...</p>
+        </div>
+      </div>
+    );
+  }
   
   if (!isAuthenticated) {
     // Redirect to login if not authenticated
@@ -48,86 +50,131 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps): React.ReactElement =
   
   // Render children if authenticated
   return <>{children}</>;
-
 };
 
 /**
- * App Component
+ * App Routes Component
  * 
- * This is the main application component that handles routing.
- * It sets up the routes for the application, including login and dashboard.
- * Protected routes require authentication to access.
+ * Contains all the routing logic with role-based protection
  */
+const AppRoutes: React.FC = () => {
+  return (
+    <Routes>
+      {/* Public Routes */}
+      <Route path="/login" element={<Login />} />
+      <Route path="/unauthorized" element={<UnauthorizedPage />} />
+      
+      {/* Protected Routes - All wrapped in AppLayout */}
+      <Route 
+        element={
+          <ProtectedRoute>
+            <AppLayout />
+          </ProtectedRoute>
+        }
+      >
+        {/* Dashboard - Accessible by all roles */}
+        <Route 
+          path="/dashboard" 
+          element={
+            <RouteGuard requiredPermission="dashboard">
+              <Dashboard />
+            </RouteGuard>
+          } 
+        />
+        
+        {/* Incoming Requests - Workers and Managers only */}
+        <Route 
+          path="/incoming-request" 
+          element={
+            <RouteGuard requiredPermission="incomingRequests">
+              <IncomingRequest />
+            </RouteGuard>
+          } 
+        />
+        
+        {/* Create Shipment - Managers only */}
+        <Route 
+          path="/create-shipment" 
+          element={
+            <RouteGuard requiredPermission="createShipment">
+              <CreateShipment />
+            </RouteGuard>
+          } 
+        />
+        
+        {/* Shipment History - All roles */}
+        <Route 
+          path="/shipment-history" 
+          element={
+            <RouteGuard requiredPermission="shipmentHistory">
+              <ShipmentHistory />
+            </RouteGuard>
+          } 
+        />
+        
+        {/* Analysis Report - Analysts and Managers only */}
+        <Route 
+          path="/analysis-report" 
+          element={
+            <RouteGuard requiredPermission="analysisReport">
+              <AnalysisReport />
+            </RouteGuard>
+          } 
+        />
+        
+        {/* Inventory - All roles */}
+        <Route 
+          path="/inventory" 
+          element={
+            <RouteGuard requiredPermission="inventory">
+              <Inventory />
+            </RouteGuard>
+          } 
+        />
+        
+        {/* Client Management - Redirect to unauthorized (not available in warehouse app) */}
+        <Route 
+          path="/client-management" 
+          element={<Navigate to="/unauthorized" replace />} 
+        />
+        
+        {/* About page - Public within authenticated area */}
+        <Route path="/about" element={<About />} />
+      </Route>
+      
+      {/* Index route - redirect based on authentication */}
+      <Route 
+        path="/" 
+        element={<Navigate to="/dashboard" replace />} 
+      />
+      
+      {/* Catch-all route - redirect to unauthorized for unknown paths */}
+      <Route 
+        path="*" 
+        element={<Navigate to="/unauthorized" replace />} 
+      />
+    </Routes>
+  );
+};
+
 /**
  * Main App Component
  * 
- * @returns {JSX.Element} The main application component
- */
-/**
- * Main App Component implementation
+ * Wraps the entire application with necessary providers and routing
  */
 const App = (): React.ReactElement => {
   // Effect to check authentication status on app load
   useEffect(() => {
-    // This would typically check for a valid token in local storage or cookies
-    // For demo purposes, we'll just initialize it if it doesn't exist
-    if (!sessionStorage.getItem('isAuthenticated')) {
-      sessionStorage.setItem('isAuthenticated', 'false');
-    }
+    // Initialize any global settings or analytics here
+    console.log('Ttarius Logistics Warehouse App - Role-Based Access Control Enabled');
   }, []);
   
   return (
-    <Router>
-      <Routes>
-        {/* Public Routes */}
-        <Route path="/login" element={<Login />} />
-        
-        {/* Protected Routes - All wrapped in AppLayout */}
-        <Route 
-          element={
-            <ProtectedRoute>
-              <AppLayout />
-            </ProtectedRoute>
-          }
-        >
-          {/* Dashboard route */}
-          <Route path="/dashboard" element={<Dashboard />} />
-          
-          {/* Other protected routes will be added here */}
-          <Route path="/create-shipment" element={<CreateShipment />} />
-          <Route path="/incoming-request" element={<IncomingRequest />} />
-          <Route path="/shipment-history" element={<ShipmentHistory />} />
-          <Route path="/client-management" element={<ClientManagement />} />
-          <Route path="/analysis-report" element={<AnalysisReport />} />
-          <Route path="/inventory" element={<Inventory />} />
-          <Route path="/about" element={<About />} />
-          {/* <Route path="/group-management" element={<GroupManagementDashboard />} /> */}
-          {/* // Removed from routing: group-management functionality is not part of current workflow */}
-          {/* <Route path="/support" element={<Support />} /> */}
-// Removed for admin context: /support now returns 404 as required
-        </Route>
-        
-        {/* Index route - redirect to dashboard if authenticated, otherwise to login */}
-        <Route 
-          path="/" 
-          element={
-            sessionStorage.getItem('isAuthenticated') === 'true' ? 
-              <Navigate to="/dashboard" replace /> : 
-              <Navigate to="/login" replace />
-          } 
-        />
-        
-        {/* Catch-all route for any undefined paths */}
-        <Route 
-          path="*" 
-          element={
-            sessionStorage.getItem('isAuthenticated') === 'true' ? 
-              <Navigate to="/dashboard" replace /> : 
-              <Navigate to="/login" replace />
-          } 
-        />
-      </Routes>
-    </Router>
+    <AuthProvider>
+      <Router>
+        <AppRoutes />
+      </Router>
+    </AuthProvider>
   );
 };
 

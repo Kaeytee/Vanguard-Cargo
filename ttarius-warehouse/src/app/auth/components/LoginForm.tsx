@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Eye, EyeOff, LogIn } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
-import type { WarehouseRole } from '../../../types/auth';
 
 interface LoginFormProps {
   onSuccess?: () => void;
@@ -9,33 +8,20 @@ interface LoginFormProps {
 
 const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
   const [credentials, setCredentials] = useState({
-    username: '',
+    employeeId: '',
     password: '',
-    role: '' as WarehouseRole
   });
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAuth();
-
-  const roles: { value: WarehouseRole; label: string }[] = [
-    { value: 'admin', label: 'Administrator' },
-    { value: 'warehouse_manager', label: 'Warehouse Manager' },
-    { value: 'processor', label: 'Processor' },
-    { value: 'group_manager', label: 'Group Manager' },
-    { value: 'dispatcher', label: 'Dispatcher' },
-    { value: 'driver', label: 'Driver' },
-    { value: 'delivery_agent', label: 'Delivery Agent' },
-    { value: 'worker', label: 'Worker' },
-    { value: 'specialist', label: 'Specialist' }
-  ];
+  const { login, error } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!credentials.username || !credentials.password || !credentials.role) return;
+    if (!credentials.employeeId || !credentials.password) return;
 
     setIsLoading(true);
     try {
-      await login(credentials.username, credentials.password, credentials.role);
+      await login(credentials.employeeId, credentials.password);
       onSuccess?.();
     } catch (error) {
       console.error('Login failed:', error);
@@ -61,18 +47,20 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="space-y-4">
             <div>
-              <label htmlFor="username" className="block text-sm font-medium text-gray-700">
-                Username
+              <label htmlFor="employeeId" className="block text-sm font-medium text-gray-700">
+                Employee ID
               </label>
               <input
-                id="username"
-                name="username"
+                id="employeeId"
+                name="employeeId"
                 type="text"
+                maxLength={10}
+                pattern="\d{10}"
                 required
                 className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-red-500 focus:border-red-500 focus:z-10 sm:text-sm"
-                placeholder="Enter your username"
-                value={credentials.username}
-                onChange={(e) => setCredentials({ ...credentials, username: e.target.value })}
+                placeholder="Enter your 10-digit employee ID"
+                value={credentials.employeeId}
+                onChange={(e) => setCredentials({ ...credentials, employeeId: e.target.value })}
               />
             </div>
             
@@ -85,9 +73,10 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
                   id="password"
                   name="password"
                   type={showPassword ? 'text' : 'password'}
+                  maxLength={6}
                   required
                   className="appearance-none relative block w-full px-3 py-2 pr-10 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-red-500 focus:border-red-500 focus:z-10 sm:text-sm"
-                  placeholder="Enter your password"
+                  placeholder="Enter your 6-character password"
                   value={credentials.password}
                   onChange={(e) => setCredentials({ ...credentials, password: e.target.value })}
                 />
@@ -105,32 +94,30 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
               </div>
             </div>
 
-            <div>
-              <label htmlFor="role" className="block text-sm font-medium text-gray-700">
-                Role
-              </label>
-              <select
-                id="role"
-                name="role"
-                required
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md focus:outline-none focus:ring-red-500 focus:border-red-500 sm:text-sm"
-                value={credentials.role}
-                onChange={(e) => setCredentials({ ...credentials, role: e.target.value as WarehouseRole })}
-              >
-                <option value="">Select your role</option>
-                {roles.map((role) => (
-                  <option key={role.value} value={role.value}>
-                    {role.label}
-                  </option>
-                ))}
-              </select>
+            {/* Test credentials information */}
+            <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
+              <h4 className="text-sm font-medium text-blue-900 mb-2">Test Login Credentials:</h4>
+              <div className="text-xs text-blue-800 space-y-1">
+                <div><strong>Worker:</strong> 1234567890 / work01</div>
+                <div><strong>Inventory Analyst:</strong> 4567890123 / inv001</div>
+                <div><strong>Warehouse Manager:</strong> 7890123456 / mgr001</div>
+              </div>
+              <p className="text-xs text-blue-600 mt-2">
+                <em>Employee ID: 10 digits | Password: 6 characters</em>
+              </p>
             </div>
           </div>
+
+          {error && (
+            <div className="bg-red-50 border border-red-200 rounded-md p-3">
+              <p className="text-sm text-red-600">{error}</p>
+            </div>
+          )}
 
           <div>
             <button
               type="submit"
-              disabled={isLoading || !credentials.username || !credentials.password || !credentials.role}
+              disabled={isLoading || !credentials.employeeId || !credentials.password}
               className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? (
