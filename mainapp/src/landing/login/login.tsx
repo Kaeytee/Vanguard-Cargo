@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Eye, EyeOff } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom'; // Import Link and useNavigate for navigation
-import { useAuth } from '../../context/AuthProvider'; // Import Auth context
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthProvider';
+import { apiService } from '../../services/api';
 import DeliveryImage from '../../images/deliveryparcel.jpg';
 import LoginBg from '../../images/register-bg.jpg';
 
@@ -11,56 +12,56 @@ export default function Login() {
 	const [isLoading, setIsLoading] = useState(false);
 	const [showPassword, setShowPassword] = useState(false);
 	const [rememberMe, setRememberMe] = useState(false);
+	const [error, setError] = useState("");
 
-	const { setUser } = useAuth(); // Get setUser from Auth context
-	const navigate = useNavigate(); // Get navigate function
+	const { setUser } = useAuth();
+	const navigate = useNavigate();
 
 	/**
-	 * Handle login form submission
-	 * Sets the user in AuthContext and navigates to /app
+	 * Handle login form submission using API
 	 */
 	const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
 		setIsLoading(true);
+		setError("");
 
-		// Simulate login process
-		setTimeout(() => {
-			// Check if there's a stored user with this email in localStorage
-			// In a real app, this would be a server authentication request
-			const storedUserData = localStorage.getItem('user');
-			let mockUser;
+		try {
+			const response = await apiService.login(email, password);
 			
-			if (storedUserData) {
-				// If we have stored user data, parse it and use it
-				const storedUser = JSON.parse(storedUserData);
-				// Only use the stored user if the email matches
-				if (storedUser.email === email) {
-					mockUser = storedUser;
-				}
-			}
-			
-			// If no stored user was found or email didn't match, create a default user
-			if (!mockUser) {
-				mockUser = {
-					id: "user_" + Date.now(),
-					name: email.split("@")[0],
-					email: email,
-					image: "https://www.pngall.com/wp-content/uploads/12/Avatar-PNG-Background.png",
-					phone: "",
-					address: "",
-					city: "",
-					state: "",
-					zip: "",
-					country: ""
+			if (response.success && response.data) {
+				// Map UserProfile to User interface
+				const user = {
+					id: response.data.user.id,
+					name: `${response.data.user.firstName} ${response.data.user.lastName}`,
+					email: response.data.user.email,
+					image: response.data.user.profileImage,
+					phone: response.data.user.phone,
+					address: response.data.user.address,
+					city: response.data.user.city,
+					state: response.data.user.state,
+					zip: response.data.user.zip,
+					country: response.data.user.country,
+					emailVerified: response.data.user.emailVerified,
+					accountStatus: response.data.user.accountStatus
 				};
+				
+				// Set user in AuthContext
+				setUser(user);
+				
+				// Store auth data
+				localStorage.setItem('authToken', response.data.token);
+				localStorage.setItem('user', JSON.stringify(user));
+				
+				// Navigate to main app/dashboard
+				navigate('/app');
+			} else {
+				setError(response.error || 'Login failed. Please try again.');
 			}
-
-			// Set user in AuthContext
-			setUser(mockUser);
+		} catch (err) {
+			setError(err instanceof Error ? err.message : 'Login failed. Please try again.');
+		} finally {
 			setIsLoading(false);
-			// Navigate to main app/dashboard
-			navigate('/app');
-		}, 1000);
+		}
 	};
 
 	const isFormValid = email && password;
@@ -89,6 +90,13 @@ export default function Login() {
 							</div>
 
 							<form onSubmit={handleSubmit} className="space-y-6">
+								{/* Error Message */}
+								{error && (
+									<div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+										{error}
+									</div>
+								)}
+
 								{/* Email Field */}
 								<div>
 									<label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">

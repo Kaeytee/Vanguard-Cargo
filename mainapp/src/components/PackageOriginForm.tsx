@@ -1,5 +1,6 @@
 import React from "react";
 import { FaInfoCircle, FaGlobe, FaLock } from "react-icons/fa";
+import { SUPPORTED_COUNTRIES } from "../lib/constants";
 
 // Interface for address suggestions from OpenStreetMap API
 interface AddressSuggestion {
@@ -22,22 +23,9 @@ interface AddressSuggestion {
 
 /**
  * Available countries for package origin selection
- * Restricted to Ghana and USA as per business requirements
+ * Now using centralized constants from lib/constants.ts to ensure alignment with warehouse system
  */
-const AVAILABLE_COUNTRIES = [
-  {
-    code: "GH",
-    name: "Ghana",
-    flag: "🇬🇭",
-    phoneCode: "+233"
-  },
-  {
-    code: "US",
-    name: "United States",
-    flag: "🇺🇸",
-    phoneCode: "+1"
-  }
-];
+const AVAILABLE_COUNTRIES = SUPPORTED_COUNTRIES;
 
 // Interface for the form data in the simplified shipment flow
 interface FormData {
@@ -85,13 +73,33 @@ interface PackageOriginFormProps {
  * PackageOriginForm - Component for collecting package origin information 
  * and client contact details in the simplified shipment flow
  * 
- * Country selection is limited to Ghana and USA
+ * Country selection is limited to Ghana and USA, but excludes client's own country
  * Contact information is displayed but not editable
  */
 const PackageOriginForm: React.FC<PackageOriginFormProps> = ({
   formData,
   onInputChange,
 }) => {
+  // Filter available countries to exclude the client's own country
+  // This enforces the international-only business rule
+  const getAvailableOriginCountries = () => {
+    const clientCountry = formData.clientCountry?.toLowerCase();
+    
+    return AVAILABLE_COUNTRIES.filter(country => {
+      // Compare country names case-insensitively
+      const countryName = country.name.toLowerCase();
+      
+      // Exclude client's country from origin selection
+      if (clientCountry === countryName || 
+          (clientCountry === 'united states' && countryName === 'united states') ||
+          (clientCountry === 'ghana' && countryName === 'ghana')) {
+        return false;
+      }
+      
+      return true;
+    });
+  };
+
   // Determine the country flag for the phone number display
   const getCountryFlag = () => {
     // Default to Ghana flag if no match
@@ -131,7 +139,7 @@ const PackageOriginForm: React.FC<PackageOriginFormProps> = ({
               className="w-full rounded-lg border border-gray-400 px-4 py-3 text-gray-900 bg-white shadow-sm focus:border-navy-500 focus:ring-2 focus:ring-navy-200 transition-all"
             >
               <option value="">Select origin country</option>
-              {AVAILABLE_COUNTRIES.map(country => (
+              {getAvailableOriginCountries().map(country => (
                 <option key={country.code} value={country.name}>
                   {country.flag} {country.name}
                 </option>
@@ -139,10 +147,26 @@ const PackageOriginForm: React.FC<PackageOriginFormProps> = ({
             </select>
           </div>
           
-          {/* Information note about available countries */}          <div className="text-sm text-gray-500 mt-1 flex items-center">
+          {/* Information note about available countries */}
+          <div className="text-sm text-gray-500 mt-1 flex items-center">
             <FaInfoCircle className="mr-1" />
-            <span>Currently only accepting packages from Ghana and USA</span>
+            <span>
+              {getAvailableOriginCountries().length > 0 
+                ? "Select where your package is coming from (excluding your own country)"
+                : "No origin countries available - you can only receive packages from other countries"
+              }
+            </span>
           </div>
+          
+          {/* Warning message if no countries are available */}
+          {getAvailableOriginCountries().length === 0 && (
+            <div className="text-sm text-amber-600 mt-2 p-2 bg-amber-50 border border-amber-200 rounded flex items-center">
+              <FaInfoCircle className="mr-2 text-amber-500" />
+              <span>
+                International logistics only: You cannot select your own country ({formData.clientCountry}) as the package origin.
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Only need city if origin country is selected */}
@@ -239,11 +263,13 @@ const PackageOriginForm: React.FC<PackageOriginFormProps> = ({
         </div>
       </div>
 
-      {/* Information Card */}      <div className="mt-6 p-4 border-l-4 border-blue-500 bg-blue-50 text-blue-700 rounded-r-lg">
-        <h4 className="font-semibold mb-1">How This Works</h4>
+      {/* Information Card */}
+      <div className="mt-6 p-4 border-l-4 border-blue-500 bg-blue-50 text-blue-700 rounded-r-lg">
+        <h4 className="font-semibold mb-1">International Logistics Only</h4>
         <p className="text-sm">
-          You're telling us about a package you're expecting to receive from either Ghana or USA. We'll help coordinate its delivery to you. 
-          Your contact information is pre-filled from your account. Just select the origin country and provide the city.
+          Ttarius Logistics specializes in cross-border shipments between Ghana and USA. 
+          You can only receive packages from a different country than where you're located. 
+          Your contact information is pre-filled from your account - just select the origin country and city.
         </p>
       </div>
     </div>

@@ -8,6 +8,7 @@ import { useAuth } from "../context/AuthProvider";
  * 
  * This component checks if the user is authenticated before rendering its children.
  * If not authenticated, it redirects to the login page.
+ * It also handles account status restrictions for email verification and other statuses.
  * 
  * @param {ReactNode} children - The child components to render if authenticated
  * @returns {JSX.Element} The protected route component
@@ -45,14 +46,49 @@ const ProtectedRoutes: React.FC<ProtectedRoutesProps> = ({ children }) => {
 
 	// If not authenticated, redirect to login page with return URL
 	if (!user) {
-		// Also check localStorage as fallback for backward compatibility
-		const fallbackAuth = localStorage.getItem('isAuthenticated') === 'true';
-		if (!fallbackAuth) {
-			return <Navigate to="/login" state={{ from: location.pathname }} replace />;
+		return <Navigate to="/login" state={{ from: location.pathname }} replace />;
+	}
+
+	// If user is authenticated but has a restricted account status
+	if (user) {
+		const accountStatus = user.accountStatus || 'ACTIVE';
+		
+		switch (accountStatus) {
+			case 'PENDING_VERIFICATION': {
+				// Allow access but show verification reminder
+				// Only redirect if they're trying to access certain features that require verification
+				const restrictedPaths = ['/app/submit-request'];
+				if (restrictedPaths.some(path => location.pathname.includes(path))) {
+					return <Navigate to="/verify-email" replace />;
+				}
+				break;
+			}
+				
+			case 'SUSPENDED':
+			case 'RESTRICTED': {
+				// Limited access - only allow viewing existing data
+				const allowedPaths = ['/app/dashboard', '/app/tracking', '/app/shipment-history', '/app/profile'];
+				if (!allowedPaths.some(path => location.pathname.includes(path))) {
+					return <Navigate to="/app/dashboard" replace />;
+				}
+				break;
+			}
+				
+			case 'BANNED':
+				// Complete lockout - redirect to login and logout
+				return <Navigate to="/login" replace />;
+				
+			case 'DORMANT':
+				// Account needs reactivation - redirect to reactivation page
+				return <Navigate to="/reactivate-account" replace />;
+				
+			default:
+				// ACTIVE or unknown status - full access
+				break;
 		}
 	}
 
-	// If authenticated, render the protected content
+	// If authenticated and status allows access, render the protected content
 	return <>{children}</>;
 };
 

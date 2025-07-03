@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
-import { Search, Bell, Settings, LogOut, Menu, X } from "lucide-react";
+import { Bell, Settings, LogOut, Menu, X } from "lucide-react";
 import { useAuth } from "../context/AuthProvider";
 import { useLogout } from "../hooks/useLogout";
+import { apiService, type Notification } from "../services/api";
 
 interface AppNavbarProps {
   onToggleSidebar?: () => void;
@@ -12,8 +13,8 @@ interface AppNavbarProps {
 /**
  * AppNavbar - Top navigation bar for the application dashboard
  *
- * This component renders the top navigation bar with search functionality,
- * notifications, and user profile dropdown. It follows OOP principles by
+ * This component renders the top navigation bar with notifications
+ * and user profile dropdown. It follows OOP principles by
  * encapsulating all navbar-related functionality within this component.
  *
  * @returns {JSX.Element} The AppNavbar component
@@ -32,8 +33,9 @@ const AppNavbar: React.FC<AppNavbarProps> = ({
   // State for user dropdown visibility
   const [showUserDropdown, setShowUserDropdown] = useState<boolean>(false);
 
-  // State for mobile search visibility
-  const [showMobileSearch, setShowMobileSearch] = useState<boolean>(false);
+  // State for notifications
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [notificationsLoading, setNotificationsLoading] = useState<boolean>(false);
 
   // Refs for click outside detection
   const notificationRef = useRef<HTMLDivElement>(null);
@@ -47,27 +49,27 @@ const AppNavbar: React.FC<AppNavbarProps> = ({
     image: "",
   };
 
-  // Mock notifications - in a real application, these would come from a notifications service
-  const notifications = [
-    {
-      id: 1,
-      message: "Your shipment has been delivered",
-      isRead: false,
-      time: "5m ago",
-    },
-    {
-      id: 2,
-      message: "New shipment request received",
-      isRead: true,
-      time: "1h ago",
-    },
-    {
-      id: 3,
-      message: "Payment confirmed for shipment #12345",
-      isRead: true,
-      time: "3h ago",
-    },
-  ];
+  // Load notifications when component mounts
+  useEffect(() => {
+    loadNotifications();
+  }, []);
+
+  /**
+   * Load unread notifications from API
+   */
+  const loadNotifications = async () => {
+    try {
+      setNotificationsLoading(true);
+      const response = await apiService.getUnreadNotifications(5); // Get up to 5 unread notifications
+      if (response.success) {
+        setNotifications(response.data);
+      }
+    } catch (error) {
+      console.error('Error loading notifications:', error);
+    } finally {
+      setNotificationsLoading(false);
+    }
+  };
 
   // Get unread notification count
   const unreadCount = notifications.filter((n) => !n.isRead).length;
@@ -97,11 +99,16 @@ const AppNavbar: React.FC<AppNavbarProps> = ({
 
   /**
    * Toggle notification dropdown visibility
-   * Closes user dropdown if open
+   * Closes user dropdown if open and loads fresh notifications
    */
   const toggleNotifications = (): void => {
     setShowNotifications(!showNotifications);
     if (showUserDropdown) setShowUserDropdown(false);
+    
+    // Reload notifications when opening dropdown
+    if (!showNotifications) {
+      loadNotifications();
+    }
   };
 
   /**
@@ -114,10 +121,48 @@ const AppNavbar: React.FC<AppNavbarProps> = ({
   };
 
   /**
-   * Toggle mobile search visibility
+   * Format notification date to relative time
    */
-  const toggleMobileSearch = (): void => {
-    setShowMobileSearch(!showMobileSearch);
+  const formatNotificationTime = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
+    
+    if (diffInMinutes < 1) {
+      return 'Just now';
+    } else if (diffInMinutes < 60) {
+      return `${diffInMinutes}m ago`;
+    } else if (diffInMinutes < 1440) { // 24 hours
+      const hours = Math.floor(diffInMinutes / 60);
+      return `${hours}h ago`;
+    } else {
+      const days = Math.floor(diffInMinutes / 1440);
+      return `${days}d ago`;
+    }
+  };
+
+  /**
+   * Handle notification click - mark as read and navigate if has action URL
+   */
+  const handleNotificationClick = async (notification: Notification) => {
+    try {
+      if (!notification.isRead) {
+        await apiService.markNotificationAsRead(notification.id);
+        // Update local state
+        setNotifications(prev => 
+          prev.map(n => 
+            n.id === notification.id ? { ...n, isRead: true } : n
+          )
+        );
+      }
+      
+      // Navigate to action URL if exists
+      if (notification.actionUrl) {
+        window.location.href = notification.actionUrl;
+      }
+    } catch (error) {
+      console.error('Error handling notification click:', error);
+    }
   };
 
   return (
@@ -134,41 +179,16 @@ const AppNavbar: React.FC<AppNavbarProps> = ({
             {isSidebarOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
 
-          {/* Welcome message - hidden on mobile when search is active */}
-          <div
-            className={`welcome-section ${
-              showMobileSearch ? "hidden" : "block"
-            } sm:block`}
-          >
+          {/* Welcome message */}
+          <div className="welcome-section block sm:block">
             <h2 className="text-lg sm:text-xl lg:text-2xl text-gray-800 font-semibold">
               Welcome
             </h2>
           </div>
         </div>
 
-        {/* Right section - Search, notifications, user profile */}
+        {/* Right section - notifications, user profile */}
         <div className="flex items-center gap-2 sm:gap-3 lg:gap-5">
-          {/* Desktop Search bar */}
-          <div className="hidden md:block relative w-64 lg:w-80 xl:w-96">
-            <input
-              type="text"
-              placeholder="Search by Shipment ID or destination"
-              className="w-full px-4 py-2 pr-10 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
-            />
-            <button className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors">
-              <Search size={18} />
-            </button>
-          </div>
-
-          {/* Mobile search toggle */}
-          <button
-            className="md:hidden p-2 rounded-md hover:bg-gray-100 transition-colors"
-            onClick={toggleMobileSearch}
-            aria-label="Toggle search"
-          >
-            <Search size={20} />
-          </button>
-
           {/* Notifications */}
           <div className="relative" ref={notificationRef}>
             <button
@@ -192,25 +212,40 @@ const AppNavbar: React.FC<AppNavbarProps> = ({
                   </h3>
                 </div>
                 <div className="max-h-64 overflow-y-auto">
-                  {notifications.map((notification) => (
-                    <div
-                      key={notification.id}
-                      className={`p-4 border-b border-gray-100 hover:bg-gray-50 transition-colors ${
-                        !notification.isRead ? "bg-blue-50" : ""
-                      }`}
-                    >
-                      <p className="text-sm text-gray-800 mb-1">
-                        {notification.message}
-                      </p>
-                      <span className="text-xs text-gray-500">
-                        {notification.time}
-                      </span>
+                  {notificationsLoading ? (
+                    <div className="p-4 text-center">
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-red-600 mx-auto"></div>
                     </div>
-                  ))}
+                  ) : notifications.length === 0 ? (
+                    <div className="p-4 text-center text-gray-500">
+                      <p className="text-sm">No new notifications</p>
+                    </div>
+                  ) : (
+                    notifications.map((notification) => (
+                      <div
+                        key={notification.id}
+                        className={`p-4 border-b border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer ${
+                          !notification.isRead ? "bg-blue-50" : ""
+                        }`}
+                        onClick={() => handleNotificationClick(notification)}
+                      >
+                        <h4 className="text-sm font-medium text-gray-900 mb-1">
+                          {notification.title}
+                        </h4>
+                        <p className="text-sm text-gray-700 mb-1">
+                          {notification.message}
+                        </p>
+                        <span className="text-xs text-gray-500">
+                          {formatNotificationTime(notification.createdAt)}
+                        </span>
+                      </div>
+                    ))
+                  )}
                 </div>
                 <Link
                   to="/app/notifications"
                   className="block text-center p-3 text-red-600 text-sm font-medium hover:bg-gray-50 transition-colors"
+                  onClick={() => setShowNotifications(false)}
                 >
                   View all notifications
                 </Link>
@@ -289,26 +324,6 @@ const AppNavbar: React.FC<AppNavbarProps> = ({
           </div>
         </div>
       </div>
-
-      {/* Mobile search overlay */}
-      {showMobileSearch && (
-        <div className="md:hidden absolute top-16 left-0 right-0 bg-white shadow-md border-b p-4 z-30">
-          <div className="relative">
-            <input
-              type="text"
-              placeholder="Search by Shipment ID or destination"
-              className="w-full px-4 py-3 pr-12 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
-              autoFocus
-            />
-            <button
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-              onClick={toggleMobileSearch}
-            >
-              <X size={20} />
-            </button>
-          </div>
-        </div>
-      )}
     </>
   );
 };

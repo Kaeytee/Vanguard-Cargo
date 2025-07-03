@@ -4,6 +4,7 @@ import { BrowserRouter } from 'react-router-dom';
 import ScrollToTop from './components/ScrollToTop'; // Import ScrollToTop for UX improvement
 import { ThemeProvider } from './context/ThemeProvider';
 import { AuthProvider } from './context/AuthProvider';
+import { PreferencesProvider } from './context/PreferencesProvider';
 import './index.css';
 import App from './App.tsx';
 
@@ -14,7 +15,9 @@ createRoot(document.getElementById('root')!).render(
       <ScrollToTop />
       <ThemeProvider>
         <AuthProvider>
-          <App />
+          <PreferencesProvider>
+            <App />
+          </PreferencesProvider>
         </AuthProvider>
       </ThemeProvider>
     </BrowserRouter>

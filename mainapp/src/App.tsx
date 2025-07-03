@@ -9,15 +9,20 @@ import Contact from "./landing/contact/contact";
 import Login from "./landing/login/login";
 import Register from "./landing/register/register";
 import ForgotPassword from "./landing/forgot-password/forgot-password";
+import EmailVerification from "./landing/email-verification/email-verification";
 import Dashboard from "./app/dashboard/dashboard";
 import Settings from "./app/settings/settings";
 import Profile from "./app/profile/profile";
 import ShipmentHistory from "./app/shipmentHistory/shipmentHistory";
-import SubmitShipment from "./app/submitShipment/submitShipment";
+import SubmitRequest from "./app/submitRequest/submitRequest";
+import TrackingPage from "./app/tracking/tracking";
 import AppAbout from "./app/about/Appabout";
 import AppSupport from "./app/support/Appsupport";
+import NotificationsPage from "./app/notification/notification";
 import ProtectedRoutes from "./components/protectedRoutes";
 import AppLayout from "./components/AppLayout";
+import SmartNotFound from "./components/SmartNotFound";
+import AppNotFoundWithLayout from "./app/layouts/AppNotFoundWithLayout";
 
 /**
  * App - Main application component
@@ -74,6 +79,8 @@ export default function App() {
           </>
         }
       />
+      {/* Authentication Routes */}
+      <Route path="/auth" element={<Navigate to="/login" replace />} />
       <Route
         path="/login"
         element={
@@ -94,48 +101,44 @@ export default function App() {
           </>
         }
       />
-      <Route
-        path="/forgot-password"
-        element={
-          <>
-            <Navbar />
-            <ForgotPassword />
-            <Footer />
-          </>
-        }
-      />
+      
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/verify-email" element={<EmailVerification />} />
 
       {/* Protected Routes - Client App with AppLayout */}
       <Route
-        path="/app"
+        path="/app/*"
         element={
           <ProtectedRoutes>
-            <AppLayout />
+            <AppLayout>
+              <Routes>
+                <Route index element={<Dashboard />} />
+                <Route path="dashboard" element={<Dashboard />} />
+                <Route path="settings" element={<Settings />} />
+                <Route path="profile" element={<Profile />} />
+                <Route path="shipment-history" element={<ShipmentHistory />} />
+                <Route path="submit-request" element={<SubmitRequest />} />
+                <Route path="tracking" element={<TrackingPage />} />
+                <Route path="about" element={<AppAbout />} />
+                <Route path="support" element={<AppSupport />} />
+                <Route path="notifications" element={<NotificationsPage />} />
+                <Route path="*" element={<AppNotFoundWithLayout />} />
+              </Routes>
+            </AppLayout>
           </ProtectedRoutes>
         }
-      >
-        {/* Child routes for the app section */}
-        <Route path="dashboard" element={<Dashboard />} />
-        <Route path="profile" element={<Profile />} />
-        <Route path="settings" element={<Settings />} />
-        <Route path="shipment-history" element={<ShipmentHistory />} />
-        <Route path="submit-shipment" element={<SubmitShipment />} />
-        <Route path="about" element={<AppAbout />} />
-        <Route path="support" element={<AppSupport />} />
-        
-        {/* Default route for /app path */}
-        <Route index element={<Dashboard />} />
-      </Route>
+      />
 
-      {/* Legacy routes - redirect to new structure for backward compatibility */}
+      {/* Legacy redirects for old app routes */}
       <Route path="/dashboard" element={<Navigate to="/app/dashboard" replace />} />
-      <Route path="/profile" element={<Navigate to="/app/profile" replace />} />
       <Route path="/settings" element={<Navigate to="/app/settings" replace />} />
-      <Route path="/shipmentHistory" element={<Navigate to="/app/shipment-history" replace />} />
-      <Route path="/submitShipment" element={<Navigate to="/app/submit-shipment" replace />} />
+      <Route path="/profile" element={<Navigate to="/app/profile" replace />} />
+      <Route path="/shipment-history" element={<Navigate to="/app/shipment-history" replace />} />
+      <Route path="/submit-request" element={<Navigate to="/app/submit-request" replace />} />
+      <Route path="/tracking" element={<Navigate to="/app/tracking" replace />} />
 
-      {/* 404 Route */}
-      <Route path="*" element={<div>404 Not Found</div>} />
+      {/* Catch-all route for 404 */}
+      <Route path="*" element={<SmartNotFound />} />
     </Routes>
   );
 }

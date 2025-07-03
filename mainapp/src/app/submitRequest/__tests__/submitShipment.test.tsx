@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import userEvent from '@testing-library/user-event'
 import { render, screen, waitFor } from '../../../test/test-utils'
-import SubmitShipmentPage from '../submitShipment'
+import SubmitRequestPage from '../submitRequest'
 
 // Mock the form components
 // Use a minimal interface for the mock props, following best practices
@@ -51,7 +51,7 @@ vi.mock('../../components/ConfirmForm', () => ({
   )
 }));
 
-describe('SubmitShipmentPage Component', () => {
+describe('SubmitRequestPage Component', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     // Reset window.location
@@ -61,21 +61,21 @@ describe('SubmitShipmentPage Component', () => {
   }); // <-- Add this to close beforeEach
 
   it('renders the page title and description', () => {
-    render(<SubmitShipmentPage />)
+    render(<SubmitRequestPage />)
     
     expect(screen.getByText(/submit a new shipment/i)).toBeInTheDocument()
     expect(screen.getByText(/fill out the form below/i)).toBeInTheDocument()
   })
 
   it('starts with step 1 (Package Origin)', () => {
-    render(<SubmitShipmentPage />)
+    render(<SubmitRequestPage />)
     
     expect(screen.getByTestId('package-origin-form')).toBeInTheDocument()
     expect(screen.queryByTestId('package-form')).not.toBeInTheDocument()
     expect(screen.queryByTestId('confirm-form')).not.toBeInTheDocument()
   })
   it('shows step indicator', () => {
-    render(<SubmitShipmentPage />)
+    render(<SubmitRequestPage />)
     
     // Step indicator should be present - using more specific selectors
     expect(screen.getByTitle(/origin & client/i)).toBeInTheDocument()
@@ -86,7 +86,7 @@ describe('SubmitShipmentPage Component', () => {
   it('advances to next step when Next button is clicked', async () => {
     const user = userEvent.setup()
     
-    render(<SubmitShipmentPage />)
+    render(<SubmitRequestPage />)
     
     // Fill in required fields for step 1
     const originSelect = screen.getByLabelText(/package origin country/i)
@@ -103,7 +103,7 @@ describe('SubmitShipmentPage Component', () => {
   it('shows validation error for missing required fields', async () => {
     const user = userEvent.setup()
     
-    render(<SubmitShipmentPage />)
+    render(<SubmitRequestPage />)
     
     // Try to proceed without filling required fields
     const nextButton = screen.getByText(/next/i)
@@ -118,7 +118,7 @@ describe('SubmitShipmentPage Component', () => {
   it('validates email format', async () => {
     const user = userEvent.setup()
     
-    render(<SubmitShipmentPage />)
+    render(<SubmitRequestPage />)
     
     // Fill in required fields for step 1
     const originSelect = screen.getByLabelText(/package origin country/i)
@@ -131,7 +131,7 @@ describe('SubmitShipmentPage Component', () => {
   })
 
   it('goes back to previous step when Back button is clicked', async () => {
-    render(<SubmitShipmentPage />)
+    render(<SubmitRequestPage />)
     
     // Manually advance to step 2 (this would require proper form data)
     // For now, we'll test the UI exists
@@ -139,7 +139,7 @@ describe('SubmitShipmentPage Component', () => {
   })
 
   it('shows loading popup during form submission', async () => {
-    render(<SubmitShipmentPage />)
+    render(<SubmitRequestPage />)
     
     // Navigate to final step and submit
     // (This would require filling out all form steps)
@@ -148,7 +148,7 @@ describe('SubmitShipmentPage Component', () => {
   })
 
   it('handles form submission success', async () => {
-    render(<SubmitShipmentPage />)
+    render(<SubmitRequestPage />)
     
     // Test form submission flow
     // (Implementation depends on actual form validation)
@@ -156,7 +156,7 @@ describe('SubmitShipmentPage Component', () => {
   })
 
   it('handles form submission error', async () => {
-    render(<SubmitShipmentPage />)
+    render(<SubmitRequestPage />)
     
     // Test error handling
     // (Implementation depends on actual error handling)
@@ -164,7 +164,7 @@ describe('SubmitShipmentPage Component', () => {
   })
 
   it('clears step validation error when input changes', () => {
-    render(<SubmitShipmentPage />)
+    render(<SubmitRequestPage />)
     
     // Test that validation errors are cleared when user starts typing
     expect(screen.getByTestId('package-origin-form')).toBeInTheDocument()

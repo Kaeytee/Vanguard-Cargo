@@ -1,10 +1,27 @@
 
+# Ttarius Logistics - Warehouse Management System
+
+## Overview
+
+Ttarius Logistics is a warehouse-to-warehouse international logistics platform that enables customers to ship packages from foreign countries to local warehouses for pickup. The warehouse system is the operational core that manages package processing, international shipping, and customer pickup coordination.
+
+## Business Model
+
+**Warehouse-to-Warehouse Pickup Service:**
+
+- Customers submit requests for packages to be collected from foreign warehouses
+- Packages are processed and shipped internationally to local warehouses
+- Customers are notified when packages arrive at the local warehouse
+- Customers visit the local warehouse to collect their packages (no home delivery)
+
 ## Features
 
 - User authentication (register, login, forgot password)
-- Protected client dashboard
-- Shipment creation and tracking
-- Admin shipment management
+- Protected client dashboard for package requests and tracking
+- International shipment creation and tracking
+- Warehouse staff management for package processing
+- Customer notification system for pickup coordination
+- Admin shipment management with barcode generation
 - Responsive layout with sidebar and navbar
 - **Admin Shipment History Barcode & Advanced Filter UI**
   - Barcode column displays a scannable PNG barcode for each shipment, generated from the tracking URL using `generateTrackingBarcode` utility.
