@@ -13,6 +13,8 @@ import {
 import { useAuth } from "../context/AuthProvider";
 import { useLogout } from "../hooks/useLogout";
 import { useTranslation } from "../lib/translations";
+// Import default avatar for user profile
+import defaultAvatar from "../assets/default-avatar.svg";
 
 /**
  * Props interface for the Sidebar component
@@ -42,7 +44,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate }) => {
   const userData = user || {
     name: "Guest User",
     email: "guest@example.com",
-    image: "",
+    image: defaultAvatar,
   };
   /**
    * Navigation menu items configuration
@@ -77,14 +79,13 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate }) => {
       <div className="flex flex-col items-center p-6 border-red-500/20">
         <div className="w-16 h-16 rounded-full overflow-hidden mb-3 ring-2 ring-white/20 transition-transform duration-200 hover:scale-105">
           <img
-            src={userData.image || ""}
+            src={userData.image || defaultAvatar}
             alt="User Avatar"
             className="w-full h-full object-cover"
             onError={(e) => {
+              // Fallback to our local default avatar if the user image fails to load
               const target = e.target as HTMLImageElement;
-              target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                userData.name
-              )}&background=ef4444&color=ffffff&size=64`;
+              target.src = defaultAvatar;
             }}
           />
         </div>
