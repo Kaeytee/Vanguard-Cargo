@@ -4,7 +4,7 @@ export const APP_CONFIG = {
   useMockData: import.meta.env.REACT_APP_USE_MOCK_DATA !== 'false',
   
   // API configuration
-  apiBaseUrl: import.meta.env.REACT_APP_API_BASE_URL || 'http://localhost:8080/api',
+  apiBaseUrl: import.meta.env.API_BASE_URL || 'http://localhost:8080/api',
   
   // App environment
   environment: import.meta.env.REACT_APP_ENVIRONMENT || 'development',

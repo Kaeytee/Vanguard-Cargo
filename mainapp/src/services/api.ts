@@ -309,7 +309,7 @@ const mockDelay = (ms: number = 500) => new Promise(resolve => setTimeout(resolv
 
 // Simplified API Service Class
 class ApiService {
-  private apiBaseUrl = import.meta.env.REACT_APP_API_BASE_URL || 'http://localhost:8080/api';
+  private apiBaseUrl = import.meta.env.API_BASE_URL || 'http://localhost:8080/api';
 
   // Helper to decide between mock and real API
   private async callApiOrMock<T>(
