@@ -4,6 +4,8 @@ import { Bell, Settings, LogOut, Menu, X } from "lucide-react";
 import { useAuth } from "../context/AuthProvider";
 import { useLogout } from "../hooks/useLogout";
 import { apiService, type Notification } from "../services/api";
+// Import default avatar for user profile
+import defaultAvatar from "../assets/default-avatar.svg";
 
 interface AppNavbarProps {
   onToggleSidebar?: () => void;
@@ -262,14 +264,13 @@ const AppNavbar: React.FC<AppNavbarProps> = ({
             >
               <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full overflow-hidden ring-2 ring-gray-200">
                 <img
-                  src={userData.image || ""}
+                  src={userData.image || defaultAvatar}
                   alt="User"
                   className="w-full h-full object-cover"
                   onError={(e) => {
+                    // Fallback to our local default avatar if the user image fails to load
                     const target = e.target as HTMLImageElement;
-                    target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                      userData.name
-                    )}&background=ef4444&color=ffffff&size=64`;
+                    target.src = defaultAvatar;
                   }}
                 />
               </div>
@@ -283,14 +284,13 @@ const AppNavbar: React.FC<AppNavbarProps> = ({
                 <div className="flex items-center gap-3 p-4 border-b border-gray-200">
                   <div className="w-12 h-12 rounded-full overflow-hidden ring-2 ring-gray-200">
                     <img
-                      src={userData.image || ""}
+                      src={userData.image || defaultAvatar}
                       alt="User"
                       className="w-full h-full object-cover"
                       onError={(e) => {
+                        // Fallback to our local default avatar if the user image fails to load
                         const target = e.target as HTMLImageElement;
-                        target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                          userData.name
-                        )}&background=ef4444&color=ffffff&size=64`;
+                        target.src = defaultAvatar;
                       }}
                     />
                   </div>

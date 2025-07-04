@@ -1,32 +1,69 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Eye, EyeOff } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthProvider';
 import { apiService } from '../../services/api';
 import DeliveryImage from '../../images/deliveryparcel.jpg';
 import LoginBg from '../../images/register-bg.jpg';
+// Import Google reCAPTCHA component
+import ReCAPTCHA from 'react-google-recaptcha';
+// Import reCAPTCHA configuration
+import { recaptchaConfig } from '../../config/recaptcha';
 
 export default function Login() {
+	// Form state variables
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
 	const [isLoading, setIsLoading] = useState(false);
 	const [showPassword, setShowPassword] = useState(false);
 	const [rememberMe, setRememberMe] = useState(false);
 	const [error, setError] = useState("");
+	// reCAPTCHA state
+	const [captchaValue, setCaptchaValue] = useState<string | null>(null);
+	const [captchaError, setCaptchaError] = useState("");
+	const recaptchaRef = useRef<ReCAPTCHA>(null);
 
 	const { setUser } = useAuth();
 	const navigate = useNavigate();
+
+	/**
+	 * Handle reCAPTCHA change
+	 * @param {string | null} value - The reCAPTCHA token value
+	 */
+	const handleCaptchaChange = (value: string | null) => {
+		setCaptchaValue(value);
+		if (value) {
+			setCaptchaError("");
+		}
+	};
+
+	/**
+	 * Handle reCAPTCHA expiration
+	 */
+	const handleCaptchaExpired = () => {
+		setCaptchaValue(null);
+		setCaptchaError("reCAPTCHA has expired. Please verify again.");
+	};
 
 	/**
 	 * Handle login form submission using API
 	 */
 	const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
-		setIsLoading(true);
 		setError("");
+		setCaptchaError("");
+
+		// Validate reCAPTCHA
+		if (!captchaValue) {
+			setCaptchaError("Please verify that you are not a robot.");
+			return;
+		}
+
+		setIsLoading(true);
 
 		try {
-			const response = await apiService.login(email, password);
+			// Send the reCAPTCHA token along with login credentials for server-side verification
+			const response = await apiService.login(email, password, captchaValue || undefined);
 			
 			if (response.success && response.data) {
 				// Map UserProfile to User interface
@@ -64,7 +101,7 @@ export default function Login() {
 		}
 	};
 
-	const isFormValid = email && password;
+	const isFormValid = email && password && captchaValue;
 
 	return (
 		<div className="min-h-screen bg-gradient-to-br from-red-50 to-red-100 flex items-center justify-center p-4" style={{ backgroundImage: `url(${LoginBg})`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
@@ -161,6 +198,22 @@ export default function Login() {
 									>
 										Forgot password?
 									</Link>
+								</div>
+
+								{/* Google reCAPTCHA */}
+								<div className="flex flex-col items-center">
+									<ReCAPTCHA
+										ref={recaptchaRef}
+										sitekey={recaptchaConfig.siteKey}
+										theme={recaptchaConfig.theme}
+										size={recaptchaConfig.size}
+										onChange={handleCaptchaChange}
+										onExpired={handleCaptchaExpired}
+										className="mt-2 mb-2"
+									/>
+									{captchaError && (
+										<div className="text-red-500 text-sm mt-1">{captchaError}</div>
+									)}
 								</div>
 
 								{/* Submit Button */}
