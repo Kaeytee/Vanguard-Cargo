@@ -30,6 +30,7 @@ lerna-debug.log*
 .env.development
 .env.test
 .env.production
+.env.vercel-quickfix
 
 # Editor directories and files
 .vscode/*

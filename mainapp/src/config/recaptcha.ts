@@ -15,12 +15,14 @@ const getEnvVariable = (key: string): string => {
   // Try Vite environment variables first
   if (typeof import.meta !== 'undefined' && import.meta.env) {
     const env = import.meta.env as Record<string, string>;
-    return env[key] || '';
+    const value = env[key] || '';
+    if (value) return value;
   }
   
   // Fall back to process.env for Create React App or Node.js environments
   if (typeof process !== 'undefined' && process.env) {
-    return process.env[key] || '';
+    const value = process.env[key] || '';
+    if (value) return value;
   }
   
   return '';
