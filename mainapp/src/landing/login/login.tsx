@@ -213,7 +213,7 @@ export default function Login() {
 								</div>
 
 								{/* Google reCAPTCHA */}
-								{recaptchaConfig.enabled && (
+								{recaptchaConfig.enabled && recaptchaConfig.siteKey && recaptchaConfig.siteKey !== 'disabled' && (
 									<div className="flex flex-col items-center">
 										{!recaptchaError ? (
 											<>

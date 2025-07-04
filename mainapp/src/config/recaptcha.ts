@@ -37,6 +37,14 @@ const isProduction =
  * Get the appropriate reCAPTCHA site key based on environment
  */
 const getReCaptchaSiteKey = (): string => {
+  // Check if reCAPTCHA is disabled first
+  const isEnabled = getEnvVariable('REACT_APP_ENABLE_RECAPTCHA') !== 'false';
+  
+  if (!isEnabled) {
+    // If reCAPTCHA is disabled, return a placeholder key to prevent errors
+    return 'disabled';
+  }
+  
   const envKey = getEnvVariable('REACT_APP_RECAPTCHA_SITE_KEY');
   
   // If we have an environment variable, use it
