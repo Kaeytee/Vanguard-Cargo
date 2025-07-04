@@ -21,6 +21,7 @@ export default function Login() {
 	// reCAPTCHA state
 	const [captchaValue, setCaptchaValue] = useState<string | null>(null);
 	const [captchaError, setCaptchaError] = useState("");
+	const [recaptchaError, setRecaptchaError] = useState(false);
 	const recaptchaRef = useRef<ReCAPTCHA>(null);
 
 	const { setUser } = useAuth();
@@ -32,6 +33,7 @@ export default function Login() {
 	 */
 	const handleCaptchaChange = (value: string | null) => {
 		setCaptchaValue(value);
+		setRecaptchaError(false);
 		if (value) {
 			setCaptchaError("");
 		}
@@ -46,6 +48,14 @@ export default function Login() {
 	};
 
 	/**
+	 * Handle reCAPTCHA error (when it fails to load)
+	 */
+	const handleCaptchaError = () => {
+		setRecaptchaError(true);
+		setCaptchaError("reCAPTCHA failed to load. Please check your internet connection and try again.");
+	};
+
+	/**
 	 * Handle login form submission using API
 	 */
 	const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -53,8 +63,8 @@ export default function Login() {
 		setError("");
 		setCaptchaError("");
 
-		// Validate reCAPTCHA
-		if (!captchaValue) {
+		// Validate reCAPTCHA (only if reCAPTCHA is enabled and loaded without errors)
+		if (recaptchaConfig.enabled && !recaptchaError && !captchaValue) {
 			setCaptchaError("Please verify that you are not a robot.");
 			return;
 		}
@@ -101,7 +111,9 @@ export default function Login() {
 		}
 	};
 
-	const isFormValid = email && password && captchaValue;
+	const isFormValid = email && password && (
+		!recaptchaConfig.enabled || recaptchaError || captchaValue
+	);
 
 	return (
 		<div className="min-h-screen bg-gradient-to-br from-red-50 to-red-100 flex items-center justify-center p-4" style={{ backgroundImage: `url(${LoginBg})`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
@@ -201,20 +213,35 @@ export default function Login() {
 								</div>
 
 								{/* Google reCAPTCHA */}
-								<div className="flex flex-col items-center">
-									<ReCAPTCHA
-										ref={recaptchaRef}
-										sitekey={recaptchaConfig.siteKey}
-										theme={recaptchaConfig.theme}
-										size={recaptchaConfig.size}
-										onChange={handleCaptchaChange}
-										onExpired={handleCaptchaExpired}
-										className="mt-2 mb-2"
-									/>
-									{captchaError && (
-										<div className="text-red-500 text-sm mt-1">{captchaError}</div>
-									)}
-								</div>
+								{recaptchaConfig.enabled && (
+									<div className="flex flex-col items-center">
+										{!recaptchaError ? (
+											<>
+												<ReCAPTCHA
+													ref={recaptchaRef}
+													sitekey={recaptchaConfig.siteKey}
+													theme={recaptchaConfig.theme}
+													size={recaptchaConfig.size}
+													onChange={handleCaptchaChange}
+													onExpired={handleCaptchaExpired}
+													onErrored={handleCaptchaError}
+													className="mt-2 mb-2"
+												/>
+												{captchaError && (
+													<div className="text-red-500 text-sm mt-1">{captchaError}</div>
+												)}
+											</>
+										) : (
+											<div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded-lg mt-2 mb-2 text-center">
+												<div className="text-sm">
+													⚠️ reCAPTCHA is currently unavailable.
+													<br />
+													You can still proceed with login, but additional security verification may be required.
+												</div>
+											</div>
+										)}
+									</div>
+								)}
 
 								{/* Submit Button */}
 								<button

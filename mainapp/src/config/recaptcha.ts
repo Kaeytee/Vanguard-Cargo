@@ -14,7 +14,8 @@
 const getEnvVariable = (key: string): string => {
   // Try Vite environment variables first
   if (typeof import.meta !== 'undefined' && import.meta.env) {
-    return (import.meta.env as any)[key] || '';
+    const env = import.meta.env as Record<string, string>;
+    return env[key] || '';
   }
   
   // Fall back to process.env for Create React App or Node.js environments
@@ -31,18 +32,43 @@ const isProduction =
   (typeof process !== 'undefined' && process.env?.NODE_ENV === 'production');
 
 /**
+ * Get the appropriate reCAPTCHA site key based on environment
+ */
+const getReCaptchaSiteKey = (): string => {
+  const envKey = getEnvVariable('REACT_APP_RECAPTCHA_SITE_KEY');
+  
+  // If we have an environment variable, use it
+  if (envKey && envKey.trim() !== '') {
+    return envKey.trim();
+  }
+  
+  // In production, we should have a real key - return empty to trigger error handling
+  if (isProduction) {
+    console.warn('⚠️ No reCAPTCHA site key found in production environment. Please set REACT_APP_RECAPTCHA_SITE_KEY environment variable.');
+    return '';
+  }
+  
+  // In development, use Google's test key as fallback
+  console.warn('⚠️ Using Google test reCAPTCHA key for development. Set REACT_APP_RECAPTCHA_SITE_KEY environment variable for production.');
+  return "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"; // Google's test key
+};
+
+/**
  * reCAPTCHA configuration object
  */
 export const recaptchaConfig = {
   /**
    * Site key for Google reCAPTCHA
    * Uses environment variables to get the appropriate key for the current environment
-   * Falls back to Google's test key if no environment variable is found
+   * Falls back to Google's test key in development if no environment variable is found
    */
-  siteKey: getEnvVariable('REACT_APP_RECAPTCHA_SITE_KEY') || 
-    (isProduction 
-      ? "" // Empty string will cause an error in production if env var is missing
-      : "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"), // Google's test key as fallback for development
+  siteKey: getReCaptchaSiteKey(),
+  
+  /**
+   * Whether reCAPTCHA is enabled
+   * Can be disabled via environment variable for quick deployment fixes
+   */
+  enabled: getEnvVariable('REACT_APP_ENABLE_RECAPTCHA') !== 'false',
   
   /**
    * Size of the reCAPTCHA widget
