@@ -3,7 +3,10 @@ import * as MockData from '../lib/mockShipmentData';
 import { shouldUseMockData } from '../config/app';
 
 // Re-export types from mock data for consistency
-export type ShipmentData = MockData.MockShipmentData;
+export interface ShipmentData extends MockData.MockShipmentData {
+  imageUrl?: string; // Optional URL for package image
+  imageUrls?: string[]; // Optional array of image URLs for multiple package images
+}
 
 // API response wrapper
 export interface ApiResponse<T> {
@@ -81,6 +84,7 @@ export interface AuthResponse {
 export interface LoginRequest {
   email: string;
   password: string;
+  recaptchaToken?: string; // reCAPTCHA token for bot protection
 }
 
 export interface RegisterRequest {
@@ -541,13 +545,60 @@ class ApiService {
     );
   }
 
+  /**
+   * Verify a reCAPTCHA token with Google's verification API
+   * This should be called on the server side, not directly from the client
+   * Included here for documentation purposes and for server implementation
+   * 
+   * @param token - The reCAPTCHA token to verify
+   * @returns Promise with verification result
+   */
+  async verifyRecaptcha(token: string): Promise<boolean> {
+    // This is a placeholder implementation
+    // In a real application, this verification should happen on the server
+    // The secret key should never be exposed in client-side code
+    
+    // Server-side implementation would look like this:
+    // const secretKey = process.env.REACT_APP_RECAPTCHA_SECRET_KEY;
+    // const response = await fetch('https://www.google.com/recaptcha/api/siteverify', {
+    //   method: 'POST',
+    //   headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    //   body: `secret=${secretKey}&response=${token}`
+    // });
+    // const data = await response.json();
+    // return data.success;
+    
+    // For client-side mock implementation, we'll just return true if token exists
+    return !!token;
+  }
+
   // ===== AUTHENTICATION ENDPOINTS =====
   
-  async login(email: string, password: string): Promise<ApiResponse<AuthResponse>> {
+  /**
+   * Authenticate user with email, password and reCAPTCHA verification
+   * 
+   * @param email - User's email address
+   * @param password - User's password
+   * @param recaptchaToken - Token from Google reCAPTCHA verification
+   * @returns Promise with authentication response containing user data and token
+   */
+  async login(email: string, password: string, recaptchaToken?: string): Promise<ApiResponse<AuthResponse>> {
     return this.callApiOrMock(
       // Mock data function
-      () => {
-        // Simple mock validation
+      async () => {
+        // Verify reCAPTCHA token first
+        if (!recaptchaToken) {
+          throw new Error('reCAPTCHA verification failed. Please verify you are not a robot.');
+        }
+        
+        // In a real implementation, we would verify the token with Google's API
+        // For mock purposes, we'll just check if it exists
+        const isRecaptchaValid = await this.verifyRecaptcha(recaptchaToken);
+        if (!isRecaptchaValid) {
+          throw new Error('reCAPTCHA verification failed. Please try again.');
+        }
+        
+        // Simple mock validation for credentials
         if (email === 'test@example.com' && password === 'password') {
           const authResponse: AuthResponse = {
             token: 'mock-jwt-token-' + Date.now(),
@@ -564,7 +615,11 @@ class ApiService {
       // Real API function
       () => this.request<AuthResponse>('/auth/login', {
         method: 'POST',
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ 
+          email, 
+          password,
+          recaptchaToken // Include reCAPTCHA token in the request for server-side verification
+        }),
       })
     );
   }

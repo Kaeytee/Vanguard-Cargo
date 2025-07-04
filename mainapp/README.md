@@ -241,6 +241,7 @@ WebSocket: /ws/tracking/:trackingNumber
 - `SecuritySettings` - Password and 2FA management
 - `NotificationSettings` - Communication preferences
 - `AddressBook` - Saved addresses management
+- `ProfilePicture` - User avatar management with default fallback
 
 **Backend Integration:**
 ```typescript
@@ -324,6 +325,60 @@ const useTrackingUpdates = (trackingNumber: string) => {
 
 ## 🛡️ Security & Compliance
 
+### reCAPTCHA Integration
+
+The application implements Google reCAPTCHA v2 to protect against automated bot access, particularly on the login page.
+
+```typescript
+// reCAPTCHA Configuration
+export const recaptchaConfig = {
+  // Site key from environment variables
+  siteKey: getEnvVariable('REACT_APP_RECAPTCHA_SITE_KEY') || 
+    (isProduction ? "" : "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"),
+  size: "normal" as "normal" | "compact" | "invisible",
+  theme: "light" as "light" | "dark",
+};
+
+// Login form with reCAPTCHA
+const LoginForm = () => {
+  const [captchaValue, setCaptchaValue] = useState<string | null>(null);
+  
+  const handleCaptchaChange = (value: string | null) => {
+    setCaptchaValue(value);
+    setFormErrors(prev => ({ ...prev, captcha: !value }));
+  };
+  
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Validate reCAPTCHA before submission
+    if (!captchaValue) {
+      setFormErrors(prev => ({ ...prev, captcha: true }));
+      return;
+    }
+    
+    // Send login request with reCAPTCHA token
+    const response = await apiService.login(email, password, captchaValue);
+    // Handle response...
+  };
+  
+  return (
+    <form onSubmit={handleSubmit}>
+      {/* Email and password fields */}
+      <ReCAPTCHA
+        sitekey={recaptchaConfig.siteKey}
+        onChange={handleCaptchaChange}
+        theme={recaptchaConfig.theme}
+        size={recaptchaConfig.size}
+      />
+      <button type="submit" disabled={!captchaValue}>
+        Login
+      </button>
+    </form>
+  );
+};
+```
+
 ### JWT Token Management
 
 ```typescript
@@ -375,6 +430,56 @@ const packageRequestSchema = z.object({
   packages: z.array(packageSchema).min(1, 'At least one package is required')
 });
 ```
+
+## 🎨 UI Components & Features
+
+### Default Profile Picture System
+
+The application implements a robust profile picture management system with a default fallback avatar to ensure consistent UI across the application.
+
+```typescript
+// Default avatar SVG component
+// Located at: /src/assets/default-avatar.svg
+// A custom SVG with brand colors is used instead of external services for reliability
+
+// Implementation in components (AppNavbar.tsx, Sidebar.tsx)
+import defaultAvatar from '../assets/default-avatar.svg';
+
+const UserAvatar = ({ user }: { user: UserProfile }) => {
+  const userData = user || {
+    name: "Guest User",
+    email: "guest@example.com",
+    image: "",
+  };
+  
+  return (
+    <div className="avatar-container">
+      <img
+        src={userData.image || defaultAvatar}
+        alt={`${userData.name}'s Avatar`}
+        className="w-full h-full object-cover"
+        onError={(e) => {
+          // Fallback to default avatar on image load error
+          const target = e.target as HTMLImageElement;
+          target.src = defaultAvatar;
+        }}
+      />
+      <div className="user-info">
+        <h4 className="user-name">{userData.name}</h4>
+        <p className="user-email">{userData.email}</p>
+      </div>
+    </div>
+  );
+};
+```
+
+The default avatar system follows these principles:
+
+1. **Reliability**: Uses local SVG asset instead of external services
+2. **Consistency**: Same default avatar appears across all components
+3. **Performance**: Lightweight SVG optimized for fast loading
+4. **Error Handling**: Graceful fallback if user's custom image fails to load
+5. **Accessibility**: Proper alt text and semantic HTML
 
 ## 📊 State Management
 

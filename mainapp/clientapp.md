@@ -447,6 +447,50 @@ GET  /api/super-admin/audit-logs        # System audit logs
 - **Allowed Headers**: All headers for development
 - **Credentials**: Enabled for JWT token handling
 
+### reCAPTCHA Integration
+- **Implementation**: Google reCAPTCHA v2 "I'm not a robot" checkbox on login page
+- **Environment-based configuration**: Different site keys for development and production
+- **Backend verification**: Server-side token verification with Google's API
+- **Security measures**: Secret key stored only in environment variables
+- **Error handling**: Proper validation and user feedback for failed verification
+- **API integration**: reCAPTCHA token sent with login request for verification
+
+```typescript
+// API Request Structure with reCAPTCHA
+POST /api/client/auth/login
+Request Body:
+{
+  "email": "user@example.com",
+  "password": "password123",
+  "recaptchaToken": "03AGdBq24PBCxq8..." // Token from Google reCAPTCHA
+}
+
+// Backend Verification Process
+1. Extract recaptchaToken from request
+2. Verify token with Google's reCAPTCHA API
+3. Proceed with authentication only if verification succeeds
+4. Return appropriate error if verification fails
+```
+
+### Default Profile Picture System
+- **Implementation**: Local SVG asset as fallback for user avatars
+- **Components**: Integrated in AppNavbar and Sidebar components
+- **Error handling**: Graceful fallback if user's custom image fails to load
+- **Performance**: Lightweight SVG optimized for fast loading
+- **Consistency**: Same default avatar appears across all components
+
+```typescript
+// Profile Picture API Endpoints
+POST /api/client/profile/upload-avatar   // Upload custom profile picture
+GET  /api/client/profile/avatar          // Get user's current avatar
+DELETE /api/client/profile/avatar        // Remove custom avatar (revert to default)
+
+// Frontend Implementation
+- Default avatar SVG stored in assets directory
+- Image error handling with fallback to default avatar
+- Consistent implementation across all user profile displays
+```
+
 ## Database Design
 
 ### Core Tables Structure
