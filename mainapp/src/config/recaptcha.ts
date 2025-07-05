@@ -12,6 +12,20 @@
  * Works with both Vite (import.meta.env) and Create React App (process.env)
  */
 const getEnvVariable = (key: string): string => {
+  // For Vite production builds, environment variables are replaced at build time
+  // We need to check for the specific variables directly
+  if (key === 'REACT_APP_RECAPTCHA_SITE_KEY') {
+    // This will be replaced with the actual value during build if it exists
+    const directValue = import.meta.env.REACT_APP_RECAPTCHA_SITE_KEY || '';
+    if (directValue) return directValue;
+  }
+  
+  if (key === 'REACT_APP_ENABLE_RECAPTCHA') {
+    // This will be replaced with the actual value during build if it exists
+    const directValue = import.meta.env.REACT_APP_ENABLE_RECAPTCHA || '';
+    if (directValue) return directValue;
+  }
+  
   // Try Vite environment variables first
   if (typeof import.meta !== 'undefined' && import.meta.env) {
     const env = import.meta.env as Record<string, string>;
@@ -47,15 +61,23 @@ const getReCaptchaSiteKey = (): string => {
   
   const envKey = getEnvVariable('REACT_APP_RECAPTCHA_SITE_KEY');
   
-  // If we have an environment variable, use it
   if (envKey && envKey.trim() !== '') {
     return envKey.trim();
   }
   
   // In production, we should have a real key - return empty to trigger error handling
   if (isProduction) {
+    // Check if we're running on Vercel
+    const isVercel = typeof process !== 'undefined' && process.env?.VERCEL === '1';
+    
+    // For Vercel deployments, try to use the environment variable directly
+    if (isVercel && process.env?.REACT_APP_RECAPTCHA_SITE_KEY) {
+      return process.env.REACT_APP_RECAPTCHA_SITE_KEY;
+    }
+    
     console.warn('⚠️ No reCAPTCHA site key found in production environment. Please set REACT_APP_RECAPTCHA_SITE_KEY environment variable.');
-    return '';
+    // Return the key from the .env.production.vercel file as a fallback
+    return '6Lcj6nYrAAAAAFwZMNXkWO0Mv-Bf64cUsyC8o5WN';
   }
   
   // In development, use Google's test key as fallback
