@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Eye, EyeOff } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthProvider';
@@ -10,6 +10,25 @@ import ReCAPTCHA from 'react-google-recaptcha';
 // Import reCAPTCHA configuration
 import { recaptchaConfig } from '../../config/recaptcha';
 
+/**
+ * Extend Window interface to include grecaptcha property
+ * This fixes TypeScript errors when accessing window.grecaptcha
+ */
+declare global {
+  interface Window {
+    grecaptcha?: {
+      ready: (callback: () => void) => void;
+      execute: (siteKey: string, options: { action: string }) => Promise<string>;
+      render: (container: string | HTMLElement, parameters: object) => number;
+    };
+  }
+}
+
+/**
+ * Login Component
+ * Handles user authentication with enhanced reCAPTCHA integration
+ * @author Senior Software Engineer
+ */
 export default function Login() {
 	// Form state variables
 	const [email, setEmail] = useState("");
@@ -18,14 +37,82 @@ export default function Login() {
 	const [showPassword, setShowPassword] = useState(false);
 	const [rememberMe, setRememberMe] = useState(false);
 	const [error, setError] = useState("");
+	
 	// reCAPTCHA state
 	const [captchaValue, setCaptchaValue] = useState<string | null>(null);
 	const [captchaError, setCaptchaError] = useState("");
 	const [recaptchaError, setRecaptchaError] = useState(false);
+	const [recaptchaScriptLoaded, setRecaptchaScriptLoaded] = useState(false);
 	const recaptchaRef = useRef<ReCAPTCHA>(null);
-
+	
 	const { setUser } = useAuth();
 	const navigate = useNavigate();
+	
+	/**
+	 * Check if reCAPTCHA script is loaded and available
+	 * This helps detect issues with script loading in production
+	 */
+	useEffect(() => {
+		// Check if reCAPTCHA is enabled in config
+		if (!recaptchaConfig.enabled || recaptchaConfig.siteKey === 'disabled') {
+			return;
+		}
+		
+		/**
+		 * Function to check if the grecaptcha object exists and is ready
+		 */
+		const checkRecaptchaLoaded = () => {
+			// Check if the grecaptcha object exists in window
+			if (window.grecaptcha && typeof window.grecaptcha.ready === 'function') {
+				window.grecaptcha.ready(() => {
+					console.log('reCAPTCHA is ready');
+					setRecaptchaScriptLoaded(true);
+					setRecaptchaError(false);
+				});
+			} else {
+				// If not loaded after timeout, set error state
+				setRecaptchaError(true);
+				console.error('reCAPTCHA failed to load after timeout');
+			}
+		};
+		
+		/**
+		 * Function to inject reCAPTCHA script
+		 */
+		const injectRecaptchaScript = () => {
+			// Only inject if not already present
+			if (!document.querySelector('script[src*="recaptcha"]')) {
+				const script = document.createElement('script');
+				script.src = `https://www.google.com/recaptcha/api.js?render=explicit`;
+				script.async = true;
+				script.defer = true;
+				
+				// Add onload handler to detect successful script loading
+				script.onload = () => {
+					console.log('reCAPTCHA script loaded successfully');
+					// Give a small delay for grecaptcha to initialize
+					setTimeout(checkRecaptchaLoaded, 1000);
+				};
+				
+				// Add error handler
+				script.onerror = () => {
+					console.error('Failed to load reCAPTCHA script');
+					setRecaptchaError(true);
+				};
+				
+				document.head.appendChild(script);
+				console.log('Manually injected reCAPTCHA script');
+			}
+		};
+		
+		// First try to inject the script
+		injectRecaptchaScript();
+		
+		// Set a timeout to check if reCAPTCHA loaded
+		const timeoutId = setTimeout(checkRecaptchaLoaded, 3000);
+		
+		return () => clearTimeout(timeoutId);
+	}, []);
 
 	/**
 	 * Handle reCAPTCHA change
@@ -53,6 +140,72 @@ export default function Login() {
 	const handleCaptchaError = () => {
 		setRecaptchaError(true);
 		setCaptchaError("reCAPTCHA failed to load. Please check your internet connection and try again.");
+		
+		/**
+		 * Reload the reCAPTCHA script by removing existing one and injecting a new one
+		 */
+		const reloadRecaptchaScript = () => {
+			// Remove existing script if present
+			const existingScript = document.querySelector('script[src*="recaptcha"]');
+			if (existingScript) {
+				existingScript.remove();
+			}
+			
+			// Create and inject new script
+			const script = document.createElement('script');
+			script.src = `https://www.google.com/recaptcha/api.js?render=explicit`;
+			script.async = true;
+			script.defer = true;
+			
+			// Add success handler
+			script.onload = () => {
+				console.log('reCAPTCHA script reloaded successfully');
+				setTimeout(() => {
+					if (window.grecaptcha) {
+						setRecaptchaError(false);
+						setRecaptchaScriptLoaded(true);
+					}
+				}, 1000);
+			};
+			
+			document.head.appendChild(script);
+		};
+		
+		// Execute the reload function
+		reloadRecaptchaScript();
+	};
+
+	/**
+	 * Manually attempt to reload the reCAPTCHA script
+	 * Used by the "Try again" button in the error state
+	 */
+	const attemptRecaptchaReload = (e: React.MouseEvent) => {
+		e.preventDefault();
+		
+		// Try to reload reCAPTCHA
+		const reloadRecaptcha = () => {
+			// Remove existing script if present
+			const existingScript = document.querySelector('script[src*="recaptcha"]');
+			if (existingScript) {
+				existingScript.remove();
+			}
+			
+			// Create and inject new script
+			const script = document.createElement('script');
+			script.src = `https://www.google.com/recaptcha/api.js?render=explicit`;
+			script.async = true;
+			script.defer = true;
+			
+			// Add success handler
+			script.onload = () => {
+				console.log('reCAPTCHA script reloaded successfully');
+				setTimeout(() => setRecaptchaError(false), 1000);
+			};
+			
+			document.head.appendChild(script);
+		};
+		
+		reloadRecaptcha();
 	};
 
 	/**
@@ -63,8 +216,8 @@ export default function Login() {
 		setError("");
 		setCaptchaError("");
 
-		// Validate reCAPTCHA (only if reCAPTCHA is enabled and loaded without errors)
-		if (recaptchaConfig.enabled && !recaptchaError && !captchaValue) {
+		// Validate reCAPTCHA (only if reCAPTCHA is enabled, loaded without errors, and we're not in a fallback state)
+		if (recaptchaConfig.enabled && recaptchaConfig.siteKey !== 'disabled' && !recaptchaError && !captchaValue) {
 			setCaptchaError("Please verify that you are not a robot.");
 			return;
 		}
@@ -111,6 +264,7 @@ export default function Login() {
 		}
 	};
 
+	// Check if form is valid for submission
 	const isFormValid = email && password && (
 		!recaptchaConfig.enabled || recaptchaError || captchaValue
 	);
@@ -217,7 +371,9 @@ export default function Login() {
 									<div className="flex flex-col items-center">
 										{!recaptchaError ? (
 											<>
+												{/* Add key prop to force re-render when needed */}
 												<ReCAPTCHA
+													key={`recaptcha-${recaptchaConfig.siteKey}`}
 													ref={recaptchaRef}
 													sitekey={recaptchaConfig.siteKey}
 													theme={recaptchaConfig.theme}
@@ -235,6 +391,13 @@ export default function Login() {
 											<div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded-lg mt-2 mb-2 text-center">
 												<div className="text-sm">
 													⚠️ reCAPTCHA is currently unavailable.
+													<br />
+													<button 
+														onClick={attemptRecaptchaReload}
+														className="text-blue-600 underline mt-1"
+													>
+														Click to try again
+													</button>
 													<br />
 													You can still proceed with login, but additional security verification may be required.
 												</div>
