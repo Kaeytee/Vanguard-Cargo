@@ -42,7 +42,6 @@ export default function Login() {
 	const [captchaValue, setCaptchaValue] = useState<string | null>(null);
 	const [captchaError, setCaptchaError] = useState("");
 	const [recaptchaError, setRecaptchaError] = useState(false);
-	const [recaptchaScriptLoaded, setRecaptchaScriptLoaded] = useState(false);
 	const recaptchaRef = useRef<ReCAPTCHA>(null);
 	
 	const { setUser } = useAuth();
@@ -66,7 +65,6 @@ export default function Login() {
 			if (window.grecaptcha && typeof window.grecaptcha.ready === 'function') {
 				window.grecaptcha.ready(() => {
 					console.log('reCAPTCHA is ready');
-					setRecaptchaScriptLoaded(true);
 					setRecaptchaError(false);
 				});
 			} else {
@@ -163,7 +161,6 @@ export default function Login() {
 				setTimeout(() => {
 					if (window.grecaptcha) {
 						setRecaptchaError(false);
-						setRecaptchaScriptLoaded(true);
 					}
 				}, 1000);
 			};
