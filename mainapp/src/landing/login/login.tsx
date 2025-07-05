@@ -42,7 +42,14 @@ export default function Login() {
 	const [captchaValue, setCaptchaValue] = useState<string | null>(null);
 	const [captchaError, setCaptchaError] = useState("");
 	const [recaptchaError, setRecaptchaError] = useState(false);
+	// Track if we're currently loading the script to prevent multiple attempts
+	const [isLoadingScript, setIsLoadingScript] = useState(false);
+	// Track if we've already attempted to load the script
+	const [scriptAttempted, setScriptAttempted] = useState(false);
 	const recaptchaRef = useRef<ReCAPTCHA>(null);
+	
+	// Store script element reference to avoid creating multiple instances
+	const scriptRef = useRef<HTMLScriptElement | null>(null);
 	
 	const { setUser } = useAuth();
 	const navigate = useNavigate();
@@ -57,6 +64,11 @@ export default function Login() {
 			return;
 		}
 		
+		// Skip if we're already loading the script or have attempted
+		if (isLoadingScript) {
+			return;
+		}
+		
 		/**
 		 * Function to check if the grecaptcha object exists and is ready
 		 */
@@ -66,51 +78,93 @@ export default function Login() {
 				window.grecaptcha.ready(() => {
 					console.log('reCAPTCHA is ready');
 					setRecaptchaError(false);
+					setIsLoadingScript(false);
 				});
-			} else {
-				// If not loaded after timeout, set error state
-				setRecaptchaError(true);
-				console.error('reCAPTCHA failed to load after timeout');
+				return true;
 			}
+			return false;
 		};
+		
+		// First check if grecaptcha is already available (might be cached)
+		if (checkRecaptchaLoaded()) {
+			return;
+		}
 		
 		/**
 		 * Function to inject reCAPTCHA script
+		 * Returns a cleanup function to remove event listeners
 		 */
 		const injectRecaptchaScript = () => {
+			// Set loading state to prevent multiple injections
+			setIsLoadingScript(true);
+			setScriptAttempted(true);
+			
 			// Only inject if not already present
 			if (!document.querySelector('script[src*="recaptcha"]')) {
+				// Create script element
 				const script = document.createElement('script');
 				script.src = `https://www.google.com/recaptcha/api.js?render=explicit`;
 				script.async = true;
 				script.defer = true;
 				
+				// Store reference to script element
+				scriptRef.current = script;
+				
 				// Add onload handler to detect successful script loading
-				script.onload = () => {
+				const handleLoad = () => {
 					console.log('reCAPTCHA script loaded successfully');
 					// Give a small delay for grecaptcha to initialize
-					setTimeout(checkRecaptchaLoaded, 1000);
+					setTimeout(() => {
+						if (window.grecaptcha) {
+							setRecaptchaError(false);
+							setIsLoadingScript(false);
+						}
+					}, 1000);
 				};
 				
 				// Add error handler
-				script.onerror = () => {
+				const handleError = () => {
 					console.error('Failed to load reCAPTCHA script');
 					setRecaptchaError(true);
+					setIsLoadingScript(false);
 				};
 				
+				// Add event listeners
+				script.addEventListener('load', handleLoad);
+				script.addEventListener('error', handleError);
+				
+				// Append to document
 				document.head.appendChild(script);
 				console.log('Manually injected reCAPTCHA script');
+				
+				// Return cleanup function
+				return () => {
+					script.removeEventListener('load', handleLoad);
+					script.removeEventListener('error', handleError);
+				};
 			}
+			
+			return () => {};
 		};
 		
-		// First try to inject the script
-		injectRecaptchaScript();
+		// Inject the script and get cleanup function
+		const cleanup = injectRecaptchaScript();
 		
 		// Set a timeout to check if reCAPTCHA loaded
-		const timeoutId = setTimeout(checkRecaptchaLoaded, 3000);
+		const timeoutId = setTimeout(() => {
+			if (!window.grecaptcha) {
+				console.error('reCAPTCHA failed to load after timeout');
+				setRecaptchaError(true);
+				setIsLoadingScript(false);
+			}
+		}, 5000);
 		
-		return () => clearTimeout(timeoutId);
-	}, []);
+		// Cleanup function
+		return () => {
+			cleanup();
+			clearTimeout(timeoutId);
+		};
+	}, [isLoadingScript, scriptAttempted]);
 
 	/**
 	 * Handle reCAPTCHA change
@@ -138,38 +192,6 @@ export default function Login() {
 	const handleCaptchaError = () => {
 		setRecaptchaError(true);
 		setCaptchaError("reCAPTCHA failed to load. Please check your internet connection and try again.");
-		
-		/**
-		 * Reload the reCAPTCHA script by removing existing one and injecting a new one
-		 */
-		const reloadRecaptchaScript = () => {
-			// Remove existing script if present
-			const existingScript = document.querySelector('script[src*="recaptcha"]');
-			if (existingScript) {
-				existingScript.remove();
-			}
-			
-			// Create and inject new script
-			const script = document.createElement('script');
-			script.src = `https://www.google.com/recaptcha/api.js?render=explicit`;
-			script.async = true;
-			script.defer = true;
-			
-			// Add success handler
-			script.onload = () => {
-				console.log('reCAPTCHA script reloaded successfully');
-				setTimeout(() => {
-					if (window.grecaptcha) {
-						setRecaptchaError(false);
-					}
-				}, 1000);
-			};
-			
-			document.head.appendChild(script);
-		};
-		
-		// Execute the reload function
-		reloadRecaptchaScript();
 	};
 
 	/**
@@ -179,30 +201,33 @@ export default function Login() {
 	const attemptRecaptchaReload = (e: React.MouseEvent) => {
 		e.preventDefault();
 		
-		// Try to reload reCAPTCHA
-		const reloadRecaptcha = () => {
-			// Remove existing script if present
-			const existingScript = document.querySelector('script[src*="recaptcha"]');
-			if (existingScript) {
-				existingScript.remove();
-			}
-			
-			// Create and inject new script
-			const script = document.createElement('script');
-			script.src = `https://www.google.com/recaptcha/api.js?render=explicit`;
-			script.async = true;
-			script.defer = true;
-			
-			// Add success handler
-			script.onload = () => {
-				console.log('reCAPTCHA script reloaded successfully');
-				setTimeout(() => setRecaptchaError(false), 1000);
-			};
-			
-			document.head.appendChild(script);
-		};
+		// Prevent multiple reload attempts
+		if (isLoadingScript) {
+			return;
+		}
 		
-		reloadRecaptcha();
+		// Remove existing script if present
+		const existingScript = document.querySelector('script[src*="recaptcha"]');
+		if (existingScript) {
+			existingScript.remove();
+		}
+		
+		// Reset script reference
+		scriptRef.current = null;
+		
+		// Reset loading states
+		setIsLoadingScript(false);
+		setScriptAttempted(false);
+		
+		// Force re-render to trigger useEffect
+		setRecaptchaError(false);
+		
+		// Small delay to ensure state updates before re-attempting
+		setTimeout(() => {
+			// This will trigger the useEffect to run again
+			setIsLoadingScript(false);
+			setScriptAttempted(false);
+		}, 100);
 	};
 
 	/**
@@ -368,18 +393,27 @@ export default function Login() {
 									<div className="flex flex-col items-center">
 										{!recaptchaError ? (
 											<>
-												{/* Add key prop to force re-render when needed */}
-												<ReCAPTCHA
-													key={`recaptcha-${recaptchaConfig.siteKey}`}
-													ref={recaptchaRef}
-													sitekey={recaptchaConfig.siteKey}
-													theme={recaptchaConfig.theme}
-													size={recaptchaConfig.size}
-													onChange={handleCaptchaChange}
-													onExpired={handleCaptchaExpired}
-													onErrored={handleCaptchaError}
-													className="mt-2 mb-2"
-												/>
+												{/* Only render ReCAPTCHA when grecaptcha is available */}
+												{window.grecaptcha && (
+													<ReCAPTCHA
+														key={`recaptcha-${recaptchaConfig.siteKey}-${Date.now()}`}
+														ref={recaptchaRef}
+														sitekey={recaptchaConfig.siteKey}
+														theme={recaptchaConfig.theme}
+														size={recaptchaConfig.size}
+														onChange={handleCaptchaChange}
+														onExpired={handleCaptchaExpired}
+														onErrored={handleCaptchaError}
+														className="mt-2 mb-2"
+													/>
+												)}
+												{/* Show loading indicator when script is loading */}
+												{isLoadingScript && (
+													<div className="flex items-center justify-center py-4">
+														<div className="w-6 h-6 border-2 border-red-500 border-t-transparent rounded-full animate-spin"></div>
+														<span className="ml-2 text-sm text-gray-600">Loading reCAPTCHA...</span>
+													</div>
+												)}
 												{captchaError && (
 													<div className="text-red-500 text-sm mt-1">{captchaError}</div>
 												)}
@@ -392,8 +426,9 @@ export default function Login() {
 													<button 
 														onClick={attemptRecaptchaReload}
 														className="text-blue-600 underline mt-1"
+														disabled={isLoadingScript}
 													>
-														Click to try again
+														{isLoadingScript ? 'Trying...' : 'Click to try again'}
 													</button>
 													<br />
 													You can still proceed with login, but additional security verification may be required.
