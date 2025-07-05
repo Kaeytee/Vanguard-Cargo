@@ -6,7 +6,7 @@ import react from '@vitejs/plugin-react'
  * Enhanced to properly handle environment variables in production builds
  * @author Senior Software Engineer
  */
-export default defineConfig(({ command, mode }) => {
+export default defineConfig(({ mode }) => {
   // Load env file based on mode (development, production, etc.)
   const env = loadEnv(mode, process.cwd(), '');
   
