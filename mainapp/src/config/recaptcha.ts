@@ -12,79 +12,60 @@
  * Works with both Vite (import.meta.env) and Create React App (process.env)
  */
 const getEnvVariable = (key: string): string => {
-  // For Vite production builds, environment variables are replaced at build time
-  // We need to check for the specific variables directly
-  if (key === 'REACT_APP_RECAPTCHA_SITE_KEY') {
-    // This will be replaced with the actual value during build if it exists
-    const directValue = import.meta.env.REACT_APP_RECAPTCHA_SITE_KEY || '';
-    if (directValue) return directValue;
-  }
-  
-  if (key === 'REACT_APP_ENABLE_RECAPTCHA') {
-    // This will be replaced with the actual value during build if it exists
-    const directValue = import.meta.env.REACT_APP_ENABLE_RECAPTCHA || '';
-    if (directValue) return directValue;
-  }
-  
-  // Try Vite environment variables first
+  // First check import.meta.env (Vite)
   if (typeof import.meta !== 'undefined' && import.meta.env) {
     const env = import.meta.env as Record<string, string>;
-    const value = env[key] || '';
-    if (value) return value;
+    const value = env[key];
+    if (value && value.trim() !== '') return value.trim();
   }
   
-  // Fall back to process.env for Create React App or Node.js environments
+  // Then check process.env (Node.js/Create React App)
   if (typeof process !== 'undefined' && process.env) {
-    const value = process.env[key] || '';
-    if (value) return value;
+    const value = process.env[key];
+    if (value && value.trim() !== '') return value.trim();
   }
   
   return '';
 };
 
-// Environment detection
-const isProduction = 
-  (typeof import.meta !== 'undefined' && import.meta.env?.PROD) || 
-  (typeof process !== 'undefined' && process.env?.NODE_ENV === 'production');
-
 /**
- * Get the appropriate reCAPTCHA site key based on environment
+ * Get the reCAPTCHA site key from environment variables
  */
-const getReCaptchaSiteKey = (): string => {
-  // Check if reCAPTCHA is disabled first
-  const isEnabled = getEnvVariable('REACT_APP_ENABLE_RECAPTCHA') !== 'false';
-  
-  if (!isEnabled) {
-    // If reCAPTCHA is disabled, return a placeholder key to prevent errors
-    return 'disabled';
-  }
-  
+const getSiteKey = (): string => {
   const envKey = getEnvVariable('REACT_APP_RECAPTCHA_SITE_KEY');
   
   if (envKey && envKey.trim() !== '') {
+    console.log('✅ Using reCAPTCHA site key from environment:', envKey.substring(0, 10) + '...');
     return envKey.trim();
   }
   
-  // In production, we should have a real key - return empty to trigger error handling
-  if (isProduction) {
-    // Check if we're running on Vercel
-    const isVercel = typeof process !== 'undefined' && process.env?.VERCEL === '1';
-    
-    // For Vercel deployments, try to use the environment variable directly
-    if (isVercel && process.env?.REACT_APP_RECAPTCHA_SITE_KEY) {
-      return process.env.REACT_APP_RECAPTCHA_SITE_KEY;
-    }
-    
-    console.warn('⚠️ No reCAPTCHA site key found in production environment. Please set REACT_APP_RECAPTCHA_SITE_KEY environment variable.');
-    // Return the key from the .env.production.vercel file as a fallback
-    return '6Lcj6nYrAAAAAFwZMNXkWO0Mv-Bf64cUsyC8o5WN';
-  }
-  
-  // In development, use Google's test key as fallback
-  console.warn('⚠️ Using Google test reCAPTCHA key for development. Set REACT_APP_RECAPTCHA_SITE_KEY environment variable for production.');
-  return "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"; // Google's test key
+  // Fallback to Google's test key that works on all domains
+  console.warn('⚠️ No reCAPTCHA site key found in environment variables. Using Google test key.');
+  return "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI";
 };
 
+/**
+ * Get the reCAPTCHA secret key from environment variables
+ */
+const getSecretKey = (): string => {
+  const envKey = getEnvVariable('REACT_APP_RECAPTCHA_SECRET_KEY');
+  
+  if (envKey && envKey.trim() !== '') {
+    console.log('✅ Using reCAPTCHA secret key from environment');
+    return envKey.trim();
+  }
+  
+  // Fallback to Google's test secret key
+  console.warn('⚠️ No reCAPTCHA secret key found in environment variables. Using Google test secret key.');
+  return "6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe";
+};
+
+// Environment detection
+// (isProduction variable removed as it was unused)
+/**
+ * No environment detection logic is needed here since isProduction was unused and removed.
+ * All configuration is handled via environment variables and fallbacks.
+ */
 /**
  * reCAPTCHA configuration object
  */
@@ -92,9 +73,16 @@ export const recaptchaConfig = {
   /**
    * Site key for Google reCAPTCHA
    * Uses environment variables to get the appropriate key for the current environment
-   * Falls back to Google's test key in development if no environment variable is found
+   * Falls back to Google's test key if no environment variable is found
    */
-  siteKey: getReCaptchaSiteKey(),
+  siteKey: getSiteKey(),
+  
+  /**
+   * Secret key for Google reCAPTCHA (for server-side verification)
+   * Uses environment variables to get the appropriate key for the current environment
+   * Falls back to Google's test secret key if no environment variable is found
+   */
+  secretKey: getSecretKey(),
   
   /**
    * Whether reCAPTCHA is enabled

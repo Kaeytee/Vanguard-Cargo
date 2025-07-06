@@ -23,6 +23,7 @@ export default defineConfig(({ mode }) => {
     define: {
       // Ensure reCAPTCHA environment variables are properly replaced
       'import.meta.env.REACT_APP_RECAPTCHA_SITE_KEY': JSON.stringify(env.REACT_APP_RECAPTCHA_SITE_KEY || ''),
+      'import.meta.env.REACT_APP_RECAPTCHA_SECRET_KEY': JSON.stringify(env.REACT_APP_RECAPTCHA_SECRET_KEY || ''),
       'import.meta.env.REACT_APP_ENABLE_RECAPTCHA': JSON.stringify(env.REACT_APP_ENABLE_RECAPTCHA || 'true'),
       // Add other critical environment variables here
       'import.meta.env.REACT_APP_ENVIRONMENT': JSON.stringify(env.REACT_APP_ENVIRONMENT || 'production'),

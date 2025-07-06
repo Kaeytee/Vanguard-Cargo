@@ -65,7 +65,7 @@ export default function Login() {
 		}
 		
 		// Skip if we're already loading the script or have attempted
-		if (isLoadingScript) {
+		if (isLoadingScript || scriptAttempted) {
 			return;
 		}
 		
@@ -91,7 +91,7 @@ export default function Login() {
 		}
 		
 		/**
-		 * Function to inject reCAPTCHA script
+		 * Function to inject reCAPTCHA script with improved error handling
 		 * Returns a cleanup function to remove event listeners
 		 */
 		const injectRecaptchaScript = () => {
@@ -101,9 +101,9 @@ export default function Login() {
 			
 			// Only inject if not already present
 			if (!document.querySelector('script[src*="recaptcha"]')) {
-				// Create script element
+				// Create script element WITHOUT the problematic callback
 				const script = document.createElement('script');
-				script.src = `https://www.google.com/recaptcha/api.js?render=explicit`;
+				script.src = `https://www.google.com/recaptcha/api.js`;
 				script.async = true;
 				script.defer = true;
 				
@@ -112,19 +112,26 @@ export default function Login() {
 				
 				// Add onload handler to detect successful script loading
 				const handleLoad = () => {
-					console.log('reCAPTCHA script loaded successfully');
+					console.log('✅ reCAPTCHA script loaded successfully');
 					// Give a small delay for grecaptcha to initialize
 					setTimeout(() => {
-						if (window.grecaptcha) {
-							setRecaptchaError(false);
+						if (window.grecaptcha && typeof window.grecaptcha.ready === 'function') {
+							window.grecaptcha.ready(() => {
+								console.log('✅ reCAPTCHA is ready and initialized');
+								setRecaptchaError(false);
+								setIsLoadingScript(false);
+							});
+						} else {
+							console.error('❌ reCAPTCHA object not available after script load');
+							setRecaptchaError(true);
 							setIsLoadingScript(false);
 						}
-					}, 1000);
+					}, 1500);
 				};
 				
 				// Add error handler
 				const handleError = () => {
-					console.error('Failed to load reCAPTCHA script');
+					console.error('❌ Failed to load reCAPTCHA script');
 					setRecaptchaError(true);
 					setIsLoadingScript(false);
 				};
@@ -135,7 +142,7 @@ export default function Login() {
 				
 				// Append to document
 				document.head.appendChild(script);
-				console.log('Manually injected reCAPTCHA script');
+				console.log('📝 reCAPTCHA script injected (without callback)');
 				
 				// Return cleanup function
 				return () => {
@@ -152,12 +159,12 @@ export default function Login() {
 		
 		// Set a timeout to check if reCAPTCHA loaded
 		const timeoutId = setTimeout(() => {
-			if (!window.grecaptcha) {
+			if (!window.grecaptcha || typeof window.grecaptcha.ready !== 'function') {
 				console.error('reCAPTCHA failed to load after timeout');
 				setRecaptchaError(true);
 				setIsLoadingScript(false);
 			}
-		}, 5000);
+		}, 10000); // Increased timeout to 10 seconds
 		
 		// Cleanup function
 		return () => {
@@ -393,8 +400,15 @@ export default function Login() {
 									<div className="flex flex-col items-center">
 										{!recaptchaError ? (
 											<>
-												{/* Only render ReCAPTCHA when grecaptcha is available */}
-												{window.grecaptcha && (
+												{/* Show loading indicator when script is loading */}
+												{isLoadingScript && (
+													<div className="flex items-center justify-center py-4">
+														<div className="w-6 h-6 border-2 border-red-500 border-t-transparent rounded-full animate-spin"></div>
+														<span className="ml-2 text-sm text-gray-600">Loading reCAPTCHA...</span>
+													</div>
+												)}
+												{/* Render ReCAPTCHA when not loading (regardless of grecaptcha state - let the component handle it) */}
+												{!isLoadingScript && (
 													<ReCAPTCHA
 														key={`recaptcha-${recaptchaConfig.siteKey}-${Date.now()}`}
 														ref={recaptchaRef}
@@ -407,13 +421,6 @@ export default function Login() {
 														className="mt-2 mb-2"
 													/>
 												)}
-												{/* Show loading indicator when script is loading */}
-												{isLoadingScript && (
-													<div className="flex items-center justify-center py-4">
-														<div className="w-6 h-6 border-2 border-red-500 border-t-transparent rounded-full animate-spin"></div>
-														<span className="ml-2 text-sm text-gray-600">Loading reCAPTCHA...</span>
-													</div>
-												)}
 												{captchaError && (
 													<div className="text-red-500 text-sm mt-1">{captchaError}</div>
 												)}
@@ -421,8 +428,7 @@ export default function Login() {
 										) : (
 											<div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded-lg mt-2 mb-2 text-center">
 												<div className="text-sm">
-													⚠️ reCAPTCHA is currently unavailable.
-													<br />
+													⚠️ reCAPTCHA is currently unavailable.<br />
 													<button 
 														onClick={attemptRecaptchaReload}
 														className="text-blue-600 underline mt-1"
