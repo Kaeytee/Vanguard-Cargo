@@ -113,20 +113,22 @@ export default function Login() {
 				// Add onload handler to detect successful script loading
 				const handleLoad = () => {
 					console.log('✅ reCAPTCHA script loaded successfully');
-					// Give a small delay for grecaptcha to initialize
+					// Give a shorter delay for grecaptcha to initialize
 					setTimeout(() => {
-						if (window.grecaptcha && typeof window.grecaptcha.ready === 'function') {
+						if (window.grecaptcha) {
+							console.log('✅ reCAPTCHA object available, waiting for ready state...');
 							window.grecaptcha.ready(() => {
 								console.log('✅ reCAPTCHA is ready and initialized');
 								setRecaptchaError(false);
 								setIsLoadingScript(false);
 							});
 						} else {
-							console.error('❌ reCAPTCHA object not available after script load');
-							setRecaptchaError(true);
+							console.log('⚠️ reCAPTCHA object not available yet, but proceeding anyway');
+							// Still set loading to false so the component can try to render
+							setRecaptchaError(false);
 							setIsLoadingScript(false);
 						}
-					}, 1500);
+					}, 800); // Reduced delay
 				};
 				
 				// Add error handler
@@ -159,12 +161,12 @@ export default function Login() {
 		
 		// Set a timeout to check if reCAPTCHA loaded
 		const timeoutId = setTimeout(() => {
-			if (!window.grecaptcha || typeof window.grecaptcha.ready !== 'function') {
-				console.error('reCAPTCHA failed to load after timeout');
-				setRecaptchaError(true);
+			if (isLoadingScript) {
+				console.log('⏰ reCAPTCHA loading timeout - stopping spinner and allowing component to render');
+				setRecaptchaError(false);
 				setIsLoadingScript(false);
 			}
-		}, 10000); // Increased timeout to 10 seconds
+		}, 5000); // 5 second timeout
 		
 		// Cleanup function
 		return () => {
@@ -410,7 +412,6 @@ export default function Login() {
 												{/* Render ReCAPTCHA when not loading (regardless of grecaptcha state - let the component handle it) */}
 												{!isLoadingScript && (
 													<ReCAPTCHA
-														key={`recaptcha-${recaptchaConfig.siteKey}-${Date.now()}`}
 														ref={recaptchaRef}
 														sitekey={recaptchaConfig.siteKey}
 														theme={recaptchaConfig.theme}
