@@ -25,7 +25,7 @@ interface TrackingEvent {
   location: string;
   status: string;
   description: string;
-  icon: any; // Lucide icon component
+  icon: React.ComponentType<{ className?: string }>; // Lucide icon component
   completed: boolean;
   imageUrl?: string | string[]; // Optional URL(s) for package image(s)
   imageAlt?: string | string[]; // Optional alt text for images
@@ -440,14 +440,14 @@ const ImageModal: React.FC<ImageModalProps> = ({ isOpen, onClose, imageUrl, altT
   const [isClosing, setIsClosing] = useState(false);
   
   // Handle the close action with animation
-  const handleClose = () => {
+  const handleClose = React.useCallback(() => {
     setIsClosing(true);
     // Wait for animation to complete before actually closing
     setTimeout(() => {
       setIsClosing(false);
       onClose();
     }, 300); // Match this with the animation duration
-  };
+  }, [onClose]);
   
   // Close modal when clicking outside the image
   const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -501,7 +501,7 @@ const ImageModal: React.FC<ImageModalProps> = ({ isOpen, onClose, imageUrl, altT
       // Restore body scrolling when modal is closed
       document.body.style.overflow = '';
     };
-  }, [isOpen, onClose]);
+  }, [isOpen, onClose, handleClose]);
 
   // Don't render anything if modal is not open
   if (!isOpen) return null;
@@ -1138,15 +1138,18 @@ const TrackingPage: React.FC = () => {
   }, [searchParams, handleSearchWithId, trackingNumber]);
 
   return (
-    <div className="min-h-screen px-4 sm:px-6 lg:px-8 py-6 bg-gray-50">
-      <div className="max-w-4xl mx-auto">
+    <div className="min-h-screen py-6 bg-gray-100 transition-colors duration-300">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">{t('trackYourPackage')}</h1>
-          <p className="text-gray-600">{t('enterTrackingNumber')}</p>
+        <div className="mb-4 px-4 sm:px-10">
+          <h1 className="text-2xl font-bold text-gray-900">
+            {t('trackYourPackage')}
+          </h1>
+          <p className="text-gray-600">
+            {t('enterTrackingNumber')}</p>
         </div>
 
         {/* Search Form Component */}
+        <div className="relative mb-6 px-5 sm:px-10"> 
         <SearchForm
           trackingNumber={trackingNumber}
           setTrackingNumber={setTrackingNumber}
@@ -1272,6 +1275,7 @@ const TrackingPage: React.FC = () => {
                         <span className="text-gray-900">{shipmentData.warehouse.address}</span>
                       </div>
                     </div>
+                    
                   </div>
                 </div>
               </div>
@@ -1279,7 +1283,7 @@ const TrackingPage: React.FC = () => {
           </div>
         )}
       </div>
-    </div>
+</div>
   );
 };
 
