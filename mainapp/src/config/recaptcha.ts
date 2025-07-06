@@ -35,7 +35,6 @@ const getSiteKey = (): string => {
   const envKey = getEnvVariable('REACT_APP_RECAPTCHA_SITE_KEY');
   
   if (envKey && envKey.trim() !== '') {
-    console.log('✅ Using reCAPTCHA site key from environment:', envKey.substring(0, 10) + '...');
     return envKey.trim();
   }
   
@@ -51,7 +50,6 @@ const getSecretKey = (): string => {
   const envKey = getEnvVariable('REACT_APP_RECAPTCHA_SECRET_KEY');
   
   if (envKey && envKey.trim() !== '') {
-    console.log('✅ Using reCAPTCHA secret key from environment');
     return envKey.trim();
   }
   
