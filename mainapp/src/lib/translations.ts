@@ -1,4 +1,3 @@
-// Translation system for Ttarius Logistics
 export const translations = {
   en: {
     // Navigation & Common
@@ -52,8 +51,8 @@ export const translations = {
     cancel: 'Cancel',
     loading: 'Loading...',
     saving: 'Saving...',
-    success: 'Success',
-    error: 'Error',
+    success: 'Profile updated successfully',
+    error: 'Failed to update profile. Please try again later.',
     tryAgain: 'Try Again',
     
     // Status Messages
@@ -94,7 +93,28 @@ export const translations = {
     manageAccountSettings: 'Manage your account settings',
     
     // Empty States
-    noShipmentsMatch: 'No shipments match your search criteria'
+    noShipmentsMatch: 'No shipments match your search criteria',
+    
+    // Profile Settings
+    profilePhoto: 'Profile Photo',
+    uploadNewPhoto: 'Upload New Photo',
+    deletePhoto: 'Delete Photo',
+    fullName: 'Full Name',
+    emailAddress: 'Email Address',
+    phoneNumber: 'Phone Number',
+    country: 'Country',
+    city: 'City',
+    address: 'Address',
+    zipCode: 'Zip Code',
+    requiredField: 'This field is required',
+    invalidEmail: 'Please enter a valid email address',
+    invalidPhone: 'Please enter a valid phone number (7-15 digits)',
+    invalidZip: 'Please enter a valid zip code (4-10 digits)',
+    invalidFullName: 'Please enter both first and last name',
+    invalidCity: 'Please enter a valid city name',
+    invalidCountry: 'Please enter a valid country name',
+    saveChanges: 'Save Changes',
+    failedToLoadProfile: 'Failed to load profile'
   },
   es: {
     // Navigation & Common
@@ -148,8 +168,8 @@ export const translations = {
     cancel: 'Cancelar',
     loading: 'Cargando...',
     saving: 'Guardando...',
-    success: 'Éxito',
-    error: 'Error',
+    success: 'Perfil actualizado con éxito',
+    error: 'Error al actualizar el perfil. Por favor, intenta de nuevo.',
     tryAgain: 'Intentar de Nuevo',
     
     // Status Messages
@@ -180,7 +200,7 @@ export const translations = {
     aboutCompany: 'Acerca de Ttarius Logistics',
     
     // Sidebar
-    logistics: 'Logistics.',
+    logistics: 'Logística.',
     
     // Dashboard Descriptions
     createNewDelivery: 'Crear una nueva entrega',
@@ -190,7 +210,28 @@ export const translations = {
     manageAccountSettings: 'Gestionar configuración de cuenta',
     
     // Empty States
-    noShipmentsMatch: 'No hay envíos que coincidan con sus criterios de búsqueda'
+    noShipmentsMatch: 'No hay envíos que coincidan con tus criterios de búsqueda',
+    
+    // Profile Settings
+    profilePhoto: 'Foto de Perfil',
+    uploadNewPhoto: 'Subir Nueva Foto',
+    deletePhoto: 'Eliminar Foto',
+    fullName: 'Nombre Completo',
+    emailAddress: 'Dirección de Correo Electrónico',
+    phoneNumber: 'Número de Teléfono',
+    country: 'País',
+    city: 'Ciudad',
+    address: 'Dirección',
+    zipCode: 'Código Postal',
+    requiredField: 'Este campo es obligatorio',
+    invalidEmail: 'Por favor, introduce una dirección de correo válida',
+    invalidPhone: 'Por favor, introduce un número de teléfono válido (7-15 dígitos)',
+    invalidZip: 'Por favor, introduce un código postal válido (4-10 dígitos)',
+    invalidFullName: 'Por favor, introduce nombre y apellido',
+    invalidCity: 'Por favor, introduce un nombre de ciudad válido',
+    invalidCountry: 'Por favor, introduce un nombre de país válido',
+    saveChanges: 'Guardar Cambios',
+    failedToLoadProfile: 'Error al cargar el perfil'
   },
   fr: {
     // Navigation & Common
@@ -244,8 +285,8 @@ export const translations = {
     cancel: 'Annuler',
     loading: 'Chargement...',
     saving: 'Enregistrement...',
-    success: 'Succès',
-    error: 'Erreur',
+    success: 'Profil mis à jour avec succès',
+    error: 'Échec de la mise à jour du profil. Veuillez réessayer.',
     tryAgain: 'Réessayer',
     
     // Status Messages
@@ -276,7 +317,7 @@ export const translations = {
     aboutCompany: 'À Propos de Ttarius Logistics',
     
     // Sidebar
-    logistics: 'Logistics.',
+    logistics: 'Logistique.',
     
     // Dashboard Descriptions
     createNewDelivery: 'Créer une nouvelle livraison',
@@ -286,7 +327,28 @@ export const translations = {
     manageAccountSettings: 'Gérer les paramètres du compte',
     
     // Empty States
-    noShipmentsMatch: 'Aucune expédition ne correspond à vos critères de recherche'
+    noShipmentsMatch: 'Aucune expédition ne correspond à vos critères de recherche',
+    
+    // Profile Settings
+    profilePhoto: 'Photo de Profil',
+    uploadNewPhoto: 'Télécharger une Nouvelle Photo',
+    deletePhoto: 'Supprimer la Photo',
+    fullName: 'Nom Complet',
+    emailAddress: 'Adresse Email',
+    phoneNumber: 'Numéro de Téléphone',
+    country: 'Pays',
+    city: 'Ville',
+    address: 'Adresse',
+    zipCode: 'Code Postal',
+    requiredField: 'Ce champ est obligatoire',
+    invalidEmail: 'Veuillez entrer une adresse email valide',
+    invalidPhone: 'Veuillez entrer un numéro de téléphone valide (7-15 chiffres)',
+    invalidZip: 'Veuillez entrer un code postal valide (4-10 chiffres)',
+    invalidFullName: 'Veuillez entrer le prénom et le nom',
+    invalidCity: 'Veuillez entrer un nom de ville valide',
+    invalidCountry: 'Veuillez entrer un nom de pays valide',
+    saveChanges: 'Enregistrer les Modifications',
+    failedToLoadProfile: 'Échec du chargement du profil'
   }
 };
 
@@ -329,5 +391,13 @@ export function useTranslation() {
     return getTranslation(language, key);
   };
 
-  return { t, language };
+  // Function to update language
+  const updateLanguage = (newLanguage: Language) => {
+    localStorage.setItem('selectedLanguage', newLanguage);
+    setLanguage(newLanguage);
+    // Dispatch custom event to notify other components
+    window.dispatchEvent(new Event('languageChanged'));
+  };
+
+  return { t, language, setLanguage: updateLanguage };
 }

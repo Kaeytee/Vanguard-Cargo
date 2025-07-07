@@ -71,7 +71,7 @@ const NotificationsPage: React.FC = () => {
       case 'error':
         return <AlertCircle className="w-5 h-5 text-red-500" />;
       default:
-        return <Info className="w-5 h-5 text-blue-500" />;
+        return <Info className="w-5 h-5 text-red-500" />;
     }
   };
 
@@ -256,7 +256,7 @@ const NotificationsPage: React.FC = () => {
                 <button
                   onClick={() => handleBulkAction('markUnread')}
                   disabled={bulkActionLoading}
-                  className="px-3 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                  className="px-3 py-2 bg-red-600 text-white text-sm rounded-md hover:bg-blue-700 disabled:opacity-50 transition-colors"
                 >
                   Mark Unread
                 </button>

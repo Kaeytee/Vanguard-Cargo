@@ -72,7 +72,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate }) => {
     <div className="w-64 bg-red-600 text-white flex flex-col h-full overflow-y-auto shadow-lg transition-all duration-300 ease-in-out lg:w-64 md:w-60 sm:w-56">
       {/* Logo and app name */}
       <div className="p-6 text-center border-red-500/20">
-        <h1 className="text-2xl font-bold m-0 tracking-wide">{t('logistics')}</h1>
+        <h1 className="text-2xl font-bold m-0 tracking-wide">Ttarius Logistics</h1>
       </div>
 
       {/* User profile section */}
@@ -135,11 +135,11 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate }) => {
               key={item.to}
               to={item.to}
               onClick={() => onNavigate?.()} // Close sidebar on mobile when navigation link is clicked
-              className="flex items-center px-6 py-3 text-white no-underline transition-all duration-200 group hover:bg-white/10 hover:translate-x-1"
+              className="flex items-center px-6 py-3 text-white no-underline group"
             >
               <IconComponent
                 size={20}
-                className="mr-4 transition-transform duration-200 group-hover:scale-110"
+                className="mr-4"
               />
               <span className="font-medium text-sm">{item.label}</span>
             </NavLink>
@@ -148,11 +148,11 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate }) => {
         {/* Logout button */}
         <button
           onClick={confirmLogout}
-          className="w-full flex items-center px-6 py-3 text-white bg-transparent border-0 cursor-pointer text-left text-sm font-medium hover:bg-white/10 transition-all duration-200 group hover:translate-x-1"
+          className="w-full flex items-center px-6 py-3 text-white bg-transparent border-0 cursor-pointer text-left text-sm font-medium group"
         >
           <LogOut
             size={20}
-            className="mr-4 transition-transform duration-200 group-hover:scale-110"
+            className="mr-4"
           />
           <span>{t('logout')}</span>
         </button>
