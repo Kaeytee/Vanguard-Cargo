@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Camera, Upload, Trash2 } from 'lucide-react';
 import { useTranslation } from '../../lib/translations';
 
@@ -42,16 +42,44 @@ const apiService: ApiService = {
       }
     };
   },
-  updateUserProfile: async (): Promise<ApiResponse<null>> => {
+  updateUserProfile: async (data: Partial<UserProfileData>): Promise<ApiResponse<null>> => {
     await new Promise(resolve => setTimeout(resolve, 1500));
+    console.log('Updated profile data:', data);
     return { success: true };
   }
+};
+
+// WhatsApp number validation utility
+const validateWhatsAppNumber = async (phoneNumber: string): Promise<boolean> => {
+  // Remove all non-digit characters
+  const cleanNumber = phoneNumber.replace(/\D/g, '');
+  
+  // Check if it's a valid international format (7-15 digits)
+  if (cleanNumber.length < 7 || cleanNumber.length > 15) {
+    return false;
+  }
+  
+  // For demo purposes, we'll simulate validation
+  // In a real app, you'd use WhatsApp Business API or a service like Twilio
+  return new Promise(resolve => {
+    setTimeout(() => {
+      // Simulate that numbers starting with certain codes are valid WhatsApp numbers
+      const validPrefixes = ['1', '44', '49', '33', '39', '34', '91', '86', '81', '55', '52', '54', '234', '233'];
+      const isValid = validPrefixes.some(prefix => cleanNumber.startsWith(prefix));
+      resolve(isValid);
+    }, 500);
+  });
 };
 
 export default function AccountSettings() {
   const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [validatingPhone, setValidatingPhone] = useState(false);
+  const [profileImage, setProfileImage] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  
   type AccountFormError = Partial<Record<keyof AccountFormData, string>> & { general?: string };
   const [formErrors, setFormErrors] = useState<AccountFormError>({});
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -120,6 +148,63 @@ export default function AccountSettings() {
     }));
   };
 
+  const handlePhoneChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { value } = e.target;
+    handleInputChange(e);
+    
+    // Validate WhatsApp number if phone number is provided
+    if (value.trim()) {
+      setValidatingPhone(true);
+      const isValid = await validateWhatsAppNumber(value);
+      if (!isValid) {
+        setFormErrors(prev => ({
+          ...prev,
+          phone: 'Please enter a valid WhatsApp number'
+        }));
+      } else {
+        setFormErrors(prev => ({
+          ...prev,
+          phone: undefined
+        }));
+      }
+      setValidatingPhone(false);
+    }
+  };
+
+  // Handle file selection for photo upload
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          const result = event.target?.result as string;
+          setProfileImage(result);
+        };
+        reader.readAsDataURL(file);
+      } else {
+        alert('Please select a valid image file');
+      }
+    }
+  };
+
+  // Handle camera button click
+  const handleCameraClick = () => {
+    cameraInputRef.current?.click();
+  };
+
+  // Handle upload button click
+  const handleUploadClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  // Handle delete photo
+  const handleDeletePhoto = () => {
+    if (window.confirm('Are you sure you want to delete your profile photo?')) {
+      setProfileImage(null);
+    }
+  };
+
   interface UpdateUserProfilePayload {
     firstName: string;
     lastName: string;
@@ -130,7 +215,7 @@ export default function AccountSettings() {
     country: string;
   }
 
-  const validateForm = (): Partial<Record<keyof AccountFormData, string>> => {
+  const validateForm = async (): Promise<Partial<Record<keyof AccountFormData, string>>> => {
     const errors: Partial<Record<keyof AccountFormData, string>> = {};
 
     if (!formData.fullName.trim()) {
@@ -145,8 +230,12 @@ export default function AccountSettings() {
       errors.email = t('invalidEmail');
     }
 
-    if (formData.phone && !/^\+?[0-9]{7,15}$/.test(formData.phone)) {
-      errors.phone = t('invalidPhone');
+    // Enhanced phone validation for WhatsApp
+    if (formData.phone) {
+      const isValidWhatsApp = await validateWhatsAppNumber(formData.phone);
+      if (!isValidWhatsApp) {
+        errors.phone = 'Please enter a valid WhatsApp number';
+      }
     }
 
     if (!formData.address.trim()) {
@@ -163,7 +252,7 @@ export default function AccountSettings() {
 
     if (!formData.zip.trim()) {
       errors.zip = t('requiredField');
-    } else if (!/^[0-9]{4,10}$/.test(formData.zip)) {
+    } else if (!/^[0-9A-Za-z\s-]{3,10}$/.test(formData.zip)) {
       errors.zip = t('invalidZip');
     }
 
@@ -175,7 +264,7 @@ export default function AccountSettings() {
     setSaving(true);
     setFormErrors({});
 
-    const errors = validateForm();
+    const errors = await validateForm();
     if (Object.keys(errors).length > 0) {
       setFormErrors(errors);
       setSaving(false);
@@ -238,6 +327,23 @@ export default function AccountSettings() {
 
   return (
     <div className="space-y-8">
+      {/* Hidden file inputs */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        onChange={handleFileChange}
+        style={{ display: 'none' }}
+      />
+      <input
+        ref={cameraInputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        onChange={handleFileChange}
+        style={{ display: 'none' }}
+      />
+
       {formErrors.general && (
         <div className="bg-red-50 border border-red-200 rounded-xl p-4">
           <p className="text-red-800 text-sm font-medium">{formErrors.general}</p>
@@ -255,13 +361,14 @@ export default function AccountSettings() {
         <div className="flex items-center space-x-6">
           <div className="relative">
             <img 
-              src={`https://ui-avatars.com/api/?name=${encodeURIComponent(formData.fullName)}&size=80&background=e5e7eb&color=374151`}
+              src={profileImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(formData.fullName)}&size=80&background=e5e7eb&color=374151`}
               alt={t('profilePhoto')}
               className="w-20 h-20 rounded-full object-cover border-4 border-white shadow-lg"
             />
             <button
               type="button"
-              className="absolute -bottom-2 -right-2 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center hover:bg-blue-700 transition-colors shadow-lg"
+              onClick={handleCameraClick}
+              className="absolute -bottom-2 -right-2 w-8 h-8 bg-red-600 text-white rounded-full flex items-center justify-center hover:bg-red-700 transition-colors shadow-lg"
             >
               <Camera className="w-4 h-4" />
             </button>
@@ -272,13 +379,15 @@ export default function AccountSettings() {
             <div className="flex space-x-3">
               <button
                 type="button"
-                className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+                onClick={handleUploadClick}
+                className="inline-flex items-center px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 transition-colors"
               >
                 <Upload className="w-4 h-4 mr-2" />
                 {t('uploadNewPhoto')}
               </button>
               <button
                 type="button"
+                onClick={handleDeletePhoto}
                 className="inline-flex items-center px-4 py-2 bg-gray-200 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-300 transition-colors"
               >
                 <Trash2 className="w-4 h-4 mr-2" />
@@ -302,7 +411,7 @@ export default function AccountSettings() {
                 value={formData.fullName}
                 onChange={handleInputChange}
                 className={`w-full px-4 py-3 border rounded-xl focus:outline-none transition-all ${
-                  formErrors.fullName ? 'border-red-500' : 'border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent'
+                  formErrors.fullName ? 'border-red-500' : 'border-gray-300 focus:ring-2 focus:ring-red-500 focus:border-transparent'
                 }`}
                 placeholder={t('fullName')}
                 required
@@ -322,7 +431,7 @@ export default function AccountSettings() {
                 value={formData.email}
                 onChange={handleInputChange}
                 className={`w-full px-4 py-3 border rounded-xl focus:outline-none transition-all ${
-                  formErrors.email ? 'border-red-500' : 'border-gray300 focus:ring-2 focus:ring-blue-500 focus:border-transparent'
+                  formErrors.email ? 'border-red-500' : 'border-gray-300 focus:ring-2 focus:ring-red-500 focus:border-transparent'
                 }`}
                 placeholder={t('emailAddress')}
                 required
@@ -335,19 +444,22 @@ export default function AccountSettings() {
 
           <div>
             <label htmlFor="phone" className="block text-sm font-semibold text-gray-700 mb-2">
-              {t('phoneNumber')}
+              {t('phoneNumber')} (WhatsApp)
             </label>
             <input
               type="tel"
               name="phone"
               id="phone"
               value={formData.phone}
-              onChange={handleInputChange}
+              onChange={handlePhoneChange}
               className={`w-full px-4 py-3 border rounded-xl focus:outline-none transition-all ${
-                formErrors.phone ? 'border-red-500' : 'border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent'
+                formErrors.phone ? 'border-red-500' : 'border-gray-300 focus:ring-2 focus:ring-red-500 focus:border-transparent'
               }`}
-              placeholder={t('phoneNumber')}
+              placeholder="Enter WhatsApp number (e.g., +1234567890)"
             />
+            {validatingPhone && (
+              <p className="mt-1 text-sm text-blue-600">Validating WhatsApp number...</p>
+            )}
             {formErrors.phone && (
               <p className="mt-1 text-sm text-red-600">{formErrors.phone}</p>
             )}
@@ -365,7 +477,7 @@ export default function AccountSettings() {
                 value={formData.country}
                 onChange={handleInputChange}
                 className={`w-full px-4 py-3 border rounded-xl focus:outline-none transition-all ${
-                  formErrors.country ? 'border-red-500' : 'border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent'
+                  formErrors.country ? 'border-red-500' : 'border-gray-300 focus:ring-2 focus:ring-red-500 focus:border-transparent'
                 }`}
                 placeholder={t('country')}
               />
@@ -384,7 +496,7 @@ export default function AccountSettings() {
                 value={formData.city}
                 onChange={handleInputChange}
                 className={`w-full px-4 py-3 border rounded-xl focus:outline-none transition-all ${
-                  formErrors.city ? 'border-red-500' : 'border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent'
+                  formErrors.city ? 'border-red-500' : 'border-gray-300 focus:ring-2 focus:ring-red-500 focus:border-transparent'
                 }`}
                 placeholder={t('city')}
               />
@@ -406,7 +518,7 @@ export default function AccountSettings() {
                 value={formData.address}
                 onChange={handleInputChange}
                 className={`w-full px-4 py-3 border rounded-xl focus:outline-none transition-all ${
-                  formErrors.address ? 'border-red-500' : 'border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent'
+                  formErrors.address ? 'border-red-500' : 'border-gray-300 focus:ring-2 focus:ring-red-500 focus:border-transparent'
                 }`}
                 placeholder={t('address')}
                 required
@@ -426,7 +538,7 @@ export default function AccountSettings() {
                 value={formData.zip}
                 onChange={handleInputChange}
                 className={`w-full px-4 py-3 border rounded-xl focus:outline-none transition-all ${
-                  formErrors.zip ? 'border-red-500' : 'border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent'
+                  formErrors.zip ? 'border-red-500' : 'border-gray-300 focus:ring-2 focus:ring-red-500 focus:border-transparent'
                 }`}
                 placeholder={t('zipCode')}
                 required
@@ -450,8 +562,8 @@ export default function AccountSettings() {
           </button>
           <button
             type="submit"
-            disabled={saving || Object.keys(formErrors).length > 0}
-            className="px-6 py-3 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={saving || validatingPhone}
+            className="px-6 py-3 bg-red-600 text-white rounded-xl font-medium hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {saving ? t('saving') : t('saveChanges')}
           </button>
