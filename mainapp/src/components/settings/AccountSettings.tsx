@@ -1,10 +1,9 @@
 import React, { useState, useEffect, useRef, useCallback, Suspense } from 'react';
 import { Camera, Upload, Trash2 } from 'lucide-react';
 import { useTranslation } from '../../lib/translations';
-import { apiService, type UserProfile } from '../../services/api';
-import { useAuth } from '../../context/AuthProvider'; // Change from useUser to useAuth
+import { apiService, type UserProfile, type UserProfileData } from '../../services/api';
+import { useUser } from '../../context/useUser';
 import ErrorBoundary from '../ErrorBoundary';
-import type { TranslationKey } from '../../lib/translations';
 
 const validateWhatsAppNumber = async (phoneNumber: string): Promise<boolean> => {
   const cleanNumber = phoneNumber.replace(/\D/g, '');
@@ -40,47 +39,61 @@ const LoadingSkeleton = () => (
   </div>
 );
 
+import type { TranslationKey } from '../../lib/translations';
+
 const AccountSettingsContent = ({ t }: { t: (key: TranslationKey) => string }) => {
-  const [loading, setLoading] = useState(false); // Start with false since we get data from auth
+  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [validatingPhone, setValidatingPhone] = useState(false);
-  const [formErrors, setFormErrors] = useState<Partial<Record<keyof UserProfile, string>> & { general?: string; fullName?: string; lastName?: string }>({});
+  const [formErrors, setFormErrors] = useState<Partial<Record<keyof UserProfile, string>> & { general?: string; fullName?: string }>({});
   const [formData, setFormData] = useState<UserProfile | null>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
-  
-  // Use useAuth instead of useUser - same as submit request page
-  const { user, updateUser } = useAuth();
+  const { user, setUser } = useUser();
 
   const loadUserProfile = useCallback(async () => {
-    if (user) {
-      try {
-        setLoading(true);
-        setFormErrors({});
-        
-        // Use the auth user data with the API service - same as submit request
-        const response = await apiService.getUserProfile(user);
-        if (response.success && response.data) {
-          setFormData(response.data);
-        } else {
-          setFormErrors({ general: t('failedToLoadProfile') });
-        }
-      } catch (err) {
-        console.error('Error loading profile:', err);
-        setFormErrors({ general: t('errorLoadingProfile') });
-      } finally {
-        // Add debounce to prevent flicker
-        setTimeout(() => setLoading(false), 100);
+    try {
+      setLoading(true);
+      setFormErrors({});
+      const response = await apiService.getUserProfile();
+      if (response.success && response.data) {
+        const newFormData: UserProfile = {
+          id: `mock-user-id-${Date.now()}`,
+          firstName: response.data.firstName,
+          lastName: response.data.lastName,
+          email: response.data.email,
+          phone: response.data.phone,
+          address: response.data.address,
+          city: response.data.city ?? '',
+          country: response.data.country,
+          zip: response.data.zip ?? '',
+          profileImage: response.data.profileImage ?? '',
+          emailVerified: false,
+          accountStatus: 'ACTIVE',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+        setFormData(newFormData);
+        setUser(newFormData);
+      } else {
+        setFormErrors({ general: response.message || t('errorLoadingProfile') });
       }
+    } catch (err) {
+      setFormErrors({ general: t('errorLoadingProfile') });
+      console.error('Error loading profile:', err);
+    } finally {
+      setLoading(false);
     }
-  }, [t, user]);
+  }, [t, setUser]);
 
-  // Auto-populate form data from auth context user - same pattern as submit request
   useEffect(() => {
-    if (user) {
-      // Auto-populate form with user information from auth context
-      loadUserProfile();
+    loadUserProfile();
+  }, [loadUserProfile]);
+
+  useEffect(() => {
+    if (user && !formData) {
+      setFormData(user);
     }
-  }, [user, loadUserProfile]);
+  }, [user, formData]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -90,7 +103,6 @@ const AccountSettingsContent = ({ t }: { t: (key: TranslationKey) => string }) =
       [name]: undefined,
       general: undefined,
       fullName: undefined,
-      lastName: undefined,
     }));
   };
 
@@ -118,57 +130,17 @@ const AccountSettingsContent = ({ t }: { t: (key: TranslationKey) => string }) =
 
   const validateForm = async (): Promise<Partial<Record<keyof UserProfile, string>> & { fullName?: string }> => {
     const errors: Partial<Record<keyof UserProfile, string>> & { fullName?: string } = {};
-    
-    // Validate first name
-    if (!formData?.firstName?.trim()) {
-      errors.firstName = t('requiredField');
-    }
-    
-    // Validate last name
-    if (!formData?.lastName?.trim()) {
-      errors.lastName = t('requiredField');
-    }
-    
-    // Validate full name has both first and last name
-    const fullName = `${formData?.firstName ?? ''} ${formData?.lastName ?? ''}`.trim();
-    if (fullName.split(' ').filter(name => name.trim().length > 0).length < 2) {
+    if (!formData?.firstName?.trim()) errors.firstName = t('requiredField');
+    else if (`${formData.firstName} ${formData.lastName ?? ''}`.trim().split(' ').length < 2)
       errors.fullName = t('invalidFullName');
-    }
-    
-    // Validate email
-    if (!formData?.email?.trim()) {
-      errors.email = t('requiredField');
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      errors.email = t('invalidEmail');
-    }
-    
-    // Validate phone (optional but if provided, must be valid)
-    if (formData?.phone && formData.phone.trim() && !(await validateWhatsAppNumber(formData.phone))) {
-      errors.phone = t('invalidPhone');
-    }
-    
-    // Validate address
-    if (!formData?.address?.trim()) {
-      errors.address = t('requiredField');
-    }
-    
-    // Validate city (optional but if provided, must be valid)
-    if (formData?.city && formData.city.trim() && !/^[a-zA-Z\s-]{2,}$/.test(formData.city)) {
-      errors.city = t('invalidCity');
-    }
-    
-    // Validate country (optional but if provided, must be valid)
-    if (formData?.country && formData.country.trim() && !/^[a-zA-Z\s-]{2,}$/.test(formData.country)) {
-      errors.country = t('invalidCountry');
-    }
-    
-    // Validate zip code
-    if (!formData?.zip?.trim()) {
-      errors.zip = t('requiredField');
-    } else if (!/^[0-9A-Za-z\s-]{3,10}$/.test(formData.zip)) {
-      errors.zip = t('invalidZip');
-    }
-    
+    if (!formData?.email?.trim()) errors.email = t('requiredField');
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) errors.email = t('invalidEmail');
+    if (formData?.phone && !(await validateWhatsAppNumber(formData.phone))) errors.phone = t('invalidPhone');
+    if (!formData?.address?.trim()) errors.address = t('requiredField');
+    if (formData?.city && !/^[a-zA-Z\s-]{2,}$/.test(formData.city)) errors.city = t('invalidCity');
+    if (formData?.country && !/^[a-zA-Z\s-]{2,}$/.test(formData.country)) errors.country = t('invalidCountry');
+    if (!formData?.zip?.trim()) errors.zip = t('requiredField');
+    else if (!/^[0-9A-Za-z\s-]{3,10}$/.test(formData.zip)) errors.zip = t('invalidZip');
     return errors;
   };
 
@@ -178,9 +150,6 @@ const AccountSettingsContent = ({ t }: { t: (key: TranslationKey) => string }) =
     setFormErrors({});
 
     const validationErrors = await validateForm();
-    console.log('Validation errors:', validationErrors);
-    console.log('Current form data:', formData);
-    
     if (Object.keys(validationErrors).length > 0) {
       setFormErrors(validationErrors);
       setSaving(false);
@@ -194,7 +163,7 @@ const AccountSettingsContent = ({ t }: { t: (key: TranslationKey) => string }) =
     }
 
     try {
-      const updateData: Partial<UserProfile> = {
+      const updateData: Partial<UserProfileData> = {
         firstName: formData.firstName,
         lastName: formData.lastName,
         email: formData.email,
@@ -204,14 +173,10 @@ const AccountSettingsContent = ({ t }: { t: (key: TranslationKey) => string }) =
         country: formData.country,
         zip: formData.zip,
         profileImage: formData.profileImage,
-        name: `${formData.firstName} ${formData.lastName}`.trim(),
       };
-      
-      // Update the profile with auth context integration - same as submit request pattern
-      const response = await apiService.updateUserProfile(updateData, updateUser);
+      const response = await apiService.updateUserProfile(updateData);
       if (response.success) {
-        // The auth context should already be updated via the updateUser callback
-        console.log('Profile updated successfully');
+        setUser(formData);
         alert(t('profileUpdated'));
       } else {
         setFormErrors({ general: response.message || t('error') });
@@ -287,36 +252,45 @@ const AccountSettingsContent = ({ t }: { t: (key: TranslationKey) => string }) =
               id="fullName"
               value={(formData?.firstName ?? '') + ' ' + (formData?.lastName ?? '')}
               onChange={(e) => {
-                const [firstName, ...lastNameParts] = e.target.value.split(' ');
-                const lastName = lastNameParts.join(' ');
+                const [firstName, ...lastName] = e.target.value.split(' ');
                 setFormData((prev) =>
                   prev
                     ? {
                         ...prev,
-                        firstName: firstName || '',
-                        lastName: lastName || '',
+                        firstName,
+                        lastName: lastName.join(' '),
+                        email: prev.email,
+                        phone: prev.phone,
+                        address: prev.address,
+                        city: prev.city,
+                        country: prev.country,
+                        zip: prev.zip,
+                        id: prev.id,
+                        emailVerified: prev.emailVerified,
+                        accountStatus: prev.accountStatus,
+                        createdAt: prev.createdAt,
+                        updatedAt: prev.updatedAt,
                       }
                     : prev
                 );
                 setFormErrors((prev) => ({
                   ...prev,
                   firstName: undefined,
-                  lastName: undefined,
                   fullName: undefined,
                   general: undefined,
                 }));
               }}
               className={`w-full px-4 py-3 border rounded-xl focus:outline-none transition-all ${
-                formErrors.firstName || formErrors.lastName || formErrors.fullName ? 'border-red-500' : 'border-gray-300 focus:ring-2 focus:ring-red-500 focus:border-transparent'
+                formErrors.firstName || formErrors.fullName ? 'border-red-500' : 'border-gray-300 focus:ring-2 focus:ring-red-500 focus:border-transparent'
               }`}
               placeholder={t('fullName')}
               required
               aria-required="true"
               aria-describedby="fullName-error"
             />
-            {(formErrors.firstName || formErrors.lastName || formErrors.fullName) && (
+            {(formErrors.firstName || formErrors.fullName) && (
               <p id="fullName-error" className="mt-1 text-sm text-red-600">
-                {formErrors.firstName || formErrors.lastName || formErrors.fullName}
+                {formErrors.firstName || formErrors.fullName}
               </p>
             )}
           </div>

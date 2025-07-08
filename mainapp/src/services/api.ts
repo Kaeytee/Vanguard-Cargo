@@ -2,28 +2,6 @@
 import * as MockData from '../lib/mockShipmentData';
 import { shouldUseMockData } from '../config/app';
 
-// Import User type from auth context
-type User = {
-  id: string;
-  name?: string;
-  firstName?: string;
-  lastName?: string;
-  email: string;
-  image?: string;
-  avatar?: string;
-  profileImage?: string;
-  phone?: string;
-  address?: string;
-  city?: string;
-  state?: string;
-  zip?: string;
-  country?: string;
-  emailVerified?: boolean;
-  accountStatus?: 'ACTIVE' | 'PENDING_VERIFICATION' | 'SUSPENDED' | 'RESTRICTED' | 'BANNED' | 'DORMANT';
-  createdAt?: string;
-  updatedAt?: string;
-};
-
 // Re-export types from mock data for consistency
 export interface ShipmentData extends MockData.MockShipmentData {
   imageUrl?: string; // Optional URL for package image
@@ -64,7 +42,6 @@ export interface PaginatedResponse<T> {
 // Additional API types for user management
 export interface UserProfile {
   id: string;
-  name?: string; // Add name field to match auth context
   firstName: string;
   lastName: string;
   email: string;
@@ -75,14 +52,23 @@ export interface UserProfile {
   state?: string;
   zip?: string;
   profileImage?: string;
-  avatar?: string; // Add avatar field to match auth context
   emailVerified?: boolean;
   accountStatus?: 'ACTIVE' | 'PENDING_VERIFICATION' | 'SUSPENDED' | 'RESTRICTED' | 'BANNED' | 'DORMANT';
   createdAt: string;
   updatedAt: string;
 }
 
-export type UpdateUserProfileRequest = Partial<UserProfile>;
+export interface UpdateUserProfileRequest {
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+  country?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  zip?: string;
+  profileImage?: string;
+}
 
 export interface ChangePasswordRequest {
   currentPassword: string;
@@ -160,9 +146,23 @@ export interface NotificationSettings {
   createdAt: string;
   updatedAt: string;
 }
-// Update UserProfileData to match UserProfile
-export interface UserProfileData extends UserProfile {
-  fullName?: string; // Optional field, can be derived from firstName and lastName
+export interface UserProfileData {
+  fullName: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  address: string;
+  city: string;
+  country: string;
+  profileImage:string;
+  zip: string;
+}
+export interface UpdateUserProfile {
+  getUserProfile(): Promise<ApiResponse<UserProfileData>>;
+}
+export interface UpdateUserProfile {
+  updateUserProfile(data: Partial<UserProfileData>): Promise<ApiResponse<null>>;
 }
 export interface UpdateNotificationSettingsRequest {
   shipmentUpdates?: boolean;
@@ -330,16 +330,7 @@ const mockDelay = (ms: number = 500) => new Promise(resolve => setTimeout(resolv
 
 // Simplified API Service Class
 class ApiService {
-  private apiBaseUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.REACT_APP_API_BASE_URL || 'http://localhost:8080/api';
-
-  // Add authentication headers
-  private getAuthHeaders(): Record<string, string> {
-    const token = localStorage.getItem('authToken');
-    return {
-      'Content-Type': 'application/json',
-      ...(token && { Authorization: `Bearer ${token}` }),
-    };
-  }
+  private apiBaseUrl = import.meta.env.API_BASE_URL || 'http://localhost:8080/api';
 
   // Helper to decide between mock and real API
 private async callApiOrMock<T>(
@@ -357,7 +348,6 @@ private async callApiOrMock<T>(
   }
 
     try {
-      console.log(`Making API request to: ${this.apiBaseUrl}`);
       return await realApiFn();
     } catch (error) {
       console.warn('Real API failed, falling back to mock data:', error);
@@ -370,34 +360,27 @@ private async callApiOrMock<T>(
     }
   }
 
-  // Real API request helper with improved error handling
+  // Real API request helper
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<ApiResponse<T>> {
-    try {
-      console.log(`Making API request to: ${this.apiBaseUrl}${endpoint}`);
-      
-      const response = await fetch(`${this.apiBaseUrl}${endpoint}`, {
-        ...options,
-        headers: {
-          ...this.getAuthHeaders(),
-          ...options.headers,
-        },
-      });
+    const token = localStorage.getItem('authToken');
 
-      console.log(`API Response status: ${response.status}`);
+    const config: RequestInit = {
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token && { Authorization: `Bearer ${token}` }),
+        ...options.headers,
+      },
+      ...options,
+    };
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error(`API Error: ${response.status} - ${errorText}`);
-        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
-      }
+    const response = await fetch(`${this.apiBaseUrl}${endpoint}`, config);
+    const data = await response.json();
 
-      const data = await response.json();
-      console.log('API Response data:', data);
-      return createSuccessResponse(data.data || data, data.message);
-    } catch (error) {
-      console.error('API request failed:', error);
-      throw error;
+    if (!response.ok) {
+      throw new Error(data.message || data.error || `HTTP error! status: ${response.status}`);
     }
+
+    return createSuccessResponse(data.data || data, data.message);
   }
 
   // ===== SHIPMENT ENDPOINTS =====
@@ -524,65 +507,37 @@ private async callApiOrMock<T>(
 
   // ===== USER PROFILE ENDPOINTS =====
 
-  // Update getUserProfile to work with auth context
-  async getUserProfile(authUser?: User): Promise<ApiResponse<UserProfile>> {
+  async getUserProfile(): Promise<ApiResponse<UserProfileData>> {
     return this.callApiOrMock(
-      // Mock data function - can use auth user if provided
+      // Mock data function
       () => {
-        if (authUser) {
-          // If auth user is provided, convert it to UserProfile format
-          return convertAuthUserToUserProfile(authUser);
-        }
-        
-        // Fallback mock data if no auth user
         return {
-          id: 'user123',
-          name: 'Jane Smith',
-          firstName: 'Jane',
-          lastName: 'Smith',
-          email: 'jane.smith@example.com',
-          phone: '+1-555-0123',
-          address: '456 Business Avenue',
-          city: 'Tech City',
-          state: 'CA',
+          firstName: 'KIGFD',
+          lastName: 'John',
+          email: 'john.doe@example.com',
+          phone: '+1234567890',
+          address: '123 Main St',
+          city: 'Metropolis',
           country: 'USA',
           profileImage: '',
-          avatar: '',
-          zip: '94105',
-          emailVerified: true,
-          accountStatus: 'ACTIVE',
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        } as UserProfile;
+          zip: '12345',
+          fullName: 'John Doe'
+        };
       },
       // Real API function
-      () => this.request<UserProfile>('/user/profile')
+      () => this.request<UserProfileData>('/user/profile')
     );
   }
 
-  // Update updateUserProfile to handle auth context updates
-  async updateUserProfile(profileData: Partial<UserProfile>, updateAuthUser?: (user: UserProfile) => void): Promise<ApiResponse<UserProfile>> {
+  async updateUserProfile(profileData: Partial<UserProfileData>): Promise<ApiResponse<null>> {
     return this.callApiOrMock(
       // Mock data function
       () => {
         console.log('Mock update:', profileData);
-        
-        // If updateAuthUser callback is provided, update the auth context
-        if (updateAuthUser && profileData) {
-          // Convert UserProfile back to auth user format
-          const authUserUpdate = {
-            ...profileData,
-            name: profileData.name || `${profileData.firstName || ''} ${profileData.lastName || ''}`.trim(),
-            avatar: profileData.profileImage || profileData.avatar,
-          };
-          updateAuthUser(authUserUpdate as UserProfile);
-        }
-        
-        // Return the updated profile data
-        return profileData as UserProfile;
+        return null;
       },
       // Real API function
-      () => this.request<UserProfile>('/user/profile', {
+      () => this.request<null>('/user/profile', {
         method: 'PUT',
         body: JSON.stringify(profileData),
       })
@@ -695,22 +650,6 @@ private async callApiOrMock<T>(
     );
   }
 
-  async logout(): Promise<ApiResponse<null>> {
-    return this.callApiOrMock(
-      // Mock data function
-      () => {
-        // Clear localStorage for mock mode
-        localStorage.removeItem('authToken');
-        localStorage.removeItem('user');
-        return null;
-      },
-      // Real API function
-      () => this.request<null>('/auth/logout', {
-        method: 'POST',
-      })
-    );
-  }
-
   async register(userData: RegisterRequest): Promise<ApiResponse<AuthResponse>> {
     return this.callApiOrMock(
       // Mock data function
@@ -723,7 +662,6 @@ private async callApiOrMock<T>(
           phone: userData.phone,
           country: userData.country,
           address: userData.address,
-          city: 'Unknown', // Default or derive from userData if available
           emailVerified: false, // New users start unverified
           accountStatus: 'PENDING_VERIFICATION', // Account requires verification
           createdAt: new Date().toISOString(),
@@ -774,6 +712,28 @@ private async callApiOrMock<T>(
           await this.sendVerificationEmail(result.data.user.email);
         }
 
+        return result;
+      }
+    );
+  }
+
+  async logout(): Promise<ApiResponse<void>> {
+    return this.callApiOrMock(
+      // Mock data function
+      () => {
+        // Clear localStorage for mock mode
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('user');
+        return undefined as void;
+      },
+      // Real API function
+      async () => {
+        const result = await this.request<void>('/auth/logout', {
+          method: 'POST',
+        });
+        // Clear localStorage regardless of API response
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('user');
         return result;
       }
     );
@@ -1351,26 +1311,3 @@ export const apiService = new ApiService();
 // Export utility functions
 export const isUsingMockData = () => apiService.isUsingMockData();
 export const getApiConfig = () => apiService.getConfigInfo();
-
-// Helper function to convert auth user to UserProfile
-function convertAuthUserToUserProfile(authUser: User): UserProfile {
-  return {
-    id: authUser.id || `user-${Date.now()}`,
-    name: authUser.name || `${authUser.firstName || ''} ${authUser.lastName || ''}`.trim(),
-    firstName: authUser.firstName || authUser.name?.split(' ')[0] || '',
-    lastName: authUser.lastName || authUser.name?.split(' ').slice(1).join(' ') || '',
-    email: authUser.email || '',
-    phone: authUser.phone || '',
-    address: authUser.address || '',
-    city: authUser.city || '',
-    state: authUser.state || '',
-    country: authUser.country || '',
-    zip: authUser.zip || '',
-    profileImage: authUser.profileImage || authUser.avatar || '',
-    avatar: authUser.avatar || authUser.profileImage || '',
-    emailVerified: authUser.emailVerified || false,
-    accountStatus: authUser.accountStatus || 'ACTIVE',
-    createdAt: authUser.createdAt || new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  };
-}

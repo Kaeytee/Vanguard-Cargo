@@ -121,13 +121,9 @@ export const translations = {
     confirmDeletePhoto: 'Are you sure you want to delete your profile photo?',
     deleteFailed: 'Could not delete photo',
     deleteError: 'Something went wrong while deleting the photo',
-    errorLoadingProfile: 'Error loading profile. Please try again.',
-    noUserDataAvailable: 'No user data available',
-    retry: 'Retry',
-    fullNameMustContainAtLeastTwoWords: 'Full name must contain at least two words',
-    thisFieldIsRequired: 'This field is required',
     
     // Additional AccountSettings translations
+    errorLoadingProfile: 'Failed to load user profile',
     errorBoundary: 'Something went wrong',
     phonePlaceholder: 'Enter WhatsApp number (e.g., +1234567890)',
     validatingPhone: 'Validating WhatsApp number...',
@@ -256,13 +252,9 @@ export const translations = {
     confirmDeletePhoto: '¿Estás seguro de que deseas eliminar tu foto de perfil?',
     deleteFailed: 'No se pudo eliminar la foto',
     deleteError: 'Algo salió mal al eliminar la foto',
-    errorLoadingProfile: 'Error al cargar el perfil. Inténtalo de nuevo.',
-    noUserDataAvailable: 'No hay datos de usuario disponibles',
-    retry: 'Reintentar',
-    fullNameMustContainAtLeastTwoWords: 'El nombre completo debe contener al menos dos palabras',
-    thisFieldIsRequired: 'Este campo es obligatorio',
     
     // Additional AccountSettings translations
+    errorLoadingProfile: 'Error al cargar el perfil de usuario',
     errorBoundary: 'Algo salió mal',
     phonePlaceholder: 'Ingresa número de WhatsApp (ej., +1234567890)',
     validatingPhone: 'Validando número de WhatsApp...',
@@ -391,13 +383,9 @@ export const translations = {
     confirmDeletePhoto: 'Êtes-vous sûr de vouloir supprimer votre photo de profil?',
     deleteFailed: 'Impossible de supprimer la photo',
     deleteError: 'Quelque chose a mal tourné lors de la suppression de la photo',
-    errorLoadingProfile: 'Erreur lors du chargement du profil. Veuillez réessayer.',
-    noUserDataAvailable: 'Aucune donnée utilisateur disponible',
-    retry: 'Réessayer',
-    fullNameMustContainAtLeastTwoWords: 'Le nom complet doit contenir au moins deux mots',
-    thisFieldIsRequired: 'Ce champ est obligatoire',
     
     // Additional AccountSettings translations
+    errorLoadingProfile: 'Échec du chargement du profil utilisateur',
     errorBoundary: 'Quelque chose a mal tourné',
     phonePlaceholder: 'Entrez le numéro WhatsApp (ex., +1234567890)',
     validatingPhone: 'Validation du numéro WhatsApp...',
