@@ -18,7 +18,24 @@ export default function Profile() {
       const response = await apiService.getUserProfile();
       
       if (response.success) {
-        setProfile(response.data);
+        // Convert UserProfileData to UserProfile
+        const userProfile: UserProfile = {
+          id: `profile-${Date.now()}`, // Generate a mock ID
+          firstName: response.data.firstName,
+          lastName: response.data.lastName,
+          email: response.data.email,
+          phone: response.data.phone,
+          country: response.data.country,
+          address: response.data.address,
+          city: response.data.city,
+          zip: response.data.zip,
+          profileImage: response.data.profileImage,
+          emailVerified: false, // Default value
+          accountStatus: 'ACTIVE', // Default value
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        };
+        setProfile(userProfile);
       } else {
         setError(response.error || 'Failed to load profile');
       }

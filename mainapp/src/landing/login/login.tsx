@@ -2,7 +2,6 @@ import { useState, useRef, useEffect } from "react";
 import { Eye, EyeOff } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthProvider';
-import { apiService } from '../../services/api';
 import DeliveryImage from '../../images/deliveryparcel.jpg';
 import LoginBg from '../../images/register-bg.jpg';
 // Import Google reCAPTCHA component
@@ -43,7 +42,7 @@ export default function Login() {
 	const [recaptchaError, setRecaptchaError] = useState(false);
 	const recaptchaRef = useRef<ReCAPTCHA>(null);
 	
-	const { setUser } = useAuth();
+	const { login } = useAuth();
 	const navigate = useNavigate();
 	
 	/**
@@ -124,7 +123,7 @@ export default function Login() {
 	};
 
 	/**
-	 * Handle login form submission using API
+	 * Handle login form submission using updated AuthProvider
 	 */
 	const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
@@ -139,37 +138,14 @@ export default function Login() {
 		setIsLoading(true);
 
 		try {
-			// Send the reCAPTCHA token along with login credentials for server-side verification
-			const response = await apiService.login(email, password, captchaValue || undefined);
+			// Use the updated AuthProvider login method
+			const success = await login(email, password, captchaValue || undefined);
 			
-			if (response.success && response.data) {
-				// Map UserProfile to User interface
-				const user = {
-					id: response.data.user.id,
-					name: `${response.data.user.firstName} ${response.data.user.lastName}`,
-					email: response.data.user.email,
-					image: response.data.user.profileImage,
-					phone: response.data.user.phone,
-					address: response.data.user.address,
-					city: response.data.user.city,
-					state: response.data.user.state,
-					zip: response.data.user.zip,
-					country: response.data.user.country,
-					emailVerified: response.data.user.emailVerified,
-					accountStatus: response.data.user.accountStatus
-				};
-				
-				// Set user in AuthContext
-				setUser(user);
-				
-				// Store auth data
-				localStorage.setItem('authToken', response.data.token);
-				localStorage.setItem('user', JSON.stringify(user));
-				
+			if (success) {
 				// Navigate to main app/dashboard
 				navigate('/app');
 			} else {
-				setError(response.error || 'Login failed. Please try again.');
+				setError('Login failed. Please check your credentials and try again.');
 			}
 		} catch (err) {
 			setError(err instanceof Error ? err.message : 'Login failed. Please try again.');

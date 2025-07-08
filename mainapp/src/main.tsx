@@ -5,6 +5,7 @@ import ScrollToTop from './components/ScrollToTop'; // Import ScrollToTop for UX
 import { ThemeProvider } from './context/ThemeProvider';
 import { AuthProvider } from './context/AuthProvider';
 import { PreferencesProvider } from './context/PreferencesProvider';
+import { UserProvider } from './context/UserContext';
 import './index.css';
 import App from './App.tsx';
 
@@ -15,9 +16,11 @@ createRoot(document.getElementById('root')!).render(
       <ScrollToTop />
       <ThemeProvider>
         <AuthProvider>
-          <PreferencesProvider>
-            <App />
-          </PreferencesProvider>
+          <UserProvider>
+            <PreferencesProvider>
+              <App />
+            </PreferencesProvider>
+          </UserProvider>
         </AuthProvider>
       </ThemeProvider>
     </BrowserRouter>

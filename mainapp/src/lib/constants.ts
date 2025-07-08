@@ -1,4 +1,4 @@
-import {DUMMY_USER} from "../app/app-config";
+ import {DUMMY_USER} from "../app/app-config";
 
 export const DELIVERY_TYPES = [
 	{ id: "air", label: "Air Freight (Primary)", primary: true, description: "International air freight - fast, reliable cross-border shipping" },

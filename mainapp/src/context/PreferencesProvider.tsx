@@ -1,6 +1,5 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import { apiService, type UserPreferences } from '../services/api';
-import { useTranslation } from '../lib/translations';
 
 interface PreferencesContextType {
   preferences: UserPreferences | null;

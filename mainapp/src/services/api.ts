@@ -2,6 +2,28 @@
 import * as MockData from '../lib/mockShipmentData';
 import { shouldUseMockData } from '../config/app';
 
+// Import User type from auth context
+type User = {
+  id: string;
+  name?: string;
+  firstName?: string;
+  lastName?: string;
+  email: string;
+  image?: string;
+  avatar?: string;
+  profileImage?: string;
+  phone?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  zip?: string;
+  country?: string;
+  emailVerified?: boolean;
+  accountStatus?: 'ACTIVE' | 'PENDING_VERIFICATION' | 'SUSPENDED' | 'RESTRICTED' | 'BANNED' | 'DORMANT';
+  createdAt?: string;
+  updatedAt?: string;
+};
+
 // Re-export types from mock data for consistency
 export interface ShipmentData extends MockData.MockShipmentData {
   imageUrl?: string; // Optional URL for package image
@@ -42,6 +64,7 @@ export interface PaginatedResponse<T> {
 // Additional API types for user management
 export interface UserProfile {
   id: string;
+  name?: string; // Add name field to match auth context
   firstName: string;
   lastName: string;
   email: string;
@@ -52,23 +75,14 @@ export interface UserProfile {
   state?: string;
   zip?: string;
   profileImage?: string;
+  avatar?: string; // Add avatar field to match auth context
   emailVerified?: boolean;
   accountStatus?: 'ACTIVE' | 'PENDING_VERIFICATION' | 'SUSPENDED' | 'RESTRICTED' | 'BANNED' | 'DORMANT';
   createdAt: string;
   updatedAt: string;
 }
 
-export interface UpdateUserProfileRequest {
-  firstName?: string;
-  lastName?: string;
-  phone?: string;
-  country?: string;
-  address?: string;
-  city?: string;
-  state?: string;
-  zip?: string;
-  profileImage?: string;
-}
+export type UpdateUserProfileRequest = Partial<UserProfile>;
 
 export interface ChangePasswordRequest {
   currentPassword: string;
@@ -146,7 +160,10 @@ export interface NotificationSettings {
   createdAt: string;
   updatedAt: string;
 }
-
+// Update UserProfileData to match UserProfile
+export interface UserProfileData extends UserProfile {
+  fullName?: string; // Optional field, can be derived from firstName and lastName
+}
 export interface UpdateNotificationSettingsRequest {
   shipmentUpdates?: boolean;
   deliveryAlerts?: boolean;
@@ -203,7 +220,7 @@ export interface UpdateNotificationRequest {
 // Mock user data for development
 const MOCK_USER: UserProfile = {
   id: 'user123',
-  firstName: 'John',
+  firstName: 'Austin',
   lastName: 'Doe',
   email: 'john.doe@email.com',
   phone: '+1 (555) 123-4567',
@@ -286,7 +303,7 @@ const createMockPaginatedResponse = <T>(
   const startIndex = (page - 1) * pageSize;
   const endIndex = startIndex + pageSize;
   const paginatedItems = items.slice(startIndex, endIndex);
-  
+
   return {
     items: paginatedItems,
     total: items.length,
@@ -313,24 +330,34 @@ const mockDelay = (ms: number = 500) => new Promise(resolve => setTimeout(resolv
 
 // Simplified API Service Class
 class ApiService {
-  private apiBaseUrl = import.meta.env.API_BASE_URL || 'http://localhost:8080/api';
+  private apiBaseUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.REACT_APP_API_BASE_URL || 'http://localhost:8080/api';
+
+  // Add authentication headers
+  private getAuthHeaders(): Record<string, string> {
+    const token = localStorage.getItem('authToken');
+    return {
+      'Content-Type': 'application/json',
+      ...(token && { Authorization: `Bearer ${token}` }),
+    };
+  }
 
   // Helper to decide between mock and real API
-  private async callApiOrMock<T>(
-    mockDataFn: () => T | Promise<T>,
-    realApiFn: () => Promise<ApiResponse<T>>
-  ): Promise<ApiResponse<T>> {
-    if (shouldUseMockData()) {
-      try {
-        await mockDelay(); // Simulate network delay
-        const mockData = await mockDataFn();
-        return createSuccessResponse(mockData);
-      } catch (error) {
-        return createErrorResponse(error instanceof Error ? error.message : 'Mock data error');
-      }
-    }
-    
+private async callApiOrMock<T>(
+  mockDataFn: () => T | Promise<T>,
+  realApiFn: () => Promise<ApiResponse<T>>
+): Promise<ApiResponse<T>> {
+  if (shouldUseMockData()) {
     try {
+      await mockDelay(); // Simulate network delay
+      const mockData = await mockDataFn();
+      return createSuccessResponse(mockData);
+    } catch (error) {
+      return createErrorResponse(error instanceof Error ? error.message : 'Mock data error');
+    }
+  }
+
+    try {
+      console.log(`Making API request to: ${this.apiBaseUrl}`);
       return await realApiFn();
     } catch (error) {
       console.warn('Real API failed, falling back to mock data:', error);
@@ -343,31 +370,38 @@ class ApiService {
     }
   }
 
-  // Real API request helper
+  // Real API request helper with improved error handling
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<ApiResponse<T>> {
-    const token = localStorage.getItem('authToken');
-    
-    const config: RequestInit = {
-      headers: {
-        'Content-Type': 'application/json',
-        ...(token && { Authorization: `Bearer ${token}` }),
-        ...options.headers,
-      },
-      ...options,
-    };
+    try {
+      console.log(`Making API request to: ${this.apiBaseUrl}${endpoint}`);
+      
+      const response = await fetch(`${this.apiBaseUrl}${endpoint}`, {
+        ...options,
+        headers: {
+          ...this.getAuthHeaders(),
+          ...options.headers,
+        },
+      });
 
-    const response = await fetch(`${this.apiBaseUrl}${endpoint}`, config);
-    const data = await response.json();
+      console.log(`API Response status: ${response.status}`);
 
-    if (!response.ok) {
-      throw new Error(data.message || data.error || `HTTP error! status: ${response.status}`);
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`API Error: ${response.status} - ${errorText}`);
+        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+      }
+
+      const data = await response.json();
+      console.log('API Response data:', data);
+      return createSuccessResponse(data.data || data, data.message);
+    } catch (error) {
+      console.error('API request failed:', error);
+      throw error;
     }
-
-    return createSuccessResponse(data.data || data, data.message);
   }
 
   // ===== SHIPMENT ENDPOINTS =====
-  
+
   async getUserShipments(
     page: number = 1,
     limit: number = 10,
@@ -378,12 +412,12 @@ class ApiService {
       // Mock data function
       () => {
         let filteredShipments = [...MockData.MOCK_SHIPMENTS];
-        
+
         // Apply status filter
         if (status && status !== 'all') {
           filteredShipments = filteredShipments.filter(s => s.status === status);
         }
-        
+
         // Apply search filter
         if (search) {
           const searchLower = search.toLowerCase();
@@ -393,7 +427,7 @@ class ApiService {
             s.destination.toLowerCase().includes(searchLower)
           );
         }
-        
+
         return createMockPaginatedResponse(filteredShipments, page, limit);
       },
       // Real API function
@@ -446,10 +480,10 @@ class ApiService {
         // Create a mock shipment response
         const newShipment: ShipmentData = {
           id: `SHIP${Math.floor(Math.random() * 9999)}`,
-          date: new Date().toLocaleDateString('en-US', { 
-            year: 'numeric', 
-            month: 'short', 
-            day: 'numeric' 
+          date: new Date().toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric'
           }),
           destination: shipmentData.recipientAddress,
           recipient: shipmentData.recipientName,
@@ -477,7 +511,7 @@ class ApiService {
           }),
           created: new Date().toISOString()
         };
-        
+
         return newShipment;
       },
       // Real API function
@@ -489,28 +523,63 @@ class ApiService {
   }
 
   // ===== USER PROFILE ENDPOINTS =====
-  
-  async getUserProfile(): Promise<ApiResponse<UserProfile>> {
+
+  // Update getUserProfile to work with auth context
+  async getUserProfile(authUser?: User): Promise<ApiResponse<UserProfile>> {
     return this.callApiOrMock(
-      // Mock data function
+      // Mock data function - can use auth user if provided
       () => {
-        return MOCK_USER;
+        if (authUser) {
+          // If auth user is provided, convert it to UserProfile format
+          return convertAuthUserToUserProfile(authUser);
+        }
+        
+        // Fallback mock data if no auth user
+        return {
+          id: 'user123',
+          name: 'Jane Smith',
+          firstName: 'Jane',
+          lastName: 'Smith',
+          email: 'jane.smith@example.com',
+          phone: '+1-555-0123',
+          address: '456 Business Avenue',
+          city: 'Tech City',
+          state: 'CA',
+          country: 'USA',
+          profileImage: '',
+          avatar: '',
+          zip: '94105',
+          emailVerified: true,
+          accountStatus: 'ACTIVE',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        } as UserProfile;
       },
       // Real API function
       () => this.request<UserProfile>('/user/profile')
     );
   }
 
-  async updateUserProfile(profileData: UpdateUserProfileRequest): Promise<ApiResponse<UserProfile>> {
+  // Update updateUserProfile to handle auth context updates
+  async updateUserProfile(profileData: Partial<UserProfile>, updateAuthUser?: (user: UserProfile) => void): Promise<ApiResponse<UserProfile>> {
     return this.callApiOrMock(
       // Mock data function
       () => {
-        const updatedUser: UserProfile = {
-          ...MOCK_USER,
-          ...profileData,
-          updatedAt: new Date().toISOString()
-        };
-        return updatedUser;
+        console.log('Mock update:', profileData);
+        
+        // If updateAuthUser callback is provided, update the auth context
+        if (updateAuthUser && profileData) {
+          // Convert UserProfile back to auth user format
+          const authUserUpdate = {
+            ...profileData,
+            name: profileData.name || `${profileData.firstName || ''} ${profileData.lastName || ''}`.trim(),
+            avatar: profileData.profileImage || profileData.avatar,
+          };
+          updateAuthUser(authUserUpdate as UserProfile);
+        }
+        
+        // Return the updated profile data
+        return profileData as UserProfile;
       },
       // Real API function
       () => this.request<UserProfile>('/user/profile', {
@@ -545,6 +614,8 @@ class ApiService {
     );
   }
 
+
+
   /**
    * Verify a reCAPTCHA token with Google's verification API
    * This should be called on the server side, not directly from the client
@@ -557,7 +628,7 @@ class ApiService {
     // This is a placeholder implementation
     // In a real application, this verification should happen on the server
     // The secret key should never be exposed in client-side code
-    
+
     // Server-side implementation would look like this:
     // const secretKey = process.env.REACT_APP_RECAPTCHA_SECRET_KEY;
     // const response = await fetch('https://www.google.com/recaptcha/api/siteverify', {
@@ -567,13 +638,13 @@ class ApiService {
     // });
     // const data = await response.json();
     // return data.success;
-    
+
     // For client-side mock implementation, we'll just return true if token exists
     return !!token;
   }
 
   // ===== AUTHENTICATION ENDPOINTS =====
-  
+
   /**
    * Authenticate user with email, password and reCAPTCHA verification
    * 
@@ -590,14 +661,14 @@ class ApiService {
         if (!recaptchaToken) {
           throw new Error('reCAPTCHA verification failed. Please verify you are not a robot.');
         }
-        
+
         // In a real implementation, we would verify the token with Google's API
         // For mock purposes, we'll just check if it exists
         const isRecaptchaValid = await this.verifyRecaptcha(recaptchaToken);
         if (!isRecaptchaValid) {
           throw new Error('reCAPTCHA verification failed. Please try again.');
         }
-        
+
         // Simple mock validation for credentials
         if (email === 'test@example.com' && password === 'password') {
           const authResponse: AuthResponse = {
@@ -615,11 +686,27 @@ class ApiService {
       // Real API function
       () => this.request<AuthResponse>('/auth/login', {
         method: 'POST',
-        body: JSON.stringify({ 
-          email, 
+        body: JSON.stringify({
+          email,
           password,
           recaptchaToken // Include reCAPTCHA token in the request for server-side verification
         }),
+      })
+    );
+  }
+
+  async logout(): Promise<ApiResponse<null>> {
+    return this.callApiOrMock(
+      // Mock data function
+      () => {
+        // Clear localStorage for mock mode
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('user');
+        return null;
+      },
+      // Real API function
+      () => this.request<null>('/auth/logout', {
+        method: 'POST',
       })
     );
   }
@@ -636,21 +723,22 @@ class ApiService {
           phone: userData.phone,
           country: userData.country,
           address: userData.address,
+          city: 'Unknown', // Default or derive from userData if available
           emailVerified: false, // New users start unverified
           accountStatus: 'PENDING_VERIFICATION', // Account requires verification
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString()
         };
-        
+
         const authResponse: AuthResponse = {
           token: 'mock-jwt-token-' + Date.now(),
           user: newUser
         };
-        
+
         // Store token and user in localStorage for mock mode
         localStorage.setItem('authToken', authResponse.token);
         localStorage.setItem('user', JSON.stringify(authResponse.user));
-        
+
         // Store initial notification preferences based on marketing agreement
         const initialNotificationSettings: NotificationSettings = {
           id: 'notif-' + Date.now(),
@@ -665,13 +753,13 @@ class ApiService {
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString()
         };
-        
+
         // Store notification settings for the new user
         localStorage.setItem(`notificationSettings_${newUser.id}`, JSON.stringify(initialNotificationSettings));
-        
+
         // Automatically send verification email
         await this.sendVerificationEmail(userData.email);
-        
+
         return authResponse;
       },
       // Real API function
@@ -680,34 +768,12 @@ class ApiService {
           method: 'POST',
           body: JSON.stringify(userData),
         });
-        
+
         // After successful registration, send verification email
         if (result.success && result.data?.user?.email) {
           await this.sendVerificationEmail(result.data.user.email);
         }
-        
-        return result;
-      }
-    );
-  }
 
-  async logout(): Promise<ApiResponse<void>> {
-    return this.callApiOrMock(
-      // Mock data function
-      () => {
-        // Clear localStorage for mock mode
-        localStorage.removeItem('authToken');
-        localStorage.removeItem('user');
-        return undefined as void;
-      },
-      // Real API function
-      async () => {
-        const result = await this.request<void>('/auth/logout', {
-          method: 'POST',
-        });
-        // Clear localStorage regardless of API response
-        localStorage.removeItem('authToken');
-        localStorage.removeItem('user');
         return result;
       }
     );
@@ -766,16 +832,16 @@ class ApiService {
       () => {
         const storedEmail = localStorage.getItem('resetEmail');
         const codeVerified = localStorage.getItem('resetCodeVerified');
-        
+
         // Validate input
         if (newPassword !== confirmPassword) {
           throw new Error('Passwords do not match');
         }
-        
+
         if (newPassword.length < 8) {
           throw new Error('Password must be at least 8 characters long');
         }
-        
+
         if (email === storedEmail && codeVerified === 'true') {
           const mockResponse: ForgotPasswordResponse = {
             message: 'Your password has been successfully reset.',
@@ -808,7 +874,7 @@ class ApiService {
         // Generate a mock verification token
         const mockToken = `mock-verification-token-${Date.now()}`;
         localStorage.setItem('verificationToken', mockToken);
-        
+
         const mockResponse: VerificationResponse = {
           message: 'Verification email sent successfully. Please check your inbox.',
           success: true
@@ -829,7 +895,7 @@ class ApiService {
       () => {
         const storedToken = localStorage.getItem('verificationToken');
         const verificationEmail = localStorage.getItem('verificationEmail');
-        
+
         if (token === storedToken && verificationEmail) {
           // Mark user as verified in localStorage
           const user = JSON.parse(localStorage.getItem('user') || '{}');
@@ -838,11 +904,11 @@ class ApiService {
             user.accountStatus = 'ACTIVE';
             localStorage.setItem('user', JSON.stringify(user));
           }
-          
+
           // Clean up verification data
           localStorage.removeItem('verificationEmail');
           localStorage.removeItem('verificationToken');
-          
+
           const mockResponse: VerificationResponse = {
             message: 'Email verified successfully! Your account is now active.',
             success: true
@@ -868,7 +934,7 @@ class ApiService {
         const mockToken = `mock-verification-token-${Date.now()}`;
         localStorage.setItem('verificationToken', mockToken);
         localStorage.setItem('verificationEmail', email);
-        
+
         const mockResponse: VerificationResponse = {
           message: 'Verification email resent successfully. Please check your inbox.',
           success: true
@@ -884,7 +950,7 @@ class ApiService {
   }
 
   // ===== NOTIFICATION SETTINGS ENDPOINTS =====
-  
+
   async getNotificationSettings(): Promise<ApiResponse<NotificationSettings>> {
     return this.callApiOrMock(
       // Mock data function
@@ -893,11 +959,11 @@ class ApiService {
         const user = JSON.parse(localStorage.getItem('user') || '{}');
         const userSettingsKey = `notificationSettings_${user.id}`;
         const storedSettings = localStorage.getItem(userSettingsKey);
-        
+
         if (storedSettings) {
           return JSON.parse(storedSettings);
         }
-        
+
         // Fallback to default settings
         const mockSettings: NotificationSettings = {
           id: 'notif-001',
@@ -940,7 +1006,7 @@ class ApiService {
         const user = JSON.parse(localStorage.getItem('user') || '{}');
         const userSettingsKey = `notificationSettings_${user.id}`;
         const currentSettings = JSON.parse(localStorage.getItem(userSettingsKey) || '{}');
-        
+
         const updatedSettings: NotificationSettings = {
           id: currentSettings.id || 'notif-001',
           userId: user.id || 'user-001',
@@ -954,10 +1020,10 @@ class ApiService {
           createdAt: currentSettings.createdAt || '2024-01-01T00:00:00Z',
           updatedAt: new Date().toISOString()
         };
-        
+
         // Persist the updated settings
         localStorage.setItem(userSettingsKey, JSON.stringify(updatedSettings));
-        
+
         return updatedSettings;
       },
       // Real API function
@@ -980,7 +1046,7 @@ class ApiService {
   }
 
   // ===== USER PREFERENCES ENDPOINTS =====
-  
+
   async getUserPreferences(): Promise<ApiResponse<UserPreferences>> {
     return this.callApiOrMock(
       // Mock data function
@@ -1049,7 +1115,7 @@ class ApiService {
   }
 
   // ===== NOTIFICATION METHODS =====
-  
+
   async getNotifications(
     page: number = 1,
     pageSize: number = 10,
@@ -1059,22 +1125,22 @@ class ApiService {
     return this.callApiOrMock(
       () => {
         let filteredNotifications = [...mockNotificationsStore];
-        
+
         // Apply read/unread filter
         if (filter === 'read') {
           filteredNotifications = filteredNotifications.filter(n => n.isRead);
         } else if (filter === 'unread') {
           filteredNotifications = filteredNotifications.filter(n => !n.isRead);
         }
-        
+
         // Apply category filter
         if (category && category !== 'all') {
           filteredNotifications = filteredNotifications.filter(n => n.category === category);
         }
-        
+
         // Sort by creation date (newest first)
         filteredNotifications.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-        
+
         return createMockPaginatedResponse(filteredNotifications, page, pageSize);
       },
       async () => {
@@ -1085,7 +1151,7 @@ class ApiService {
           ...(filter && filter !== 'all' && { filter }),
           ...(category && category !== 'all' && { category })
         });
-        
+
         const response = await fetch(`${this.apiBaseUrl}/notifications?${params}`, {
           headers: {
             ...(token && { Authorization: `Bearer ${token}` }),
@@ -1152,12 +1218,12 @@ class ApiService {
         if (notificationIndex === -1) {
           throw new Error('Notification not found');
         }
-        
+
         mockNotificationsStore[notificationIndex] = {
           ...mockNotificationsStore[notificationIndex],
           isRead: true
         };
-        
+
         return mockNotificationsStore[notificationIndex];
       },
       async () => {
@@ -1184,12 +1250,12 @@ class ApiService {
         if (notificationIndex === -1) {
           throw new Error('Notification not found');
         }
-        
+
         mockNotificationsStore[notificationIndex] = {
           ...mockNotificationsStore[notificationIndex],
           isRead: false
         };
-        
+
         return mockNotificationsStore[notificationIndex];
       },
       async () => {
@@ -1216,7 +1282,7 @@ class ApiService {
         if (notificationIndex === -1) {
           throw new Error('Notification not found');
         }
-        
+
         mockNotificationsStore.splice(notificationIndex, 1);
         return undefined as void;
       },
@@ -1263,12 +1329,12 @@ class ApiService {
   }
 
   // ===== UTILITY FUNCTIONS =====
-  
+
   // Check if currently using mock data
   isUsingMockData(): boolean {
     return shouldUseMockData();
   }
-  
+
   // Get configuration info
   getConfigInfo() {
     return {
@@ -1285,3 +1351,26 @@ export const apiService = new ApiService();
 // Export utility functions
 export const isUsingMockData = () => apiService.isUsingMockData();
 export const getApiConfig = () => apiService.getConfigInfo();
+
+// Helper function to convert auth user to UserProfile
+function convertAuthUserToUserProfile(authUser: User): UserProfile {
+  return {
+    id: authUser.id || `user-${Date.now()}`,
+    name: authUser.name || `${authUser.firstName || ''} ${authUser.lastName || ''}`.trim(),
+    firstName: authUser.firstName || authUser.name?.split(' ')[0] || '',
+    lastName: authUser.lastName || authUser.name?.split(' ').slice(1).join(' ') || '',
+    email: authUser.email || '',
+    phone: authUser.phone || '',
+    address: authUser.address || '',
+    city: authUser.city || '',
+    state: authUser.state || '',
+    country: authUser.country || '',
+    zip: authUser.zip || '',
+    profileImage: authUser.profileImage || authUser.avatar || '',
+    avatar: authUser.avatar || authUser.profileImage || '',
+    emailVerified: authUser.emailVerified || false,
+    accountStatus: authUser.accountStatus || 'ACTIVE',
+    createdAt: authUser.createdAt || new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+}
