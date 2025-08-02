@@ -1,6 +1,6 @@
 # Comprehensive Warehouse Integration Documentation
 
-This document describes the comprehensive integration layer implemented between the Ttarius Logistics client app and warehouse system.
+This document describes the comprehensive integration layer implemented between the Vanguard Cargo client app and warehouse system.
 
 ## Overview
 
@@ -155,7 +155,7 @@ Fully typed interfaces for all data structures and method signatures.
 
 ## Business Logic Alignment
 
-The integration follows Ttarius Logistics business rules:
+The integration follows Vanguard Cargo business rules:
 
 1. **International Only**: Enforces international shipping requirement
 2. **Warehouse-to-Warehouse**: Models foreign warehouse → local warehouse flow  

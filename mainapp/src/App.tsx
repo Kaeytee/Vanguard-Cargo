@@ -23,6 +23,7 @@ import ProtectedRoutes from "./components/protectedRoutes";
 import AppLayout from "./components/AppLayout";
 import SmartNotFound from "./components/SmartNotFound";
 import AppNotFoundWithLayout from "./app/layouts/AppNotFoundWithLayout";
+import { featureFlags } from "./config/featureFlags";
 
 /**
  * App - Main application component
@@ -84,21 +85,29 @@ export default function App() {
       <Route
         path="/login"
         element={
-          <>
-            <Navbar />
-            <Login />
-            <Footer />
-          </>
+          featureFlags.authEnabled ? (
+            <>
+              <Navbar />
+              <Login />
+              <Footer />
+            </>
+          ) : (
+            <Navigate to="/" replace />
+          )
         }
       />
       <Route
         path="/register"
         element={
-          <>
-            <Navbar />
-            <Register />
-            <Footer />
-          </>
+          featureFlags.authEnabled ? (
+            <>
+              <Navbar />
+              <Register />
+              <Footer />
+            </>
+          ) : (
+            <Navigate to="/" replace />
+          )
         }
       />
       

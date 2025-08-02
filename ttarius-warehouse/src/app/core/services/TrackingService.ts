@@ -1,7 +1,7 @@
 /**
  * TrackingService.ts
  * 
- * Core tracking service for Ttarius Logistics
+ * Core tracking service for Vanguard Cargo
  * This service manages tracking points, timelines, and location-based operations
  * Provides comprehensive tracking functionality with OpenStreetMap integration
  * 

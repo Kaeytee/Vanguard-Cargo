@@ -1,7 +1,7 @@
 /**
  * Package.ts
  * 
- * Core package/shipment data structure for Ttarius Logistics
+ * Core package/shipment data structure for Vanguard Cargo
  * This file defines the central Package model used throughout the entire application
  * Provides type safety and consistency for all package-related operations
  * 

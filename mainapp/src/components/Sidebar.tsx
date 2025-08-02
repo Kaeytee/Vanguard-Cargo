@@ -72,7 +72,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate }) => {
     <div className="w-64 bg-red-600 text-white flex flex-col h-full overflow-y-auto shadow-lg transition-all duration-300 ease-in-out lg:w-64 md:w-60 sm:w-56">
       {/* Logo and app name */}
       <div className="p-6 text-center border-red-500/20">
-        <h1 className="text-2xl font-bold m-0 tracking-wide">Ttarius Logistics</h1>
+        <h1 className="text-2xl font-bold m-0 tracking-wide">Vanguard Cargo</h1>
       </div>
 
       {/* User profile section */}

@@ -7,7 +7,7 @@
 import React from 'react';
 
 /**
- * Settings component for TTarius Logistics application.
+ * Settings component for Vanguard Cargo application.
  * @returns {React.ReactElement} Settings page
  */
 const Settings: React.FC = () => (

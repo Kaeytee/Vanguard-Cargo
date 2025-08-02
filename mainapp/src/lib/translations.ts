@@ -80,7 +80,7 @@ export const translations = {
     
     // About
     aboutUs: 'About Us',
-    aboutCompany: 'About Ttarius Logistics',
+    aboutCompany: 'About Vanguard Cargo',
     
     // Sidebar
     logistics: 'Logistics.',
@@ -197,7 +197,7 @@ export const translations = {
     
     // About
     aboutUs: 'Acerca de Nosotros',
-    aboutCompany: 'Acerca de Ttarius Logistics',
+    aboutCompany: 'Acerca de Vanguard Cargo',
     
     // Sidebar
     logistics: 'Logística.',
@@ -314,7 +314,7 @@ export const translations = {
     
     // About
     aboutUs: 'À Propos de Nous',
-    aboutCompany: 'À Propos de Ttarius Logistics',
+    aboutCompany: 'À Propos de Vanguard Cargo',
     
     // Sidebar
     logistics: 'Logistique.',

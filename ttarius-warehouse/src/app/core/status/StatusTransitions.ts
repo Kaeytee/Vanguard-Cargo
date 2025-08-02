@@ -1,7 +1,7 @@
 /**
  * StatusTransitions.ts
  * 
- * Centralized status transition management for Ttarius Logistics
+ * Centralized status transition management for Vanguard Cargo
  * This file defines valid status change rules and business logic for package lifecycle management.
  * Ensures data integrity and prevents invalid status transitions.
  * 

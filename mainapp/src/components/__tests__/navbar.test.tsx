@@ -31,7 +31,7 @@ describe('Navbar Component', () => {
   it('renders the logo and brand name', () => {
     render(<Navbar />)
     
-    expect(screen.getByText('Ttarius Logistics')).toBeInTheDocument()
+    expect(screen.getByText('Vanguard Cargo')).toBeInTheDocument()
   })
   it('renders navigation links when not authenticated', () => {
     render(<Navbar />)
@@ -53,6 +53,6 @@ describe('Navbar Component', () => {
     render(<Navbar />)
     
     // Basic test to ensure component renders
-    expect(screen.getByText('Ttarius Logistics')).toBeInTheDocument()
+    expect(screen.getByText('Vanguard Cargo')).toBeInTheDocument()
   })
 })

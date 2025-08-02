@@ -1,8 +1,8 @@
-# Ttarius Logistics - Warehouse System: The Operational Core
+# Vanguard Cargo - Warehouse System: The Operational Core
 
 ## Executive Summary
 
-**This warehouse system IS the Ttarius Logistics platform.** Every business decision, data flow, user interaction, and system integration flows through this warehouse backbone. This document serves as the definitive operational blueprint for backend developers, system architects, and business stakeholders to understand and implement the complete logistics operation.
+**This warehouse system IS the Vanguard Cargo platform.** Every business decision, data flow, user interaction, and system integration flows through this warehouse backbone. This document serves as the definitive operational blueprint for backend developers, system architects, and business stakeholders to understand and implement the complete logistics operation.
 
 ### Why This Document Is Critical
 - **For Backend Developers**: This is your implementation roadmap - every API, database table, and business rule is defined here
@@ -63,7 +63,7 @@ The client app is essentially a user interface that communicates with this wareh
 ## Business Logic Framework: Pure International Logistics
 
 ### Package Types - Official Definition
-**There are ONLY two package types in the entire Ttarius Logistics system:**
+**There are ONLY two package types in the entire Vanguard Cargo system:**
 1. **DOCUMENT**: Legal documents, contracts, certificates, official papers
 2. **NON_DOCUMENT**: Everything else - goods, products, personal items, equipment
 
@@ -79,7 +79,7 @@ The client app is essentially a user interface that communicates with this wareh
 4. **EXPRESS**: Premium express international service (future high-priority option)
 
 ### Core Business Model - Pure International Logistics
-**Ttarius Logistics operates EXCLUSIVELY as an international logistics company:**
+**Vanguard Cargo operates EXCLUSIVELY as an international logistics company:**
 - **No Domestic Services**: We do not handle deliveries within the same country
 - **Cross-Border Only**: All packages move between different countries
 - **Current Routes**: Ghana ↔ USA exclusively
@@ -560,7 +560,7 @@ EXCEPTION           →    PROCESSING (with notes)
 ### Tracking Number System
 
 **Enhanced Format**: TT + 12 digits with check digits (e.g., TT123456789012)
-- **TT**: Ttarius Logistics identifier
+- **TT**: Vanguard Cargo identifier
 - **12 digits**: UUID-based or sequential number with Luhn algorithm check digits for validation
 
 **Production-Ready Generation Algorithm:**
@@ -1588,7 +1588,7 @@ GET  /api/warehouse/analytics/trends            # Operational trends
 # Example OpenAPI specification
 openapi: 3.0.0
 info:
-  title: Ttarius Logistics Warehouse API
+  title: Vanguard Cargo Warehouse API
   version: 1.0.0
   description: International logistics warehouse management system
 paths:
@@ -2266,4 +2266,4 @@ Response:
 
 ---
 
-**This Future Production section establishes the framework for enhanced operational visibility and customer service capabilities, supporting the continued growth and excellence of the Ttarius Logistics international warehouse system.**
+**This Future Production section establishes the framework for enhanced operational visibility and customer service capabilities, supporting the continued growth and excellence of the Vanguard Cargo international warehouse system.**

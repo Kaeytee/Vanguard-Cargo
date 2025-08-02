@@ -465,9 +465,9 @@ class ApiService {
             address: shipmentData.recipientAddress
           },
           warehouseDetails: {
-            name: "Ttarius Logistics Warehouse",
+            name: "Vanguard Cargo Warehouse",
             phone: "+1 (555) 123-4567",
-            email: "warehouse@ttariuslogistics.com",
+            email: "warehouse@vanguardcargo.org",
             address: "123 Warehouse Street, City, Country"
           },
           estimatedDelivery: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', {

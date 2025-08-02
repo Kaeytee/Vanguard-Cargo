@@ -1,7 +1,7 @@
 /**
  * ShipmentHistory.tsx
  * 
- * Professional shipment history management page for Ttarius Logistics
+ * Professional shipment history management page for Vanguard Cargo
  * Displays comprehensive list of all shipments with modern Tailwind design
  * Features status cards, advanced filtering, search, and detailed popup views
  * 
@@ -443,7 +443,7 @@ const ShipmentHistory: React.FC = () => {
 
       // Create professional business CSV with metadata header
       const csvContent = [
-        '# TTARIUS LOGISTICS - SHIPMENT HISTORY EXPORT',
+        '# Vanguard Cargo - SHIPMENT HISTORY EXPORT',
         `# Export Date: ${currentDate}`,
         `# Export Time: ${currentTime}`,
         `# Total Records: ${filteredAndSearchedPackages.length}`,

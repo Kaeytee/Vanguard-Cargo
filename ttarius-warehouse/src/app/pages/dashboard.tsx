@@ -230,7 +230,7 @@ const Dashboard: React.FC = () => {
           <FiZap className="text-blue-600 animate-pulse" size={24} />
           <h1 className="text-2xl font-bold text-gray-900">Dashboard Overview</h1>
         </div>
-        <p className="text-gray-500 text-sm">TTarius logistics | Accra Ghana</p>
+        <p className="text-gray-500 text-sm">Vanguard Cargo | Accra Ghana</p>
       </div>
 
       {/* Metrics Cards with staggered animation */}

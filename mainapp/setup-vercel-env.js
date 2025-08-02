@@ -11,7 +11,7 @@ const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
-console.log('🚀 Ttarius Logistics - Vercel Environment Setup');
+console.log('🚀 Vanguard Cargo - Vercel Environment Setup');
 console.log('================================================\n');
 
 // Check if vercel CLI is installed

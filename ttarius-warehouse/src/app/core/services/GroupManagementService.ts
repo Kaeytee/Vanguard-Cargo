@@ -1,7 +1,7 @@
 /**
  * GroupManagementService.ts
  * 
- * Core group management service for Ttarius Logistics
+ * Core group management service for Vanguard Cargo
  * This service handles batch grouping of packages and group operations
  * Centralizes all shipment group management with validation and      // Validate packages are available for grouping
       const packageValidation = await this.validatePackagesForGrouping(request.packageIds);

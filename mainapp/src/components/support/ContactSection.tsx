@@ -148,7 +148,7 @@ const ContactSection: React.FC<ContactSectionProps> = ({
         >
           <div className="w-full h-48 sm:h-64 md:h-80 rounded-lg overflow-hidden border border-gray-200 shadow">
             <iframe
-              title="Ttarius Logistics Location"
+              title="Vanguard Cargo Location"
               src="https://www.google.com/maps?q=6.5244,3.3792&z=15&output=embed"
               width="100%"
               height="100%"

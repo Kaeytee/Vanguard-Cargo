@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 // import { useTheme } from "../context/ThemeProvider";
 import { useAuth } from "../context/AuthProvider";
 import { useLogout } from "../hooks/useLogout";
+import { featureFlags } from "../config/featureFlags";
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -106,7 +107,7 @@ export default function Navbar() {
           {/* Logo */}
           <Link to="/" className="flex-shrink-0">
             <span className="text-2xl font-bold text-primary tracking-tight">
-              Ttarius Logistics
+              Vanguard Cargo
             </span>
           </Link>{" "}
           {/* Desktop Navigation */}
@@ -154,16 +155,24 @@ export default function Navbar() {
                 {" "}
                 {!hideLogin && (
                   <Link
-                    to="/login"
-                    className="px-4 py-2 text-sm font-medium text-primary hover:text-primary/80 transition-colors duration-200 rounded-md hover:bg-red-600/10 border border-primary"
+                    to={featureFlags.authEnabled ? "/login" : "/"}
+                    className={cn(
+                      "px-4 py-2 text-sm font-medium text-primary hover:text-primary/80 transition-all duration-200 rounded-md hover:bg-red-600/10 border border-primary",
+                      !featureFlags.authEnabled && "opacity-0 cursor-not-allowed pointer-events-none"
+                    )}
+                    title={!featureFlags.authEnabled ? "Authentication temporarily disabled" : "Log in to your account"}
                   >
                     Log In
                   </Link>
                 )}
                 {!hideRegister && (
                   <Link
-                    to="/register"
-                    className="px-4 py-2 text-sm text-white font-medium bg-red-600 text-primary-foreground rounded-md hover:bg-red-600/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 transition-all duration-200 shadow-sm"
+                    to={featureFlags.authEnabled ? "/register" : "/"}
+                    className={cn(
+                      "px-4 py-2 text-sm text-white font-medium bg-red-600 text-primary-foreground rounded-md hover:bg-red-600/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 transition-all duration-200 shadow-sm",
+                      !featureFlags.authEnabled && "opacity-0 cursor-not-allowed pointer-events-none"
+                    )}
+                    title={!featureFlags.authEnabled ? "Authentication temporarily disabled" : "Create a new account"}
                   >
                     Register
                   </Link>
@@ -253,18 +262,26 @@ export default function Navbar() {
                     {" "}
                     {!hideLogin && (
                       <Link
-                        to="/login"
+                        to={featureFlags.authEnabled ? "/login" : "/"}
                         onClick={() => setIsMenuOpen(false)}
-                        className="w-full px-4 py-2 text-center text-primary border border-primary rounded-md hover:bg-red-600/10 transition-colors duration-200"
+                        className={cn(
+                          "w-full px-4 py-2 text-center text-primary border border-primary rounded-md hover:bg-red-600/10 transition-all duration-200",
+                          !featureFlags.authEnabled && "opacity-0 cursor-not-allowed pointer-events-none"
+                        )}
+                        title={!featureFlags.authEnabled ? "Authentication temporarily disabled" : "Log in to your account"}
                       >
                         Login
                       </Link>
                     )}
                     {!hideRegister && (
                       <Link
-                        to="/register"
+                        to={featureFlags.authEnabled ? "/register" : "/"}
                         onClick={() => setIsMenuOpen(false)}
-                        className="w-full px-4 py-2 text-center bg-red-600 text-primary-foreground rounded-md hover:bg-red-600/90 transition-colors duration-200 mt-2"
+                        className={cn(
+                          "w-full px-4 py-2 text-center bg-red-600 text-primary-foreground rounded-md hover:bg-red-600/90 transition-all duration-200 mt-2",
+                          !featureFlags.authEnabled && "opacity-0 cursor-not-allowed pointer-events-none"
+                        )}
+                        title={!featureFlags.authEnabled ? "Authentication temporarily disabled" : "Create a new account"}
                       >
                         Register
                       </Link>

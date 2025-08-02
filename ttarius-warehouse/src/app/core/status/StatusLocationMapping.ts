@@ -76,7 +76,7 @@ export interface StatusLocationMapping {
 }
 
 /**
- * Ttarius Logistics facility locations in Ghana
+ * Vanguard Cargo facility locations in Ghana
  * Real geographic coordinates for authentic tracking experience
  */
 export const TTARIUS_FACILITIES: Record<string, LocationPoint> = {
@@ -84,7 +84,7 @@ export const TTARIUS_FACILITIES: Record<string, LocationPoint> = {
   ACCRA_MAIN_WAREHOUSE: {
     latitude: 5.6037,
     longitude: -0.1870,
-    address: 'Ttarius Logistics Warehouse, Industrial Area',
+    address: 'Vanguard Cargo Warehouse, Industrial Area',
     city: 'Accra',
     region: 'Greater Accra',
     country: 'Ghana',

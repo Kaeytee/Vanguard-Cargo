@@ -274,7 +274,7 @@ const AppAbout: React.FC = () => {
             Our Location
           </h2>
           <p className="text-gray-700 mb-1 sm:mb-2 font-semibold">
-            Ttarius Logistics Headquarters
+            Vanguard Cargo Headquarters
           </p>
           <p className="text-gray-600 text-sm sm:text-base">
             1234 Logistics Avenue
@@ -285,7 +285,7 @@ const AppAbout: React.FC = () => {
             <br />
             Phone: +233 800 123 4567
             <br />
-            Email: info@ttariuslogistics.com
+            Email: info@vanguardcargo.org
           </p>
         </motion.div>
         {/* Map on the right */}
@@ -295,7 +295,7 @@ const AppAbout: React.FC = () => {
         >
           <div className="w-full h-48 sm:h-64 md:h-72 rounded-lg overflow-hidden border border-gray-200 shadow">
             <iframe
-              title="Ttarius Logistics Location"
+              title="Vanguard Cargo Location"
               src="https://www.google.com/maps?q=6.5244,3.3792&z=15&output=embed"
               width="100%"
               height="100%"

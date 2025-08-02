@@ -1,8 +1,8 @@
-# Ttarius Logistics - Client App Backend Requirements
+# Vanguard Cargo - Client App Backend Requirements
 
 ## Overview
 
-This document provides comprehensive backend API requirements for the **Ttarius Logistics Client Application**. This is a **cross-platform system** where:
+This document provides comprehensive backend API requirements for the **Vanguard Cargo Client Application**. This is a **cross-platform system** where:
 
 - **`mainapp/` directory**: Contains the client-side React/TypeScript application with Vite and Vitest
 - **Backend**: Spring Boot REST API with PostgreSQL database
@@ -141,262 +141,37 @@ Client App (mainapp/) ──────► Spring Boot API ──────�
 - **DOCUMENT**: Papers, contracts, certificates, legal documents
 - **NON_DOCUMENT**: Physical items, goods, products, packages
 
-### Delivery Types (Air Freight Primary)
-- **AIR**: International air freight shipping (PRIMARY SERVICE - currently operational)
-- **GROUND**: Cross-border ground transportation (future expansion)
-- **SEA**: International sea freight shipping (future expansion)
-- **EXPRESS**: Premium express international delivery (future expansion)
+### Delivery Types
+- **GROUND**: Standard ground transportation
+- **AIR**: Air freight shipping
+- **SEA**: Sea freight shipping  
+- **EXPRESS**: Express delivery service
 
-### Pure International Logistics Model
-**Ttarius Logistics operates exclusively as an international logistics company:**
-- **No Domestic Services**: No deliveries within the same country
-- **Cross-Border Only**: All packages move between different countries
-- **Current Operations**: Ghana ↔ USA routes exclusively
-- **Business Focus**: International package logistics and cross-border coordination
-
-### Origin Country Selection Logic (Critical UI Rule)
-**Client Country Restriction Implementation:**
-- **Ghana Clients**: Can ONLY select non-Ghana countries as origin (USA, future countries)
-- **USA Clients**: Can ONLY select non-USA countries as origin (Ghana, future countries)
-- **UI Enforcement**: Client's own country must be disabled/hidden in origin country dropdown
-
-**Frontend Implementation Logic:**
-```
-Origin Country Dropdown Logic:
-IF user.country === "Ghana" 
-  THEN availableOrigins = ["USA", ...futureCountries] (Ghana excluded)
-IF user.country === "USA" 
-  THEN availableOrigins = ["Ghana", ...futureCountries] (USA excluded)
-
-Validation Rule:
-selectedOriginCountry !== user.country (enforced at form submission)
-```
-
-**Business Justification:**
-- Prevents impossible domestic requests that don't align with business model
-- Ensures all requests are international by design
-- Reduces user confusion about service offerings
-- Enforces cross-border logistics business focus
-
-### Request Status Flow (Aligned with Warehouse System)
-
-**Client App Displays (Simplified View):**
-1. **SUBMITTED**: Request submitted and received by warehouse
-2. **UNDER_REVIEW**: Warehouse reviewing and processing request  
-3. **PROCESSING**: Package being processed in warehouse (multiple internal stages)
-4. **READY_FOR_PICKUP**: Package ready for collection/shipment
-5. **COMPLETED**: Package delivered to destination
-
-**Status Mapping from Warehouse System:**
-```
-Warehouse Internal Status    →    Client App Display
-AWAITING_PICKUP             →    UNDER_REVIEW
-RECEIVED                    →    PROCESSING  
-PROCESSING                  →    PROCESSING
-PROCESSED                   →    PROCESSING
-GROUPED                     →    READY_FOR_PICKUP
-SHIPPED                     →    READY_FOR_PICKUP
-IN_TRANSIT                  →    READY_FOR_PICKUP
-DELIVERED                   →    COMPLETED
-EXCEPTION                   →    PROCESSING (with notes)
-```
-
-**Note**: The client app shows a simplified 5-status view while the warehouse system manages 8 detailed internal statuses. This provides clients with clear progress updates without overwhelming them with operational details.
+### Request Status Flow (Simplified 5-Status System)
+1. **PENDING**: Initial request submission - waiting for warehouse processing
+2. **RECEIVED**: Package processed at warehouse (weight + dimensions + photos documented)
+3. **IN_TRANSIT**: Package is being shipped/transported
+4. **ARRIVED**: Package has arrived at destination warehouse/hub
+5. **DELIVERED**: Package has been delivered to final recipient
 
 ## API Endpoint Structure
 
-### Client App Endpoints (International Focus)
+### Client App Endpoints
 ```
 Authentication:
 POST /api/client/auth/register     # Register new client
 POST /api/client/auth/login        # Client login
-POST /api/client/auth/forgot-password  # Request password reset
-POST /api/client/auth/verify-reset-code # Verify reset code before password reset
-POST /api/client/auth/reset-password   # Reset password with token
 GET  /api/client/auth/me          # Get current client info
-POST /api/client/auth/logout      # Logout and invalidate token
-POST /api/client/auth/refresh     # Refresh JWT token
-
-Email Verification:
-POST /api/client/auth/send-verification  # Send email verification
-POST /api/client/auth/verify-email       # Verify email with token
-POST /api/client/auth/resend-verification # Resend verification email
 
 Profile Management:
 GET  /api/client/profile          # Get client profile
 PUT  /api/client/profile          # Update client profile
-POST /api/client/profile/change-password # Change password
-POST /api/client/profile/upload-avatar   # Upload profile picture
 
-Settings & Preferences:
-GET  /api/client/settings/preferences     # Get user preferences
-PUT  /api/client/settings/preferences     # Update user preferences
-GET  /api/client/settings/notifications   # Get notification settings
-PUT  /api/client/settings/notifications   # Update notification settings
-GET  /api/client/settings/privacy         # Get privacy settings
-PUT  /api/client/settings/privacy         # Update privacy settings
-GET  /api/client/settings/account-deletion  # Get account deletion settings
-POST /api/client/settings/account-deletion  # Request account deletion
-PUT  /api/client/settings/language          # Update language preference
-
-Notifications Management:
-GET  /api/client/notifications            # Get user notifications (paginated)
-GET  /api/client/notifications/unread     # Get unread notifications
-PUT  /api/client/notifications/{id}/read  # Mark notification as read
-PUT  /api/client/notifications/{id}/unread # Mark notification as unread
-DELETE /api/client/notifications/{id}     # Delete notification
-POST /api/client/notifications/mark-all-read # Mark all notifications as read
-GET  /api/client/notifications/stats      # Get notification statistics
-POST /api/client/notifications/push         # Send push notification (real-time updates)
-
-International Package Requests:
-POST /api/client/requests         # Submit new international request
-GET  /api/client/requests         # Get user's international requests
-GET  /api/client/requests/{id}    # Get specific international request
-GET  /api/client/requests/{id}/track # Track international request status
-DELETE /api/client/requests/{id}  # Cancel request (if allowed)
-PUT  /api/client/requests/{id}    # Update request (if allowed)
-
-Origin Country Validation:
-GET  /api/client/countries/available  # Get available origin countries for current client
-POST /api/client/requests/validate   # Validate international request before submission
-GET  /api/client/routes/supported     # Get supported international shipping routes
-
-Tracking:
-GET  /api/client/requests/{id}/history      # Get detailed tracking history for a request
-GET  /api/client/requests/{id}/real-time    # Get real-time tracking updates for a request
-```
-
-### Forgot Password Flow Endpoints
-
-```
-Three-Step Password Reset Process:
-
-Step 1 - Request Password Reset:
-POST /api/client/auth/forgot-password
-Request Body:
-{
-  "email": "user@example.com"
-}
-Response:
-{
-  "success": true,
-  "data": {
-    "message": "A verification code has been sent to your email address.",
-    "success": true
-  }
-}
-
-Step 2 - Verify Reset Code:
-POST /api/client/auth/verify-reset-code
-Request Body:
-{
-  "email": "user@example.com",
-  "code": "12345"
-}
-Response:
-{
-  "success": true,
-  "data": {
-    "message": "Verification code is valid.",
-    "success": true
-  }
-}
-
-Step 3 - Reset Password:
-POST /api/client/auth/reset-password
-Request Body:
-{
-  "email": "user@example.com",
-  "code": "12345",
-  "newPassword": "newpassword123",
-  "confirmPassword": "newpassword123"
-}
-Response:
-{
-  "success": true,
-  "data": {
-    "message": "Your password has been successfully reset.",
-    "success": true
-  }
-}
-
-Security Requirements:
-- Verification codes expire after 15 minutes
-- Maximum 3 attempts per code
-- Rate limiting: 1 request per minute per email
-- Codes are single-use only
-- Previous codes invalidated when new code is generated
-```
-
-### Registration and Marketing Preferences Integration
-
-```
-Client Registration with Marketing Preferences:
-
-POST /api/client/auth/register
-Request Body:
-{
-  "firstName": "John",
-  "lastName": "Doe", 
-  "email": "john.doe@example.com",
-  "password": "securepassword123",
-  "phone": "+1234567890",
-  "address": "123 Main Street, City",
-  "country": "USA",
-  "agreeToMarketing": true  // Marketing communications preference
-}
-
-Response:
-{
-  "success": true,
-  "data": {
-    "token": "jwt-token-here",
-    "user": {
-      "id": "user123",
-      "firstName": "John",
-      "lastName": "Doe",
-      "email": "john.doe@example.com",
-      "phone": "+1234567890",
-      "country": "USA",
-      "address": "123 Main Street, City",
-      "createdAt": "2024-01-01T00:00:00Z",
-      "updatedAt": "2024-01-01T00:00:00Z"
-    }
-  }
-}
-
-Marketing Preference Integration Logic:
-- During registration, if agreeToMarketing = true, user's notification settings are initialized with marketingNotifications = true
-- If agreeToMarketing = false or undefined, marketingNotifications = false
-- This setting can later be modified in the user's notification preferences
-- Ensures consistency between registration consent and actual marketing communications
-
-Backend Requirements:
-- Store marketing preference during user creation
-- Initialize NotificationSettings table with preference
-- Link marketing consent to actual communication delivery
-- Respect user preference changes in settings page
-```
-
-### International Request Validation Endpoints
-```
-Backend Validation Logic for International Requests:
-
-GET /api/client/countries/available:
-- Returns list of countries client can select as origin
-- Excludes client's own country
-- Example: Ghana client gets ["USA", "Nigeria", "UK"] (Ghana excluded)
-
-POST /api/client/requests/validate:
-- Validates origin country ≠ client country
-- Confirms international route is supported
-- Checks service availability for selected route
-
-POST /api/client/requests (Submit Request):
-- Enforces origin country ≠ client country at API level
-- Returns error if domestic request attempted
-- Creates international package request only
+Package Requests:
+POST /api/client/requests         # Submit new request
+GET  /api/client/requests         # Get user's requests
+GET  /api/client/requests/{id}    # Get specific request
+GET  /api/client/requests/{id}/track # Track request status
 ```
 
 ### Warehouse Admin Endpoints
@@ -447,50 +222,6 @@ GET  /api/super-admin/audit-logs        # System audit logs
 - **Allowed Headers**: All headers for development
 - **Credentials**: Enabled for JWT token handling
 
-### reCAPTCHA Integration
-- **Implementation**: Google reCAPTCHA v2 "I'm not a robot" checkbox on login page
-- **Environment-based configuration**: Different site keys for development and production
-- **Backend verification**: Server-side token verification with Google's API
-- **Security measures**: Secret key stored only in environment variables
-- **Error handling**: Proper validation and user feedback for failed verification
-- **API integration**: reCAPTCHA token sent with login request for verification
-
-```typescript
-// API Request Structure with reCAPTCHA
-POST /api/client/auth/login
-Request Body:
-{
-  "email": "user@example.com",
-  "password": "password123",
-  "recaptchaToken": "03AGdBq24PBCxq8..." // Token from Google reCAPTCHA
-}
-
-// Backend Verification Process
-1. Extract recaptchaToken from request
-2. Verify token with Google's reCAPTCHA API
-3. Proceed with authentication only if verification succeeds
-4. Return appropriate error if verification fails
-```
-
-### Default Profile Picture System
-- **Implementation**: Local SVG asset as fallback for user avatars
-- **Components**: Integrated in AppNavbar and Sidebar components
-- **Error handling**: Graceful fallback if user's custom image fails to load
-- **Performance**: Lightweight SVG optimized for fast loading
-- **Consistency**: Same default avatar appears across all components
-
-```typescript
-// Profile Picture API Endpoints
-POST /api/client/profile/upload-avatar   // Upload custom profile picture
-GET  /api/client/profile/avatar          // Get user's current avatar
-DELETE /api/client/profile/avatar        // Remove custom avatar (revert to default)
-
-// Frontend Implementation
-- Default avatar SVG stored in assets directory
-- Image error handling with fallback to default avatar
-- Consistent implementation across all user profile displays
-```
-
 ## Database Design
 
 ### Core Tables Structure
@@ -539,7 +270,7 @@ DELETE /api/client/profile/avatar        // Remove custom avatar (revert to defa
 - **Audit capabilities**: Access to all system logs and activities
 - **Configuration control**: Manage system settings and permissions
 
-## Cross-Border Warehouse Communication (Pure International Logistics)
+## Cross-Border Warehouse Communication
 
 ### Multi-Country Warehouse Architecture
 
@@ -556,49 +287,15 @@ Ghana Warehouse System ←──────────────→ USA Ware
 
 ### International Package Flow Logic
 
-#### Scenario 1: Ghana Client → USA Package → Ghana Warehouse Pickup
+#### Scenario: Ghana Client → USA Package → Ghana Delivery
 
 1. **Client Request (Ghana)**
    ```
-   Ghana Client submits international request:
-   - Origin: USA (only option for Ghana clients)
-   - Destination: Ghana (automatically derived from client country)
+   Ghana Client submits request:
+   - Origin: USA (New York)
+   - Destination: Ghana (Accra)
    - Package Type: Document/Non-Document
-   - Delivery Type: Air (primary service)
-   - Pickup Location: Ttarius Warehouse - Accra, Ghana
-   ```
-
-2. **International Request Processing Flow**
-   ```
-   Ghana System ──► USA System ──► Ghana System
-        │              │              │
-     Receives        Processes      Receives
-     Request         Package        International
-     Routes to USA   at Origin      Shipment for
-                                   Warehouse Pickup
-   ```
-
-#### Scenario 2: USA Client → Ghana Package → USA Warehouse Pickup
-
-1. **Client Request (USA)**
-   ```
-   USA Client submits international request:
-   - Origin: Ghana (only option for USA clients)
-   - Destination: USA (automatically derived from client country)
-   - Package Type: Document/Non-Document
-   - Delivery Type: Air (primary service)
-   - Pickup Location: Ttarius Warehouse - [USA Location]
-   ```
-
-2. **International Request Processing Flow**
-   ```
-   USA System ──► Ghana System ──► USA System
-        │              │              │
-     Receives        Processes      Receives
-     Request         Package        International
-     Routes to Ghana at Origin      Shipment for
-                                   Warehouse Pickup
-     Routes to Ghana at Origin      Shipment
+   - Delivery Type: Air/Sea/Ground
    ```
 
 2. **Request Processing Flow**
@@ -695,7 +392,7 @@ enum InternationalEvents {
   PACKAGE_PROCESSED_USA = 'package_processed_usa',
   PACKAGE_SHIPPED_TO_GHANA = 'package_shipped_to_ghana',
   PACKAGE_ARRIVED_IN_GHANA = 'package_arrived_ghana',
-  PACKAGE_READY_FOR_PICKUP = 'package_ready_for_pickup',
+  PACKAGE_OUT_FOR_DELIVERY = 'package_out_for_delivery',
   PACKAGE_DELIVERED = 'package_delivered'
 }
 
@@ -721,7 +418,7 @@ interface InternationalEventPayload {
 4. READY_FOR_SHIPMENT (USA) → Synced to Ghana
 5. IN_TRANSIT_TO_GHANA (USA) → Synced to Ghana
 6. ARRIVED_IN_GHANA (Ghana) → Final processing
-7. READY_FOR_PICKUP (Ghana) → Client notified for warehouse pickup
+7. OUT_FOR_DELIVERY (Ghana) → Client notified
 8. DELIVERED (Ghana) → Request completed
 ```
 
@@ -759,24 +456,20 @@ class CrossBorderStatusService {
 
 ## Package Processing Workflow & WhatsApp Business Integration
 
-### Status Flow with Automatic Progression (Aligned with Warehouse)
+### Simplified Status Flow with Automatic Progression
 
-The system uses the warehouse's comprehensive status system but displays a simplified view to clients:
+The system uses a **5-status progression** that automatically advances based on warehouse staff completing processing stages with required data:
 
-**Internal Warehouse Statuses (8 stages):**
 ```
-AWAITING_PICKUP → RECEIVED → PROCESSING → PROCESSED → GROUPED → SHIPPED → IN_TRANSIT → DELIVERED
-```
-
-**Client App Display (5 simplified stages):**
-```
-SUBMITTED → UNDER_REVIEW → PROCESSING → READY_FOR_PICKUP → COMPLETED
+PENDING → RECEIVED → IN_TRANSIT → ARRIVED → DELIVERED
+    ↓         ↓           ↓          ↓         ↓
+Weight +   Shipment    Transit     Arrival   Delivery
+Photos    Dispatch    Updates    Scanning  Confirmation
 ```
 
 ### Processing Stages Logic
 
-#### Stage 1: Initial Processing (AWAITING_PICKUP → RECEIVED)
-**Client Sees**: UNDER_REVIEW → PROCESSING
+#### Stage 1: Initial Processing (PENDING → RECEIVED)
 **Trigger**: Warehouse staff completes initial processing with required data
 **Required Data**:
 - Package weight (kg)
@@ -785,41 +478,41 @@ SUBMITTED → UNDER_REVIEW → PROCESSING → READY_FOR_PICKUP → COMPLETED
 - **Up to 3 photos** of the package
 - Processing notes (optional)
 
-**Automatic Action**: Warehouse status changes from AWAITING_PICKUP to RECEIVED
-**Client Status**: Changes from UNDER_REVIEW to PROCESSING
+**Automatic Action**: Status changes from PENDING to RECEIVED
 **Notifications Sent**: WhatsApp + Email + SMS + Push notification to client
 
-#### Stage 2: Warehouse Processing (RECEIVED → PROCESSING → PROCESSED)
-**Client Sees**: PROCESSING (no change - internal warehouse stages)
-**Trigger**: Warehouse staff processes package through internal stages
-**Internal Actions**: Package inspection, labeling, preparation for shipment
-**Client Experience**: Continues to see PROCESSING status
-
-#### Stage 3: Shipment Preparation (PROCESSED → GROUPED → SHIPPED)
-**Client Sees**: PROCESSING → READY_FOR_PICKUP
-**Trigger**: Package grouped into shipment and dispatched
+#### Stage 2: Shipment Dispatch (RECEIVED → IN_TRANSIT)
+**Trigger**: Warehouse staff prepares package for shipment
 **Required Data**:
 - Shipping method selection (Air/Sea/Ground/Express)
 - Tracking number generation
 - **Up to 3 dispatch photos**
-- Estimated pickup availability timeframe
+- Estimated delivery timeframe
 
-**Automatic Action**: Warehouse progresses through PROCESSED → GROUPED → SHIPPED
-**Client Status**: Changes from PROCESSING to READY_FOR_PICKUP
+**Automatic Action**: Status changes from RECEIVED to IN_TRANSIT
 **Notifications Sent**: Multi-channel notifications with tracking details
 
-#### Stage 4: Final Warehouse Arrival (IN_TRANSIT → DELIVERED)
-**Client Sees**: READY_FOR_PICKUP → COMPLETED
-**Trigger**: Package arrives at local warehouse and is ready for customer pickup
+#### Stage 3: Arrival Processing (IN_TRANSIT → ARRIVED)
+**Trigger**: Package scanned at destination warehouse
 **Required Data**:
-- Pickup ready confirmation
-- Warehouse address and pickup hours
+- Arrival timestamp
+- Destination warehouse location
 - **Up to 3 arrival photos**
-- Arrival timestamp and warehouse location
+- Customs clearance status (if international)
 
-**Automatic Action**: Status changes from IN_TRANSIT to DELIVERED
-**Client Status**: Changes from READY_FOR_PICKUP to COMPLETED
-**Notifications Sent**: Pickup ready notification across all channels
+**Automatic Action**: Status changes from IN_TRANSIT to ARRIVED
+**Notifications Sent**: Arrival confirmation to client
+
+#### Stage 4: Final Delivery (ARRIVED → DELIVERED)
+**Trigger**: Package delivered to final recipient
+**Required Data**:
+- Delivery confirmation
+- Recipient name and signature
+- **Up to 3 delivery photos**
+- Delivery timestamp and location
+
+**Automatic Action**: Status changes from ARRIVED to DELIVERED
+**Notifications Sent**: Delivery confirmation across all channels
 
 ### WhatsApp Business API Integration
 
@@ -834,16 +527,16 @@ SUBMITTED → UNDER_REVIEW → PROCESSING → READY_FOR_PICKUP → COMPLETED
 Each status change triggers a WhatsApp message with:
 - **Header**: Package/shipment image (when available)
 - **Body**: Personalized message with status details
-- **Footer**: Ttarius Logistics branding
+- **Footer**: Vanguard Cargo branding
 - **Action Buttons**: Quick reply options (Track Package, Contact Support)
 
 #### Sample Message Templates
 
-**PROCESSING Status Template (when warehouse receives package)**:
+**RECEIVED Status Template**:
 ```
 Hello [Client Name],
 
-✅ Your package [Package ID] is now being PROCESSED!
+✅ Your package [Package ID] has been RECEIVED!
 
 📦 Processing Details:
 Weight: [X]kg
@@ -856,16 +549,16 @@ Next: Preparing for shipment
 Track: [Tracking URL]
 ```
 
-**READY_FOR_PICKUP Status Template (when package shipped)**:
+**IN_TRANSIT Status Template**:
 ```
 Hello [Client Name],
 
-🚚 Your package [Package ID] is READY FOR PICKUP!
+🚚 Your package [Package ID] is now IN TRANSIT!
 
 🚛 Shipping Details:
 Method: [Air/Sea/Ground/Express]
 Tracking: [Tracking Number]
-Estimated Pickup Ready: [X] days
+Estimated Delivery: [X] days
 
 Track: [Tracking URL]
 ```
@@ -875,24 +568,24 @@ Track: [Tracking URL]
 #### Intelligent Package Grouping Logic
 Warehouse admins can group multiple packages into a single shipment based on:
 - **Destination Country/Region**: Packages going to same area
-- **Shipping Method**: Same shipping method (Air/Sea/Ground)
-- **Priority Level**: Express vs standard shipping
+- **Delivery Type**: Same shipping method (Air/Sea/Ground)
+- **Priority Level**: Express vs standard delivery
 - **Size/Weight Constraints**: Optimal container/vehicle capacity
 - **Departure Schedule**: Packages ready for same departure date
 
 #### Shipment Group Creation Process
-1. **Selection**: Admin selects packages with status PROCESSED (internal warehouse status)
+1. **Selection**: Admin selects packages with status RECEIVED
 2. **Grouping**: System suggests optimal groupings based on criteria above
 3. **Validation**: Admin reviews and confirms shipment groups
 4. **ID Assignment**: Each package gets assigned same shipment ID (SHIP-GH-2025-001)
-5. **Status Update**: All packages in group move from PROCESSING to READY_FOR_PICKUP simultaneously
+5. **Status Update**: All packages in group move to IN_TRANSIT simultaneously
 
 #### Cascading Status Updates
 When a shipment status changes, **ALL packages in that shipment are affected**:
 
 **Example**: Shipment SHIP-GH-2025-001 contains packages PKG-001, PKG-002, PKG-003
-- Admin updates shipment status to "DELIVERED"
-- System automatically updates all 3 packages to COMPLETED status (client view)
+- Admin updates shipment status to "ARRIVED"
+- System automatically updates all 3 packages to ARRIVED status
 - Notifications sent to all 3 clients simultaneously
 - Each client receives personalized message about their specific package
 
@@ -916,7 +609,7 @@ Clients can configure which channels they want to receive notifications on:
 #### Notification Failure Handling
 - **Retry Logic**: Failed notifications are retried with exponential backoff
 - **Channel Fallback**: If WhatsApp fails, system falls back to SMS
-- **Pickup Tracking**: System tracks which notifications were successfully delivered to customers about pickup readiness
+- **Delivery Tracking**: System tracks which notifications were successfully delivered
 - **Manual Resend**: Admins can manually resend failed notifications
 
 ### Integration Points for Development
@@ -1141,7 +834,7 @@ Clients can configure which channels they want to receive notifications on:
 ```
 Hello [Client Name],
 
-⚠️ Your Ttarius Logistics account has been SUSPENDED
+⚠️ Your Vanguard Cargo account has been SUSPENDED
 
 📋 Details:
 Reason: [Suspension Reason]
@@ -1164,7 +857,7 @@ Reference: [Case ID]
 ```
 Hello [Client Name],
 
-✅ Your Ttarius Logistics account has been REACTIVATED
+✅ Your Vanguard Cargo account has been REACTIVATED
 
 🎉 Welcome back! Your account is now ACTIVE
 

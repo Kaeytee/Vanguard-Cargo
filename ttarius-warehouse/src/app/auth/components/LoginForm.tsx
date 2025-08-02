@@ -43,7 +43,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
             Warehouse System Login
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            Access the Ttarius Logistics warehouse management system
+            Access the Vanguard Cargo warehouse management system
           </p>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>

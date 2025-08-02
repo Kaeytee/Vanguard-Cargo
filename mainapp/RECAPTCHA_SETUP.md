@@ -1,4 +1,4 @@
-# reCAPTCHA Setup Guide for Ttarius Logistics
+# reCAPTCHA Setup Guide for Vanguard Cargo
 
 ## 🚨 IMPORTANT: Current Issue
 
@@ -14,7 +14,7 @@ Your application is currently using test reCAPTCHA keys that only work on `local
 2. Sign in with your Google account
 3. Click "Create" or "+" to register a new site
 4. Fill in the details:
-   - **Label**: `Ttarius Logistics Production`
+   - **Label**: `Vanguard Cargo Production`
    - **reCAPTCHA type**: Select "reCAPTCHA v2" → "I'm not a robot" Checkbox
    - **Domains**: Add your production domains:
      - `yourdomain.com` (replace with your actual domain)

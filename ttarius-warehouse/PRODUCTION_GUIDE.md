@@ -1,6 +1,6 @@
 # Production Deployment Guide
 
-This guide will help you deploy the Ttarius Logistics Warehouse Management System to production.
+This guide will help you deploy the Vanguard Cargo Warehouse Management System to production.
 
 ## 🚀 Quick Start - Switch to Production
 

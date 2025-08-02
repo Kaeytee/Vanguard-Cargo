@@ -1,4 +1,4 @@
-# Ttarius Logistics - Client Application
+# Vanguard Cargo - Client Application
 
 A comprehensive logistics management platform built with React, TypeScript, and Vite, featuring complete customer account management, shipment tracking, and cross-border warehouse integration.
 
@@ -743,4 +743,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-**Note**: This README provides the complete frontend implementation guide for the Ttarius Logistics client application. For detailed backend integration information, refer to the [clientapp.md](./clientapp.md) documentation.
+**Note**: This README provides the complete frontend implementation guide for the Vanguard Cargo client application. For detailed backend integration information, refer to the [clientapp.md](./clientapp.md) documentation.

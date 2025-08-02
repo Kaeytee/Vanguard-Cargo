@@ -1,7 +1,7 @@
 /**
  * StatusDefinitions.ts
  * 
- * Centralized status management system for Ttarius Logistics
+ * Centralized status management system for Vanguard Cargo
  * This file serves as the single source of truth for all package/shipment status codes
  * and their properties throughout the entire application.
  * 

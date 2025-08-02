@@ -7,7 +7,7 @@ export const DELIVERY_TYPES = [
 	{ id: "express", label: "Express (Future)", disabled: true, description: "Premium express international service (coming soon)" }
 ];
 
-// CRITICAL: Only 2 package types exist in the entire Ttarius Logistics system
+// CRITICAL: Only 2 package types exist in the entire Vanguard Cargo system
 export const PACKAGE_TYPES = [
 	{ id: "DOCUMENT", label: "Document", description: "Legal documents, contracts, certificates, official papers" },
 	{ id: "NON_DOCUMENT", label: "Non-Document", description: "Everything else - goods, products, personal items, equipment" }

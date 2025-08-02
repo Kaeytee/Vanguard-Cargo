@@ -267,7 +267,7 @@ const PackageOriginForm: React.FC<PackageOriginFormProps> = ({
       <div className="mt-6 p-4 border-l-4 border-blue-500 bg-blue-50 text-blue-700 rounded-r-lg">
         <h4 className="font-semibold mb-1">International Logistics Only</h4>
         <p className="text-sm">
-          Ttarius Logistics specializes in cross-border shipments between Ghana and USA. 
+          Vanguard Cargo specializes in cross-border shipments between Ghana and USA. 
           You can only receive packages from a different country than where you're located. 
           Your contact information is pre-filled from your account - just select the origin country and city.
         </p>

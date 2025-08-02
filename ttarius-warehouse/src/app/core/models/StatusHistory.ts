@@ -1,7 +1,7 @@
 /**
  * StatusHistory.ts
  * 
- * Core status history data structure for Ttarius Logistics
+ * Core status history data structure for Vanguard Cargo
  * This file defines the StatusHistory model for comprehensive audit trails
  * Provides complete tracking of all status changes across packages and groups
  * 

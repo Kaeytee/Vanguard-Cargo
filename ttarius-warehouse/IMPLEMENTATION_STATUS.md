@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document provides an overview of the implemented frontend hierarchy for the Ttarius Logistics warehouse system. The system is built with React, TypeScript, and Tailwind CSS, following the specifications outlined in `FRONTEND_HIERARCHY.md` and `warehouse.md`.
+This document provides an overview of the implemented frontend hierarchy for the Vanguard Cargo warehouse system. The system is built with React, TypeScript, and Tailwind CSS, following the specifications outlined in `FRONTEND_HIERARCHY.md` and `warehouse.md`.
 
 ## Implementation Status
 

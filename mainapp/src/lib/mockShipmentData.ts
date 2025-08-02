@@ -43,9 +43,9 @@ export const MOCK_SHIPMENTS: MockShipmentData[] = [
       address: "1600 Pennsylvania Avenue NW, Washington, DC 20500, USA"
     },
     warehouseDetails: {
-      name: "Ttarius Logistics Ghana",
+      name: "Vanguard Cargo Ghana",
       phone: "+233 30 123 4567",
-      email: "warehouse@ttariuslogistics.com",
+      email: "warehouse@vanguardcargo.org",
       address: "15 Independence Avenue, Accra, Ghana"
     },
     estimatedDelivery: "2025-02-25",
@@ -68,9 +68,9 @@ export const MOCK_SHIPMENTS: MockShipmentData[] = [
       address: "1234 Market Street, Philadelphia, PA 19107, USA"
     },
     warehouseDetails: {
-      name: "Ttarius Logistics Kumasi",
+      name: "Vanguard Cargo Kumasi",
       phone: "+233 32 456 7890",
-      email: "kumasi@ttariuslogistics.com",
+      email: "kumasi@vanguardcargo.org",
       address: "25 Kejetia Market Road, Kumasi, Ghana"
     },
     estimatedDelivery: "2025-02-24",
@@ -93,9 +93,9 @@ export const MOCK_SHIPMENTS: MockShipmentData[] = [
       address: "500 Commerce Street, Dallas, TX 75202, USA"
     },
     warehouseDetails: {
-      name: "Ttarius Logistics Tema Port",
+      name: "Vanguard Cargo Tema Port",
       phone: "+233 30 987 6543",
-      email: "tema@ttariuslogistics.com",
+      email: "tema@vanguardcargo.org",
       address: "Port of Tema, Community 1, Tema, Ghana"
     },
     estimatedDelivery: "2025-02-17",
@@ -118,9 +118,9 @@ export const MOCK_SHIPMENTS: MockShipmentData[] = [
       address: "2000 M Street NW, Washington, DC 20036, USA"
     },
     warehouseDetails: {
-      name: "Ttarius Logistics Ghana",
+      name: "Vanguard Cargo Ghana",
       phone: "+233 30 123 4567",
-      email: "warehouse@ttariuslogistics.com",
+      email: "warehouse@vanguardcargo.org",
       address: "15 Independence Avenue, Accra, Ghana"
     },
     estimatedDelivery: "2025-02-04",
@@ -143,9 +143,9 @@ export const MOCK_SHIPMENTS: MockShipmentData[] = [
       address: "3770 S Las Vegas Blvd, Las Vegas, NV 89109, USA"
     },
     warehouseDetails: {
-      name: "Ttarius Logistics Ghana",
+      name: "Vanguard Cargo Ghana",
       phone: "+233 30 123 4567",
-      email: "warehouse@ttariuslogistics.com",
+      email: "warehouse@vanguardcargo.org",
       address: "15 Independence Avenue, Accra, Ghana"
     },
     estimatedDelivery: "2025-01-25",
@@ -168,9 +168,9 @@ export const MOCK_SHIPMENTS: MockShipmentData[] = [
       address: "800 Nicollet Mall, Minneapolis, MN 55402, USA"
     },
     warehouseDetails: {
-      name: "Ttarius Logistics Tamale",
+      name: "Vanguard Cargo Tamale",
       phone: "+233 37 234 5678",
-      email: "tamale@ttariuslogistics.com",
+      email: "tamale@vanguardcargo.org",
       address: "Central Market Area, Tamale, Ghana"
     },
     estimatedDelivery: "2025-01-04",
@@ -193,9 +193,9 @@ export const MOCK_SHIPMENTS: MockShipmentData[] = [
       address: "100 Federal Street, Boston, MA 02110, USA"
     },
     warehouseDetails: {
-      name: "Ttarius Logistics Cape Coast",
+      name: "Vanguard Cargo Cape Coast",
       phone: "+233 33 345 6789",
-      email: "capecoast@ttariuslogistics.com",
+      email: "capecoast@vanguardcargo.org",
       address: "Victoria Park, Cape Coast, Ghana"
     },
     estimatedDelivery: "2024-11-14",
