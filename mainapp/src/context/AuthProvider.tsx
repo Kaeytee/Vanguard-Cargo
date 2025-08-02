@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 
-interface User {
+export interface User {
   id: string;
   name: string;
   email: string;
@@ -15,7 +15,7 @@ interface User {
   accountStatus?: 'ACTIVE' | 'PENDING_VERIFICATION' | 'SUSPENDED' | 'RESTRICTED' | 'BANNED' | 'DORMANT';
 }
 
-interface AuthContextType {
+export interface AuthContextType {
   user: User | null;
   setUser: (user: User | null) => void;
   loading: boolean;

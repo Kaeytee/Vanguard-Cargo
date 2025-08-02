@@ -24,6 +24,7 @@ import AppLayout from "./components/AppLayout";
 import SmartNotFound from "./components/SmartNotFound";
 import AppNotFoundWithLayout from "./app/layouts/AppNotFoundWithLayout";
 import { featureFlags } from "./config/featureFlags";
+import MockDataDebug from "./components/MockDataDebug";
 
 /**
  * App - Main application component
@@ -131,6 +132,7 @@ export default function App() {
                 <Route path="about" element={<AppAbout />} />
                 <Route path="support" element={<AppSupport />} />
                 <Route path="notifications" element={<NotificationsPage />} />
+                <Route path="debug" element={<MockDataDebug />} />
                 <Route path="*" element={<AppNotFoundWithLayout />} />
               </Routes>
             </AppLayout>

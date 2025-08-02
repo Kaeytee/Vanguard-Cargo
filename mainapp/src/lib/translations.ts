@@ -114,7 +114,21 @@ export const translations = {
     invalidCity: 'Please enter a valid city name',
     invalidCountry: 'Please enter a valid country name',
     saveChanges: 'Save Changes',
-    failedToLoadProfile: 'Failed to load profile'
+    failedToLoadProfile: 'Failed to load profile',
+    uploadFailed: 'Upload failed',
+    uploadError: 'Something went wrong during upload',
+    invalidImageFile: 'Please select a valid image file',
+    confirmDeletePhoto: 'Are you sure you want to delete your profile photo?',
+    deleteFailed: 'Could not delete photo',
+    deleteError: 'Something went wrong while deleting the photo',
+    
+    // Additional AccountSettings translations
+    errorLoadingProfile: 'Failed to load user profile',
+    errorBoundary: 'Something went wrong',
+    phonePlaceholder: 'Enter WhatsApp number (e.g., +1234567890)',
+    validatingPhone: 'Validating WhatsApp number...',
+    profileUpdated: 'Profile updated successfully',
+    uploadPhoto: 'Upload Photo',
   },
   es: {
     // Navigation & Common
@@ -231,7 +245,21 @@ export const translations = {
     invalidCity: 'Por favor, introduce un nombre de ciudad válido',
     invalidCountry: 'Por favor, introduce un nombre de país válido',
     saveChanges: 'Guardar Cambios',
-    failedToLoadProfile: 'Error al cargar el perfil'
+    failedToLoadProfile: 'Error al cargar el perfil',
+    uploadFailed: 'Error de carga',
+    uploadError: 'Algo salió mal durante la carga',
+    invalidImageFile: 'Por favor, selecciona un archivo de imagen válido',
+    confirmDeletePhoto: '¿Estás seguro de que deseas eliminar tu foto de perfil?',
+    deleteFailed: 'No se pudo eliminar la foto',
+    deleteError: 'Algo salió mal al eliminar la foto',
+    
+    // Additional AccountSettings translations
+    errorLoadingProfile: 'Error al cargar el perfil de usuario',
+    errorBoundary: 'Algo salió mal',
+    phonePlaceholder: 'Ingresa número de WhatsApp (ej., +1234567890)',
+    validatingPhone: 'Validando número de WhatsApp...',
+    profileUpdated: 'Perfil actualizado exitosamente',
+    uploadPhoto: 'Subir Foto',
   },
   fr: {
     // Navigation & Common
@@ -348,7 +376,21 @@ export const translations = {
     invalidCity: 'Veuillez entrer un nom de ville valide',
     invalidCountry: 'Veuillez entrer un nom de pays valide',
     saveChanges: 'Enregistrer les Modifications',
-    failedToLoadProfile: 'Échec du chargement du profil'
+    failedToLoadProfile: 'Échec du chargement du profil',
+    uploadFailed: 'Échec de la téléversement',
+    uploadError: 'Quelque chose a mal tourné pendant le téléversement',
+    invalidImageFile: 'Veuillez sélectionner un fichier image valide',
+    confirmDeletePhoto: 'Êtes-vous sûr de vouloir supprimer votre photo de profil?',
+    deleteFailed: 'Impossible de supprimer la photo',
+    deleteError: 'Quelque chose a mal tourné lors de la suppression de la photo',
+    
+    // Additional AccountSettings translations
+    errorLoadingProfile: 'Échec du chargement du profil utilisateur',
+    errorBoundary: 'Quelque chose a mal tourné',
+    phonePlaceholder: 'Entrez le numéro WhatsApp (ex., +1234567890)',
+    validatingPhone: 'Validation du numéro WhatsApp...',
+    profileUpdated: 'Profil mis à jour avec succès',
+    uploadPhoto: 'Téléverser Photo',
   }
 };
 
