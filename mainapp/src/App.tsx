@@ -111,6 +111,8 @@ export default function App() {
           )
         }
       />
+
+
       
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/verify-email" element={<EmailVerification />} />
