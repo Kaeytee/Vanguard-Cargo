@@ -81,7 +81,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate }) => {
     <div className="h-full flex flex-col bg-red-600 text-white">
       {/* Logo */}
       <div className="flex items-center justify-center h-16 px-6 border-b border-red-500">
-        <h1 className="text-xl font-bold">Ttarius Warehouse</h1>
+        <h1 className="text-xl font-bold">Vangaurd Warehouse</h1>
       </div>
 
       {/* User info */}

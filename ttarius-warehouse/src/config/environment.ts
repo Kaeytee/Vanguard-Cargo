@@ -25,7 +25,7 @@ export const getEnvConfig = (): EnvironmentConfig => {
   return {
     APP_ENV: (import.meta.env.VITE_APP_ENV as EnvironmentConfig['APP_ENV']) || 'development',
     API_BASE_URL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api',
-    APP_NAME: import.meta.env.VITE_APP_NAME || 'Ttarius Warehouse',
+    APP_NAME: import.meta.env.VITE_APP_NAME || 'Vangaurd Warehouse',
     DEBUG_MODE: import.meta.env.VITE_DEBUG_MODE === 'true',
     MOCK_AUTH: import.meta.env.VITE_MOCK_AUTH === 'true',
     LOG_LEVEL: (import.meta.env.VITE_LOG_LEVEL as EnvironmentConfig['LOG_LEVEL']) || 'info',

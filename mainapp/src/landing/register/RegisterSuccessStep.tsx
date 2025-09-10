@@ -69,7 +69,7 @@ export const RegisterSuccessStep: React.FC<RegisterSuccessStepProps> = ({
         <div className="space-y-2 text-sm text-gray-600">
           <div className="flex items-center space-x-2">
             <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-            <span>Account created ✓</span>
+            <span className="flex items-center gap-2">Account created <CheckCircle className="w-4 h-4 text-green-500" /></span>
           </div>
           <div className="flex items-center space-x-2">
             <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>

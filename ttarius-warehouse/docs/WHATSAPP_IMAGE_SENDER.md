@@ -156,7 +156,7 @@ Package Image: {imageUrl}
 Thank you for choosing our logistics service!
 
 Best regards,
-Ttarius Warehouse Team
+Vangaurd Warehouse Team
 ```
 
 ### Phone Number Format

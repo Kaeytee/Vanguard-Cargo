@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X } from "lucide-react";
+import { Menu, X, MapPin } from "lucide-react";
 import { Button } from "./ui/button";
 import { cn } from "../lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
@@ -80,13 +80,13 @@ export default function Navbar() {
     };
   }, [isMenuOpen]);
 
-  // Navigation links
+  // Navigation links focused on package forwarding
   const navLinks = [
-    ...(user ? [{ href: "/dashboard", label: "Dashboard" }] : []),
+    ...(user ? [{ href: "/dashboard", label: "My Packages" }] : []),
     { href: "/", label: "Home" },
-    { href: "/about", label: "About Us" },
-    { href: "/services", label: "Services" },
-    { href: "/contact", label: "Contact" },
+    { href: "/services", label: "How It Works" },
+    { href: "/about", label: "Why Choose Us" },
+    { href: "/contact", label: "Support" },
   ];
 
   const hideLogin = pathname === "/login";
@@ -107,7 +107,7 @@ export default function Navbar() {
           {/* Logo */}
           <Link to="/" className="flex-shrink-0">
             <span className="text-2xl font-bold text-primary tracking-tight">
-              Vanguard Cargo
+              Vangaurd Logistics
             </span>
           </Link>{" "}
           {/* Desktop Navigation */}
@@ -169,12 +169,12 @@ export default function Navbar() {
                   <Link
                     to={featureFlags.authEnabled ? "/register" : "/"}
                     className={cn(
-                      "px-4 py-2 text-sm text-white font-medium bg-red-600 text-primary-foreground rounded-md hover:bg-red-600/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 transition-all duration-200 shadow-sm",
+                      "px-4 py-2 text-sm text-white font-medium bg-red-600 text-primary-foreground rounded-md hover:bg-red-600/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 transition-all duration-200 shadow-sm flex items-center gap-2",
                       !featureFlags.authEnabled && "opacity-0 cursor-not-allowed pointer-events-none"
                     )}
-                    title={!featureFlags.authEnabled ? "Authentication temporarily disabled" : "Create a new account"}
+                    title={!featureFlags.authEnabled ? "Authentication temporarily disabled" : "Get your free US address"}
                   >
-                    Register
+                    Get US Address <MapPin className="w-4 h-4" />
                   </Link>
                 )}
               </>

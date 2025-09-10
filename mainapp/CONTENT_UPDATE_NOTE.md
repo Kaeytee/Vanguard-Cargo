@@ -1,14 +1,14 @@
 # Website Content Overhaul Plan
 
 **Goal:**
-Update all website content to accurately reflect Ttarius Logistics’ brand, services, and value proposition. Replace all placeholder/dummy text, update service descriptions, and ensure consistency across all pages.
+Update all website content to accurately reflect Vangaurd Logistics’ brand, services, and value proposition. Replace all placeholder/dummy text, update service descriptions, and ensure consistency across all pages.
 
 ---
 
 ## Task List
 
 1. **Landing/Home Page**
-   - Replace hero section text with a compelling summary of Ttarius Logistics.
+   - Replace hero section text with a compelling summary of Vangaurd Logistics.
    - Update service highlights and call-to-action.
    - Ensure all images and captions are relevant.
 

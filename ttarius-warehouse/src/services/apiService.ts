@@ -254,7 +254,7 @@ export class AuthApiService {
       
       const user: User = {
         id: `emp_${credentials.employeeId}`,
-        email: `${credentials.employeeId}@ttarius-logistics.com`,
+        email: `${credentials.employeeId}@Vangaurd-logistics.com`,
         name: userData.name,
         role: userData.role,
         department: userData.department,

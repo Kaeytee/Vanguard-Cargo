@@ -1,4 +1,4 @@
-# Ttarius Warehouse Frontend Implementation
+# Vangaurd Warehouse Frontend Implementation
 
 ## Overview
 
@@ -204,8 +204,8 @@ function CustomDashboard() {
 
 ### Environment Variables
 ```env
-VITE_API_URL=https://api.ttarius-logistics.com
-VITE_WS_URL=wss://ws.ttarius-logistics.com
+VITE_API_URL=https://api.Vangaurd-logistics.com
+VITE_WS_URL=wss://ws.Vangaurd-logistics.com
 VITE_AUTH_TOKEN_KEY=warehouse_token
 ```
 

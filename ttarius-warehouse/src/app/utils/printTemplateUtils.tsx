@@ -10,8 +10,8 @@ const COMPANY_DETAILS = {
   name: 'Vanguard Cargo',
   address: '123 Warehouse Ave, Accra, Ghana',
   phone: '+233 24 123 4567',
-  email: 'info@ttarius.com',
-  website: 'www.ttarius.com',
+  email: 'info@Vangaurd.com',
+  website: 'www.Vangaurd.com',
   logo: '/assets/logo.png', // Add logo path when available
   primaryColor: '#b91c1c', // Red color for branding
   secondaryColor: '#1e293b', // Dark blue for headers

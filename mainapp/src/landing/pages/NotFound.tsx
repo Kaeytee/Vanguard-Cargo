@@ -72,7 +72,7 @@ const NotFound: React.FC = () => {
           <p className="text-sm text-gray-500">
             Still need help? 
             <a 
-              href="mailto:support@ttarius-logistics.com" 
+              href="mailto:support@Vangaurd-logistics.com" 
               className="text-red-600 hover:text-red-700 font-medium ml-1"
             >
               Contact our support team

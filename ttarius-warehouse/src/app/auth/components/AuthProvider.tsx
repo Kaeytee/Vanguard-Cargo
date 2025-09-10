@@ -80,7 +80,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // Mock user data based on role
       const mockUser: User = {
         id: `user_${Date.now()}`,
-        email: `${username}@ttarius-logistics.com`,
+        email: `${username}@Vangaurd-logistics.com`,
         name: username.charAt(0).toUpperCase() + username.slice(1),
         role: userRole,
         department: getDepartmentByRole(role),

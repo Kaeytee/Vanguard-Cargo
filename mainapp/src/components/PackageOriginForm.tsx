@@ -1,5 +1,6 @@
 import React from "react";
 import { FaInfoCircle, FaGlobe, FaLock } from "react-icons/fa";
+import { MapPin } from "lucide-react";
 import { SUPPORTED_COUNTRIES } from "../lib/constants";
 
 // Interface for address suggestions from OpenStreetMap API
@@ -102,15 +103,8 @@ const PackageOriginForm: React.FC<PackageOriginFormProps> = ({
 
   // Determine the country flag for the phone number display
   const getCountryFlag = () => {
-    // Default to Ghana flag if no match
-    let flag = "🇬🇭";
-    
-    // Check if the phone starts with a US code
-    if (formData.clientPhone.startsWith("+1")) {
-      flag = "🇺🇸";
-    }
-    
-    return flag;
+    // Use MapPin icon for all countries for consistency
+    return <MapPin className="w-4 h-4" />;
   };
     return (
     <div className="space-y-6" data-testid="package-origin-form">      

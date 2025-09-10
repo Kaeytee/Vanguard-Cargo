@@ -2,6 +2,7 @@ import React from 'react'
 import DashboardCard from '../../components/DashboardCard';
 import type { DashboardCardProps } from '../../components/DashboardCard';
 import { useTranslation } from '../../lib/translations';
+import { ShoppingBag } from 'lucide-react';
 
 
 type DashboardCardConfig = Omit<DashboardCardProps, 'onClick'> & { href: string };
@@ -9,44 +10,63 @@ type DashboardCardConfig = Omit<DashboardCardProps, 'onClick'> & { href: string 
 const Dashboard: React.FC = () => {
   const { t } = useTranslation();
 
-  // Dashboard card configuration array with title, icon, and action
+  // Dashboard card configuration array focused on package forwarding workflow
   const dashboardCards: DashboardCardConfig[] = [
     {
-      title: t('submitRequest'),
-      description: t('createNewDelivery'),
-      imageSrc: "/submit-girl.png", // Person signing for package
+      title: "Incoming Packages",
+      description: "View packages arriving at your US address",
+      imageSrc: "/submit-girl.png",
       href: "/app/submit-request",
-      iconComponent: "box" // Using the box icon from the image
+      iconComponent: "box"
     },
     {
-      title: t('shipmentHistory'),
-      description: t('visitPreviousOrders'),
-      imageSrc: "/shipment-history.jpg", // Smiling courier with boxes
-      href: "/app/shipment-history",
-      iconComponent: "history" // Using the history icon from the image
+      title: "Combine & Ship",
+      description: "Consolidate packages and request shipping to Ghana",
+      imageSrc: "/shipment-history.jpg",
+      href: "/app/shipment-history", 
+      iconComponent: "history"
     },
     {
-      title: t('tracking'),
-      description: t('receiveLiveUpdates'),
-      imageSrc: "/track.png", // Map with pins
+      title: "Track My Packages",
+      description: "Real-time tracking from US to Ghana",
+      imageSrc: "/track.png",
       href: "/app/tracking",
-      iconComponent: "location" // Using the location icon from the image
+      iconComponent: "location"
     },
     {
-      title: t('settings'),
-      description: t('manageAccountSettings'),
-      imageSrc: "/settings.png", // Smiling courier with boxes
+      title: "My Account",
+      description: "Manage address, billing, and preferences",
+      imageSrc: "/settings.png",
       href: "/app/settings",
-      iconComponent: "history" // Using the history icon from the image
+      iconComponent: "history"
     }
   ];
 
   return (
 		<div className=" px-4 sm:px-10 transition-colors duration-300">
-      {/* Welcome Header - exactly as in the image */}
-      {/* <h1 className="text-2xl font-bold mb-12">{t('quickActions')}</h1> */}
+      {/* US Address Welcome Section */}
+      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 mb-8">
+        <div className="flex items-center justify-between flex-wrap gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 mb-2 flex items-center gap-3">
+              Welcome to Your Shopping Dashboard! <ShoppingBag className="w-6 h-6" />
+            </h1>
+            <div className="text-gray-600">
+              <p className="font-medium">Your US Shipping Address:</p>
+              <div className="text-sm mt-1 bg-white px-3 py-2 rounded-lg inline-block">
+                <div className="font-semibold">John Doe (TTL-12345)</div>
+                <div>2891 NE 2nd Ave, Miami, FL 33137</div>
+              </div>
+            </div>
+          </div>
+          <div className="text-right">
+            <div className="text-sm text-gray-500 mb-1">Total Savings This Year</div>
+            <div className="text-2xl font-bold text-green-600">$1,247</div>
+          </div>
+        </div>
+      </div>
       
-      {/* 2x2 Grid of Dashboard Cards - exact layout from image */}
+      {/* Dashboard Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl h-full mx-auto">
 		{dashboardCards.map((card) => (
 		  <a key={card.title} href={card.href} style={{ textDecoration: 'none' }}>

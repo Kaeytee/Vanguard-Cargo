@@ -2,6 +2,7 @@
 import Hero from './hero';
 import Services from './services';
 import WhyChoose from './whyChoose';
+import Testimonials from './testimonials';
 import CTA from './cta';
 
 export default function Home() {
@@ -15,6 +16,9 @@ export default function Home() {
 
 			{/* Why Choose Us Section */}
 			<WhyChoose />
+
+			{/* Testimonials Section */}
+			<Testimonials />
 
 			{/* Call to Action Section */}
 			<CTA />
