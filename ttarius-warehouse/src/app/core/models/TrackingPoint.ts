@@ -1,7 +1,7 @@
 /**
  * TrackingPoint.ts
  * 
- * Core tracking point data structure for Ttarius Logistics
+ * Core tracking point data structure for Vanguard Cargo
  * This file defines the TrackingPoint model for location-based package tracking
  * Enables status-based location illusions for customer tracking experience
  * 

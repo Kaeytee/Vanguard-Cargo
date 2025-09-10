@@ -166,7 +166,7 @@ const App = (): React.ReactElement => {
   // Effect to check authentication status on app load
   useEffect(() => {
     // Initialize any global settings or analytics here
-    console.log('Ttarius Logistics Warehouse App - Role-Based Access Control Enabled');
+    console.log('Vanguard Cargo Warehouse App - Role-Based Access Control Enabled');
   }, []);
   
   return (

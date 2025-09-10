@@ -23,6 +23,8 @@ import ProtectedRoutes from "./components/protectedRoutes";
 import AppLayout from "./components/AppLayout";
 import SmartNotFound from "./components/SmartNotFound";
 import AppNotFoundWithLayout from "./app/layouts/AppNotFoundWithLayout";
+import { featureFlags } from "./config/featureFlags";
+import MockDataDebug from "./components/MockDataDebug";
 
 /**
  * App - Main application component
@@ -84,23 +86,33 @@ export default function App() {
       <Route
         path="/login"
         element={
-          <>
-            <Navbar />
-            <Login />
-            <Footer />
-          </>
+          featureFlags.authEnabled ? (
+            <>
+              <Navbar />
+              <Login />
+              <Footer />
+            </>
+          ) : (
+            <Navigate to="/" replace />
+          )
         }
       />
       <Route
         path="/register"
         element={
-          <>
-            <Navbar />
-            <Register />
-            <Footer />
-          </>
+          featureFlags.authEnabled ? (
+            <>
+              <Navbar />
+              <Register />
+              <Footer />
+            </>
+          ) : (
+            <Navigate to="/" replace />
+          )
         }
       />
+
+
       
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/verify-email" element={<EmailVerification />} />
@@ -122,6 +134,7 @@ export default function App() {
                 <Route path="about" element={<AppAbout />} />
                 <Route path="support" element={<AppSupport />} />
                 <Route path="notifications" element={<NotificationsPage />} />
+                <Route path="debug" element={<MockDataDebug />} />
                 <Route path="*" element={<AppNotFoundWithLayout />} />
               </Routes>
             </AppLayout>

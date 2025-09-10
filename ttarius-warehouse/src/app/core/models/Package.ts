@@ -1,7 +1,7 @@
 /**
  * Package.ts
  * 
- * Core package/shipment data structure for Ttarius Logistics
+ * Core package/shipment data structure for Vanguard Cargo
  * This file defines the central Package model used throughout the entire application
  * Provides type safety and consistency for all package-related operations
  * 
@@ -337,7 +337,7 @@ export class PackageUtils {
    * @returns Customer-facing tracking number
    */
   static generateTrackingNumber(): string {
-    const prefix = 'TT'; // Ttarius prefix
+    const prefix = 'TT'; // Vanguard prefix
     const timestamp = Date.now().toString().slice(-8);
     const random = Math.random().toString().slice(-4);
     return `${prefix}${timestamp}${random}`.toUpperCase();

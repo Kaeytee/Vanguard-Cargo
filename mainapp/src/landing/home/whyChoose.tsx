@@ -2,35 +2,35 @@ import { motion } from 'framer-motion';
 import AnimateInView from '../../components/ui/animate-in-view';
 
 export default function WhyChoose() {
-	// Define why choose us items
+	// Define why choose us items for package forwarding
 	const whyChooseItems = [
 		{
-			icon: 'heart',
-			title: 'Reliability',
-			description: '99.8% on-time delivery rate with real-time tracking and notifications',
-			stat: '99.8%',
-			statLabel: 'On-time delivery'
+			icon: 'savings',
+			title: 'Massive Savings',
+			description: 'Save up to 70% on shipping costs with our package consolidation service',
+			stat: '70%',
+			statLabel: 'Average savings'
 		},
 		{
-			icon: 'clock',
-			title: 'Fast Shipment',
-			description: 'Quick shipping from China to the USA',
-			stat: '4-7 Days',
-			statLabel: 'Average delivery time'
+			icon: 'stores',
+			title: '10,000+ US Stores',
+			description: 'Shop from Amazon, Nike, Best Buy, and thousands of stores that don\'t ship to Ghana',
+			stat: '10K+',
+			statLabel: 'Partner stores'
 		},
 		{
-			icon: 'tech',
-			title: 'Technology-Driven',
-			description: 'AI-powered route optimization and predictive analytics for efficient delivery',
-			stat: '30%',
-			statLabel: 'Faster than average'
+			icon: 'delivery',
+			title: 'Reliable Delivery Service',
+			description: 'We handle everything from US pickup to secure delivery at pickup locations in Ghana',
+			stat: '7-14 Days',
+			statLabel: 'Delivery to Ghana'
 		},
 		{
-			icon: 'lightning',
-			title: 'Fast Turnaround',
-			description: 'Expedited shipping options with priority handling for urgent cargo',
+			icon: 'support',
+			title: 'Expert Support',
+			description: 'Our Ghana-based team understands your needs and provides local language support',
 			stat: '24/7',
-			statLabel: 'Support available'
+			statLabel: 'Customer support'
 		}
 	];
 
@@ -38,7 +38,10 @@ export default function WhyChoose() {
 		<section className="py-16 bg-gray-50">
 			<div className="container mx-auto px-4">
 				<AnimateInView variant="fadeInDown">
-					<h2 className="text-3xl font-bold text-center mb-12">Why Choose Us</h2>
+					<h2 className="text-3xl font-bold text-center mb-4">Why 5000+ Ghanaians Choose Vanguard</h2>
+					<p className="text-xl text-gray-600 text-center mb-12 max-w-3xl mx-auto">
+						Join thousands of satisfied customers who trust us to bring the best of US shopping to Ghana
+					</p>
 				</AnimateInView>
 
 				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -54,47 +57,47 @@ export default function WhyChoose() {
 						>
 							<div className="bg-white p-6 rounded-lg border border-gray-100 shadow-sm h-full flex flex-col">
 								<div className="flex justify-center mb-4">
-									{item.icon === 'heart' && (
+									{item.icon === 'savings' && (
 										<motion.div
-											className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center text-red-600"
+											className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center text-green-600"
 											whileHover={{ scale: 1.1, rotate: 5 }}
 											transition={{ type: "spring", stiffness: 300, damping: 15 }}
 										>
 											<svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-												<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+												<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
 											</svg>
 										</motion.div>
 									)}
-									{item.icon === 'clock' && (
+									{item.icon === 'stores' && (
 										<motion.div
-											className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center text-red-600"
+											className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-600"
 											whileHover={{ scale: 1.1, rotate: 5 }}
 											transition={{ type: "spring", stiffness: 300, damping: 15 }}
 										>
 											<svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-												<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+												<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
 											</svg>
 										</motion.div>
 									)}
-									{item.icon === 'tech' && (
+									{item.icon === 'delivery' && (
 										<motion.div
-											className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center text-red-600"
+											className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center text-purple-600"
 											whileHover={{ scale: 1.1, rotate: 5 }}
 											transition={{ type: "spring", stiffness: 300, damping: 15 }}
 										>
 											<svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-												<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+												<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
 											</svg>
 										</motion.div>
 									)}
-									{item.icon === 'lightning' && (
+									{item.icon === 'support' && (
 										<motion.div
 											className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center text-red-600"
 											whileHover={{ scale: 1.1, rotate: 5 }}
 											transition={{ type: "spring", stiffness: 300, damping: 15 }}
 										>
 											<svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-												<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+												<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192L5.636 18.364M12 2.25a9.75 9.75 0 110 19.5 9.75 9.75 0 010-19.5z" />
 											</svg>
 										</motion.div>
 									)}

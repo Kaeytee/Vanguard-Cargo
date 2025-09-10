@@ -7,11 +7,12 @@ import {
   MessageSquare,
   HelpCircle,
   AlertCircle,
+  CheckCircle,
 } from "lucide-react";
 
 interface ContactSectionProps {
-  containerVariants: any;
-  itemVariants: any;
+  containerVariants: import("framer-motion").Variants;
+  itemVariants: import("framer-motion").Variants;
 }
 
 const ContactSection: React.FC<ContactSectionProps> = ({
@@ -86,10 +87,10 @@ const ContactSection: React.FC<ContactSectionProps> = ({
                   <Phone size={18} className="text-red-500" />
                 </div>
                 <a
-                  href="tel:+2338001234567"
+                  href="tel:+233302555147"
                   className="text-gray-800 font-medium hover:text-red-500 transition-colors text-sm sm:text-base"
                 >
-                  +233 800 123 4567
+                  +233 302 555 0147
                 </a>
               </div>
             </div>
@@ -104,10 +105,10 @@ const ContactSection: React.FC<ContactSectionProps> = ({
                   <Mail size={18} className="text-red-500" />
                 </div>
                 <a
-                  href="mailto:support@logistics.com"
+                  href="mailto:support@Vanguardcargo.org"
                   className="text-gray-800 font-medium hover:text-red-500 transition-colors text-sm sm:text-base"
                 >
-                  support@logistics.com
+                  support@Vanguardcargo.org
                 </a>
               </div>
             </div>
@@ -122,7 +123,7 @@ const ContactSection: React.FC<ContactSectionProps> = ({
                   <MessageSquare size={18} className="text-red-500" />
                 </div>
                 <span className="text-gray-800 font-medium text-sm sm:text-base">
-                  123 Logistics Ave, Suite 400, New York, NY 10001
+                  Vanguard Logistics Center, East Legon, Accra, Ghana
                 </span>
               </div>
             </div>
@@ -148,8 +149,8 @@ const ContactSection: React.FC<ContactSectionProps> = ({
         >
           <div className="w-full h-48 sm:h-64 md:h-80 rounded-lg overflow-hidden border border-gray-200 shadow">
             <iframe
-              title="Ttarius Logistics Location"
-              src="https://www.google.com/maps?q=6.5244,3.3792&z=15&output=embed"
+              title="Vanguard Logistics Location"
+              src="https://www.google.com/maps?q=5.6037,0.1870&z=15&output=embed"
               width="100%"
               height="100%"
               style={{ border: 0 }}
@@ -258,7 +259,7 @@ const ContactSection: React.FC<ContactSectionProps> = ({
             </div>
             {isSubmitted && (
               <div className="text-green-600 text-xs sm:text-sm mt-2 flex items-center">
-                <span className="mr-2">✔</span>
+                <CheckCircle className="mr-2 w-4 h-4" />
                 Your message has been sent!
               </div>
             )}

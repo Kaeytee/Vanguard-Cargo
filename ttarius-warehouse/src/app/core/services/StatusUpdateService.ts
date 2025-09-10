@@ -1,7 +1,7 @@
 /**
  * StatusUpdateService.ts
  * 
- * Core status update orchestration service for Ttarius Logistics
+ * Core status update orchestration service for Vanguard Cargo
  * This service coordinates status changes across packages, groups, and tracking
  * Ensures consistency, validation, and proper cascading of status updates
  * 

@@ -1,4 +1,4 @@
-# Ttarius Logistics - API Integration
+# Vanguard Cargo - API Integration
 
 ## Super Simple Single Environment Setup
 

@@ -76,15 +76,15 @@ export interface StatusLocationMapping {
 }
 
 /**
- * Ttarius Logistics facility locations in Ghana
+ * Vanguard Cargo facility locations in Ghana
  * Real geographic coordinates for authentic tracking experience
  */
-export const TTARIUS_FACILITIES: Record<string, LocationPoint> = {
+export const Vanguard_FACILITIES: Record<string, LocationPoint> = {
   // Main warehouse and headquarters
   ACCRA_MAIN_WAREHOUSE: {
     latitude: 5.6037,
     longitude: -0.1870,
-    address: 'Ttarius Logistics Warehouse, Industrial Area',
+    address: 'Vanguard Cargo Warehouse, Industrial Area',
     city: 'Accra',
     region: 'Greater Accra',
     country: 'Ghana',
@@ -99,7 +99,7 @@ export const TTARIUS_FACILITIES: Record<string, LocationPoint> = {
   ACCRA_SORTING_CENTER: {
     latitude: 5.6108,
     longitude: -0.1821,
-    address: 'Ttarius Sorting Center, Spintex Road',
+    address: 'Vanguard Sorting Center, Spintex Road',
     city: 'Accra',
     region: 'Greater Accra',
     country: 'Ghana',
@@ -113,7 +113,7 @@ export const TTARIUS_FACILITIES: Record<string, LocationPoint> = {
   KUMASI_DISTRIBUTION_HUB: {
     latitude: 6.6885,
     longitude: -1.6244,
-    address: 'Ttarius Distribution Hub, Adum',
+    address: 'Vanguard Distribution Hub, Adum',
     city: 'Kumasi',
     region: 'Ashanti',
     country: 'Ghana',
@@ -127,7 +127,7 @@ export const TTARIUS_FACILITIES: Record<string, LocationPoint> = {
   TAMALE_DELIVERY_HUB: {
     latitude: 9.4034,
     longitude: -0.8424,
-    address: 'Ttarius Delivery Hub, Central Market Area',
+    address: 'Vanguard Delivery Hub, Central Market Area',
     city: 'Tamale',
     region: 'Northern',
     country: 'Ghana',
@@ -141,7 +141,7 @@ export const TTARIUS_FACILITIES: Record<string, LocationPoint> = {
   CAPE_COAST_DELIVERY_HUB: {
     latitude: 5.1053,
     longitude: -1.2466,
-    address: 'Ttarius Delivery Hub, Commercial Street',
+    address: 'Vanguard Delivery Hub, Commercial Street',
     city: 'Cape Coast',
     region: 'Central',
     country: 'Ghana',
@@ -188,94 +188,94 @@ export const STATUS_LOCATION_MAPPINGS: StatusLocationMapping[] = [
   // 🔄 INTAKE PHASE LOCATIONS
   {
     status: PackageStatus.PENDING,
-    location: TTARIUS_FACILITIES.ACCRA_MAIN_WAREHOUSE,
+    location: Vanguard_FACILITIES.ACCRA_MAIN_WAREHOUSE,
     description: 'Package request received at main warehouse',
     estimatedDuration: 24,
     isVisible: true,
     icon: 'warehouse',
-    nextLocations: [TTARIUS_FACILITIES.ACCRA_SORTING_CENTER]
+    nextLocations: [Vanguard_FACILITIES.ACCRA_SORTING_CENTER]
   },
   
   {
     status: PackageStatus.PROCESSING,
-    location: TTARIUS_FACILITIES.ACCRA_MAIN_WAREHOUSE,
+    location: Vanguard_FACILITIES.ACCRA_MAIN_WAREHOUSE,
     description: 'Package being processed and prepared for shipment',
     estimatedDuration: 12,
     isVisible: true,
     icon: 'processing',
-    nextLocations: [TTARIUS_FACILITIES.ACCRA_SORTING_CENTER]
+    nextLocations: [Vanguard_FACILITIES.ACCRA_SORTING_CENTER]
   },
   
   // 📋 GROUPING PHASE LOCATIONS
   {
     status: PackageStatus.READY_FOR_GROUPING,
-    location: TTARIUS_FACILITIES.ACCRA_SORTING_CENTER,
+    location: Vanguard_FACILITIES.ACCRA_SORTING_CENTER,
     description: 'Package ready for grouping at sorting facility',
     estimatedDuration: 6,
     isVisible: false, // Internal status, not shown to customers
     icon: 'sorting',
-    nextLocations: [TTARIUS_FACILITIES.ACCRA_SORTING_CENTER]
+    nextLocations: [Vanguard_FACILITIES.ACCRA_SORTING_CENTER]
   },
   
   {
     status: PackageStatus.GROUPED,
-    location: TTARIUS_FACILITIES.ACCRA_SORTING_CENTER,
+    location: Vanguard_FACILITIES.ACCRA_SORTING_CENTER,
     description: 'Package grouped with other shipments for efficient delivery',
     estimatedDuration: 4,
     isVisible: true,
     icon: 'grouped',
     nextLocations: [
-      TTARIUS_FACILITIES.KUMASI_DISTRIBUTION_HUB,
-      TTARIUS_FACILITIES.TAMALE_DELIVERY_HUB,
-      TTARIUS_FACILITIES.CAPE_COAST_DELIVERY_HUB
+      Vanguard_FACILITIES.KUMASI_DISTRIBUTION_HUB,
+      Vanguard_FACILITIES.TAMALE_DELIVERY_HUB,
+      Vanguard_FACILITIES.CAPE_COAST_DELIVERY_HUB
     ]
   },
   
   {
     status: PackageStatus.GROUP_CONFIRMED,
-    location: TTARIUS_FACILITIES.ACCRA_SORTING_CENTER,
+    location: Vanguard_FACILITIES.ACCRA_SORTING_CENTER,
     description: 'Shipment group confirmed and ready for dispatch',
     estimatedDuration: 2,
     isVisible: true,
     icon: 'confirmed',
     nextLocations: [
-      TTARIUS_FACILITIES.KUMASI_DISTRIBUTION_HUB,
-      TTARIUS_FACILITIES.TAMALE_DELIVERY_HUB,
-      TTARIUS_FACILITIES.CAPE_COAST_DELIVERY_HUB
+      Vanguard_FACILITIES.KUMASI_DISTRIBUTION_HUB,
+      Vanguard_FACILITIES.TAMALE_DELIVERY_HUB,
+      Vanguard_FACILITIES.CAPE_COAST_DELIVERY_HUB
     ]
   },
   
   // 🚚 SHIPPING PHASE LOCATIONS
   {
     status: PackageStatus.DISPATCHED,
-    location: TTARIUS_FACILITIES.ACCRA_SORTING_CENTER,
+    location: Vanguard_FACILITIES.ACCRA_SORTING_CENTER,
     description: 'Package dispatched from sorting center',
     estimatedDuration: 2,
     isVisible: true,
     icon: 'truck-departure',
     nextLocations: [
-      TTARIUS_FACILITIES.KUMASI_HIGHWAY_JUNCTION,
-      TTARIUS_FACILITIES.ACCRA_TEMA_HIGHWAY
+      Vanguard_FACILITIES.KUMASI_HIGHWAY_JUNCTION,
+      Vanguard_FACILITIES.ACCRA_TEMA_HIGHWAY
     ]
   },
   
   {
     status: PackageStatus.IN_TRANSIT,
-    location: TTARIUS_FACILITIES.KUMASI_HIGHWAY_JUNCTION, // Dynamic based on destination
+    location: Vanguard_FACILITIES.KUMASI_HIGHWAY_JUNCTION, // Dynamic based on destination
     description: 'Package in transit to destination',
     estimatedDuration: 24,
     isVisible: true,
     icon: 'truck-moving',
     nextLocations: [
-      TTARIUS_FACILITIES.KUMASI_DISTRIBUTION_HUB,
-      TTARIUS_FACILITIES.TAMALE_DELIVERY_HUB,
-      TTARIUS_FACILITIES.CAPE_COAST_DELIVERY_HUB
+      Vanguard_FACILITIES.KUMASI_DISTRIBUTION_HUB,
+      Vanguard_FACILITIES.TAMALE_DELIVERY_HUB,
+      Vanguard_FACILITIES.CAPE_COAST_DELIVERY_HUB
     ]
   },
   
   {
     status: PackageStatus.OUT_FOR_DELIVERY,
-    location: TTARIUS_FACILITIES.KUMASI_DISTRIBUTION_HUB, // Dynamic based on destination
+    location: Vanguard_FACILITIES.KUMASI_DISTRIBUTION_HUB, // Dynamic based on destination
     description: 'Package out for final delivery',
     estimatedDuration: 8,
     isVisible: true,
@@ -285,7 +285,7 @@ export const STATUS_LOCATION_MAPPINGS: StatusLocationMapping[] = [
   
   {
     status: PackageStatus.DELIVERED,
-    location: TTARIUS_FACILITIES.KUMASI_DISTRIBUTION_HUB, // Will be customer location
+    location: Vanguard_FACILITIES.KUMASI_DISTRIBUTION_HUB, // Will be customer location
     description: 'Package successfully delivered',
     estimatedDuration: 0,
     isVisible: true,
@@ -296,7 +296,7 @@ export const STATUS_LOCATION_MAPPINGS: StatusLocationMapping[] = [
   // ⚠️ EXCEPTION HANDLING LOCATIONS
   {
     status: PackageStatus.DELAYED,
-    location: TTARIUS_FACILITIES.KUMASI_HIGHWAY_JUNCTION, // Dynamic based on last known location
+    location: Vanguard_FACILITIES.KUMASI_HIGHWAY_JUNCTION, // Dynamic based on last known location
     description: 'Package delayed - investigating cause',
     estimatedDuration: 12,
     isVisible: true,
@@ -306,7 +306,7 @@ export const STATUS_LOCATION_MAPPINGS: StatusLocationMapping[] = [
   
   {
     status: PackageStatus.RETURNED,
-    location: TTARIUS_FACILITIES.ACCRA_MAIN_WAREHOUSE,
+    location: Vanguard_FACILITIES.ACCRA_MAIN_WAREHOUSE,
     description: 'Package returned to sender',
     estimatedDuration: 0,
     isVisible: true,
@@ -316,7 +316,7 @@ export const STATUS_LOCATION_MAPPINGS: StatusLocationMapping[] = [
   
   {
     status: PackageStatus.LOST,
-    location: TTARIUS_FACILITIES.ACCRA_MAIN_WAREHOUSE,
+    location: Vanguard_FACILITIES.ACCRA_MAIN_WAREHOUSE,
     description: 'Package location unknown - investigation in progress',
     estimatedDuration: 0,
     isVisible: true,
@@ -346,7 +346,7 @@ export class LocationMappingService {
     
     if (!mapping) {
       // Default to main warehouse if status not found
-      return TTARIUS_FACILITIES.ACCRA_MAIN_WAREHOUSE;
+      return Vanguard_FACILITIES.ACCRA_MAIN_WAREHOUSE;
     }
     
     // For dynamic statuses, determine location based on destination
@@ -392,15 +392,15 @@ export class LocationMappingService {
     
     // Map destinations to appropriate hubs
     if (destinationLower.includes('kumasi')) {
-      return TTARIUS_FACILITIES.KUMASI_DISTRIBUTION_HUB;
+      return Vanguard_FACILITIES.KUMASI_DISTRIBUTION_HUB;
     } else if (destinationLower.includes('tamale')) {
-      return TTARIUS_FACILITIES.TAMALE_DELIVERY_HUB;
+      return Vanguard_FACILITIES.TAMALE_DELIVERY_HUB;
     } else if (destinationLower.includes('cape coast')) {
-      return TTARIUS_FACILITIES.CAPE_COAST_DELIVERY_HUB;
+      return Vanguard_FACILITIES.CAPE_COAST_DELIVERY_HUB;
     }
     
     // Default to Accra for unknown destinations
-    return TTARIUS_FACILITIES.ACCRA_MAIN_WAREHOUSE;
+    return Vanguard_FACILITIES.ACCRA_MAIN_WAREHOUSE;
   }
   
   /**
@@ -417,9 +417,9 @@ export class LocationMappingService {
     
     // Add highway junction if traveling between major cities
     if (origin.city === 'Accra' && destination.city === 'Kumasi') {
-      waypoints.push(TTARIUS_FACILITIES.KUMASI_HIGHWAY_JUNCTION);
+      waypoints.push(Vanguard_FACILITIES.KUMASI_HIGHWAY_JUNCTION);
     } else if (origin.city === 'Accra' && destination.city === 'Tema') {
-      waypoints.push(TTARIUS_FACILITIES.ACCRA_TEMA_HIGHWAY);
+      waypoints.push(Vanguard_FACILITIES.ACCRA_TEMA_HIGHWAY);
     }
     
     waypoints.push(destination);

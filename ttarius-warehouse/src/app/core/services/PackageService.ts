@@ -1,7 +1,7 @@
 /**
  * PackageService.ts
  * 
- * Core package service for Ttarius Logistics
+ * Core package service for Vanguard Cargo
  * This service provides comprehensive CRUD operations and business logic for packages
  * Centralizes all package-related operations with proper validation and error handling
  * 

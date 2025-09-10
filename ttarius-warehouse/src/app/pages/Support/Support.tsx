@@ -7,7 +7,7 @@
 import React from 'react';
 
 /**
- * Support component for TTarius Logistics application.
+ * Support component for Vanguard Cargo application.
  * @returns {React.ReactElement} Support page
  */
 const Support: React.FC = () => {

@@ -8,7 +8,7 @@ import image from '../assets/Login.png';
 /**
  * Login Component
  * 
- * This component renders the login page for TTarius Logistics warehouse application.
+ * This component renders the login page for Vanguard Cargo warehouse application.
  * It includes a form with username and password inputs, and a login button with loading state.
  * After successful login, it navigates to the dashboard.
  * The design matches the provided mockup with a split layout - image on left, form on right.
@@ -122,7 +122,7 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> 
           <div className="w-full max-w-md">
             {/* Logo and Title */}
             <div className="text-center mb-12">
-              <h1 className="text-4xl font-bold text-blue-900 mb-4">TTarius logistics.</h1>
+              <h1 className="text-4xl font-bold text-blue-900 mb-4">Vanguard Cargo.</h1>
               <p className="text-gray-400 text-lg font-medium">Login as Admin</p>
             </div>
 

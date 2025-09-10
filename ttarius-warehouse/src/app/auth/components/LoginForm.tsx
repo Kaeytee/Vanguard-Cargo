@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Eye, EyeOff, LogIn } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
+import { logger } from '../../../config/environment';
 
 interface LoginFormProps {
   onSuccess?: () => void;
@@ -24,7 +25,8 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
       await login(credentials.employeeId, credentials.password);
       onSuccess?.();
     } catch (error) {
-      console.error('Login failed:', error);
+      // Error logging is handled by the auth service
+      logger.error('Login form error:', error instanceof Error ? error.message : 'Unknown error');
     } finally {
       setIsLoading(false);
     }
@@ -41,7 +43,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
             Warehouse System Login
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            Access the Ttarius Logistics warehouse management system
+            Access the Vanguard Cargo warehouse management system
           </p>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>

@@ -1,5 +1,5 @@
 // barcodeUtils.ts
-// Utility functions for barcode generation in TTarius Logistics
+// Utility functions for barcode generation in Vanguard Cargo
 // Clean code, OOP, and best practices applied
 // This file enables barcode generation for tracking URLs for each package
 
@@ -12,7 +12,7 @@ import JsBarcode from 'jsbarcode';
  */
 export function generateTrackingBarcode(packageId: string): string {
   // Construct the tracking URL to encode in the barcode
-  const trackingUrl = `https://www.ttariuslogistics.com/app/tracl/${packageId}`;
+  const trackingUrl = `https://www.vanguardcargo.org/app/tracl/${packageId}`;
   // Create a canvas for JsBarcode to render into
   const canvas = document.createElement('canvas');
   // Generate the barcode using CODE128 format

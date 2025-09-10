@@ -234,7 +234,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onToggle }) => {
     <>
       {/* Logo section */}
       <div className="px-6 py-6 bg-transparent">
-        <h1 className="text-xl font-bold text-white tracking-wide">TTarius logistics.</h1>
+        <h1 className="text-xl font-bold text-white tracking-wide">Vanguard Cargo.</h1>
       </div>
 
       {/* User role indicator */}

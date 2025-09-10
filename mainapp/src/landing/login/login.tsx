@@ -1,32 +1,146 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Eye, EyeOff } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthProvider';
 import { apiService } from '../../services/api';
 import DeliveryImage from '../../images/deliveryparcel.jpg';
 import LoginBg from '../../images/register-bg.jpg';
+// Import Google reCAPTCHA component
+import ReCAPTCHA from 'react-google-recaptcha';
+// Import reCAPTCHA configuration
+import { recaptchaConfig } from '../../config/recaptcha';
 
+/**
+ * Extend Window interface to include grecaptcha property
+ * This fixes TypeScript errors when accessing window.grecaptcha
+ */
+declare global {
+  interface Window {
+    grecaptcha?: {
+      ready: (callback: () => void) => void;
+      execute: (siteKey: string, options: { action: string }) => Promise<string>;
+      render: (container: string | HTMLElement, parameters: object) => number;
+    };
+  }
+}
+
+/**
+ * Login Component
+ * Handles user authentication with enhanced reCAPTCHA integration
+ * @author Senior Software Engineer
+ */
 export default function Login() {
+	// Form state variables
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
 	const [isLoading, setIsLoading] = useState(false);
 	const [showPassword, setShowPassword] = useState(false);
 	const [rememberMe, setRememberMe] = useState(false);
 	const [error, setError] = useState("");
-
+	
+	// reCAPTCHA state
+	const [captchaValue, setCaptchaValue] = useState<string | null>(null);
+	const [recaptchaError, setRecaptchaError] = useState(false);
+	const recaptchaRef = useRef<ReCAPTCHA>(null);
+	
 	const { setUser } = useAuth();
 	const navigate = useNavigate();
+	
+	/**
+	 * Check if reCAPTCHA script is loaded and available
+	 * This helps detect issues with script loading in production
+	 */
+	useEffect(() => {
+		// Check if reCAPTCHA is enabled in config
+		if (!recaptchaConfig.enabled || recaptchaConfig.siteKey === 'disabled') {
+			return;
+		}
+
+		// Only inject if not already present
+		if (!document.querySelector('script[src*="recaptcha"]')) {
+			// Create script element WITHOUT the problematic callback
+			const script = document.createElement('script');
+			script.src = `https://www.google.com/recaptcha/api.js`;
+			script.async = true;
+			script.defer = true;
+			
+			// Add onload handler to detect successful script loading
+			script.onload = () => {
+				console.log('✅ reCAPTCHA script loaded successfully');
+				// Give a shorter delay for grecaptcha to initialize
+				setTimeout(() => {
+					if (window.grecaptcha) {
+						console.log('✅ reCAPTCHA object available, waiting for ready state...');
+						window.grecaptcha.ready(() => {
+							console.log('✅ reCAPTCHA is ready and initialized');
+							setRecaptchaError(false);
+						});
+					} else {
+						console.log('⚠️ reCAPTCHA object not available yet, but proceeding anyway');
+						// Still set loading to false so the component can try to render
+						setRecaptchaError(false);
+					}
+				}, 800); // Reduced delay
+			};
+			
+			// Add error handler
+			script.onerror = () => {
+				console.error('❌ Failed to load reCAPTCHA script');
+				setRecaptchaError(true);
+			};
+			
+			// Append to document
+			document.head.appendChild(script);
+			console.log('📝 reCAPTCHA script injected (without callback)');
+		}
+	}, []);
+
+	/**
+	 * Handle reCAPTCHA change
+	 * @param {string | null} value - The reCAPTCHA token value
+	 */
+	const handleCaptchaChange = (value: string | null) => {
+		setCaptchaValue(value);
+		setRecaptchaError(false);
+		if (value) {
+			setError("");
+		}
+	};
+
+	/**
+	 * Handle reCAPTCHA expiration
+	 */
+	const handleCaptchaExpired = () => {
+		setCaptchaValue(null);
+		setError("reCAPTCHA has expired. Please verify again.");
+	};
+
+	/**
+	 * Handle reCAPTCHA error (when it fails to load)
+	 */
+	const handleCaptchaError = () => {
+		setRecaptchaError(true);
+		setError("reCAPTCHA failed to load. Please check your internet connection and try again.");
+	};
 
 	/**
 	 * Handle login form submission using API
 	 */
 	const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
-		setIsLoading(true);
 		setError("");
 
+		// Validate reCAPTCHA (only if reCAPTCHA is enabled, loaded without errors, and we're not in a fallback state)
+		if (recaptchaConfig.enabled && recaptchaConfig.siteKey !== 'disabled' && !recaptchaError && !captchaValue) {
+			setError("Please verify that you are not a robot.");
+			return;
+		}
+
+		setIsLoading(true);
+
 		try {
-			const response = await apiService.login(email, password);
+			// Send the reCAPTCHA token along with login credentials for server-side verification
+			const response = await apiService.login(email, password, captchaValue || undefined);
 			
 			if (response.success && response.data) {
 				// Map UserProfile to User interface
@@ -64,7 +178,10 @@ export default function Login() {
 		}
 	};
 
-	const isFormValid = email && password;
+	// Check if form is valid for submission
+	const isFormValid = email && password && (
+		!recaptchaConfig.enabled || recaptchaError || captchaValue
+	);
 
 	return (
 		<div className="min-h-screen bg-gradient-to-br from-red-50 to-red-100 flex items-center justify-center p-4" style={{ backgroundImage: `url(${LoginBg})`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
@@ -162,6 +279,22 @@ export default function Login() {
 										Forgot password?
 									</Link>
 								</div>
+
+								{/* Google reCAPTCHA */}
+								{recaptchaConfig.enabled && recaptchaConfig.siteKey && (
+									<div className="recaptcha-container">
+										<ReCAPTCHA
+											ref={recaptchaRef}
+											sitekey={recaptchaConfig.siteKey}
+											theme={recaptchaConfig.theme}
+											size={recaptchaConfig.size}
+											onChange={handleCaptchaChange}
+											onExpired={handleCaptchaExpired}
+											onErrored={handleCaptchaError}
+											className="mt-2 mb-2"
+										/>
+									</div>
+								)}
 
 								{/* Submit Button */}
 								<button

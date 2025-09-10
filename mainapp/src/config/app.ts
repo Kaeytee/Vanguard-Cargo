@@ -4,7 +4,7 @@ export const APP_CONFIG = {
   useMockData: import.meta.env.REACT_APP_USE_MOCK_DATA !== 'false',
   
   // API configuration
-  apiBaseUrl: import.meta.env.REACT_APP_API_BASE_URL || 'http://localhost:8080/api',
+  apiBaseUrl: import.meta.env.API_BASE_URL || 'http://localhost:8080/api',
   
   // App environment
   environment: import.meta.env.REACT_APP_ENVIRONMENT || 'development',
@@ -13,7 +13,7 @@ export const APP_CONFIG = {
   debug: import.meta.env.REACT_APP_DEBUG === 'true',
   
   // App metadata
-  appName: import.meta.env.REACT_APP_APP_NAME || 'Ttarius Logistics',
+  appName: import.meta.env.REACT_APP_APP_NAME || 'Vanguard Cargo',
   version: import.meta.env.REACT_APP_VERSION || '1.0.0',
   
   // Feature flags

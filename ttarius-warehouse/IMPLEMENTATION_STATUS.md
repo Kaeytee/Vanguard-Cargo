@@ -1,8 +1,8 @@
-# Ttarius Warehouse Frontend Implementation
+# Vanguard Warehouse Frontend Implementation
 
 ## Overview
 
-This document provides an overview of the implemented frontend hierarchy for the Ttarius Logistics warehouse system. The system is built with React, TypeScript, and Tailwind CSS, following the specifications outlined in `FRONTEND_HIERARCHY.md` and `warehouse.md`.
+This document provides an overview of the implemented frontend hierarchy for the Vanguard Cargo warehouse system. The system is built with React, TypeScript, and Tailwind CSS, following the specifications outlined in `FRONTEND_HIERARCHY.md` and `warehouse.md`.
 
 ## Implementation Status
 
@@ -204,8 +204,8 @@ function CustomDashboard() {
 
 ### Environment Variables
 ```env
-VITE_API_URL=https://api.ttarius-logistics.com
-VITE_WS_URL=wss://ws.ttarius-logistics.com
+VITE_API_URL=https://api.Vanguard-logistics.com
+VITE_WS_URL=wss://ws.Vanguard-logistics.com
 VITE_AUTH_TOKEN_KEY=warehouse_token
 ```
 

@@ -1,7 +1,7 @@
 /**
  * StatusValidationService.ts
  * 
- * Centralized status validation and business logic service for Ttarius Logistics
+ * Centralized status validation and business logic service for Vanguard Cargo
  * This service handles all status-related validations, business rules, and operations
  * Ensures data integrity and enforces business constraints across the application
  * 

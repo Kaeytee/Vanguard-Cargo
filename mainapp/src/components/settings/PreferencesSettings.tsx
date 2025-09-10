@@ -1,3 +1,4 @@
+// PreferencesSettings.tsx
 import { useState, useEffect } from 'react';
 import { FaGlobeAsia } from 'react-icons/fa';
 import { usePreferences } from '../../context/PreferencesProvider';
@@ -130,11 +131,12 @@ function PreferencesSettings() {
           <label htmlFor="language" className="block text-md font-semibold mb-2">
             Language
           </label>
+          <p className="text-gray-500 text-sm mb-4">Select your preferred language</p>
           <select
             id="language"
             value={localPreferences.language}
             onChange={handleLanguageChange}
-            className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+            className="w-full max-w-xs px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
           >
             <option value="en">English</option>
             <option value="es">Spanish</option>
@@ -143,7 +145,6 @@ function PreferencesSettings() {
             <option value="zh">Chinese</option>
             <option value="ja">Japanese</option>
           </select>
-          <p className="text-xs text-gray-500 mt-1">Select your preferred language</p>
         </div>
 
         {/* Units Setting */}

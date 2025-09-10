@@ -7,11 +7,11 @@ import ReactDOMServer from 'react-dom/server';
  * Update this object if company information changes.
  */
 const COMPANY_DETAILS = {
-  name: 'Ttarius Logistics',
+  name: 'Vanguard Cargo',
   address: '123 Warehouse Ave, Accra, Ghana',
   phone: '+233 24 123 4567',
-  email: 'info@ttarius.com',
-  website: 'www.ttarius.com',
+  email: 'info@Vanguard.com',
+  website: 'www.Vanguard.com',
   logo: '/assets/logo.png', // Add logo path when available
   primaryColor: '#b91c1c', // Red color for branding
   secondaryColor: '#1e293b', // Dark blue for headers
@@ -365,7 +365,7 @@ const PackagePrintTemplate: React.FC<PackagePrintTemplateProps> = ({
           }}>
             <strong>Tracking URL:</strong>{' '}
             <a 
-              href={`https://www.ttariuslogistics.com/app/tracl/${packageInfo.packageId}`}
+              href={`https://www.vanguardcargo.org/app/tracl/${packageInfo.packageId}`}
               target="_blank" 
               rel="noopener noreferrer"
               style={{ 
@@ -374,7 +374,7 @@ const PackagePrintTemplate: React.FC<PackagePrintTemplateProps> = ({
                 wordBreak: 'break-all'
               }}
             >
-              https://www.ttariuslogistics.com/app/tracl/{packageInfo.packageId}
+              https://www.vanguardcargo.org/app/tracl/{packageInfo.packageId}
             </a>
           </p>
           <p style={{ 

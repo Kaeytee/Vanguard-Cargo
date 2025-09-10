@@ -11,13 +11,16 @@ import {
 	Truck, 
 	ShoppingBag, 
 	Bell, 
-	Archive 
+	Archive,
+	Rocket,
+	DollarSign 
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import AnimateInView from '../../components/ui/animate-in-view';
 import air from '../../images/air.png';
 import packaging from '../../images/packaging.png';
 import customs from '../../images/customs.png';
+import servicesImage from '../../assets/services.jpg';
 /**
  * Services component - Displays the Services page content with animations
  * @returns {JSX.Element} The Services page component
@@ -27,101 +30,202 @@ export default function Services() {
 	const [hoveredServiceIndex, setHoveredServiceIndex] = useState<number | null>(null);
 	const [hoveredAdditionalIndex, setHoveredAdditionalIndex] = useState<number | null>(null);
 
-	// Define main service sections
+	// Define main service sections focused on package forwarding
 	const mainServices = [
 		{
 			icon: Plane,
-			title: 'Air Freight',
-			description: 'Our core service is reliable, efficient air cargo delivery for personal and business shipments. Whether you\'re sending small parcels or larger cargo, we handle every step with care.',
+			title: 'US Address & Shopping',
+			description: 'Get your personal US shipping address instantly and start shopping from any US store. We provide a real Miami address that works with all major retailers including Amazon, Nike, Best Buy, and thousands more.',
 			benefits: [
-				'Safe packaging options',
-				'Support with documentation',
-				'Charter services for oversized or specialized cargo',
-				'Temperature-controlled solutions for sensitive goods'
+				'Instant US address activation',
+				'Works with all US online stores',
+				'Package receiving notifications',
+				'Professional package handling'
 			],
 			image: air,
-			imageAlt: 'Airplane flying over container port at sunset',
+			imageAlt: 'Person shopping online with US address',
 			reverse: false
 		},
 		{
 			icon: Package,
-			title: 'Packaging Services',
-			description: 'Professional packaging to ensure your items meet international air freight standards and arrive safely.',
+			title: 'Package Consolidation & Savings',
+			description: 'Our smart consolidation service combines multiple purchases into one shipment, saving you up to 70% on shipping costs. We repackage items efficiently and remove unnecessary packaging to reduce weight.',
 			benefits: [
-				'Custom packaging solutions',
-				'Use of high-quality materials',
-				'Protection against damage',
-				'Compliance with airline regulations'
+				'Combine up to 10 packages',
+				'Professional repackaging',
+				'Weight optimization',
+				'Free package photos before shipping'
 			],
 			image: packaging,
-			imageAlt: 'Workers in packaging facility',
+			imageAlt: 'Professional package consolidation facility',
 			reverse: true
 		},
 		{
 			icon: FileText,
-			title: 'Customs Clearance Assistance',
-			description: 'Our expert team ensures your shipments smoothly clear customs in both Ghana and the USA, handling all necessary documentation and compliance to avoid delays and extra costs.',
+			title: 'Hassle-Free Customs & Delivery',
+			description: 'We handle all customs paperwork, duties, and taxes to ensure smooth delivery to pickup locations in Ghana. Our team manages the entire process so you don\'t have to worry about complicated customs procedures.',
 			benefits: [
-				'Accurate documentation preparation',
-				'Fast clearance to minimize shipment delays',
-				'Coordination with customs authorities',
-				'Compliance with import/export regulations'
+				'Complete customs handling',
+				'Delivery to pickup locations in Ghana',
+				'Duty and tax calculation',
+				'Real-time delivery tracking'
 			],
 			image: customs,
-			imageAlt: 'Warehouse worker with documentation',
+			imageAlt: 'Delivery worker bringing packages to customer door',
 			reverse: false
 		}
 	];
 
-	// Define additional services
+	// Define additional package forwarding services
 	const additionalServices = [
 		{
 			icon: Shield,
-			title: 'Cargo Insurance',
-			description: 'Comprehensive coverage to protect your valuable shipments during transit.'
+			title: 'Package Protection',
+			description: 'Comprehensive insurance coverage for all your packages during transit and storage.'
 		},
 		{
 			icon: AlertTriangle,
-			title: 'Dangerous Goods Handling',
-			description: 'Careful transport of hazardous materials with strict adherence to safety regulations.'
+			title: 'Package Inspection',
+			description: 'Free photo service and quality inspection of all incoming packages before shipping.'
 		},
 		{
 			icon: Truck,
-			title: 'Project Logistics',
-			description: 'Certified transportation of hazardous materials with strict adherence to safety regulations.'
+			title: 'Express Delivery',
+			description: 'Fast-track shipping options for urgent packages with 5-7 day delivery to Ghana.'
 		},
 		{
 			icon: ShoppingBag,
-			title: 'Item Procurement Assistance',
-			description: 'Help customers in Ghana purchase and ship items from the USA, even if they don\'t have a U.S. address or card.'
+			title: 'Personal Shopper',
+			description: 'We can purchase items for you from US stores if you need assistance with shopping or payment.'
 		},
 		{
 			icon: Bell,
-			title: 'Shipment Notifications (SMS/Email Alerts)',
-			description: 'Send automated SMS or email alerts to update customers about their shipment status at key stages.'
+			title: 'Smart Notifications',
+			description: 'Real-time SMS and email alerts for package arrivals, shipping updates, and delivery confirmations.'
 		},
 		{
 			icon: Archive,
-			title: 'Consolidated Shipping',
-			description: 'Group multiple customers\' packages into one shipment to reduce costs and speed up delivery times.'
+			title: 'Storage & Warehousing',
+			description: 'Free 30-day storage at our US facility, giving you time to accumulate packages for consolidation.'
 		}
 	];
 
 	return (
 		<div className="services-container">
-			{/* Services Header Section */}
-			<section className="py-16 px-4 sm:px-6 lg:px-8 bg-gray-50">
-				<div className="max-w-4xl mx-auto text-center">
-					<AnimateInView variant="fadeInDown">
-						<h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
-							Our Services
-						</h1>
-						<p className="text-lg text-gray-600 leading-relaxed">
-							We provide reliable air freight delivery between Ghana and the 
-							United States, offering seamless shipping from Ghana to the USA 
-							and from the USA back to Ghana.
-						</p>
-					</AnimateInView>
+			{/* Enhanced Services Hero Section */}
+			<section className="relative py-20 px-4 sm:px-6 lg:px-8 bg-gray-50 overflow-hidden">
+				{/* Background pattern overlay */}
+				<div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgba(0,0,0,0.05)_1px,transparent_0)] [background-size:20px_20px]"></div>
+				
+				{/* SVG Background Placeholder */}
+				<div className="absolute inset-0 opacity-10">
+					<svg viewBox="0 0 100 100" className="w-full h-full">
+						<defs>
+							<pattern id="services-pattern" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+								<circle cx="2" cy="2" r="1" fill="gray" opacity="0.5"/>
+							</pattern>
+						</defs>
+						<rect width="100" height="100" fill="url(#services-pattern)"/>
+					</svg>
+				</div>
+				
+				<div className="relative max-w-6xl mx-auto">
+					<div className="grid lg:grid-cols-2 gap-12 items-center">
+						{/* Content Side */}
+						<AnimateInView variant="fadeInLeft">
+							<div className="text-gray-700">
+								<motion.div 
+									className="inline-block bg-red-500 text-white px-4 py-2 rounded-full text-sm font-bold mb-6"
+									whileHover={{ scale: 1.05 }}
+									transition={{ duration: 0.2 }}
+								>
+									Most Affordable Package Forwarding to Ghana
+								</motion.div>
+								<h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight text-gray-700">
+									Shop the US.
+									<span className="block text-red-600">Ship to Ghana.</span>
+									<span className="block text-3xl md:text-4xl font-medium text-gray-700">Save Up to 70%.</span>
+								</h1>
+								<p className="text-xl text-gray-700 mb-8 leading-relaxed">
+									Get your free US shipping address and start shopping from thousands of American stores. 
+									We consolidate your packages and ship them to Ghana at unbeatable rates.
+								</p>
+								
+								{/* Key benefits */}
+								<div className="grid sm:grid-cols-2 gap-4 mb-8">
+									<div className="flex items-center space-x-3">
+										<div className="w-2 h-2 bg-red-600 rounded-full"></div>
+										<span className="text-gray-700">Free US address</span>
+									</div>
+									<div className="flex items-center space-x-3">
+										<div className="w-2 h-2 bg-red-600 rounded-full"></div>
+										<span className="text-gray-700">Package consolidation</span>
+									</div>
+									<div className="flex items-center space-x-3">
+										<div className="w-2 h-2 bg-red-600 rounded-full"></div>
+										<span className="text-gray-700">7-14 days delivery</span>
+									</div>
+									<div className="flex items-center space-x-3">
+										<div className="w-2 h-2 bg-red-600 rounded-full"></div>
+										<span className="text-gray-700">Real-time tracking</span>
+									</div>
+								</div>
+								
+								{/* CTA Buttons */}
+								<div className="flex flex-col sm:flex-row gap-4">
+									<Link to="/register">
+										<motion.button 
+											className="bg-red-600 hover:bg-red-700 text-white font-bold px-8 py-4 rounded-lg transition-all duration-300 w-full sm:w-auto"
+											whileHover={{ scale: 1.05, y: -2 }}
+											whileTap={{ scale: 0.95 }}
+										>
+											Get My Free US Address
+										</motion.button>
+									</Link>
+									<Link to="/contact">
+										<motion.button 
+											className="bg-transparent border-2 border-red-600 text-red-600 hover:bg-red-600 hover:text-white font-bold px-8 py-4 rounded-lg transition-all duration-300 w-full sm:w-auto"
+											whileHover={{ scale: 1.05, y: -2 }}
+											whileTap={{ scale: 0.95 }}
+										>
+											Learn More
+										</motion.button>
+									</Link>
+								</div>
+							</div>
+						</AnimateInView>
+						
+						{/* Visual Side - Placeholder for SVG */}
+						<AnimateInView variant="fadeInRight" delay={0.2}>
+							<div className="relative">
+								<div className="bg-white rounded-2xl p-8 border border-gray-200 shadow-lg">
+									<div className="text-center text-gray-700">
+										<div className="w-full h-64 bg-gray-100 rounded-lg overflow-hidden mb-6">
+											<img 
+												src={servicesImage} 
+												alt="Services illustration" 
+												className="w-full h-full object-cover"
+											/>
+										</div>
+										<div className="grid grid-cols-3 gap-4 text-sm">
+											<div>
+												<div className="text-2xl font-bold text-red-600">50K+</div>
+												<div className="text-gray-600">Packages Delivered</div>
+											</div>
+											<div>
+												<div className="text-2xl font-bold text-red-600">70%</div>
+												<div className="text-gray-600">Average Savings</div>
+											</div>
+											<div>
+												<div className="text-2xl font-bold text-red-600">4.9★</div>
+												<div className="text-gray-600">Customer Rating</div>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</AnimateInView>
+					</div>
 				</div>
 			</section>
 
@@ -241,13 +345,101 @@ export default function Services() {
 				);
 			})}
 
+			{/* Savings Calculator Section */}
+			<section className="py-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-red-900 via-red-800 to-red-700 text-white">
+				<div className="max-w-4xl mx-auto">
+					<AnimateInView variant="fadeInDown">
+						<div className="text-center mb-12">
+							<h2 className="text-3xl font-bold mb-4 flex items-center justify-center gap-3">
+								See How Much You'll Save <DollarSign className="w-8 h-8" />
+							</h2>
+							<p className="text-xl text-red-100">
+								Our package consolidation can save you hundreds of dollars per year
+							</p>
+						</div>
+					</AnimateInView>
+
+					<div className="grid md:grid-cols-2 gap-12 items-center">
+						<AnimateInView variant="fadeInLeft">
+							<div className="bg-white/10 rounded-2xl p-8 backdrop-blur-sm">
+								<h3 className="text-xl font-bold mb-6">Typical Savings Example</h3>
+								
+								<div className="space-y-4">
+									<div className="flex justify-between items-center">
+										<span>3 separate shipments (5 lbs each)</span>
+										<span className="font-bold">$180</span>
+									</div>
+									<div className="flex justify-between items-center">
+										<span>1 consolidated shipment (15 lbs)</span>
+										<span className="font-bold text-green-400">$65</span>
+									</div>
+									<div className="border-t border-white/20 pt-4">
+										<div className="flex justify-between items-center text-xl font-bold">
+											<span>Your Savings:</span>
+											<span className="text-yellow-400">$115 (64%)</span>
+										</div>
+									</div>
+								</div>
+								
+								<div className="mt-6 text-sm text-red-200">
+									* Savings based on typical 5lb packages from popular US retailers
+								</div>
+							</div>
+						</AnimateInView>
+
+						<AnimateInView variant="fadeInRight">
+							<div className="space-y-6">
+								<div className="flex items-center space-x-4">
+									<div className="w-12 h-12 bg-yellow-400 rounded-full flex items-center justify-center text-red-900 font-bold text-xl">
+										1
+									</div>
+									<div>
+										<h4 className="font-bold">Shop Multiple Stores</h4>
+										<p className="text-red-200">Buy from different US retailers</p>
+									</div>
+								</div>
+								
+								<div className="flex items-center space-x-4">
+									<div className="w-12 h-12 bg-green-400 rounded-full flex items-center justify-center text-red-900 font-bold text-xl">
+										2
+									</div>
+									<div>
+										<h4 className="font-bold">We Consolidate</h4>
+										<p className="text-red-200">Combine packages into one shipment</p>
+									</div>
+								</div>
+								
+								<div className="flex items-center space-x-4">
+									<div className="w-12 h-12 bg-blue-400 rounded-full flex items-center justify-center text-white font-bold text-xl">
+										3
+									</div>
+									<div>
+										<h4 className="font-bold">You Save Big</h4>
+										<p className="text-red-200">Pay one low shipping rate instead of multiple</p>
+									</div>
+								</div>
+
+								<div className="mt-8">
+									<Link
+										to="/register"
+										className="bg-white hover:bg-yellow-300 text-red-900 font-bold px-8 py-4 rounded-lg transition-all duration-300 transform hover:scale-105 inline-flex items-center gap-2"
+									>
+										Start Saving Today <Rocket className="w-5 h-5" />
+									</Link>
+								</div>
+							</div>
+						</AnimateInView>
+					</div>
+				</div>
+			</section>
+
 			{/* Additional Services Section */}
 			<section className="py-16 px-4 sm:px-6 lg:px-8 bg-white">
 				<div className="max-w-6xl mx-auto">
 					<AnimateInView variant="fadeInDown">
 						<div className="text-center mb-4">
-							<h2 className="text-3xl font-bold text-gray-900">Additional Services</h2>
-							<p className="text-gray-600 mt-2">Complementary solutions to enhance your logistics experience</p>
+							<h2 className="text-3xl font-bold text-gray-900">Value-Added Services</h2>
+							<p className="text-gray-600 mt-2">Extra services to make your shopping experience even better</p>
 						</div>
 					</AnimateInView>
 					

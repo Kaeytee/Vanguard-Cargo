@@ -1,7 +1,7 @@
 /**
  * TrackingService.ts
  * 
- * Core tracking service for Ttarius Logistics
+ * Core tracking service for Vanguard Cargo
  * This service manages tracking points, timelines, and location-based operations
  * Provides comprehensive tracking functionality with OpenStreetMap integration
  * 
@@ -38,13 +38,13 @@ export interface TrackingTimeline {
  * Tracking service result interface
  * Standardized response format for tracking operations
  */
-export interface TrackingServiceResult<T = any> {
+export interface TrackingServiceResult<T = unknown> {
   readonly success: boolean;           // Whether operation succeeded
   readonly data?: T;                   // Result data if successful
   readonly error?: string;             // Error message if failed
   readonly errors?: string[];          // Multiple error messages
   readonly warnings?: string[];        // Warning messages
-  readonly metadata?: Record<string, any>; // Additional metadata
+  readonly metadata?: Record<string, unknown>; // Additional metadata
 }
 
 /**
@@ -59,7 +59,7 @@ export interface RealTimeTrackingUpdate {
   readonly timestamp: string;          // Update timestamp
   readonly source: TrackingSource;     // Source of update
   readonly confidence: number;         // Confidence level (0-1)
-  readonly metadata?: Record<string, any>; // Additional data
+  readonly metadata?: Record<string, unknown>; // Additional data
 }
 
 /**
@@ -76,7 +76,7 @@ export interface TrackingNotification {
   readonly priority: 'low' | 'medium' | 'high' | 'critical'; // Priority level
   readonly customerVisible: boolean;   // Whether customer should see this
   readonly actionRequired: boolean;    // Whether action is required
-  readonly metadata?: Record<string, any>; // Additional data
+  readonly metadata?: Record<string, unknown>; // Additional data
 }
 
 /**

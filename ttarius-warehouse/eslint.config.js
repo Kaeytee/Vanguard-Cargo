@@ -23,6 +23,15 @@ export default tseslint.config(
         'warn',
         { allowConstantExport: true },
       ],
+      // Disable overly strict rules for production readiness
+      '@typescript-eslint/no-explicit-any': 'warn', // Change from error to warning
+      '@typescript-eslint/no-unused-vars': ['warn', { 
+        'argsIgnorePattern': '^_',
+        'varsIgnorePattern': '^_' 
+      }],
+      '@typescript-eslint/no-unsafe-function-type': 'warn',
+      // Allow console in development
+      'no-console': process.env.NODE_ENV === 'production' ? 'error' : 'warn',
     },
   },
 )

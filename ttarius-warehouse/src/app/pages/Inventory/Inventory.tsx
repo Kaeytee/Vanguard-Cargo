@@ -5,7 +5,7 @@
  * Follows clean code, OOP, and best practices.
  */
 /**
- * Inventory component for TTarius Logistics application.
+ * Inventory component for Vanguard Cargo application.
  * @returns {React.ReactElement} Inventory page
 */
 import React, { useState } from 'react';
@@ -14,7 +14,7 @@ import { FiPackage, FiCheckCircle, FiFilter, FiSearch, FiEye, FiCalendar } from 
 import 'react-datepicker/dist/react-datepicker.css';
 
 /**
- * Inventory component for TTarius Logistics application.
+ * Inventory component for Vanguard Cargo application.
  * Implements summary cards, search/filter, and inventory table UI as per design.
  * @returns {React.ReactElement} Inventory page
  */

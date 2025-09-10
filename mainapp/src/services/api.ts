@@ -3,7 +3,10 @@ import * as MockData from '../lib/mockShipmentData';
 import { shouldUseMockData } from '../config/app';
 
 // Re-export types from mock data for consistency
-export type ShipmentData = MockData.MockShipmentData;
+export interface ShipmentData extends MockData.MockShipmentData {
+  imageUrl?: string; // Optional URL for package image
+  imageUrls?: string[]; // Optional array of image URLs for multiple package images
+}
 
 // API response wrapper
 export interface ApiResponse<T> {
@@ -81,6 +84,7 @@ export interface AuthResponse {
 export interface LoginRequest {
   email: string;
   password: string;
+  recaptchaToken?: string; // reCAPTCHA token for bot protection
 }
 
 export interface RegisterRequest {
@@ -142,7 +146,24 @@ export interface NotificationSettings {
   createdAt: string;
   updatedAt: string;
 }
-
+export interface UserProfileData {
+  fullName: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  address: string;
+  city: string;
+  country: string;
+  profileImage:string;
+  zip: string;
+}
+export interface UpdateUserProfile {
+  getUserProfile(): Promise<ApiResponse<UserProfileData>>;
+}
+export interface UpdateUserProfile {
+  updateUserProfile(data: Partial<UserProfileData>): Promise<ApiResponse<null>>;
+}
 export interface UpdateNotificationSettingsRequest {
   shipmentUpdates?: boolean;
   deliveryAlerts?: boolean;
@@ -199,7 +220,7 @@ export interface UpdateNotificationRequest {
 // Mock user data for development
 const MOCK_USER: UserProfile = {
   id: 'user123',
-  firstName: 'John',
+  firstName: 'Austin',
   lastName: 'Doe',
   email: 'john.doe@email.com',
   phone: '+1 (555) 123-4567',
@@ -282,7 +303,7 @@ const createMockPaginatedResponse = <T>(
   const startIndex = (page - 1) * pageSize;
   const endIndex = startIndex + pageSize;
   const paginatedItems = items.slice(startIndex, endIndex);
-  
+
   return {
     items: paginatedItems,
     total: items.length,
@@ -309,23 +330,23 @@ const mockDelay = (ms: number = 500) => new Promise(resolve => setTimeout(resolv
 
 // Simplified API Service Class
 class ApiService {
-  private apiBaseUrl = import.meta.env.REACT_APP_API_BASE_URL || 'http://localhost:8080/api';
+  private apiBaseUrl = import.meta.env.API_BASE_URL || 'http://localhost:8080/api';
 
   // Helper to decide between mock and real API
-  private async callApiOrMock<T>(
-    mockDataFn: () => T | Promise<T>,
-    realApiFn: () => Promise<ApiResponse<T>>
-  ): Promise<ApiResponse<T>> {
-    if (shouldUseMockData()) {
-      try {
-        await mockDelay(); // Simulate network delay
-        const mockData = await mockDataFn();
-        return createSuccessResponse(mockData);
-      } catch (error) {
-        return createErrorResponse(error instanceof Error ? error.message : 'Mock data error');
-      }
+private async callApiOrMock<T>(
+  mockDataFn: () => T | Promise<T>,
+  realApiFn: () => Promise<ApiResponse<T>>
+): Promise<ApiResponse<T>> {
+  if (shouldUseMockData()) {
+    try {
+      await mockDelay(); // Simulate network delay
+      const mockData = await mockDataFn();
+      return createSuccessResponse(mockData);
+    } catch (error) {
+      return createErrorResponse(error instanceof Error ? error.message : 'Mock data error');
     }
-    
+  }
+
     try {
       return await realApiFn();
     } catch (error) {
@@ -342,7 +363,7 @@ class ApiService {
   // Real API request helper
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<ApiResponse<T>> {
     const token = localStorage.getItem('authToken');
-    
+
     const config: RequestInit = {
       headers: {
         'Content-Type': 'application/json',
@@ -363,7 +384,7 @@ class ApiService {
   }
 
   // ===== SHIPMENT ENDPOINTS =====
-  
+
   async getUserShipments(
     page: number = 1,
     limit: number = 10,
@@ -374,12 +395,12 @@ class ApiService {
       // Mock data function
       () => {
         let filteredShipments = [...MockData.MOCK_SHIPMENTS];
-        
+
         // Apply status filter
         if (status && status !== 'all') {
           filteredShipments = filteredShipments.filter(s => s.status === status);
         }
-        
+
         // Apply search filter
         if (search) {
           const searchLower = search.toLowerCase();
@@ -389,7 +410,7 @@ class ApiService {
             s.destination.toLowerCase().includes(searchLower)
           );
         }
-        
+
         return createMockPaginatedResponse(filteredShipments, page, limit);
       },
       // Real API function
@@ -442,10 +463,10 @@ class ApiService {
         // Create a mock shipment response
         const newShipment: ShipmentData = {
           id: `SHIP${Math.floor(Math.random() * 9999)}`,
-          date: new Date().toLocaleDateString('en-US', { 
-            year: 'numeric', 
-            month: 'short', 
-            day: 'numeric' 
+          date: new Date().toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric'
           }),
           destination: shipmentData.recipientAddress,
           recipient: shipmentData.recipientName,
@@ -461,9 +482,9 @@ class ApiService {
             address: shipmentData.recipientAddress
           },
           warehouseDetails: {
-            name: "Ttarius Logistics Warehouse",
+            name: "Vanguard Cargo Warehouse",
             phone: "+1 (555) 123-4567",
-            email: "warehouse@ttariuslogistics.com",
+            email: "warehouse@vanguardcargo.org",
             address: "123 Warehouse Street, City, Country"
           },
           estimatedDelivery: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', {
@@ -473,7 +494,7 @@ class ApiService {
           }),
           created: new Date().toISOString()
         };
-        
+
         return newShipment;
       },
       // Real API function
@@ -485,31 +506,38 @@ class ApiService {
   }
 
   // ===== USER PROFILE ENDPOINTS =====
-  
-  async getUserProfile(): Promise<ApiResponse<UserProfile>> {
+
+  async getUserProfile(): Promise<ApiResponse<UserProfileData>> {
     return this.callApiOrMock(
       // Mock data function
       () => {
-        return MOCK_USER;
+        return {
+          firstName: 'KIGFD',
+          lastName: 'John',
+          email: 'john.doe@example.com',
+          phone: '+1234567890',
+          address: '123 Main St',
+          city: 'Metropolis',
+          country: 'USA',
+          profileImage: '',
+          zip: '12345',
+          fullName: 'John Doe'
+        };
       },
       // Real API function
-      () => this.request<UserProfile>('/user/profile')
+      () => this.request<UserProfileData>('/user/profile')
     );
   }
 
-  async updateUserProfile(profileData: UpdateUserProfileRequest): Promise<ApiResponse<UserProfile>> {
+  async updateUserProfile(profileData: Partial<UserProfileData>): Promise<ApiResponse<null>> {
     return this.callApiOrMock(
       // Mock data function
       () => {
-        const updatedUser: UserProfile = {
-          ...MOCK_USER,
-          ...profileData,
-          updatedAt: new Date().toISOString()
-        };
-        return updatedUser;
+        console.log('Mock update:', profileData);
+        return null;
       },
       // Real API function
-      () => this.request<UserProfile>('/user/profile', {
+      () => this.request<null>('/user/profile', {
         method: 'PUT',
         body: JSON.stringify(profileData),
       })
@@ -541,13 +569,62 @@ class ApiService {
     );
   }
 
+
+
+  /**
+   * Verify a reCAPTCHA token with Google's verification API
+   * This should be called on the server side, not directly from the client
+   * Included here for documentation purposes and for server implementation
+   * 
+   * @param token - The reCAPTCHA token to verify
+   * @returns Promise with verification result
+   */
+  async verifyRecaptcha(token: string): Promise<boolean> {
+    // This is a placeholder implementation
+    // In a real application, this verification should happen on the server
+    // The secret key should never be exposed in client-side code
+
+    // Server-side implementation would look like this:
+    // const secretKey = process.env.REACT_APP_RECAPTCHA_SECRET_KEY;
+    // const response = await fetch('https://www.google.com/recaptcha/api/siteverify', {
+    //   method: 'POST',
+    //   headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    //   body: `secret=${secretKey}&response=${token}`
+    // });
+    // const data = await response.json();
+    // return data.success;
+
+    // For client-side mock implementation, we'll just return true if token exists
+    return !!token;
+  }
+
   // ===== AUTHENTICATION ENDPOINTS =====
-  
-  async login(email: string, password: string): Promise<ApiResponse<AuthResponse>> {
+
+  /**
+   * Authenticate user with email, password and reCAPTCHA verification
+   * 
+   * @param email - User's email address
+   * @param password - User's password
+   * @param recaptchaToken - Token from Google reCAPTCHA verification
+   * @returns Promise with authentication response containing user data and token
+   */
+  async login(email: string, password: string, recaptchaToken?: string): Promise<ApiResponse<AuthResponse>> {
     return this.callApiOrMock(
       // Mock data function
-      () => {
-        // Simple mock validation
+      async () => {
+        // Verify reCAPTCHA token first
+        if (!recaptchaToken) {
+          throw new Error('reCAPTCHA verification failed. Please verify you are not a robot.');
+        }
+
+        // In a real implementation, we would verify the token with Google's API
+        // For mock purposes, we'll just check if it exists
+        const isRecaptchaValid = await this.verifyRecaptcha(recaptchaToken);
+        if (!isRecaptchaValid) {
+          throw new Error('reCAPTCHA verification failed. Please try again.');
+        }
+
+        // Simple mock validation for credentials
         if (email === 'test@example.com' && password === 'password') {
           const authResponse: AuthResponse = {
             token: 'mock-jwt-token-' + Date.now(),
@@ -564,7 +641,11 @@ class ApiService {
       // Real API function
       () => this.request<AuthResponse>('/auth/login', {
         method: 'POST',
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({
+          email,
+          password,
+          recaptchaToken // Include reCAPTCHA token in the request for server-side verification
+        }),
       })
     );
   }
@@ -586,16 +667,16 @@ class ApiService {
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString()
         };
-        
+
         const authResponse: AuthResponse = {
           token: 'mock-jwt-token-' + Date.now(),
           user: newUser
         };
-        
+
         // Store token and user in localStorage for mock mode
         localStorage.setItem('authToken', authResponse.token);
         localStorage.setItem('user', JSON.stringify(authResponse.user));
-        
+
         // Store initial notification preferences based on marketing agreement
         const initialNotificationSettings: NotificationSettings = {
           id: 'notif-' + Date.now(),
@@ -610,13 +691,13 @@ class ApiService {
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString()
         };
-        
+
         // Store notification settings for the new user
         localStorage.setItem(`notificationSettings_${newUser.id}`, JSON.stringify(initialNotificationSettings));
-        
+
         // Automatically send verification email
         await this.sendVerificationEmail(userData.email);
-        
+
         return authResponse;
       },
       // Real API function
@@ -625,12 +706,12 @@ class ApiService {
           method: 'POST',
           body: JSON.stringify(userData),
         });
-        
+
         // After successful registration, send verification email
         if (result.success && result.data?.user?.email) {
           await this.sendVerificationEmail(result.data.user.email);
         }
-        
+
         return result;
       }
     );
@@ -711,16 +792,16 @@ class ApiService {
       () => {
         const storedEmail = localStorage.getItem('resetEmail');
         const codeVerified = localStorage.getItem('resetCodeVerified');
-        
+
         // Validate input
         if (newPassword !== confirmPassword) {
           throw new Error('Passwords do not match');
         }
-        
+
         if (newPassword.length < 8) {
           throw new Error('Password must be at least 8 characters long');
         }
-        
+
         if (email === storedEmail && codeVerified === 'true') {
           const mockResponse: ForgotPasswordResponse = {
             message: 'Your password has been successfully reset.',
@@ -753,7 +834,7 @@ class ApiService {
         // Generate a mock verification token
         const mockToken = `mock-verification-token-${Date.now()}`;
         localStorage.setItem('verificationToken', mockToken);
-        
+
         const mockResponse: VerificationResponse = {
           message: 'Verification email sent successfully. Please check your inbox.',
           success: true
@@ -774,7 +855,7 @@ class ApiService {
       () => {
         const storedToken = localStorage.getItem('verificationToken');
         const verificationEmail = localStorage.getItem('verificationEmail');
-        
+
         if (token === storedToken && verificationEmail) {
           // Mark user as verified in localStorage
           const user = JSON.parse(localStorage.getItem('user') || '{}');
@@ -783,11 +864,11 @@ class ApiService {
             user.accountStatus = 'ACTIVE';
             localStorage.setItem('user', JSON.stringify(user));
           }
-          
+
           // Clean up verification data
           localStorage.removeItem('verificationEmail');
           localStorage.removeItem('verificationToken');
-          
+
           const mockResponse: VerificationResponse = {
             message: 'Email verified successfully! Your account is now active.',
             success: true
@@ -813,7 +894,7 @@ class ApiService {
         const mockToken = `mock-verification-token-${Date.now()}`;
         localStorage.setItem('verificationToken', mockToken);
         localStorage.setItem('verificationEmail', email);
-        
+
         const mockResponse: VerificationResponse = {
           message: 'Verification email resent successfully. Please check your inbox.',
           success: true
@@ -829,7 +910,7 @@ class ApiService {
   }
 
   // ===== NOTIFICATION SETTINGS ENDPOINTS =====
-  
+
   async getNotificationSettings(): Promise<ApiResponse<NotificationSettings>> {
     return this.callApiOrMock(
       // Mock data function
@@ -838,11 +919,11 @@ class ApiService {
         const user = JSON.parse(localStorage.getItem('user') || '{}');
         const userSettingsKey = `notificationSettings_${user.id}`;
         const storedSettings = localStorage.getItem(userSettingsKey);
-        
+
         if (storedSettings) {
           return JSON.parse(storedSettings);
         }
-        
+
         // Fallback to default settings
         const mockSettings: NotificationSettings = {
           id: 'notif-001',
@@ -885,7 +966,7 @@ class ApiService {
         const user = JSON.parse(localStorage.getItem('user') || '{}');
         const userSettingsKey = `notificationSettings_${user.id}`;
         const currentSettings = JSON.parse(localStorage.getItem(userSettingsKey) || '{}');
-        
+
         const updatedSettings: NotificationSettings = {
           id: currentSettings.id || 'notif-001',
           userId: user.id || 'user-001',
@@ -899,10 +980,10 @@ class ApiService {
           createdAt: currentSettings.createdAt || '2024-01-01T00:00:00Z',
           updatedAt: new Date().toISOString()
         };
-        
+
         // Persist the updated settings
         localStorage.setItem(userSettingsKey, JSON.stringify(updatedSettings));
-        
+
         return updatedSettings;
       },
       // Real API function
@@ -925,7 +1006,7 @@ class ApiService {
   }
 
   // ===== USER PREFERENCES ENDPOINTS =====
-  
+
   async getUserPreferences(): Promise<ApiResponse<UserPreferences>> {
     return this.callApiOrMock(
       // Mock data function
@@ -994,7 +1075,7 @@ class ApiService {
   }
 
   // ===== NOTIFICATION METHODS =====
-  
+
   async getNotifications(
     page: number = 1,
     pageSize: number = 10,
@@ -1004,22 +1085,22 @@ class ApiService {
     return this.callApiOrMock(
       () => {
         let filteredNotifications = [...mockNotificationsStore];
-        
+
         // Apply read/unread filter
         if (filter === 'read') {
           filteredNotifications = filteredNotifications.filter(n => n.isRead);
         } else if (filter === 'unread') {
           filteredNotifications = filteredNotifications.filter(n => !n.isRead);
         }
-        
+
         // Apply category filter
         if (category && category !== 'all') {
           filteredNotifications = filteredNotifications.filter(n => n.category === category);
         }
-        
+
         // Sort by creation date (newest first)
         filteredNotifications.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-        
+
         return createMockPaginatedResponse(filteredNotifications, page, pageSize);
       },
       async () => {
@@ -1030,7 +1111,7 @@ class ApiService {
           ...(filter && filter !== 'all' && { filter }),
           ...(category && category !== 'all' && { category })
         });
-        
+
         const response = await fetch(`${this.apiBaseUrl}/notifications?${params}`, {
           headers: {
             ...(token && { Authorization: `Bearer ${token}` }),
@@ -1097,12 +1178,12 @@ class ApiService {
         if (notificationIndex === -1) {
           throw new Error('Notification not found');
         }
-        
+
         mockNotificationsStore[notificationIndex] = {
           ...mockNotificationsStore[notificationIndex],
           isRead: true
         };
-        
+
         return mockNotificationsStore[notificationIndex];
       },
       async () => {
@@ -1129,12 +1210,12 @@ class ApiService {
         if (notificationIndex === -1) {
           throw new Error('Notification not found');
         }
-        
+
         mockNotificationsStore[notificationIndex] = {
           ...mockNotificationsStore[notificationIndex],
           isRead: false
         };
-        
+
         return mockNotificationsStore[notificationIndex];
       },
       async () => {
@@ -1161,7 +1242,7 @@ class ApiService {
         if (notificationIndex === -1) {
           throw new Error('Notification not found');
         }
-        
+
         mockNotificationsStore.splice(notificationIndex, 1);
         return undefined as void;
       },
@@ -1208,12 +1289,12 @@ class ApiService {
   }
 
   // ===== UTILITY FUNCTIONS =====
-  
+
   // Check if currently using mock data
   isUsingMockData(): boolean {
     return shouldUseMockData();
   }
-  
+
   // Get configuration info
   getConfigInfo() {
     return {

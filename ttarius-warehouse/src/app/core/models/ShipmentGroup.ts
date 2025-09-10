@@ -1,7 +1,7 @@
 /**
  * ShipmentGroup.ts
  * 
- * Core shipment group data structure for Ttarius Logistics
+ * Core shipment group data structure for Vanguard Cargo
  * This file defines the central ShipmentGroup model for batch package management
  * Enables efficient grouping, routing, and batch status updates for multiple packages
  * 

@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { Check, Heart, Clock, Lightbulb, CheckCircle, Package, Star } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import AnimateInView from '../../components/ui/animate-in-view';
-import about from "../../images/about.png"
+import servicesImage from '../../assets/services.jpg';
 
 /**
  * About component - Displays the About page content of the Logistics company with animations
@@ -20,12 +20,12 @@ export default function About() {
 		{
 			icon: Heart,
 			title: 'Our Mission',
-			description: 'Lorem ipsum dolor sit amet consectetur. Lobortis adipiscing lacus tincidunt ipsum felis tincidunt sem adipiscing. Tincidunt et donec massa purus et. Scelerisque nunc consequat interdum suspendisse mattesque sed ut lorem suspendisse lacus. Condimentum pellentesque et ligula vitae amet sociis blandit.'
+			description: 'To bridge the gap between Ghana and the USA through reliable, efficient, and affordable logistics services. We are committed to connecting families, empowering businesses, and fostering international trade by providing seamless shipping solutions that our customers can trust and depend on.'
 		},
 		{
 			icon: Clock,
 			title: 'Our Vision',
-			description: 'Lorem ipsum dolor sit amet consectetur. Lobortis adipiscing lacus tincidunt ipsum felis tincidunt sem adipiscing. Tincidunt et donec massa purus et. Scelerisque nunc consequat interdum suspendisse mattesque sed ut lorem suspendisse lacus. Condimentum pellentesque et ligula vitae amet sociis blandit.'
+			description: 'To become the leading logistics provider for Ghana-USA trade corridor, recognized for our exceptional service quality, innovative technology solutions, and unwavering commitment to customer satisfaction. We envision a world where distance is no barrier to commerce and connection.'
 		}
 	];
 
@@ -33,92 +33,180 @@ export default function About() {
 	const valueItems = [
 		{
 			icon: Lightbulb,
-			title: 'Innovative',
-			description: 'We constantly seek new ways to improve and revolutionize logistics processes.'
+			title: 'Innovation',
+			description: 'We leverage cutting-edge technology and innovative solutions to streamline the shipping process and enhance customer experience.'
 		},
 		{
 			icon: CheckCircle,
 			title: 'Reliability',
-			description: 'We deliver on our promises, ensuring consistent and dependable service.'
+			description: 'With our proven track record of 98% on-time delivery, you can trust us to handle your shipments with utmost care and precision.'
 		},
 		{
 			icon: Package,
-			title: 'Sustainability',
-			description: 'We\'re committed to environmentally responsible logistics solutions.'
+			title: 'Security',
+			description: 'Your packages are our priority. We ensure secure handling, real-time tracking, and safe delivery of all shipments.'
 		},
 		{
 			icon: Star,
 			title: 'Excellence',
-			description: 'We strive for the highest standards in every aspect of our operations.'
+			description: 'We strive for excellence in every interaction, continuously improving our services to exceed customer expectations.'
 		}
 	];
 
 	// Define benefit items for the checklist
 	const benefits = [
-		'Fast delivery from Ghana to the USA',
-		'98% on-time delivery rate',
-		'24/7 customer support'
+		'Free US shipping address for all customers',
+		'Package consolidation saving up to 70%',
+		'Real-time tracking from US to Ghana',
+		'Professional customer support team',
+		'Full insurance coverage on all shipments'
 	];
 
 	return (
 		<div className="about-container">
-			{/* About Header Section */}
-			<section className="py-16 px-4 sm:px-6 lg:px-8 bg-gray-50">
-				<div className="max-w-7xl mx-auto">
+			{/* Enhanced About Hero Section */}
+			<section className="relative py-20 px-4 sm:px-6 lg:px-8 bg-gray-50 overflow-hidden">
+				{/* Background decoration */}
+				<div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgba(0,0,0,0.05)_1px,transparent_0)] [background-size:20px_20px]"></div>
+				
+				{/* SVG Background Placeholder */}
+				<div className="absolute inset-0 opacity-10">
+					<svg viewBox="0 0 100 100" className="w-full h-full">
+						<defs>
+							<pattern id="about-pattern" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+								<circle cx="2" cy="2" r="1" fill="gray" opacity="0.5"/>
+							</pattern>
+						</defs>
+						<rect width="100" height="100" fill="url(#about-pattern)"/>
+					</svg>
+				</div>
+				
+				<div className="relative max-w-7xl mx-auto">
 					<div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+						{/* Content Side */}
 						<div className="space-y-8">
 							<AnimateInView variant="fadeInLeft">
-								<div>
-									<h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
-										About Logistics.
+								<div className="text-gray-700">
+									<motion.div 
+										className="inline-block bg-red-500 text-white px-4 py-2 rounded-full text-sm font-bold mb-6"
+										whileHover={{ scale: 1.05 }}
+										transition={{ duration: 0.2 }}
+									>
+										Founded in 2020 - Serving 10,000+ Customers
+									</motion.div>
+									<h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight text-gray-700">
+										About 
+										<span className="block text-red-600">Vanguard Logistics</span>
 									</h1>
-									<p className="text-lg text-gray-600 leading-relaxed mb-8">
-										Lorem ipsum dolor sit amet consectetur. Non in bibendum et ut. 
-										Facilisi aliquam commodo vitae ipsum dolor.
+									<p className="text-xl text-gray-700 leading-relaxed mb-8">
+										We're Ghana's premier package forwarding service, connecting you to the best of American shopping. 
+										Our mission is to make US shopping accessible, affordable, and reliable for every Ghanaian.
 									</p>
 								</div>
 							</AnimateInView>
 							
+							{/* Key achievements */}
+							<div className="grid grid-cols-2 gap-6">
+								<AnimateInView variant="fadeInLeft" delay={0.2}>
+									<div className="text-center">
+										<div className="text-3xl font-bold text-red-600">50K+</div>
+										<div className="text-gray-600 text-sm">Packages Delivered</div>
+									</div>
+								</AnimateInView>
+								<AnimateInView variant="fadeInLeft" delay={0.3}>
+									<div className="text-center">
+										<div className="text-3xl font-bold text-red-600">10K+</div>
+										<div className="text-gray-600 text-sm">Happy Customers</div>
+									</div>
+								</AnimateInView>
+								<AnimateInView variant="fadeInLeft" delay={0.4}>
+									<div className="text-center">
+										<div className="text-3xl font-bold text-red-600">98%</div>
+										<div className="text-gray-600 text-sm">On-Time Delivery</div>
+									</div>
+								</AnimateInView>
+								<AnimateInView variant="fadeInLeft" delay={0.5}>
+									<div className="text-center">
+										<div className="text-3xl font-bold text-red-600">4.9★</div>
+										<div className="text-gray-600 text-sm">Customer Rating</div>
+									</div>
+								</AnimateInView>
+							</div>
+							
+							{/* Key benefits with clean design */}
 							<div className="space-y-4">
 								{benefits.map((benefit, index) => (
 									<AnimateInView 
 										key={index}
 										variant="fadeInLeft" 
-										delay={0.2 + index * 0.1}
+										delay={0.6 + index * 0.1}
 									>
-										<motion.li 
-											className="flex items-center space-x-3"
+										<motion.div 
+											className="flex items-center space-x-3 text-gray-700"
 											whileHover={{ x: 5 }}
 											transition={{ type: "spring", stiffness: 300, damping: 20 }}
 										>
 											<div className="flex-shrink-0">
 												<motion.div 
-													className="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center"
+													className="w-6 h-6 bg-red-600 rounded-full flex items-center justify-center"
 													whileHover={{ scale: 1.1 }}
 													transition={{ type: "spring", stiffness: 400, damping: 15 }}
 												>
 													<Check className="w-4 h-4 text-white" strokeWidth={2} />
 												</motion.div>
 											</div>
-											<span className="text-gray-700 font-medium">{benefit}</span>
-										</motion.li>
+											<span className="font-medium">{benefit}</span>
+										</motion.div>
 									</AnimateInView>
 								))}
 							</div>
+							
+							{/* CTA */}
+							<AnimateInView variant="fadeInLeft" delay={1.0}>
+								<Link to="/services">
+									<motion.button 
+										className="bg-red-600 hover:bg-red-700 text-white font-bold px-8 py-4 rounded-lg transition-all duration-300"
+										whileHover={{ scale: 1.05, y: -2 }}
+										whileTap={{ scale: 0.95 }}
+									>
+										Discover Our Services
+									</motion.button>
+								</Link>
+							</AnimateInView>
 						</div>
 						
+						{/* Visual Side - Placeholder for SVG */}
 						<AnimateInView variant="fadeInRight" delay={0.3}>
-							<motion.div 
-								className="relative"
-								whileHover={{ scale: 1.02 }}
-								transition={{ duration: 0.3 }}
-							>
-								<img 
-									src={about} 
-									alt="Logistics container port at sunset with airplane"
-									className="w-full h-80 lg:h-96 object-cover rounded-lg shadow-lg"
-								/>
-							</motion.div>
+							<div className="relative">
+								<div className="bg-white rounded-2xl p-8 border border-gray-200 shadow-lg">
+									<div className="text-center text-gray-700">
+										<div className="w-full h-80 bg-gray-100 rounded-lg overflow-hidden mb-6">
+											<img 
+												src={servicesImage} 
+												alt="About us illustration" 
+												className="w-full h-full object-cover"
+											/>
+										</div>
+										<div className="text-center">
+											<h3 className="text-xl font-bold mb-4 text-gray-900">Why Choose Vanguard?</h3>
+											<div className="space-y-3 text-sm">
+												<div className="bg-gray-50 rounded-lg p-3">
+													<div className="font-semibold text-gray-900">Fast & Reliable</div>
+													<div className="text-gray-600">7-14 days delivery guaranteed</div>
+												</div>
+												<div className="bg-gray-50 rounded-lg p-3">
+													<div className="font-semibold text-gray-900">Huge Savings</div>
+													<div className="text-gray-600">Up to 70% off shipping costs</div>
+												</div>
+												<div className="bg-gray-50 rounded-lg p-3">
+													<div className="font-semibold text-gray-900">Trusted Service</div>
+													<div className="text-gray-600">4.9★ rating from customers</div>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
 						</AnimateInView>
 					</div>
 				</div>
@@ -261,7 +349,7 @@ export default function About() {
 							transition={{ duration: 0.6 }}
 							viewport={{ once: true }}
 						>
-							Join Us on Our Journey
+							Ready to Ship with Vanguard Logistics?
 						</motion.h2>
 						<motion.p 
 							className="text-xl text-red-100 mb-8"
@@ -270,7 +358,7 @@ export default function About() {
 							transition={{ duration: 0.6, delay: 0.2 }}
 							viewport={{ once: true }}
 						>
-							Experience the future of logistics with our innovative solutions
+							Experience reliable shipping services between Ghana and the USA. Let us handle your logistics needs with care and professionalism.
 						</motion.p>
 						<Link to="/contact">
 						<motion.button 

@@ -117,7 +117,7 @@ const PackageForm: React.FC<PackageFormProps> = ({
                       value={type.id} 
                       disabled={type.disabled}
                     >
-                      {type.label} {type.primary && '✓'}
+                      {type.label} {type.primary && '(Primary)'}
                     </option>
                   ))}
                 </select>

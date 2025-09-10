@@ -1,11 +1,11 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { FileText } from "lucide-react";
-import { Phone } from "lucide-react";
+import type { Variants } from "framer-motion";
+import { FileText, Phone } from "lucide-react";
 
 interface FaqSectionProps {
-  containerVariants: any;
-  itemVariants: any;
+  containerVariants: Variants;
+  itemVariants: Variants;
   onSwitchToContact?: () => void;
 }
 
@@ -19,29 +19,34 @@ const FaqSection: React.FC<FaqSectionProps> = ({
   // FAQ data
   const faqs = [
     {
-      question: "How do I track my shipment?",
+      question: "How do I get my free US address?",
       answer:
-        "You can track your shipment by navigating to the Shipment History page and clicking on the tracking number of your shipment. This will show you real-time updates on your shipment's location and estimated delivery time.",
+        "Register for an account on our platform and you'll receive a unique US shipping address within minutes. Use this address when shopping at any US retailer, and we'll receive your packages at our warehouse.",
     },
     {
-      question: "What information do I need to submit a new shipment?",
+      question: "How does package consolidation work?",
       answer:
-        "To submit a new shipment, you'll need the recipient's full address, contact information, package dimensions, weight, and any special handling instructions. You can also specify pickup times and delivery preferences.",
+        "When multiple packages arrive for you at our US warehouse, we can combine them into one shipment to Ghana. This significantly reduces your shipping costs compared to shipping each package individually.",
     },
     {
-      question: "How do I update my account information?",
+      question: "How much can I save with your service?",
       answer:
-        "You can update your account information by navigating to the Settings page. There you can change your personal details, update your password, and manage notification preferences.",
+        "Our customers typically save 40-70% on shipping costs through consolidation and our bulk shipping rates. The exact savings depend on the number and size of your packages.",
     },
     {
-      question: "What payment methods do you accept?",
+      question: "What items can I ship from the US to Ghana?",
       answer:
-        "We accept all major credit cards, PayPal, bank transfers, and corporate accounts with approved credit. Payment options can be selected during the shipment submission process.",
+        "You can ship most items including electronics, clothing, books, and personal items. We cannot ship prohibited items such as hazardous materials, perishables, liquids over 100ml, or items restricted by Ghana Customs.",
     },
     {
-      question: "How can I cancel a shipment?",
+      question: "How long does shipping take to Ghana?",
       answer:
-        'You can cancel a shipment by going to Shipment History, selecting the shipment you wish to cancel, and clicking the "Cancel Shipment" button. Note that cancellations are only possible before the shipment has been picked up.',
+        "Standard shipping takes 7-14 business days from our US warehouse to Ghana. We also offer express shipping options for 3-7 business days delivery.",
+    },
+    {
+      question: "How do I track my packages?",
+      answer:
+        "You can track your packages in real-time through your dashboard. We provide updates from when your package arrives at our US warehouse until it's delivered to your address in Ghana.",
     },
   ];
 
@@ -116,7 +121,7 @@ const FaqSection: React.FC<FaqSectionProps> = ({
                 if (onSwitchToContact) {
                   onSwitchToContact();
                 } else {
-                  window.location.href = "mailto:support@ttarius.com";
+                  window.location.href = "mailto:support@Vanguardcargo.org";
                 }
               }}
             >

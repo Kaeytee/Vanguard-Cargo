@@ -52,10 +52,10 @@ const ClientSettingsPage: React.FC = () => {
   return (
     <div className="min-h-screen px-4 sm:px-10 py-6 transition-colors duration-300">
       <div>
-        <div>
+        {/* <div>
           <h1 className="text-2xl font-bold mb-2">{t("settings")}</h1>
           <p className="mb-6 text-gray-400">Set up your preferences</p>
-        </div>
+        </div> */}
 
         <div>
           

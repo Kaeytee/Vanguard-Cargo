@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import AnimateInView from '../../components/ui/animate-in-view';
+import supportImage from '../../assets/support.jpg';
 
 /**
  * Contact component - Displays the Contact page content with animations
@@ -55,19 +56,19 @@ export default function Contact() {
 			icon: Phone,
 			title: 'Phone',
 			description: 'Available 24/7 for urgent matters',
-			details: '(+233) 456-7890'
+			details: '(+233) 302-555-0147'
 		},
 		{
 			icon: MapPin,
 			title: 'Address',
 			description: 'Drop in during business hours',
-			details: '123 Cargo Lane\nEast Legon, Accra'
+			details: 'Vanguard Logistics Center\nEast Legon, Accra, Ghana'
 		},
 		{
 			icon: Mail,
 			title: 'Email',
-			description: 'Response less than 24 hours',
-			details: 'support@logistics.com'
+			description: 'Response within 24 hours',
+			details: 'support@Vanguardcargo.org'
 		}
 	];
 
@@ -92,41 +93,137 @@ export default function Contact() {
 	// FAQ items
 	const faqItems = [
 		{
-			question: 'Add commonly asked questions here',
-			answer: 'Lorem ipsum dolor sit amet consectetur. Non in bibendum et ut. Facilisi aliquam commodo vitae ipsum dolor.'
+			question: 'How do I get my free US address?',
+			answer: 'Simply register for an account on our platform, and you\'ll receive a unique US shipping address within minutes. This address can receive packages from any US retailer and we\'ll consolidate and forward them to you in Ghana.'
 		},
 		{
-			question: 'Add commonly asked questions here',
-			answer: 'Lorem ipsum dolor sit amet consectetur. Non in bibendum et ut. Facilisi aliquam commodo vitae ipsum dolor.'
+			question: 'How much money can I save with package consolidation?',
+			answer: 'Our customers typically save 40-70% on shipping costs by consolidating multiple packages into one shipment. The exact savings depend on the number of packages, their weight, and dimensions.'
 		},
 		{
-			question: 'Add commonly asked questions here',
-			answer: 'Lorem ipsum dolor sit amet consectetur. Non in bibendum et ut. Facilisi aliquam commodo vitae ipsum dolor.'
+			question: 'How long does shipping take from the US to Ghana?',
+			answer: 'Standard shipping typically takes 7-14 business days from our US warehouse to Ghana. We also offer express shipping options that can deliver in 3-7 business days for urgent packages.'
 		},
 		{
-			question: 'Add commonly asked questions here',
-			answer: 'Lorem ipsum dolor sit amet consectetur. Non in bibendum et ut. Facilisi aliquam commodo vitae ipsum dolor.'
+			question: 'What items cannot be shipped through your service?',
+			answer: 'We cannot ship prohibited items such as hazardous materials, perishable foods, liquids, firearms, and items restricted by Ghana Customs. Please check our prohibited items list for a complete overview.'
 		},
 		{
-			question: 'Add commonly asked questions here',
-			answer: 'Lorem ipsum dolor sit amet consectetur. Non in bibendum et ut. Facilisi aliquam commodo vitae ipsum dolor.'
+			question: 'How do I track my packages?',
+			answer: 'You can track your packages in real-time through your dashboard. We provide tracking updates from the moment your package arrives at our US warehouse until it\'s delivered to your door in Ghana.'
 		}
 	];
 
 	return (
 		<div className="contact-container">
-			{/* Contact Header Section */}
-			<section className="py-16 px-4 sm:px-6 lg:px-8 bg-gray-50">
-				<div className="max-w-4xl mx-auto text-center">
-					<AnimateInView variant="fadeInDown">
-						<h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
-							Contact Us
-						</h1>
-						<p className="text-lg text-gray-600 leading-relaxed">
-							Our team is here to help you with your shipping needs. Reach out 
-							to us anytime – we're just a message or call away!
-						</p>
-					</AnimateInView>
+			{/* Enhanced Contact Hero Section */}
+			<section className="relative py-20 px-4 sm:px-6 lg:px-8 bg-gray-50 overflow-hidden">
+				{/* Background elements */}
+				<div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgba(0,0,0,0.05)_1px,transparent_0)] [background-size:20px_20px]"></div>
+				
+				{/* SVG Background Placeholder */}
+				<div className="absolute inset-0 opacity-10">
+					<svg viewBox="0 0 100 100" className="w-full h-full">
+						<defs>
+							<pattern id="contact-pattern" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+								<circle cx="2" cy="2" r="1" fill="gray" opacity="0.5"/>
+							</pattern>
+						</defs>
+						<rect width="100" height="100" fill="url(#contact-pattern)"/>
+					</svg>
+				</div>
+				
+				<div className="relative max-w-6xl mx-auto">
+					<div className="grid lg:grid-cols-2 gap-12 items-center">
+						{/* Content Side */}
+						<AnimateInView variant="fadeInLeft">
+							<div className="text-gray-700">
+								<motion.div 
+									className="inline-block bg-red-500 text-white px-4 py-2 rounded-full text-sm font-bold mb-6"
+									whileHover={{ scale: 1.05 }}
+									transition={{ duration: 0.2 }}
+								>
+									24/7 Customer Support
+								</motion.div>
+								<h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight text-gray-700">
+									Get in Touch
+									<span className="block text-red-600">We're Here to Help</span>
+								</h1>
+								<p className="text-xl text-gray-700 mb-8 leading-relaxed">
+									Have questions about package forwarding? Need help with your shipment? Our dedicated 
+									support team is ready to assist you every step of the way.
+								</p>
+								
+								{/* Contact methods preview */}
+								<div className="space-y-4 mb-8">
+									<div className="flex items-center space-x-4">
+										<div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
+											<div className="w-6 h-6 bg-red-600 rounded"></div>
+										</div>
+										<div>
+											<div className="font-semibold text-gray-900">Quick Response</div>
+											<div className="text-gray-600 text-sm">Average response time under 2 hours</div>
+										</div>
+									</div>
+									<div className="flex items-center space-x-4">
+										<div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
+											<div className="w-6 h-6 bg-red-600 rounded"></div>
+										</div>
+										<div>
+											<div className="font-semibold text-gray-900">Multiple Channels</div>
+											<div className="text-gray-600 text-sm">Email, phone, and live chat support</div>
+										</div>
+									</div>
+									<div className="flex items-center space-x-4">
+										<div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
+											<div className="w-6 h-6 bg-red-600 rounded"></div>
+										</div>
+										<div>
+											<div className="font-semibold text-gray-900">Expert Team</div>
+											<div className="text-gray-600 text-sm">Shipping specialists ready to help</div>
+										</div>
+									</div>
+								</div>
+								
+								{/* Quick action button */}
+								<motion.a 
+									href="tel:+233302555147"
+									className="inline-flex items-center bg-red-600 hover:bg-red-700 text-white font-bold px-8 py-4 rounded-lg transition-all duration-300"
+									whileHover={{ scale: 1.05, y: -2 }}
+									whileTap={{ scale: 0.95 }}
+								>
+									Call Us Now: +233 302 555 0147
+								</motion.a>
+							</div>
+						</AnimateInView>
+						
+						{/* Visual Side - Placeholder for SVG */}
+						<AnimateInView variant="fadeInRight" delay={0.2}>
+							<div className="relative">
+								<div className="bg-white rounded-2xl p-8 border border-gray-200 shadow-lg">
+									<div className="text-center text-gray-700">
+										<div className="w-full h-64 bg-gray-100 rounded-lg overflow-hidden mb-6">
+											<img 
+												src={supportImage} 
+												alt="Customer support illustration" 
+												className="w-full h-full object-cover"
+											/>
+										</div>
+										<div className="space-y-4">
+											<div className="bg-gray-50 rounded-lg p-4">
+												<div className="text-sm text-gray-600">Email Support</div>
+												<div className="font-semibold text-gray-900">support@Vanguardlogistics.com</div>
+											</div>
+											<div className="bg-gray-50 rounded-lg p-4">
+												<div className="text-sm text-gray-600">Office Hours</div>
+												<div className="font-semibold text-gray-900">Mon-Fri: 8AM-8PM</div>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</AnimateInView>
+					</div>
 				</div>
 			</section>
 
@@ -179,7 +276,7 @@ export default function Contact() {
 												name="email"
 												value={formData.email}
 												onChange={handleInputChange}
-												placeholder="logistics@company.com"
+												placeholder="your.email@example.com"
 												className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500 transition-colors duration-200"
 											/>
 										</motion.div>
@@ -501,7 +598,7 @@ export default function Contact() {
 							transition={{ duration: 0.6, delay: 0.2 }}
 							viewport={{ once: true }}
 						>
-							Our team is ready to help you with your logistics needs. Contact us 
+							Our team is ready to help you with your package forwarding needs. Contact us 
 							today for a personalized solution.
 						</motion.p>
 						

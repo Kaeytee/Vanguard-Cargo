@@ -1,8 +1,8 @@
-# Ttarius Logistics - Warehouse Frontend Structure
+# Vanguard Cargo - Warehouse Frontend Structure
 
 ## Frontend Hierarchy Overview
 
-This document defines the complete frontend hierarchy for the Ttarius Logistics warehouse system, aligning with the organizational structure and roles defined in the main warehouse documentation.
+This document defines the complete frontend hierarchy for the Vanguard Cargo warehouse system, aligning with the organizational structure and roles defined in the main warehouse documentation.
 
 ## Directory Structure
 

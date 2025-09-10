@@ -1,6 +1,6 @@
 # API Integration Guide
 
-This guide explains how to integrate your Ttarius Logistics client app with real backend endpoints using the simplified API service.
+This guide explains how to integrate your Vanguard Cargo client app with real backend endpoints using the simplified API service.
 
 ## Quick Start - Single Environment File
 
@@ -146,9 +146,9 @@ Your API should return shipment data in this format:
     "address": "1600 Pennsylvania Avenue NW, Washington, DC 20500, USA"
   },
   "warehouseDetails": {
-    "name": "Ttarius Logistics Ghana",
+    "name": "Vanguard Cargo Ghana",
     "phone": "+233 30 123 4567",
-    "email": "warehouse@ttariuslogistics.com",
+    "email": "warehouse@vanguardcargo.org",
     "address": "15 Independence Avenue, Accra, Ghana"
   },
   "estimatedDelivery": "2025-02-25",
