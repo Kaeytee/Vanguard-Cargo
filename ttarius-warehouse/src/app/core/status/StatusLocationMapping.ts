@@ -39,12 +39,12 @@ export interface LocationPoint extends LocationCoordinate {
   // Routing metadata (optional properties used in route generation)
   readonly estimatedArrival?: string;  // Estimated arrival time at this location
   readonly expectedStatus?: PackageStatus; // Expected package status at this location
-  readonly isMajorHub?: boolean;      // Whether this is a major logistics hub
+  readonly isMajorHub?: boolean;      // Whether this is a major cargo hub
 }
 
 /**
  * Facility type values
- * Categorizes different types of locations in the logistics network
+ * Categorizes different types of locations in the cargo network
  */
 export const FacilityTypeValues = {
   WAREHOUSE: 'warehouse' as const,           // Main warehouse facility

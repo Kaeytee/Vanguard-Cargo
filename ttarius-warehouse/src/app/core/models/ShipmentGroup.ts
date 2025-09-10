@@ -37,7 +37,7 @@ export interface ShipmentGroup {
   readonly statusHistory: GroupStatusHistoryEntry[]; // Complete status history
   readonly packageStatuses: Record<string, PackageStatus>; // Individual package statuses
   
-  // 🗺️ ROUTING AND LOGISTICS
+  // 🗺️ ROUTING AND cargo
   readonly route: GroupRoute;             // Optimized delivery route
   readonly origin: LocationPoint;         // Group origin/pickup point
   readonly destinations: LocationPoint[]; // All destination points

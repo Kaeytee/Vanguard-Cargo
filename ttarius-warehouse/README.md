@@ -2,7 +2,7 @@
 
 ## Overview
 
-Vanguard Cargo is a warehouse-to-warehouse international logistics platform that enables customers to ship packages from foreign countries to local warehouses for pickup. The warehouse system is the operational core that manages package processing, international shipping, and customer pickup coordination.
+Vanguard Cargo is a warehouse-to-warehouse international cargo platform that enables customers to ship packages from foreign countries to local warehouses for pickup. The warehouse system is the operational core that manages package processing, international shipping, and customer pickup coordination.
 
 ## Business Model
 

@@ -6,7 +6,7 @@ import { generateTrackingBarcode } from '../../utils/barcodeUtils';
 /**
  * CreateShipment Component
  * 
- * This component provides a form interface for creating new shipments in the logistics system.
+ * This component provides a form interface for creating new shipments in the cargo system.
  * It includes form fields for shipment details, origin, destination, and scheduling.
  * 
  * @returns {React.ReactElement} The CreateShipment component

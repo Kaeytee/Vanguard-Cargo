@@ -4,7 +4,7 @@ import { FiUserPlus, FiEdit2, FiTrash2, FiMail, FiPhone, FiMapPin, FiSearch } fr
 /**
  * ClientManagement Component
  * 
- * This component provides an interface for managing clients in the logistics system.
+ * This component provides an interface for managing clients in the cargo system.
  * It includes features for viewing, adding, editing, and deleting clients.
  * 
  * @returns {React.ReactElement} The ClientManagement component
@@ -40,7 +40,7 @@ const ClientManagement: React.FC = () => {
       contactPerson: 'Sarah Johnson',
       email: 'sarah.j@globalshipping.com',
       phone: '+1 (555) 987-6543',
-      address: '456 Logistics Blvd, Chicago, IL 60007',
+      address: '456 cargo Blvd, Chicago, IL 60007',
       status: 'active',
       joinDate: '2024-02-20'
     },

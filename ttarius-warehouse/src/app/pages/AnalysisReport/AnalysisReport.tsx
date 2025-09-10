@@ -4,7 +4,7 @@ import { FiBarChart2, FiPieChart, FiTrendingUp, FiCalendar, FiDownload, FiFilter
 /**
  * AnalysisReport Component
  * 
- * This component provides data analysis and reporting features for the logistics system.
+ * This component provides data analysis and reporting features for the cargo system.
  * It displays various charts, metrics, and allows filtering and exporting of data.
  * 
  * @returns {React.ReactElement} The AnalysisReport component
