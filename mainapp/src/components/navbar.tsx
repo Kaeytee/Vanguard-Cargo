@@ -107,7 +107,7 @@ export default function Navbar() {
           {/* Logo */}
           <Link to="/" className="flex-shrink-0">
             <span className="text-2xl font-bold text-primary tracking-tight">
-              Vangaurd Logistics
+              Vanguard Logistics
             </span>
           </Link>{" "}
           {/* Desktop Navigation */}

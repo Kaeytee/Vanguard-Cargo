@@ -121,7 +121,7 @@ const FaqSection: React.FC<FaqSectionProps> = ({
                 if (onSwitchToContact) {
                   onSwitchToContact();
                 } else {
-                  window.location.href = "mailto:support@vangaurdcargo.org";
+                  window.location.href = "mailto:support@Vanguardcargo.org";
                 }
               }}
             >

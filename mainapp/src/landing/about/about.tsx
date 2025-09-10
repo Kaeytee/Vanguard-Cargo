@@ -349,7 +349,7 @@ export default function About() {
 							transition={{ duration: 0.6 }}
 							viewport={{ once: true }}
 						>
-							Ready to Ship with Vangaurd Logistics?
+							Ready to Ship with Vanguard Logistics?
 						</motion.h2>
 						<motion.p 
 							className="text-xl text-red-100 mb-8"

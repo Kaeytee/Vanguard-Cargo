@@ -575,8 +575,8 @@ describe('Authentication Flow', () => {
 
 ```bash
 # .env.production
-VITE_API_BASE_URL=https://api.Vangaurd.com
-VITE_WS_URL=wss://api.Vangaurd.com/ws
+VITE_API_BASE_URL=https://api.Vanguard.com
+VITE_WS_URL=wss://api.Vanguard.com/ws
 VITE_STRIPE_PUBLIC_KEY=pk_live_...
 VITE_GOOGLE_MAPS_API_KEY=...
 ```

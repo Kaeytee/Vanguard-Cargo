@@ -68,7 +68,7 @@ export default function Contact() {
 			icon: Mail,
 			title: 'Email',
 			description: 'Response within 24 hours',
-			details: 'support@vangaurdcargo.org'
+			details: 'support@Vanguardcargo.org'
 		}
 	];
 

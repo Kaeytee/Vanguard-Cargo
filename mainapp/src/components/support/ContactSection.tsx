@@ -105,10 +105,10 @@ const ContactSection: React.FC<ContactSectionProps> = ({
                   <Mail size={18} className="text-red-500" />
                 </div>
                 <a
-                  href="mailto:support@vangaurdcargo.org"
+                  href="mailto:support@Vanguardcargo.org"
                   className="text-gray-800 font-medium hover:text-red-500 transition-colors text-sm sm:text-base"
                 >
-                  support@vangaurdcargo.org
+                  support@Vanguardcargo.org
                 </a>
               </div>
             </div>

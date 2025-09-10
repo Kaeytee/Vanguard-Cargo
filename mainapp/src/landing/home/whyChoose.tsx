@@ -38,7 +38,7 @@ export default function WhyChoose() {
 		<section className="py-16 bg-gray-50">
 			<div className="container mx-auto px-4">
 				<AnimateInView variant="fadeInDown">
-					<h2 className="text-3xl font-bold text-center mb-4">Why 5000+ Ghanaians Choose Vangaurd</h2>
+					<h2 className="text-3xl font-bold text-center mb-4">Why 5000+ Ghanaians Choose Vanguard</h2>
 					<p className="text-xl text-gray-600 text-center mb-12 max-w-3xl mx-auto">
 						Join thousands of satisfied customers who trust us to bring the best of US shopping to Ghana
 					</p>
