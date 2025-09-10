@@ -8,7 +8,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const BASE_URL = 'https://ttariuslogistics.com';
+const BASE_URL = 'https://vanguardcargo.org';
 
 // Static pages with their priorities and change frequencies
 const STATIC_PAGES = [
