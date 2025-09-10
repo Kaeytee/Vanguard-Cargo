@@ -83,7 +83,7 @@ export default function Footer() {
 						<h3 className="text-lg font-semibold text-gray-900">Contact</h3>
 						<div className="space-y-2 text-gray-600">
 							<p className="text-sm">
-								123 Logistics Way<br />
+								123 cargo Way<br />
 								Future City, FC 12345
 							</p>
 							<p className="text-sm">

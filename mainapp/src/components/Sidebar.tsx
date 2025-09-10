@@ -2,7 +2,6 @@ import React from "react";
 import { NavLink } from "react-router-dom";
 import {
   BarChart3,
-  Package,
   Clock,
   Settings,
   Headphones,
@@ -51,7 +50,6 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate }) => {
    */
   const navigationItems = [
     { to: "/app/dashboard", icon: BarChart3, label: t('dashboard') },
-    { to: "/app/submit-request", icon: Package, label: t('submitRequest') },
     { to: "/app/shipment-history", icon: Clock, label: t('shipmentHistory') },
     { to: "/app/tracking", icon: Search, label: t('tracking') },
     { to: "/app/settings", icon: Settings, label: t('settings') },

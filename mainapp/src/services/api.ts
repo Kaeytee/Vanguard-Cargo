@@ -217,23 +217,6 @@ export interface UpdateNotificationRequest {
   isRead?: boolean;
 }
 
-// Mock user data for development
-const MOCK_USER: UserProfile = {
-  id: 'user123',
-  firstName: 'Austin',
-  lastName: 'Doe',
-  email: 'john.doe@email.com',
-  phone: '+1 (555) 123-4567',
-  country: 'United States',
-  address: '123 Main St',
-  city: 'New York',
-  state: 'NY',
-  zip: '10001',
-  profileImage: '',
-  createdAt: new Date().toISOString(),
-  updatedAt: new Date().toISOString()
-};
-
 // Mock notifications data for development
 const MOCK_NOTIFICATIONS: Notification[] = [
   {
@@ -612,31 +595,42 @@ private async callApiOrMock<T>(
     return this.callApiOrMock(
       // Mock data function
       async () => {
-        // Verify reCAPTCHA token first
-        if (!recaptchaToken) {
-          throw new Error('reCAPTCHA verification failed. Please verify you are not a robot.');
+        // In mock mode, accept any credentials as long as email and password are not empty
+        if (!email || !password) {
+          throw new Error('Email and password are required');
         }
 
-        // In a real implementation, we would verify the token with Google's API
-        // For mock purposes, we'll just check if it exists
-        const isRecaptchaValid = await this.verifyRecaptcha(recaptchaToken);
-        if (!isRecaptchaValid) {
-          throw new Error('reCAPTCHA verification failed. Please try again.');
-        }
+        // For demo purposes, we'll bypass reCAPTCHA in mock mode
+        // In a real implementation, you would still verify the reCAPTCHA token
+        
+        // Create a mock user based on the entered email
+        const mockUser: UserProfile = {
+          id: 'user-' + Date.now(),
+          firstName: email.split('@')[0].charAt(0).toUpperCase() + email.split('@')[0].slice(1),
+          lastName: 'User',
+          email: email,
+          phone: '+1234567890',
+          country: 'Ghana',
+          address: '123 Main Street, Accra',
+          city: 'Accra',
+          state: 'Greater Accra',
+          zip: '00233',
+          emailVerified: true,
+          accountStatus: 'ACTIVE',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        };
 
-        // Simple mock validation for credentials
-        if (email === 'test@example.com' && password === 'password') {
-          const authResponse: AuthResponse = {
-            token: 'mock-jwt-token-' + Date.now(),
-            user: MOCK_USER
-          };
-          // Store token in localStorage for mock mode
-          localStorage.setItem('authToken', authResponse.token);
-          localStorage.setItem('user', JSON.stringify(authResponse.user));
-          return authResponse;
-        } else {
-          throw new Error('Invalid email or password');
-        }
+        const authResponse: AuthResponse = {
+          token: 'mock-jwt-token-' + Date.now(),
+          user: mockUser
+        };
+
+        // Store token in localStorage for mock mode
+        localStorage.setItem('authToken', authResponse.token);
+        localStorage.setItem('user', JSON.stringify(authResponse.user));
+        
+        return authResponse;
       },
       // Real API function
       () => this.request<AuthResponse>('/auth/login', {
@@ -681,9 +675,9 @@ private async callApiOrMock<T>(
         const initialNotificationSettings: NotificationSettings = {
           id: 'notif-' + Date.now(),
           userId: newUser.id,
-          shipmentUpdates: true, // Always enabled for logistics
-          deliveryAlerts: true, // Always enabled for logistics
-          delayNotifications: true, // Always enabled for logistics
+          shipmentUpdates: true, // Always enabled for cargo
+          deliveryAlerts: true, // Always enabled for cargo
+          delayNotifications: true, // Always enabled for cargo
           marketingNotifications: userData.agreeToMarketing ?? false, // Based on registration choice
           emailNotifications: true, // Default enabled
           smsNotifications: false, // Default disabled

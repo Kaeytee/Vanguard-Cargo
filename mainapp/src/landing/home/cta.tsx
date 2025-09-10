@@ -35,8 +35,8 @@ export default function CTA() {
 		<section className="py-16 bg-gradient-to-br from-red-900 via-red-800 to-red-700 text-white relative overflow-hidden">
 			{/* Background decorative elements */}
 			<div className="absolute inset-0">
-				<div className="absolute top-10 left-10 w-20 h-20 bg-yellow-400 rounded-full opacity-10 animate-pulse"></div>
-				<div className="absolute top-40 right-20 w-16 h-16 bg-green-400 rounded-full opacity-10 animate-bounce"></div>
+				<div className="absolute top-10 left-10 w-20 h-20 bg-red-400 rounded-full opacity-10 animate-pulse"></div>
+				<div className="absolute top-40 right-20 w-16 h-16 bg-red-400 rounded-full opacity-10 animate-bounce"></div>
 				<div className="absolute bottom-20 left-1/4 w-12 h-12 bg-red-400 rounded-full opacity-10 animate-ping"></div>
 			</div>
 
@@ -59,15 +59,15 @@ export default function CTA() {
 					<AnimateInView variant="fadeInUp" delay={0.3}>
 						<div className="flex flex-wrap justify-center md:justify-start gap-4 mb-8">
 							<div className="flex items-center bg-white/20 rounded-full px-4 py-2">
-								<Check className="w-4 h-4 text-green-400 mr-2" />
+								<Check className="w-4 h-4 text-red-300 mr-2" />
 								<span className="text-sm">Free US address</span>
 							</div>
 							<div className="flex items-center bg-white/20 rounded-full px-4 py-2">
-								<Check className="w-4 h-4 text-green-400 mr-2" />
+								<Check className="w-4 h-4 text-red-300 mr-2" />
 								<span className="text-sm">Package consolidation</span>
 							</div>
 							<div className="flex items-center bg-white/20 rounded-full px-4 py-2">
-								<Check className="w-4 h-4 text-green-400 mr-2" />
+								<Check className="w-4 h-4 text-red-300 mr-2" />
 								<span className="text-sm">Save up to 70%</span>
 							</div>
 						</div>
@@ -76,7 +76,7 @@ export default function CTA() {
 					<AnimateInView variant="fadeInUp" delay={0.4}>
 						<div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
 							<Link to="/register">
-								<AnimatedButton size="lg" className="bg-white hover:bg-yellow-300 text-red-900 font-bold flex items-center gap-2">
+								<AnimatedButton size="lg" className="bg-white hover:bg-red-100 text-red-900 font-bold flex items-center gap-2">
 									Get My Free US Address 
 									<Rocket className="w-5 h-5" />
 								</AnimatedButton>
@@ -113,7 +113,7 @@ export default function CTA() {
 									<div>United States</div>
 								</div>
 								<div className="mt-4 pt-4 border-t border-gray-200">
-									<div className="flex items-center text-green-600 text-sm">
+									<div className="flex items-center text-red-600 text-sm">
 										<Check className="w-4 h-4 mr-2" />
 										<span>Ready to receive packages!</span>
 									</div>
@@ -121,10 +121,10 @@ export default function CTA() {
 							</div>
 							
 							{/* Floating elements */}
-							<div className="absolute -top-4 -right-4 bg-yellow-400 text-red-900 px-3 py-1 rounded-full text-xs font-bold animate-bounce">
+							<div className="absolute -top-4 -right-4 bg-red-600 text-white px-3 py-1 rounded-full text-xs font-bold animate-bounce">
 								FREE!
 							</div>
-							<div className="absolute -bottom-4 -left-4 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-bold">
+							<div className="absolute -bottom-4 -left-4 bg-red-500 text-white px-3 py-1 rounded-full text-xs font-bold">
 								Instant Setup
 							</div>
 						</div>

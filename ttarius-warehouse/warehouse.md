@@ -2,7 +2,7 @@
 
 ## Executive Summary
 
-**This warehouse system IS the Vanguard Cargo platform.** Every business decision, data flow, user interaction, and system integration flows through this warehouse backbone. This document serves as the definitive operational blueprint for backend developers, system architects, and business stakeholders to understand and implement the complete logistics operation.
+**This warehouse system IS the Vanguard Cargo platform.** Every business decision, data flow, user interaction, and system integration flows through this warehouse backbone. This document serves as the definitive operational blueprint for backend developers, system architects, and business stakeholders to understand and implement the complete cargo operation.
 
 ### Why This Document Is Critical
 - **For Backend Developers**: This is your implementation roadmap - every API, database table, and business rule is defined here
@@ -60,7 +60,7 @@ The client app is essentially a user interface that communicates with this wareh
 17. [Monitoring and Alerts](#monitoring-and-alerts)
 18. [Future Production](#future-production)
 
-## Business Logic Framework: Pure International Logistics
+## Business Logic Framework: Pure International cargo
 
 ### Package Types - Official Definition
 **There are ONLY two package types in the entire Vanguard Cargo system:**
@@ -78,8 +78,8 @@ The client app is essentially a user interface that communicates with this wareh
 3. **SEA**: International sea freight for large shipments (future cost-effective option)
 4. **EXPRESS**: Premium express international service (future high-priority option)
 
-### Core Business Model - Pure International Logistics
-**Vanguard Cargo operates EXCLUSIVELY as an international logistics company:**
+### Core Business Model - Pure International cargo
+**Vanguard Cargo operates EXCLUSIVELY as an international cargo company:**
 - **No Domestic Services**: We do not handle deliveries within the same country
 - **Cross-Border Only**: All packages move between different countries
 - **Current Routes**: Ghana ↔ USA exclusively
@@ -99,7 +99,7 @@ Client's Country = USA → Origin Country Dropdown = [Ghana, Future Countries] (
 
 **Business Justification:**
 - Prevents impossible domestic requests
-- Enforces international logistics business model
+- Enforces international cargo business model
 - Ensures all requests are cross-border by design
 
 ### The Universal Workflow - Every Package Follows This Path (International Only)
@@ -110,7 +110,7 @@ CLIENT REQUEST → ORIGIN WAREHOUSE → INTERNATIONAL SHIPPING → DESTINATION W
    (Client App)    (Origin Country)    (Air Freight)        (Destination Country)  (Warehouse Pickup)
    - Submit info   - Process package   - Ship internationally  - Clear customs       - Notify customer
    - Get tracking  - Prepare export    - Track transit        - Process arrival      - Customer pickup
-   - Track status  - Ship package      - Handle logistics     - Store in warehouse   - Confirm collection
+   - Track status  - Ship package      - Handle cargo     - Store in warehouse   - Confirm collection
 ```
 
 **This workflow is immutable. Every package moves between countries and ends with warehouse pickup - no home delivery exists.**
@@ -222,7 +222,7 @@ Client Request → Package Creation → Physical Receipt → Processing → Ship
 - **Efficiency**: Optimal resource utilization and cost management
 - **Scalability**: System must handle growing package volumes
 
-### Database Architecture & Data Flow - Pure International Logistics
+### Database Architecture & Data Flow - Pure International cargo
 
 **Why Normalized Data Matters:**
 The warehouse system uses a fully normalized database design to eliminate redundancy and ensure data integrity. This means the client app sends only essential, unique data, while the warehouse system manages all relationships and derived information.
@@ -273,7 +273,7 @@ Users (shared table - includes country field)
 │       └── Customs_Documentation [1:1]
 │           └── Shipments (international groups) [many:1]
 │               ├── Shipment_Status_History [1:many]
-│               └── International_Logistics [1:1]
+│               └── International_cargo [1:1]
 ```
 
 **Benefits of This Approach:**
@@ -685,11 +685,11 @@ ALTER TABLE packages ADD CONSTRAINT valid_tracking_format
 ### Warehouse Staff Hierarchy & Organizational Structure
 
 **Executive Level Management:**
-- **Transportation Manager**: Oversees all shipping and logistics operations
+- **Transportation Manager**: Oversees all shipping and cargo operations
   - **Transportation Coordinator**: Reports to Transportation Manager, handles day-to-day shipping coordination
 - **Warehouse Manager**: Manages warehouse operations and staff
 - **Inventory Analyst**: Tracks and analyzes inventory levels and movements
-- **Logistics Analyst**: Analyzes logistics performance and optimization opportunities
+- **cargo Analyst**: Analyzes cargo performance and optimization opportunities
 - **Customer Service Representative**: Handles customer inquiries and communication
 - **Export Documentation Specialist**: Manages all international shipping documentation and customs requirements
 
@@ -708,7 +708,7 @@ ALTER TABLE packages ADD CONSTRAINT valid_tracking_format
 | Warehouse Manager | All | Yes | Yes | Yes | Limited |
 | Order Fulfillment Specialists | Assigned | Limited | No | No | No |
 | Inventory Analyst | All | Limited | No | No | No |
-| Logistics Analyst | All | No | No | No | No |
+| cargo Analyst | All | No | No | No | No |
 | Customer Service Rep | Customer-specific | Limited | No | Yes | No |
 | Export Documentation | International | Limited | No | No | No |
 | Warehouse Workers | Assigned | Limited | No | No | No |
@@ -1153,7 +1153,7 @@ Shipment {
   shipmentType: GROUND | AIR | SEA | EXPRESS
   destinationRegion: string
   
-  logistics: {
+  cargo: {
     vehicleId: UUID
     driverId: UUID
     route: RoutePoint[]
@@ -1540,7 +1540,7 @@ GET  /api/warehouse/shipments                   # Get all shipments with filters
 GET  /api/warehouse/shipments/{id}              # Get specific shipment details
 PUT  /api/warehouse/shipments/{id}/status       # Update shipment status
 POST /api/warehouse/shipments/{id}/dispatch     # Mark shipment as dispatched
-PUT  /api/warehouse/shipments/{id}/logistics    # Update vehicle/driver assignment
+PUT  /api/warehouse/shipments/{id}/cargo    # Update vehicle/driver assignment
 ```
 
 ### Tracking & Status
@@ -1590,7 +1590,7 @@ openapi: 3.0.0
 info:
   title: Vanguard Cargo Warehouse API
   version: 1.0.0
-  description: International logistics warehouse management system
+  description: International cargo warehouse management system
 paths:
   /api/warehouse/packages/{id}/status:
     put:

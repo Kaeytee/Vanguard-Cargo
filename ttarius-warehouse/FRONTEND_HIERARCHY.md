@@ -26,7 +26,7 @@ src/
 │   │   │   ├── TransportationManagerDashboard.tsx
 │   │   │   ├── WarehouseManagerDashboard.tsx
 │   │   │   ├── InventoryAnalystDashboard.tsx
-│   │   │   ├── LogisticsAnalystDashboard.tsx
+│   │   │   ├── cargoAnalystDashboard.tsx
 │   │   │   ├── CustomerServiceDashboard.tsx
 │   │   │   └── ExportDocumentationDashboard.tsx
 │   │   ├── operational/                # Operational Level Dashboards
@@ -347,7 +347,7 @@ src/
 ### Executive Level Components
 ```typescript
 // Transportation Manager
-- Full access to all transportation and logistics operations
+- Full access to all transportation and cargo operations
 - Dashboard: Transportation metrics, shipment overview, performance analytics
 - Components: TransportationManagerDashboard.tsx, ShipmentOverview.tsx
 
@@ -361,10 +361,10 @@ src/
 - Dashboard: Stock levels, movement analytics, location optimization
 - Components: InventoryAnalystDashboard.tsx, InventoryAnalytics.tsx
 
-// Logistics Analyst
+// cargo Analyst
 - Performance analysis and optimization tools
 - Dashboard: KPIs, efficiency metrics, trend analysis
-- Components: LogisticsAnalystDashboard.tsx, PerformanceMetrics.tsx
+- Components: cargoAnalystDashboard.tsx, PerformanceMetrics.tsx
 
 // Customer Service Representative
 - Customer interaction and package release management

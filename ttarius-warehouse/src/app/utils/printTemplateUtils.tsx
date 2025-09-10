@@ -400,7 +400,7 @@ const PackagePrintTemplate: React.FC<PackagePrintTemplateProps> = ({
           fontSize: 14,
           marginBottom: 8
         }}>
-          Thank you for choosing <strong>{COMPANY_DETAILS.name}</strong> for your logistics needs.
+          Thank you for choosing <strong>{COMPANY_DETAILS.name}</strong> for your cargo needs.
         </div>
         <div style={{ 
           color: '#9ca3af', 

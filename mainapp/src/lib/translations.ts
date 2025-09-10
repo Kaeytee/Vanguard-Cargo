@@ -83,7 +83,7 @@ export const translations = {
     aboutCompany: 'About Vanguard Cargo',
     
     // Sidebar
-    logistics: 'Logistics.',
+    cargo: 'cargo.',
     
     // Dashboard Descriptions
     createNewDelivery: 'Create a new delivery',
@@ -214,7 +214,7 @@ export const translations = {
     aboutCompany: 'Acerca de Vanguard Cargo',
     
     // Sidebar
-    logistics: 'Logística.',
+    cargo: 'Logística.',
     
     // Dashboard Descriptions
     createNewDelivery: 'Crear una nueva entrega',
@@ -345,7 +345,7 @@ export const translations = {
     aboutCompany: 'À Propos de Vanguard Cargo',
     
     // Sidebar
-    logistics: 'Logistique.',
+    cargo: 'Logistique.',
     
     // Dashboard Descriptions
     createNewDelivery: 'Créer une nouvelle livraison',

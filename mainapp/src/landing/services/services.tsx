@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import AnimateInView from '../../components/ui/animate-in-view';
+import SEO from '../../components/SEO';
 import air from '../../images/air.png';
 import packaging from '../../images/packaging.png';
 import customs from '../../images/customs.png';
@@ -112,6 +113,13 @@ export default function Services() {
 
 	return (
 		<div className="services-container">
+			<SEO 
+				title="Package Forwarding Services - Ship from USA to Ghana | Vanguard Cargo"
+				description="Comprehensive package forwarding services from USA to Ghana. Free US address, package consolidation, customs handling, and reliable delivery. Get up to 80% savings on international shipping."
+				keywords="package forwarding services, USA to Ghana shipping, package consolidation, customs clearance, international shipping services, cargo forwarding, freight services, US address service"
+				url="https://www.vanguardcargo.org/services"
+			/>
+			
 			{/* Enhanced Services Hero Section */}
 			<section className="relative py-20 px-4 sm:px-6 lg:px-8 bg-gray-50 overflow-hidden">
 				{/* Background pattern overlay */}
@@ -371,12 +379,12 @@ export default function Services() {
 									</div>
 									<div className="flex justify-between items-center">
 										<span>1 consolidated shipment (15 lbs)</span>
-										<span className="font-bold text-green-400">$65</span>
+										<span className="font-bold text-red-300">$65</span>
 									</div>
 									<div className="border-t border-white/20 pt-4">
 										<div className="flex justify-between items-center text-xl font-bold">
 											<span>Your Savings:</span>
-											<span className="text-yellow-400">$115 (64%)</span>
+											<span className="text-red-300">$115 (64%)</span>
 										</div>
 									</div>
 								</div>
@@ -390,7 +398,7 @@ export default function Services() {
 						<AnimateInView variant="fadeInRight">
 							<div className="space-y-6">
 								<div className="flex items-center space-x-4">
-									<div className="w-12 h-12 bg-yellow-400 rounded-full flex items-center justify-center text-red-900 font-bold text-xl">
+									<div className="w-12 h-12 bg-red-400 rounded-full flex items-center justify-center text-white font-bold text-xl">
 										1
 									</div>
 									<div>
@@ -400,7 +408,7 @@ export default function Services() {
 								</div>
 								
 								<div className="flex items-center space-x-4">
-									<div className="w-12 h-12 bg-green-400 rounded-full flex items-center justify-center text-red-900 font-bold text-xl">
+									<div className="w-12 h-12 bg-red-500 rounded-full flex items-center justify-center text-white font-bold text-xl">
 										2
 									</div>
 									<div>
@@ -410,7 +418,7 @@ export default function Services() {
 								</div>
 								
 								<div className="flex items-center space-x-4">
-									<div className="w-12 h-12 bg-blue-400 rounded-full flex items-center justify-center text-white font-bold text-xl">
+									<div className="w-12 h-12 bg-red-600 rounded-full flex items-center justify-center text-white font-bold text-xl">
 										3
 									</div>
 									<div>
@@ -422,7 +430,7 @@ export default function Services() {
 								<div className="mt-8">
 									<Link
 										to="/register"
-										className="bg-white hover:bg-yellow-300 text-red-900 font-bold px-8 py-4 rounded-lg transition-all duration-300 transform hover:scale-105 inline-flex items-center gap-2"
+										className="bg-white hover:bg-red-100 text-red-900 font-bold px-8 py-4 rounded-lg transition-all duration-300 transform hover:scale-105 inline-flex items-center gap-2"
 									>
 										Start Saving Today <Rocket className="w-5 h-5" />
 									</Link>
@@ -513,7 +521,7 @@ export default function Services() {
 							transition={{ duration: 0.6 }}
 							viewport={{ once: true }}
 						>
-							Ready to Optimize Your Logistics?
+							Ready to Optimize Your cargo?
 						</motion.h2>
 						<motion.p 
 							className="text-xl text-red-100 mb-8"

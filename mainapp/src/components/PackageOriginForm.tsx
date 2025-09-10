@@ -157,7 +157,7 @@ const PackageOriginForm: React.FC<PackageOriginFormProps> = ({
             <div className="text-sm text-amber-600 mt-2 p-2 bg-amber-50 border border-amber-200 rounded flex items-center">
               <FaInfoCircle className="mr-2 text-amber-500" />
               <span>
-                International logistics only: You cannot select your own country ({formData.clientCountry}) as the package origin.
+                International cargo only: You cannot select your own country ({formData.clientCountry}) as the package origin.
               </span>
             </div>
           )}
@@ -258,8 +258,8 @@ const PackageOriginForm: React.FC<PackageOriginFormProps> = ({
       </div>
 
       {/* Information Card */}
-      <div className="mt-6 p-4 border-l-4 border-blue-500 bg-blue-50 text-blue-700 rounded-r-lg">
-        <h4 className="font-semibold mb-1">International Logistics Only</h4>
+      <div className="mt-6 p-4 border-l-4 border-red-500 bg-red-50 text-red-700 rounded-r-lg">
+        <h4 className="font-semibold mb-1">International cargo Only</h4>
         <p className="text-sm">
           Vanguard Cargo specializes in cross-border shipments between Ghana and USA. 
           You can only receive packages from a different country than where you're located. 

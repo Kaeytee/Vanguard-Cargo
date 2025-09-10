@@ -33,7 +33,7 @@ const MockDataDebug: React.FC = () => {
   }, []);
 
   if (loading) {
-    return <div className="p-4 bg-blue-100 rounded">Loading mock data...</div>;
+    return <div className="p-4 bg-red-100 rounded">Loading mock data...</div>;
   }
 
   return (

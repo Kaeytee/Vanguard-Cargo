@@ -5,8 +5,8 @@
 ### 1. Environment Variables Security
 - ✅ **Removed sensitive .env files from git tracking**
   - `mainapp/.env.vercel-quickfix`
-  - `ttarius-warehouse/.env.development`
-  - `ttarius-warehouse/.env.production`
+  - `Vanguard-warehouse/.env.development`
+  - `Vanguard-warehouse/.env.production`
 - ✅ **Enhanced .gitignore files** to prevent future commits of sensitive files
 - ✅ **Sanitized documentation** by removing exposed reCAPTCHA keys
 
@@ -35,7 +35,7 @@
 # Set these in Vercel Dashboard → Settings → Environment Variables
 REACT_APP_RECAPTCHA_SITE_KEY=your_new_site_key
 REACT_APP_RECAPTCHA_SECRET_KEY=your_new_secret_key
-REACT_APP_API_BASE_URL=https://api.ttariuslogistics.com/api
+REACT_APP_API_BASE_URL=https://api.www.vanguardcargo.org/api
 REACT_APP_ENVIRONMENT=production
 REACT_APP_USE_MOCK_DATA=false
 REACT_APP_DEBUG=false
@@ -58,7 +58,7 @@ REACT_APP_DEBUG=true
 ```bash
 # WARNING: This rewrites git history - coordinate with team first
 git filter-branch --force --index-filter \
-  'git rm --cached --ignore-unmatch mainapp/.env mainapp/.env.production ttarius-warehouse/.env.development ttarius-warehouse/.env.production' \
+  'git rm --cached --ignore-unmatch mainapp/.env mainapp/.env.production Vanguard-warehouse/.env.development Vanguard-warehouse/.env.production' \
   --prune-empty --tag-name-filter cat -- --all
 
 # Force push to remote (DANGEROUS - backup first)
@@ -89,7 +89,7 @@ git push origin --force --tags
    cp .env.example .env
    # Edit .env with your real values
    
-   # In ttarius-warehouse/
+   # In Vanguard-warehouse/
    touch .env.development
    touch .env.production
    # Add your configuration

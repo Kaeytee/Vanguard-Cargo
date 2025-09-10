@@ -18,11 +18,11 @@ export interface FeatureFlags {
 /**
  * Current feature flag configuration
  * 
- * To revert authentication functionality in the future:
- * 1. Change authEnabled from false to true
- * 2. The UI will automatically show auth buttons normally
- * 3. Auth routes will work as expected
+ * Authentication functionality has been restored:
+ * 1. authEnabled set to true to re-enable authentication
+ * 2. Login and register routes are now active
+ * 3. Auth buttons will show normally in the UI
  */
 export const featureFlags: FeatureFlags = {
-  authEnabled: false, // TODO: Set to true when ready to re-enable authentication
+  authEnabled: true, // Authentication routes and functionality enabled
 };

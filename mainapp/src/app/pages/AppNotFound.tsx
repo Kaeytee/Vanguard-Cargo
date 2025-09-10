@@ -51,13 +51,13 @@ const AppNotFound: React.FC = () => {
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Link 
-              to="/app/submit-request" 
+              to="/app/dashboard" 
               className="flex items-center p-4 rounded-lg border border-gray-200 hover:border-red-300 hover:bg-red-50 transition-colors duration-200 group"
             >
               <Package className="w-8 h-8 text-red-600 mr-3 group-hover:scale-110 transition-transform duration-200" />
               <div className="text-left">
-                <h4 className="font-medium text-gray-900">Submit Request</h4>
-                <p className="text-sm text-gray-600">Create new package request</p>
+                <h4 className="font-medium text-gray-900">Dashboard</h4>
+                <p className="text-sm text-gray-600">Go back to dashboard</p>
               </div>
             </Link>
             

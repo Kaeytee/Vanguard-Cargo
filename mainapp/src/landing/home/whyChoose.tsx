@@ -59,7 +59,7 @@ export default function WhyChoose() {
 								<div className="flex justify-center mb-4">
 									{item.icon === 'savings' && (
 										<motion.div
-											className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center text-green-600"
+											className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center text-red-600"
 											whileHover={{ scale: 1.1, rotate: 5 }}
 											transition={{ type: "spring", stiffness: 300, damping: 15 }}
 										>
@@ -70,7 +70,7 @@ export default function WhyChoose() {
 									)}
 									{item.icon === 'stores' && (
 										<motion.div
-											className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-600"
+											className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center text-red-600"
 											whileHover={{ scale: 1.1, rotate: 5 }}
 											transition={{ type: "spring", stiffness: 300, damping: 15 }}
 										>
@@ -81,7 +81,7 @@ export default function WhyChoose() {
 									)}
 									{item.icon === 'delivery' && (
 										<motion.div
-											className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center text-purple-600"
+											className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center text-red-600"
 											whileHover={{ scale: 1.1, rotate: 5 }}
 											transition={{ type: "spring", stiffness: 300, damping: 15 }}
 										>

@@ -14,7 +14,6 @@ import Dashboard from "./app/dashboard/dashboard";
 import Settings from "./app/settings/settings";
 import Profile from "./app/profile/profile";
 import ShipmentHistory from "./app/shipmentHistory/shipmentHistory";
-import SubmitRequest from "./app/submitRequest/submitRequest";
 import TrackingPage from "./app/tracking/tracking";
 import AppAbout from "./app/about/Appabout";
 import AppSupport from "./app/support/Appsupport";
@@ -129,7 +128,6 @@ export default function App() {
                 <Route path="settings" element={<Settings />} />
                 <Route path="profile" element={<Profile />} />
                 <Route path="shipment-history" element={<ShipmentHistory />} />
-                <Route path="submit-request" element={<SubmitRequest />} />
                 <Route path="tracking" element={<TrackingPage />} />
                 <Route path="about" element={<AppAbout />} />
                 <Route path="support" element={<AppSupport />} />
@@ -147,7 +145,6 @@ export default function App() {
       <Route path="/settings" element={<Navigate to="/app/settings" replace />} />
       <Route path="/profile" element={<Navigate to="/app/profile" replace />} />
       <Route path="/shipment-history" element={<Navigate to="/app/shipment-history" replace />} />
-      <Route path="/submit-request" element={<Navigate to="/app/submit-request" replace />} />
       <Route path="/tracking" element={<Navigate to="/app/tracking" replace />} />
 
       {/* Catch-all route for 404 */}

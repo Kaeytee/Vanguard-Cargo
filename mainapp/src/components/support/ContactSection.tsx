@@ -123,7 +123,7 @@ const ContactSection: React.FC<ContactSectionProps> = ({
                   <MessageSquare size={18} className="text-red-500" />
                 </div>
                 <span className="text-gray-800 font-medium text-sm sm:text-base">
-                  Vanguard Logistics Center, East Legon, Accra, Ghana
+                  Vanguard Cargo Center, East Legon, Accra, Ghana
                 </span>
               </div>
             </div>
@@ -149,7 +149,7 @@ const ContactSection: React.FC<ContactSectionProps> = ({
         >
           <div className="w-full h-48 sm:h-64 md:h-80 rounded-lg overflow-hidden border border-gray-200 shadow">
             <iframe
-              title="Vanguard Logistics Location"
+              title="Vanguard Cargo Location"
               src="https://www.google.com/maps?q=5.6037,0.1870&z=15&output=embed"
               width="100%"
               height="100%"
@@ -258,7 +258,7 @@ const ContactSection: React.FC<ContactSectionProps> = ({
               </button>
             </div>
             {isSubmitted && (
-              <div className="text-green-600 text-xs sm:text-sm mt-2 flex items-center">
+              <div className="text-red-600 text-xs sm:text-sm mt-2 flex items-center">
                 <CheckCircle className="mr-2 w-4 h-4" />
                 Your message has been sent!
               </div>

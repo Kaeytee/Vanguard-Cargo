@@ -46,7 +46,7 @@ Your package (ID: ${packageId}) has been processed and is ready for shipment.
 
 Package Image: ${imageUrl}
 
-Thank you for choosing our logistics service!
+Thank you for choosing our cargo service!
 
 Best regards,
 Vanguard Warehouse Team`;
