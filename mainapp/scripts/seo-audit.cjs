@@ -31,7 +31,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const BASE_URL = 'https://ttariuslogistics.com';
+const BASE_URL = 'https://vanguardcargo.org';
 
 class SEOAuditor {
   constructor() {
