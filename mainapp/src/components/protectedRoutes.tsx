@@ -57,7 +57,7 @@ const ProtectedRoutes: React.FC<ProtectedRoutesProps> = ({ children }) => {
 			case 'PENDING_VERIFICATION': {
 				// Allow access but show verification reminder
 				// Only redirect if they're trying to access certain features that require verification
-				const restrictedPaths = ['/app/submit-request'];
+				const restrictedPaths = ['/app/shipment-history'];
 				if (restrictedPaths.some(path => location.pathname.includes(path))) {
 					return <Navigate to="/verify-email" replace />;
 				}

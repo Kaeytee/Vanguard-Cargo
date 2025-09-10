@@ -149,3 +149,38 @@ body {
 	-webkit-box-shadow: 0 10px 15px -3px rgba(225, 29, 72, 0.1), 0 4px 6px -4px rgba(225, 29, 72, 0.1);
 	-moz-box-shadow: 0 10px 15px -3px rgba(225, 29, 72, 0.1), 0 4px 6px -4px rgba(225, 29, 72, 0.1);
 }
+
+/* Marquee animations for brand logos - Infinite Scroll */
+@keyframes marquee-left {
+	0% {
+		transform: translateX(0%);
+	}
+	100% {
+		transform: translateX(-25%);
+	}
+}
+
+@keyframes marquee-right {
+	0% {
+		transform: translateX(-25%);
+	}
+	100% {
+		transform: translateX(0%);
+	}
+}
+
+.animate-marquee-left {
+	animation: marquee-left 30s linear infinite;
+	will-change: transform;
+}
+
+.animate-marquee-right {
+	animation: marquee-right 30s linear infinite;
+	will-change: transform;
+}
+
+/* Pause animation on hover for better user interaction */
+.animate-marquee-left:hover,
+.animate-marquee-right:hover {
+	animation-play-state: paused;
+}

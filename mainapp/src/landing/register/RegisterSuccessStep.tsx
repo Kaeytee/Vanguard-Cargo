@@ -86,7 +86,7 @@ export const RegisterSuccessStep: React.FC<RegisterSuccessStepProps> = ({
       <div className="space-y-3">
         <motion.button
           onClick={() => navigate('/verify-email')}
-          className="w-full font-semibold px-6 py-3 rounded-lg transition-all duration-200 bg-blue-500 hover:bg-blue-600 text-white flex items-center justify-center space-x-2"
+          className="w-full font-semibold px-6 py-3 rounded-lg transition-all duration-200 bg-red-500 hover:bg-red-600 text-white flex items-center justify-center space-x-2"
           whileHover={{ scale: 1.02, y: -2 }}
           whileTap={{ scale: 0.98 }}
         >

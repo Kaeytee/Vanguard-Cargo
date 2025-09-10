@@ -60,7 +60,7 @@ const DashboardCard: React.FC<DashboardCardProps> = ({
       </div>
       
       {/* Circular icon on the right side - exactly as in the image */}
-      <div className="absolute bottom-4 right-4 bg-blue-800 rounded-full p-3 flex items-center justify-center my-8">
+      <div className="absolute bottom-4 right-4 bg-red-600 rounded-full p-3 flex items-center justify-center my-8">
         {renderIcon()}
       </div>
     </div>

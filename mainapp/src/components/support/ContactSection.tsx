@@ -258,7 +258,7 @@ const ContactSection: React.FC<ContactSectionProps> = ({
               </button>
             </div>
             {isSubmitted && (
-              <div className="text-green-600 text-xs sm:text-sm mt-2 flex items-center">
+              <div className="text-red-600 text-xs sm:text-sm mt-2 flex items-center">
                 <CheckCircle className="mr-2 w-4 h-4" />
                 Your message has been sent!
               </div>

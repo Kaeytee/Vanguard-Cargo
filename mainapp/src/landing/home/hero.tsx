@@ -132,7 +132,7 @@ const popularBrands = [
               className="text-center lg:text-left"
             >
               <div className="flex items-center justify-center lg:justify-start mb-6">
-                <span className="bg-red-500 text-white px-4 py-2 rounded-full text-sm font-bold flex items-center gap-2">
+                <span className="bg-red-600 text-white px-4 py-2 rounded-full text-sm font-bold flex items-center gap-2">
                   <MapPin className="w-4 h-4" />
                   <Plane className="w-4 h-4" />
                   <MapPin className="w-4 h-4" />
@@ -166,14 +166,14 @@ const popularBrands = [
               <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start mb-8">
                 <Link
                   to="/register"
-                  className="bg-red-500 hover:bg-gray-300 hover:text-gray-700 text-gray-100 px-8 py-4 rounded-lg font-bold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
+                  className="bg-red-600 hover:bg-red-700 text-white px-8 py-4 rounded-lg font-bold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
                 >
                   Get My Free US Address 
                   <Rocket className="w-5 h-5" />
                 </Link>
                 <Link
                   to="/services"
-                  className="bg-transparent border-2 border-gray-800 text-black hover:bg-gray-700 hover:text-white px-8 py-4 rounded-lg font-bold text-lg transition-all duration-300"
+                  className="bg-transparent border-2 border-red-600 text-red-600 hover:bg-red-600 hover:text-white px-8 py-4 rounded-lg font-bold text-lg transition-all duration-300"
                 >
                   See How It Works
                 </Link>
@@ -207,7 +207,7 @@ const popularBrands = [
                       {testimonials[currentTestimonial].location}
                     </p>
                   </div>
-                  <div className="ml-auto flex text-yellow-400">
+                  <div className="ml-auto flex text-red-400">
                     {[...Array(5)].map((_, i) => (
                       <Star key={i} className="h-4 w-4 fill-current" />
                     ))}
@@ -238,7 +238,7 @@ const popularBrands = [
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, delay: 0.5 }}
-                className="bg-gradient-to-r from-red-500 to-red-600 text-white p-6 rounded-xl shadow-lg"
+                className="bg-gradient-to-r from-red-600 to-red-700 text-white p-6 rounded-xl shadow-lg"
               >
                 <div className="flex items-center justify-between mb-3">
                   <div className="text-sm font-semibold">YOUR US ADDRESS:</div>
@@ -258,10 +258,10 @@ const popularBrands = [
               </motion.div>
 
               {/* Floating Benefits */}
-              <div className="absolute -top-4 -right-4 bg-yellow-400 text-red-900 px-3 py-2 rounded-full text-xs font-bold animate-bounce">
+              <div className="absolute -top-4 -right-4 bg-red-600 text-white px-3 py-2 rounded-full text-xs font-bold animate-bounce">
                 70% SAVINGS
               </div>
-              <div className="absolute -bottom-4 -left-4 bg-green-500 text-white px-3 py-2 rounded-full text-xs font-bold">
+              <div className="absolute -bottom-4 -left-4 bg-red-600 text-white px-3 py-2 rounded-full text-xs font-bold">
                 INSTANT SETUP
               </div>
             </motion.div>
@@ -294,8 +294,10 @@ const popularBrands = [
           </motion.p>
         </div>
 
-        {/* Popular Brands Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6 mb-12">
+        {/* Popular Brands - Responsive: Grid on Mobile, Marquee on Desktop */}
+        
+        {/* Mobile Grid (hidden on lg and up) */}
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-6 mb-12 lg:hidden">
           {popularBrands.map((brand, index) => (
             <motion.a
               key={brand.name}
@@ -318,6 +320,71 @@ const popularBrands = [
           ))}
         </div>
 
+        {/* Desktop Marquee (hidden on mobile, visible on lg and up) */}
+        <div className="space-y-8 mb-12 hidden lg:block">
+          {/* Top Row - Left to Right */}
+          <div className="overflow-hidden relative">
+            <div className="flex animate-marquee-left whitespace-nowrap">
+              {/* Create multiple copies for true infinite scroll */}
+              {[...Array(4)].map((_, setIndex) => (
+                <div key={`top-set-${setIndex}`} className="flex">
+                  {popularBrands.slice(0, 6).map((brand) => (
+                    <motion.a
+                      key={`top-${setIndex}-${brand.name}`}
+                      href={brand.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      initial={{ opacity: 0, y: 20 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.5 }}
+                      viewport={{ once: true }}
+                      whileHover={{ scale: 1.05, y: -5 }}
+                      className="bg-white rounded-xl shadow-lg border border-gray-200 p-4 hover:shadow-xl transition-all duration-300 group flex-shrink-0 w-32 h-32 flex items-center justify-center mx-3"
+                    >
+                      <img 
+                        src={brand.logo} 
+                        alt={`${brand.name} logo`}
+                        className="w-full h-full object-contain max-w-[80%] max-h-[80%]"
+                      />
+                    </motion.a>
+                  ))}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Bottom Row - Right to Left */}
+          <div className="overflow-hidden relative">
+            <div className="flex animate-marquee-right whitespace-nowrap">
+              {/* Create multiple copies for true infinite scroll */}
+              {[...Array(4)].map((_, setIndex) => (
+                <div key={`bottom-set-${setIndex}`} className="flex">
+                  {popularBrands.slice(6).map((brand) => (
+                    <motion.a
+                      key={`bottom-${setIndex}-${brand.name}`}
+                      href={brand.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      initial={{ opacity: 0, y: 20 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.5 }}
+                      viewport={{ once: true }}
+                      whileHover={{ scale: 1.05, y: -5 }}
+                      className="bg-white rounded-xl shadow-lg border border-gray-200 p-4 hover:shadow-xl transition-all duration-300 group flex-shrink-0 w-32 h-32 flex items-center justify-center mx-3"
+                    >
+                      <img 
+                        src={brand.logo} 
+                        alt={`${brand.name} logo`}
+                        className="w-full h-full object-contain max-w-[80%] max-h-[80%]"
+                      />
+                    </motion.a>
+                  ))}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
         
 
         {/* Call to Action */}
@@ -329,7 +396,7 @@ const popularBrands = [
           className="text-center mt-12"
         >
           <Link
-            to="/app/submit-request"
+            to="/app/dashboard"
             className="inline-flex items-center bg-red-600 hover:bg-red-700 text-white px-8 py-4 rounded-xl font-semibold text-lg transition-all duration-300 transform hover:scale-105 hover:shadow-lg"
           >
             <ShoppingBag className="h-5 w-5 mr-2" />

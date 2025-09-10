@@ -258,7 +258,7 @@ const PackageOriginForm: React.FC<PackageOriginFormProps> = ({
       </div>
 
       {/* Information Card */}
-      <div className="mt-6 p-4 border-l-4 border-blue-500 bg-blue-50 text-blue-700 rounded-r-lg">
+      <div className="mt-6 p-4 border-l-4 border-red-500 bg-red-50 text-red-700 rounded-r-lg">
         <h4 className="font-semibold mb-1">International cargo Only</h4>
         <p className="text-sm">
           Vanguard Cargo specializes in cross-border shipments between Ghana and USA. 
