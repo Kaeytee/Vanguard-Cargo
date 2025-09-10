@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Sitemap Generator for Ttarius Logistics
+ * Sitemap Generator for Vanguard Cargo
  * Generates comprehensive XML sitemaps for better SEO
  */
 
