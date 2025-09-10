@@ -11,8 +11,8 @@ Make sure your `.env.production` file is configured with your real API endpoints
 ```bash
 # Production Environment Variables
 VITE_APP_ENV=production
-VITE_API_BASE_URL=https://api.Vangaurd-logistics.com/api
-VITE_APP_NAME=Vangaurd Warehouse
+VITE_API_BASE_URL=https://api.Vanguard-logistics.com/api
+VITE_APP_NAME=Vanguard Warehouse
 VITE_DEBUG_MODE=false
 VITE_MOCK_AUTH=false
 VITE_LOG_LEVEL=error
@@ -74,7 +74,7 @@ npm run build:prod
 | Variable | Development | Production | Description |
 |----------|-------------|------------|-------------|
 | `VITE_APP_ENV` | development | production | Current environment |
-| `VITE_API_BASE_URL` | http://localhost:3001/api | https://api.Vangaurd-logistics.com/api | API base URL |
+| `VITE_API_BASE_URL` | http://localhost:3001/api | https://api.Vanguard-logistics.com/api | API base URL |
 | `VITE_MOCK_AUTH` | true | false | Use mock authentication |
 | `VITE_DEBUG_MODE` | true | false | Enable debug features |
 | `VITE_LOG_LEVEL` | debug | error | Logging level |

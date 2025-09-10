@@ -156,7 +156,7 @@ Package Image: {imageUrl}
 Thank you for choosing our logistics service!
 
 Best regards,
-Vangaurd Warehouse Team
+Vanguard Warehouse Team
 ```
 
 ### Phone Number Format

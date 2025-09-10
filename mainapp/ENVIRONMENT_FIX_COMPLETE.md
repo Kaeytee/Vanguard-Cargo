@@ -20,13 +20,13 @@
 
 ### Development (`.env.development`)
 ```bash
-REACT_APP_RECAPTCHA_SITE_KEY=6Lcj6nYrAAAAAFwZMNXkWO0Mv-Bf64cUsyC8o5WN
+REACT_APP_RECAPTCHA_SITE_KEY=your_site_key_here
 REACT_APP_ENABLE_RECAPTCHA=true
 ```
 
 ### Production (`.env.production`)
 ```bash
-REACT_APP_RECAPTCHA_SITE_KEY=6Lcj6nYrAAAAAFwZMNXkWO0Mv-Bf64cUsyC8o5WN
+REACT_APP_RECAPTCHA_SITE_KEY=your_site_key_here
 REACT_APP_ENABLE_RECAPTCHA=true
 ```
 
@@ -44,7 +44,7 @@ To fix the blank page on Vercel right now:
 
 ### Option B: Use Current Keys (Test This First)
 1. **Add to Vercel**:
-   - `REACT_APP_RECAPTCHA_SITE_KEY=6Lcj6nYrAAAAAFwZMNXkWO0Mv-Bf64cUsyC8o5WN`
+   - `REACT_APP_RECAPTCHA_SITE_KEY=your_site_key_here`
    - `REACT_APP_ENABLE_RECAPTCHA=true`
 2. **Redeploy** and test
 
@@ -62,7 +62,7 @@ To fix the blank page on Vercel right now:
 
 ## 🔐 About Your Current reCAPTCHA Key
 
-Your key `6Lcj6nYrAAAAAFwZMNXkWO0Mv-Bf64cUsyC8o5WN`:
+Your key `your_site_key_here`:
 - ✅ **Works on localhost** (that's why you see it locally)
 - ❓ **May not work on Vercel domain** (depends on how it was configured)
 - 🔍 **Need to check domain settings** in Google reCAPTCHA console

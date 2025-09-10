@@ -1,15 +1,12 @@
 import React from 'react'
 import DashboardCard from '../../components/DashboardCard';
 import type { DashboardCardProps } from '../../components/DashboardCard';
-import { useTranslation } from '../../lib/translations';
 import { ShoppingBag } from 'lucide-react';
 
 
 type DashboardCardConfig = Omit<DashboardCardProps, 'onClick'> & { href: string };
 
 const Dashboard: React.FC = () => {
-  const { t } = useTranslation();
-
   // Dashboard card configuration array focused on package forwarding workflow
   const dashboardCards: DashboardCardConfig[] = [
     {

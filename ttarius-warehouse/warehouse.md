@@ -792,7 +792,7 @@ class WhatsAppSecurityManager {
   
   static generateSecureDeepLink(trackingNumber: string): string {
     const encrypted = this.encryptTrackingNumber(trackingNumber);
-    return `https://track.Vangaurd.com/secure/${encrypted}`;
+    return `https://track.Vanguard.com/secure/${encrypted}`;
   }
 }
 ```
@@ -1482,12 +1482,12 @@ Response:
     {
       "type": "EXPORT_DECLARATION",
       "reference": "EXP-2025-001234",
-      "downloadUrl": "https://api.Vangaurd.com/docs/export-declarations/EXP-2025-001234.pdf"
+      "downloadUrl": "https://api.Vanguard.com/docs/export-declarations/EXP-2025-001234.pdf"
     },
     {
       "type": "COMMERCIAL_INVOICE", 
       "reference": "INV-2025-001234",
-      "downloadUrl": "https://api.Vangaurd.com/docs/invoices/INV-2025-001234.pdf"
+      "downloadUrl": "https://api.Vanguard.com/docs/invoices/INV-2025-001234.pdf"
     }
   ],
   "submissionDeadline": "2025-07-05T15:00:00Z",

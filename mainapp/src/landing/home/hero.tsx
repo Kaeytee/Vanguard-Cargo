@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { CheckCircle, Star, Globe, Plane, MapPin, Rocket, ShoppingBag, Shirt, Laptop, Heart, Home } from "lucide-react";
+import { CheckCircle, Star, Globe, Plane, MapPin, Rocket, ShoppingBag } from "lucide-react";
 import svgBackground from "../../assets/svg.png";
 
 export default function Hero() {
@@ -103,36 +103,6 @@ const popularBrands = [
     url: "https://www2.hm.com"
   }
 ];
-
-
-
-  // Shopping categories
-  const shoppingCategories = [
-    {
-      name: "Fashion & Apparel",
-      description: "Latest trends and designer brands",
-      icon: Shirt,
-      brands: ["Nike", "Adidas", "Macy's", "Nordstrom"]
-    },
-    {
-      name: "Electronics",
-      description: "Gadgets and tech at great prices",
-      icon: Laptop,
-      brands: ["Apple", "Best Buy", "Amazon", "Newegg"]
-    },
-    {
-      name: "Health & Beauty",
-      description: "Cosmetics and wellness products",
-      icon: Heart,
-      brands: ["Sephora", "Ulta", "CVS", "Target"]
-    },
-    {
-      name: "Home & Garden",
-      description: "Everything for your living space",
-      icon: Home,
-      brands: ["Home Depot", "Lowe's", "Wayfair", "IKEA"]
-    }
-  ];
 
   return (
     <>

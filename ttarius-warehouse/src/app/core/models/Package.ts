@@ -337,7 +337,7 @@ export class PackageUtils {
    * @returns Customer-facing tracking number
    */
   static generateTrackingNumber(): string {
-    const prefix = 'TT'; // Vangaurd prefix
+    const prefix = 'TT'; // Vanguard prefix
     const timestamp = Date.now().toString().slice(-8);
     const random = Math.random().toString().slice(-4);
     return `${prefix}${timestamp}${random}`.toUpperCase();
