@@ -4,7 +4,7 @@
  */
 
 // Base URL configuration
-export const BASE_URL = 'https://ttariuslogistics.com';
+export const BASE_URL = 'https://vanguardcargo.org';
 
 // Default SEO meta tags
 export const DEFAULT_SEO = {
