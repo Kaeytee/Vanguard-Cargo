@@ -11,11 +11,11 @@ import deliveryImg from '../images/delivery.jpg';
 import deliveryParcelImg from '../images/deliveryparcel.jpg';
 import forgotImg from '../images/forgot.jpg';
 import loginBgImg from '../images/loginbg.png';
-import logisticsBackground2Img from '../images/logistics-background-2.png';
-import logisticsBackground3Img from '../images/logistics-background-3.png';
-import logisticsBackground4Img from '../images/logistics-background-4.jpg';
-import logisticsBackgroundImg from '../images/logistics-background.png';
-import logisticsContainerPortImg from '../images/logistics-container-port.jpg';
+import cargoBackground2Img from '../images/cargo-background-2.png';
+import cargoBackground3Img from '../images/cargo-background-3.png';
+import cargoBackground4Img from '../images/cargo-background-4.jpg';
+import cargoBackgroundImg from '../images/cargo-background.png';
+import cargoContainerPortImg from '../images/cargo-container-port.jpg';
 import packagingImg from '../images/packaging.png';
 import registerBgImg from '../images/register-bg.jpg';
 import shipmentHistoryImg from '../images/shipment-history.png';
@@ -63,9 +63,9 @@ export const IMAGE_REGISTRY: Record<string, ImageMetadata> = {
   },
   
   // Medium priority - dashboard and common UI elements
-  logisticsBackground: {
-    src: logisticsBackgroundImg,
-    name: 'Logistics Background',
+  cargoBackground: {
+    src: cargoBackgroundImg,
+    name: 'cargo Background',
     priority: 'medium',
     category: 'background',
     preloadStrategy: 'viewport'
@@ -135,30 +135,30 @@ export const IMAGE_REGISTRY: Record<string, ImageMetadata> = {
     category: 'illustration',
     preloadStrategy: 'interaction'
   },
-  logisticsBackground2: {
-    src: logisticsBackground2Img,
-    name: 'Logistics Background 2',
+  cargoBackground2: {
+    src: cargoBackground2Img,
+    name: 'cargo Background 2',
     priority: 'low',
     category: 'background',
     preloadStrategy: 'interaction'
   },
-  logisticsBackground3: {
-    src: logisticsBackground3Img,
-    name: 'Logistics Background 3',
+  cargoBackground3: {
+    src: cargoBackground3Img,
+    name: 'cargo Background 3',
     priority: 'low',
     category: 'background',
     preloadStrategy: 'interaction'
   },
-  logisticsBackground4: {
-    src: logisticsBackground4Img,
-    name: 'Logistics Background 4',
+  cargoBackground4: {
+    src: cargoBackground4Img,
+    name: 'cargo Background 4',
     priority: 'low',
     category: 'background',
     preloadStrategy: 'interaction'
   },
-  logisticsContainerPort: {
-    src: logisticsContainerPortImg,
-    name: 'Logistics Container Port',
+  cargoContainerPort: {
+    src: cargoContainerPortImg,
+    name: 'cargo Container Port',
     priority: 'low',
     category: 'background',
     preloadStrategy: 'interaction'

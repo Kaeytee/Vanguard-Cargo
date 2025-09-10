@@ -1,0 +1,6 @@
+Contact: mailto:security@vanguardcargo.org
+Expires: 2025-12-31T23:59:59.000Z
+Encryption: https://www.vanguardcargo.org/pgp-key.txt
+Acknowledgments: https://www.vanguardcargo.org/security-thanks
+Policy: https://www.vanguardcargo.org/security-policy
+Hiring: https://www.vanguardcargo.org/careers

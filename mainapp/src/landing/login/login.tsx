@@ -194,7 +194,7 @@ export default function Login() {
 								<path d="M19 7h-3V6a4 4 0 0 0-8 0v1H5a1 1 0 0 0-1 1v11a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3V8a1 1 0 0 0-1-1zM10 6a2 2 0 0 1 4 0v1h-4V6zm8 13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V9h2v1a1 1 0 0 0 2 0V9h4v1a1 1 0 0 0 2 0V9h2v10z"/>
 							</svg>
 						</div>
-						<h3 className="text-2xl font-bold mb-2 text-transparent">Secure Logistics</h3>
+						<h3 className="text-2xl font-bold mb-2 text-transparent">Secure cargo</h3>
 						<p className="text-transparent">Your trusted delivery partner</p>
 					</div>
 
@@ -203,7 +203,7 @@ export default function Login() {
 						<div className="max-w-sm mx-auto w-full">
 							<div className="mb-8 text-center lg:text-left">
 								<h2 className="text-3xl font-bold text-gray-900 mb-2">Welcome Back</h2>
-								<p className="text-gray-600">Begin your logistics journey here</p>
+								<p className="text-gray-600">Begin your cargo journey here</p>
 							</div>
 
 							<form onSubmit={handleSubmit} className="space-y-6">

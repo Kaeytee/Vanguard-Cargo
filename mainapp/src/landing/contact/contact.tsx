@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import AnimateInView from '../../components/ui/animate-in-view';
+import SEO from '../../components/SEO';
 import supportImage from '../../assets/support.jpg';
 
 /**
@@ -62,7 +63,7 @@ export default function Contact() {
 			icon: MapPin,
 			title: 'Address',
 			description: 'Drop in during business hours',
-			details: 'Vanguard Logistics Center\nEast Legon, Accra, Ghana'
+			details: 'Vanguard cargo Center\nEast Legon, Accra, Ghana'
 		},
 		{
 			icon: Mail,
@@ -116,6 +117,13 @@ export default function Contact() {
 
 	return (
 		<div className="contact-container">
+			<SEO 
+				title="Contact Vanguard Cargo - Get Support for Your Package Forwarding"
+				description="Get in touch with Vanguard Cargo for expert package forwarding support. Contact our team for shipping quotes, tracking assistance, or general inquiries. We're here to help with your USA to Ghana shipping needs."
+				keywords="contact Vanguard Cargo, package forwarding support, shipping customer service, Ghana logistics contact, international shipping help, cargo forwarding assistance"
+				url="https://www.vanguardcargo.org/contact"
+			/>
+			
 			{/* Enhanced Contact Hero Section */}
 			<section className="relative py-20 px-4 sm:px-6 lg:px-8 bg-gray-50 overflow-hidden">
 				{/* Background elements */}
@@ -212,7 +220,7 @@ export default function Contact() {
 										<div className="space-y-4">
 											<div className="bg-gray-50 rounded-lg p-4">
 												<div className="text-sm text-gray-600">Email Support</div>
-												<div className="font-semibold text-gray-900">support@Vanguardlogistics.com</div>
+												<div className="font-semibold text-gray-900">support@www.vanguardcargo.org</div>
 											</div>
 											<div className="bg-gray-50 rounded-lg p-4">
 												<div className="text-sm text-gray-600">Office Hours</div>

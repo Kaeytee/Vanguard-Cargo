@@ -290,7 +290,7 @@ const popularBrands = [
             viewport={{ once: true }}
             className="text-xl text-gray-600 max-w-3xl mx-auto"
           >
-            Access thousands of US stores and brands. Use your Ttarius address at checkout and we'll handle the rest.
+            Access thousands of US stores and brands. Use your Vanguard address at checkout and we'll handle the rest.
           </motion.p>
         </div>
 

@@ -87,7 +87,7 @@ export const initialUserData = {
 	senderCountry: DUMMY_USER.country,
 }
 
-// CRITICAL BUSINESS RULE: International Logistics Only
+// CRITICAL BUSINESS RULE: International cargo Only
 // Origin country MUST be different from client country
 export const SUPPORTED_COUNTRIES = [
 	{ code: "GH", name: "Ghana", flag: "🇬🇭" },
@@ -112,7 +112,7 @@ export const validateInternationalRequest = (clientCountry: string, originCountr
 	}
 	
 	if (clientCountry === originCountry) {
-		errors.push("Origin country must be different from your country (international logistics only)");
+		errors.push("Origin country must be different from your country (international cargo only)");
 	}
 	
 	const supportedCountries = SUPPORTED_COUNTRIES.map(c => c.code);

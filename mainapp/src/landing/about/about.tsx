@@ -4,10 +4,11 @@ import { motion } from 'framer-motion';
 import { Check, Heart, Clock, Lightbulb, CheckCircle, Package, Star } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import AnimateInView from '../../components/ui/animate-in-view';
+import SEO from '../../components/SEO';
 import servicesImage from '../../assets/services.jpg';
 
 /**
- * About component - Displays the About page content of the Logistics company with animations
+ * About component - Displays the About page content of the cargo company with animations
  * @returns {JSX.Element} The About page component
  */
 export default function About() {
@@ -20,12 +21,12 @@ export default function About() {
 		{
 			icon: Heart,
 			title: 'Our Mission',
-			description: 'To bridge the gap between Ghana and the USA through reliable, efficient, and affordable logistics services. We are committed to connecting families, empowering businesses, and fostering international trade by providing seamless shipping solutions that our customers can trust and depend on.'
+			description: 'To bridge the gap between Ghana and the USA through reliable, efficient, and affordable cargo services. We are committed to connecting families, empowering businesses, and fostering international trade by providing seamless shipping solutions that our customers can trust and depend on.'
 		},
 		{
 			icon: Clock,
 			title: 'Our Vision',
-			description: 'To become the leading logistics provider for Ghana-USA trade corridor, recognized for our exceptional service quality, innovative technology solutions, and unwavering commitment to customer satisfaction. We envision a world where distance is no barrier to commerce and connection.'
+			description: 'To become the leading cargo provider for Ghana-USA trade corridor, recognized for our exceptional service quality, innovative technology solutions, and unwavering commitment to customer satisfaction. We envision a world where distance is no barrier to commerce and connection.'
 		}
 	];
 
@@ -64,6 +65,13 @@ export default function About() {
 
 	return (
 		<div className="about-container">
+			<SEO 
+				title="About Vanguard Cargo - Your Trusted Package Forwarding Partner"
+				description="Learn about Vanguard Cargo's mission to connect Ghana with global markets through reliable package forwarding. Discover our story, values, and commitment to excellence in international shipping."
+				keywords="about Vanguard Cargo, package forwarding company, international shipping Ghana, cargo company history, logistics services, shipping expertise, Ghana international trade"
+				url="https://www.vanguardcargo.org/about"
+			/>
+			
 			{/* Enhanced About Hero Section */}
 			<section className="relative py-20 px-4 sm:px-6 lg:px-8 bg-gray-50 overflow-hidden">
 				{/* Background decoration */}
@@ -96,7 +104,7 @@ export default function About() {
 									</motion.div>
 									<h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight text-gray-700">
 										About 
-										<span className="block text-red-600">Vanguard Logistics</span>
+										<span className="block text-red-600">Vanguard cargo</span>
 									</h1>
 									<p className="text-xl text-gray-700 leading-relaxed mb-8">
 										We're Ghana's premier package forwarding service, connecting you to the best of American shopping. 
@@ -349,7 +357,7 @@ export default function About() {
 							transition={{ duration: 0.6 }}
 							viewport={{ once: true }}
 						>
-							Ready to Ship with Vanguard Logistics?
+							Ready to Ship with Vanguard cargo?
 						</motion.h2>
 						<motion.p 
 							className="text-xl text-red-100 mb-8"
@@ -358,7 +366,7 @@ export default function About() {
 							transition={{ duration: 0.6, delay: 0.2 }}
 							viewport={{ once: true }}
 						>
-							Experience reliable shipping services between Ghana and the USA. Let us handle your logistics needs with care and professionalism.
+							Experience reliable shipping services between Ghana and the USA. Let us handle your cargo needs with care and professionalism.
 						</motion.p>
 						<Link to="/contact">
 						<motion.button 

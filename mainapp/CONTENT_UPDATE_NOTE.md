@@ -1,14 +1,14 @@
 # Website Content Overhaul Plan
 
 **Goal:**
-Update all website content to accurately reflect Vanguard Logistics’ brand, services, and value proposition. Replace all placeholder/dummy text, update service descriptions, and ensure consistency across all pages.
+Update all website content to accurately reflect Vanguard cargo’ brand, services, and value proposition. Replace all placeholder/dummy text, update service descriptions, and ensure consistency across all pages.
 
 ---
 
 ## Task List
 
 1. **Landing/Home Page**
-   - Replace hero section text with a compelling summary of Vanguard Logistics.
+   - Replace hero section text with a compelling summary of Vanguard cargo.
    - Update service highlights and call-to-action.
    - Ensure all images and captions are relevant.
 
@@ -17,7 +17,7 @@ Update all website content to accurately reflect Vanguard Logistics’ brand, se
    - Add or update team/leadership info if applicable.
 
 3. **Services Page**
-   - Clearly describe all logistics services (shipping, tracking, insurance, etc.).
+   - Clearly describe all cargo services (shipping, tracking, insurance, etc.).
    - Add customer benefits and unique selling points.
 
 4. **Contact Page**

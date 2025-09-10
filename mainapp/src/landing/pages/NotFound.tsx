@@ -55,7 +55,7 @@ const NotFound: React.FC = () => {
               className="p-4 bg-white rounded-lg border border-gray-200 hover:border-red-300 hover:bg-red-50 transition-colors duration-200"
             >
               <h4 className="font-medium text-gray-900 mb-2">Client Login</h4>
-              <p className="text-gray-600">Access your logistics dashboard</p>
+              <p className="text-gray-600">Access your cargo dashboard</p>
             </Link>
             <Link 
               to="/register" 
@@ -72,7 +72,7 @@ const NotFound: React.FC = () => {
           <p className="text-sm text-gray-500">
             Still need help? 
             <a 
-              href="mailto:support@Vanguard-logistics.com" 
+              href="mailto:support@Vanguard-cargo.com" 
               className="text-red-600 hover:text-red-700 font-medium ml-1"
             >
               Contact our support team

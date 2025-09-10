@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "npm run generate-seo && tsc -b && vite build",
+    "generate-seo": "node scripts/generate-seo-files.cjs",
     "lint": "eslint .",
     "preview": "vite preview",
     "deploy": "npm run build && vercel",
@@ -23,6 +24,7 @@
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-google-recaptcha": "^3.1.0",
+    "react-helmet-async": "^2.0.5",
     "react-i18next": "^15.6.0",
     "react-icons": "^5.5.0",
     "react-phone-number-input": "^3.4.12",

@@ -346,7 +346,7 @@ export default function Register() {
                   <React.Fragment>
                     <div className="mb-6 text-center">
                       <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">Create Account</h2>
-                      <p className="text-gray-600 mt-2 text-sm sm:text-base">Begin your logistics journey here</p>
+                      <p className="text-gray-600 mt-2 text-sm sm:text-base">Begin your cargo journey here</p>
                     </div>
                     {errors.general && (
                       <div className="mb-4 text-red-600 text-sm text-center bg-red-50 p-3 rounded-md error-shake">

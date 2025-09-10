@@ -1,0 +1,45 @@
+User-agent: *
+Allow: /
+
+# Important pages for crawling
+Allow: /about
+Allow: /services
+Allow: /contact
+
+# SEO Landing pages
+Allow: /shipping-to-ghana
+Allow: /package-forwarding
+Allow: /usa-address
+Allow: /consolidation-service
+Allow: /customs-clearance
+
+# Disallow admin and private areas
+Disallow: /app/
+Disallow: /admin/
+Disallow: /api/
+Disallow: /_vercel/
+Disallow: /debug/
+
+# Disallow authentication pages from indexing
+Disallow: /login
+Disallow: /register
+Disallow: /forgot-password
+Disallow: /verify-email
+
+# Allow crawling of static assets
+Allow: /assets/
+Allow: /images/
+Allow: /*.css
+Allow: /*.js
+Allow: /*.png
+Allow: /*.jpg
+Allow: /*.jpeg
+Allow: /*.gif
+Allow: /*.svg
+Allow: /*.webp
+
+# Sitemap location
+Sitemap: https://www.vanguardcargo.org/sitemap.xml
+
+# Crawl delay (be respectful)
+Crawl-delay: 1

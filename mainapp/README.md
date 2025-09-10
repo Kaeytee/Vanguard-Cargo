@@ -1,6 +1,6 @@
 # Vanguard Cargo - Client Application
 
-A comprehensive logistics management platform built with React, TypeScript, and Vite, featuring complete customer account management, shipment tracking, and cross-border warehouse integration.
+A comprehensive cargo management platform built with React, TypeScript, and Vite, featuring complete customer account management, shipment tracking, and cross-border warehouse integration.
 
 ## 🚀 Quick Start
 
@@ -20,7 +20,7 @@ npm run test
 
 ## 📋 Overview
 
-This client application provides a complete logistics management solution for customers to:
+This client application provides a complete cargo management solution for customers to:
 - Create and manage accounts with status-based access controls
 - Submit and track shipment requests
 - View shipment history and real-time tracking

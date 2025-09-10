@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import AnimateInView from '../../components/ui/animate-in-view';
+import SEO from '../../components/SEO';
 import air from '../../images/air.png';
 import packaging from '../../images/packaging.png';
 import customs from '../../images/customs.png';
@@ -112,6 +113,13 @@ export default function Services() {
 
 	return (
 		<div className="services-container">
+			<SEO 
+				title="Package Forwarding Services - Ship from USA to Ghana | Vanguard Cargo"
+				description="Comprehensive package forwarding services from USA to Ghana. Free US address, package consolidation, customs handling, and reliable delivery. Get up to 80% savings on international shipping."
+				keywords="package forwarding services, USA to Ghana shipping, package consolidation, customs clearance, international shipping services, cargo forwarding, freight services, US address service"
+				url="https://www.vanguardcargo.org/services"
+			/>
+			
 			{/* Enhanced Services Hero Section */}
 			<section className="relative py-20 px-4 sm:px-6 lg:px-8 bg-gray-50 overflow-hidden">
 				{/* Background pattern overlay */}
@@ -513,7 +521,7 @@ export default function Services() {
 							transition={{ duration: 0.6 }}
 							viewport={{ once: true }}
 						>
-							Ready to Optimize Your Logistics?
+							Ready to Optimize Your cargo?
 						</motion.h2>
 						<motion.p 
 							className="text-xl text-red-100 mb-8"

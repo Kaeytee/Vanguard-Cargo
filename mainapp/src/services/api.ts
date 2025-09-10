@@ -681,9 +681,9 @@ private async callApiOrMock<T>(
         const initialNotificationSettings: NotificationSettings = {
           id: 'notif-' + Date.now(),
           userId: newUser.id,
-          shipmentUpdates: true, // Always enabled for logistics
-          deliveryAlerts: true, // Always enabled for logistics
-          delayNotifications: true, // Always enabled for logistics
+          shipmentUpdates: true, // Always enabled for cargo
+          deliveryAlerts: true, // Always enabled for cargo
+          delayNotifications: true, // Always enabled for cargo
           marketingNotifications: userData.agreeToMarketing ?? false, // Based on registration choice
           emailNotifications: true, // Default enabled
           smsNotifications: false, // Default disabled

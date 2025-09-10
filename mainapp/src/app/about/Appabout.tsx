@@ -6,7 +6,7 @@ import { useTranslation } from "../../lib/translations";
 /**
  * AppAbout - Client app about page
  *
- * This component displays information about the logistics application
+ * This component displays information about the cargo application
  * including company history, mission, vision, and team information.
  * It's specifically designed for authenticated users within the client app.
  *
@@ -70,7 +70,7 @@ const AppAbout: React.FC = () => {
     {
       title: "Innovation",
       description:
-        "We leverage the latest technology to optimize logistics processes and enhance customer experience.",
+        "We leverage the latest technology to optimize cargo processes and enhance customer experience.",
     },
     {
       title: "Integrity",
@@ -112,11 +112,11 @@ const AppAbout: React.FC = () => {
           className="w-full sm:w-2/3 flex flex-col items-center mx-auto"
         >
           <p className="text-white text-xl sm:text-3xl font-bold mb-4">
-            To provide reliable, efficient, and sustainable logistics solutions
+            To provide reliable, efficient, and sustainable cargo solutions
             that connect businesses and people worldwide.
           </p>
           <p className="text-white text-sm sm:text-base">
-            To provide reliable, efficient, and sustainable logistics solutions
+            To provide reliable, efficient, and sustainable cargo solutions
             that connect businesses and people worldwide. We strive to optimize
             supply chains, reduce environmental impact, and deliver exceptional
             service to our clients.
@@ -136,17 +136,17 @@ const AppAbout: React.FC = () => {
         >
           <p className="text-xl sm:text-2xl font-bold mb-4">Our Story</p>
           <p className="w-full sm:w-3/4 md:w-1/2 mb-3 text-sm sm:text-base">
-            To provide reliable, efficient, and sustainable logistics solutions
+            To provide reliable, efficient, and sustainable cargo solutions
             that connect businesses and people worldwide. We strive to optimize
             supply chains, reduce environmental impact, and deliver exceptional
             service to our clients.
           </p>
           <p className="w-full sm:w-3/4 md:w-1/2 mb-3 text-sm sm:text-base">
-            To provide reliable, efficient, and sustainable logistics solutions
+            To provide reliable, efficient, and sustainable cargo solutions
             that connect businesses and people worldwide.
           </p>
           <p className="w-full sm:w-3/4 md:w-1/2 mb-3 text-sm sm:text-base">
-            To provide reliable, efficient, and sustainable logistics solutions
+            To provide reliable, efficient, and sustainable cargo solutions
             that connect businesses and people worldwide. We strive to optimize
             supply chains, reduce environmental impact, and deliver exceptional
             service to our clients.
@@ -277,7 +277,7 @@ const AppAbout: React.FC = () => {
             Vanguard Cargo Headquarters
           </p>
           <p className="text-gray-600 text-sm sm:text-base">
-            1234 Logistics Avenue
+            1234 cargo Avenue
             <br />
             Suite 500
             <br />

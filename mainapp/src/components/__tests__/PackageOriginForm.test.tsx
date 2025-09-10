@@ -64,10 +64,10 @@ describe('PackageOriginForm Component', () => {
     expect(screen.getByText(/select where your package is coming from/i)).toBeInTheDocument()
   })
 
-  it('displays updated information about international logistics', () => {
+  it('displays updated information about international cargo', () => {
     render(<PackageOriginForm {...mockProps} />)
     
-    expect(screen.getByText(/international logistics only/i)).toBeInTheDocument()
+    expect(screen.getByText(/international cargo only/i)).toBeInTheDocument()
     expect(screen.getByText(/cross-border shipments between ghana and usa/i)).toBeInTheDocument()
   })
 
@@ -110,10 +110,10 @@ describe('PackageOriginForm Component', () => {
     expect(emailField).toHaveClass('cursor-not-allowed')
   })
 
-  it('shows information card about international logistics', () => {
+  it('shows information card about international cargo', () => {
     render(<PackageOriginForm {...mockProps} />)
     
-    expect(screen.getByText(/international logistics only/i)).toBeInTheDocument()
+    expect(screen.getByText(/international cargo only/i)).toBeInTheDocument()
     expect(screen.getByText(/cross-border shipments between ghana and usa/i)).toBeInTheDocument()
   })
 

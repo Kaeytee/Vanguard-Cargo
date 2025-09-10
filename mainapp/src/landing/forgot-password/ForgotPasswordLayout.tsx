@@ -42,7 +42,7 @@ export const ForgotPasswordLayout: React.FC<ForgotPasswordLayoutProps> = ({
               >
                 <img 
                   src={Image}
-                  alt="Delivery person with logistics background"
+                  alt="Delivery person with cargo background"
                   className="w-full h-full object-cover"
                 />
               </motion.div>
