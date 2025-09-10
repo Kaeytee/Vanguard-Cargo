@@ -104,10 +104,10 @@ const ContactSection: React.FC<ContactSectionProps> = ({
                   <Mail size={18} className="text-red-500" />
                 </div>
                 <a
-                  href="mailto:support@logistics.com"
+                  href="mailto:support@vanguardcargo.com"
                   className="text-gray-800 font-medium hover:text-red-500 transition-colors text-sm sm:text-base"
                 >
-                  support@logistics.com
+                  support@vanguardcargo.com
                 </a>
               </div>
             </div>
@@ -122,7 +122,7 @@ const ContactSection: React.FC<ContactSectionProps> = ({
                   <MessageSquare size={18} className="text-red-500" />
                 </div>
                 <span className="text-gray-800 font-medium text-sm sm:text-base">
-                  123 Logistics Ave, Suite 400, New York, NY 10001
+                  123 vanguardcargo Ave, Suite 400, New York, NY 10001
                 </span>
               </div>
             </div>

@@ -67,7 +67,7 @@ export default function Contact() {
 			icon: Mail,
 			title: 'Email',
 			description: 'Response less than 24 hours',
-			details: 'support@logistics.com'
+			details: 'support@vanguardcargo.com'
 		}
 	];
 
@@ -179,7 +179,7 @@ export default function Contact() {
 												name="email"
 												value={formData.email}
 												onChange={handleInputChange}
-												placeholder="logistics@company.com"
+												placeholder="vanguardcargo@company.com"
 												className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500 transition-colors duration-200"
 											/>
 										</motion.div>
@@ -501,7 +501,7 @@ export default function Contact() {
 							transition={{ duration: 0.6, delay: 0.2 }}
 							viewport={{ once: true }}
 						>
-							Our team is ready to help you with your logistics needs. Contact us 
+							Our team is ready to help you with your vanguardcargo needs. Contact us 
 							today for a personalized solution.
 						</motion.p>
 						

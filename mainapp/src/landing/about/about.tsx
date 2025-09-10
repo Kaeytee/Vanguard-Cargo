@@ -20,12 +20,12 @@ export default function About() {
 		{
 			icon: Heart,
 			title: 'Our Mission',
-			description: 'Lorem ipsum dolor sit amet consectetur. Lobortis adipiscing lacus tincidunt ipsum felis tincidunt sem adipiscing. Tincidunt et donec massa purus et. Scelerisque nunc consequat interdum suspendisse mattesque sed ut lorem suspendisse lacus. Condimentum pellentesque et ligula vitae amet sociis blandit.'
+			description: 'To bridge the gap between Ghana and the USA through reliable, efficient, and affordable logistics services. We are committed to connecting families, empowering businesses, and fostering international trade by providing seamless shipping solutions that our customers can trust and depend on.'
 		},
 		{
 			icon: Clock,
 			title: 'Our Vision',
-			description: 'Lorem ipsum dolor sit amet consectetur. Lobortis adipiscing lacus tincidunt ipsum felis tincidunt sem adipiscing. Tincidunt et donec massa purus et. Scelerisque nunc consequat interdum suspendisse mattesque sed ut lorem suspendisse lacus. Condimentum pellentesque et ligula vitae amet sociis blandit.'
+			description: 'To become the leading logistics provider for Ghana-USA trade corridor, recognized for our exceptional service quality, innovative technology solutions, and unwavering commitment to customer satisfaction. We envision a world where distance is no barrier to commerce and connection.'
 		}
 	];
 
@@ -33,31 +33,33 @@ export default function About() {
 	const valueItems = [
 		{
 			icon: Lightbulb,
-			title: 'Innovative',
-			description: 'We constantly seek new ways to improve and revolutionize logistics processes.'
+			title: 'Innovation',
+			description: 'We leverage cutting-edge technology and innovative solutions to streamline the shipping process and enhance customer experience.'
 		},
 		{
 			icon: CheckCircle,
 			title: 'Reliability',
-			description: 'We deliver on our promises, ensuring consistent and dependable service.'
+			description: 'With our proven track record of 98% on-time delivery, you can trust us to handle your shipments with utmost care and precision.'
 		},
 		{
 			icon: Package,
-			title: 'Sustainability',
-			description: 'We\'re committed to environmentally responsible logistics solutions.'
+			title: 'Security',
+			description: 'Your packages are our priority. We ensure secure handling, real-time tracking, and safe delivery of all shipments.'
 		},
 		{
 			icon: Star,
 			title: 'Excellence',
-			description: 'We strive for the highest standards in every aspect of our operations.'
+			description: 'We strive for excellence in every interaction, continuously improving our services to exceed customer expectations.'
 		}
 	];
 
 	// Define benefit items for the checklist
 	const benefits = [
-		'Fast delivery from Ghana to the USA',
-		'98% on-time delivery rate',
-		'24/7 customer support'
+		'Secure shipping from Ghana to the USA',
+		'Real-time package tracking system',
+		'Competitive pricing and transparent fees',
+		'Dedicated customer support team',
+		'Insurance coverage for all shipments'
 	];
 
 	return (
@@ -70,11 +72,10 @@ export default function About() {
 							<AnimateInView variant="fadeInLeft">
 								<div>
 									<h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
-										About Logistics.
+										About Ttarius Logistics.
 									</h1>
 									<p className="text-lg text-gray-600 leading-relaxed mb-8">
-										Lorem ipsum dolor sit amet consectetur. Non in bibendum et ut. 
-										Facilisi aliquam commodo vitae ipsum dolor.
+										Ttarius Logistics is your trusted partner for reliable and efficient shipping solutions between Ghana and the USA. We specialize in connecting families, businesses, and communities across continents with our comprehensive logistics services.
 									</p>
 								</div>
 							</AnimateInView>
@@ -261,7 +262,7 @@ export default function About() {
 							transition={{ duration: 0.6 }}
 							viewport={{ once: true }}
 						>
-							Join Us on Our Journey
+							Ready to Ship with Ttarius Logistics?
 						</motion.h2>
 						<motion.p 
 							className="text-xl text-red-100 mb-8"
@@ -270,7 +271,7 @@ export default function About() {
 							transition={{ duration: 0.6, delay: 0.2 }}
 							viewport={{ once: true }}
 						>
-							Experience the future of logistics with our innovative solutions
+							Experience reliable shipping services between Ghana and the USA. Let us handle your logistics needs with care and professionalism.
 						</motion.p>
 						<Link to="/contact">
 						<motion.button 
