@@ -1,5 +1,5 @@
 /**
- * SEO Configuration for Ttarius Logistics
+ * SEO Configuration for Vanguard Cargo
  * Centralized SEO settings and structured data schemas
  */
 
