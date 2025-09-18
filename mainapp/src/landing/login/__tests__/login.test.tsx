@@ -84,7 +84,7 @@ describe('Login Component', () => {
     
     // Find and click the toggle button (look for Eye icon)
     const toggleButtons = screen.getAllByRole('button')
-    const toggleButton = toggleButtons.find(button => 
+    const toggleButton = toggleButtons.find((button: HTMLElement) => 
       button.querySelector('[data-testid="mock-icon"]')
     )
     

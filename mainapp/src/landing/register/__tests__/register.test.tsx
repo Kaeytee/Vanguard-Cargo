@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import userEvent from '@testing-library/user-event'
-import { render, screen, waitFor } from '../../../test/test-utils'
+import { render } from '../../../test/test-utils'
+import { screen, waitFor } from '@testing-library/react'
 import React from 'react'
 import { AuthProvider } from '../../../context/AuthContext'
 import { BrowserRouter } from 'react-router-dom'

@@ -142,7 +142,7 @@ describe('Register Component', () => {
     
     // Find and click the toggle button for password field
     const toggleButtons = screen.getAllByRole('button')
-    const passwordToggleButton = toggleButtons.find(button => 
+    const passwordToggleButton = toggleButtons.find((button: HTMLElement) => 
       button.querySelector('[data-testid="mock-icon"]') && 
       button.closest('div')?.querySelector('input[type="password"]')
     )

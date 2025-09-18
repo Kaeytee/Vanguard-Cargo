@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen } from '../../../test/test-utils'
+import { render } from '../../../test/test-utils'
+import { screen } from '@testing-library/react'
 import { AuthProvider } from '../../../context/AuthContext'
 
 // Mock the problematic image import directly in the test file

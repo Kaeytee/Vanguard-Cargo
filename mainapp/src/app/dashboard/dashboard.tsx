@@ -10,10 +10,10 @@ import shopImage from '../../assets/shop.jpg';
 
 const Dashboard: React.FC = () => {
   const { user, profile } = useAuth();
-  const [packages, setPackages] = useState<PackageWithDetails[]>([]);
+  const [packages, setPackages] = useState<PackageWithDetails[]>([]); // eslint-disable-line @typescript-eslint/no-unused-vars
   const [usAddress, setUsAddress] = useState<USShippingAddress | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [packageStats, setPackageStats] = useState({
+  const [loading, setLoading] = useState(true); // eslint-disable-line @typescript-eslint/no-unused-vars
+  const [packageStats, setPackageStats] = useState({ // eslint-disable-line @typescript-eslint/no-unused-vars
     total: 0,
     pending: 0,
     inTransit: 0,

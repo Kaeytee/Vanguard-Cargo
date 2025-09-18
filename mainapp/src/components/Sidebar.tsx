@@ -5,7 +5,7 @@ import {
   Clock,
   Settings,
   Headphones,
-  Info,
+  // Info,
   LogOut,
   Search,
   Package,
