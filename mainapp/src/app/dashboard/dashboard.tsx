@@ -3,71 +3,30 @@ import { Copy, MapPin, Info } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { motion } from "framer-motion";
 import PackageIntakeWidget from '../../components/PackageIntakeWidget';
-import { packageService, type PackageWithDetails } from '../../services/packageService';
 import { addressService, type USShippingAddress } from '../../services/addressService';
 import shopImage from '../../assets/shop.jpg';
 
 
 const Dashboard: React.FC = () => {
   const { user, profile } = useAuth();
-  const [packages, setPackages] = useState<PackageWithDetails[]>([]); // eslint-disable-line @typescript-eslint/no-unused-vars
   const [usAddress, setUsAddress] = useState<USShippingAddress | null>(null);
-  const [loading, setLoading] = useState(true); // eslint-disable-line @typescript-eslint/no-unused-vars
-  const [packageStats, setPackageStats] = useState({ // eslint-disable-line @typescript-eslint/no-unused-vars
-    total: 0,
-    pending: 0,
-    inTransit: 0,
-    delivered: 0
-  });
 
   // Extract first name from profile or user email
   const firstName = profile?.firstName || user?.email?.split('@')[0] || 'User';
 
-  // Fetch user data and packages on component mount
+  // Fetch user data on component mount
   useEffect(() => {
     const fetchDashboardData = async () => {
       if (!user) return;
 
       try {
-        setLoading(true);
-
         // Fetch user's US shipping address
         const addressResult = await addressService.getUserAddress(user.id);
         if (!addressResult.error && addressResult.data) {
           setUsAddress(addressResult.data);
         }
-
-        // Fetch user's packages
-        const packagesResult = await packageService.getPackages(user.id);
-        if (!packagesResult.error) {
-          setPackages(packagesResult.data);
-          
-          // Calculate package statistics
-          type PackageStats = { total: number; pending: number; inTransit: number; delivered: number };
-          const stats = packagesResult.data.reduce<PackageStats>((acc, pkg: PackageWithDetails) => {
-            acc.total++;
-            switch (pkg.status) {
-              case 'pending':
-              case 'processing':
-                acc.pending++;
-                break;
-              case 'shipped':
-              case 'in_transit':
-                acc.inTransit++;
-                break;
-              case 'delivered':
-                acc.delivered++;
-                break;
-            }
-            return acc;
-          }, { total: 0, pending: 0, inTransit: 0, delivered: 0 });
-          
-          setPackageStats(stats);
-        }
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
-      } finally {
-        setLoading(false);
       }
     };
 

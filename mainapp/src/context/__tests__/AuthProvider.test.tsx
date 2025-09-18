@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { render } from '../../test/test-utils'
-import { screen, act, waitFor } from '@testing-library/react'
+import { render, screen, act, waitFor } from '../../test/test-utils'
 import { AuthProvider, useAuth } from '../AuthProvider'
 
 // Test component to interact with AuthProvider
