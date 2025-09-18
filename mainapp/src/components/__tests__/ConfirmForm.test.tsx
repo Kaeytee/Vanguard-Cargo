@@ -1,7 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 import userEvent from '@testing-library/user-event'
-import { render } from '../../test/test-utils'
-import { screen } from '@testing-library/react'
+import { render, screen } from '../../test/test-utils'
 import ConfirmForm from '../ConfirmForm'
 import { mockFormData } from '../../test/test-utils'
 
