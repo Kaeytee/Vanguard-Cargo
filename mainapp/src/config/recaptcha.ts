@@ -32,7 +32,8 @@ const getEnvVariable = (key: string): string => {
  * Get the reCAPTCHA site key from environment variables
  */
 const getSiteKey = (): string => {
-  const envKey = getEnvVariable('REACT_APP_RECAPTCHA_SITE_KEY');
+  const envKey = getEnvVariable('VITE_RECAPTCHA_SITE_KEY') || 
+                 getEnvVariable('REACT_APP_RECAPTCHA_SITE_KEY');
   
   if (envKey && envKey.trim() !== '') {
     return envKey.trim();
@@ -47,7 +48,8 @@ const getSiteKey = (): string => {
  * Get the reCAPTCHA secret key from environment variables
  */
 const getSecretKey = (): string => {
-  const envKey = getEnvVariable('REACT_APP_RECAPTCHA_SECRET_KEY');
+  const envKey = getEnvVariable('VITE_RECAPTCHA_SECRET_KEY') ||
+                 getEnvVariable('REACT_APP_RECAPTCHA_SECRET_KEY');
   
   if (envKey && envKey.trim() !== '') {
     return envKey.trim();

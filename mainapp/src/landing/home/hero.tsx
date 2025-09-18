@@ -143,7 +143,7 @@ const popularBrands = [
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-700 mb-6 leading-tight">
                 Shop in the US.{" "}
                 <span className="text-red-600">Ship to Ghana,</span>{" "}
-                <span className="text-gray-700">stress-free.</span>
+                <span className="text-gray-700">In 3 Days.</span>
               </h1>
 
 

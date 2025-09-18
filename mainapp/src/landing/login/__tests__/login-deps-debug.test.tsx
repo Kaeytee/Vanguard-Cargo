@@ -32,8 +32,8 @@ describe('Login Component Dependencies Debug', () => {
     }).not.toThrow()
   })
   it('should use useAuth hook', async () => {
-    const { useAuth } = await import('../../../context/AuthProvider')
-    const { AuthProvider } = await import('../../../context/AuthProvider')
+    const { useAuth } = await import('../../../hooks/useAuth')
+    const { AuthProvider } = await import('../../../context/AuthContext')
     const { renderHook } = await import('@testing-library/react')
     
     expect(() => {

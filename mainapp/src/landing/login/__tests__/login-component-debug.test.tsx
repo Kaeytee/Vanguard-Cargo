@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { render } from '@testing-library/react'
 import Login from '../login'
-import { AuthProvider } from '../../../context/AuthProvider'
+import { AuthProvider } from '../../../context/AuthContext'
 import { BrowserRouter } from 'react-router-dom'
 
 // Debug test to isolate the "Element type is invalid" error

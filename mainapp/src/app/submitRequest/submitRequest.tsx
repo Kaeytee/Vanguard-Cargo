@@ -2,7 +2,7 @@
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 import React, { useState, useEffect } from "react";
-import { useAuth } from "../../context/AuthProvider";
+import { useAuth } from "../../hooks/useAuth";
 
 const useRouter = () => {
   return {
@@ -48,17 +48,17 @@ export default function SubmitRequestPage() {
   // Auto-populate client information from user profile when component mounts
   useEffect(() => {
     if (user) {
-      // Update form data with user information
+      // Update form data with user information - using basic user data for now
       setFormData(prevData => ({
         ...prevData,
-        clientName: user.name || prevData.clientName,
+        clientName: prevData.clientName, // Keep existing or empty
         clientEmail: user.email || prevData.clientEmail,
-        clientPhone: user.phone || prevData.clientPhone,
-        clientAddress: user.address || prevData.clientAddress,
-        clientCity: user.city || prevData.clientCity,
-        clientState: user.state || prevData.clientState,
-        clientZip: user.zip || prevData.clientZip,
-        clientCountry: user.country || prevData.clientCountry
+        clientPhone: prevData.clientPhone, // Keep existing or empty
+        clientAddress: prevData.clientAddress, // Keep existing or empty
+        clientCity: prevData.clientCity, // Keep existing or empty
+        clientState: prevData.clientState, // Keep existing or empty
+        clientZip: prevData.clientZip, // Keep existing or empty
+        clientCountry: prevData.clientCountry // Keep existing or empty
       }));
     }
   }, [user, setFormData]);

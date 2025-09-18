@@ -15,7 +15,7 @@ export default function Home() {
 				keywords="package forwarding Ghana, USA to Ghana shipping, international shipping, US address Ghana, cargo forwarding, online shopping USA, package consolidation, shipping service Ghana, freight forwarding"
 				url="https://www.vanguardcargo.org/"
 			/>
-			
+
 			{/* Hero Section */}
 			<Hero />
 

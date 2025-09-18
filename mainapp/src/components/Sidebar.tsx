@@ -8,8 +8,9 @@ import {
   Info,
   LogOut,
   Search,
+  Package,
 } from "lucide-react";
-import { useAuth } from "../context/AuthProvider";
+import { useAuth } from "../hooks/useAuth";
 import { useLogout } from "../hooks/useLogout";
 import { useTranslation } from "../lib/translations";
 // Import default avatar for user profile
@@ -35,21 +36,22 @@ interface SidebarProps {
  */
 const Sidebar: React.FC<SidebarProps> = ({ onNavigate }) => {
   // Get user data and logout function from auth context
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { confirmLogout } = useLogout();
   const { t } = useTranslation();
 
   // Fallback user data if auth context user is null
-  const userData = user || {
-    name: "Guest User",
-    email: "guest@example.com",
-    image: defaultAvatar,
+  const userData = {
+    name: profile ? `${profile.firstName} ${profile.lastName}` : "Guest User",
+    email: user?.email || "guest@example.com",
+    image: profile?.avatarUrl || defaultAvatar,
   };
   /**
    * Navigation menu items configuration
    */
   const navigationItems = [
     { to: "/app/dashboard", icon: BarChart3, label: t('dashboard') },
+    { to: "/app/package-intake", icon: Package, label: t('packageIntake') },
     { to: "/app/shipment-history", icon: Clock, label: t('shipmentHistory') },
     { to: "/app/tracking", icon: Search, label: t('tracking') },
     { to: "/app/settings", icon: Settings, label: t('settings') },
@@ -59,8 +61,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate }) => {
    * Footer navigation items configuration
    */
   const footerItems = [
-    { to: "/app/support", icon: Headphones, label: t('support') },
-    { to: "/app/about", icon: Info, label: t('about') },
+  { to: "/app/support", icon: Headphones, label: t('support') },
   ];
 
   /**

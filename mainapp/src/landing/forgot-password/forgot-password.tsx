@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { AnimatePresence } from 'framer-motion';
 import type { ForgotPasswordState } from './types';
 import { getStepContent } from './utils';
@@ -15,6 +15,7 @@ import { SuccessStep } from './SuccessStep';
  */
 export default function ForgotPassword() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   
   // Consolidated state
   const [state, setState] = useState<ForgotPasswordState>({
@@ -29,6 +30,15 @@ export default function ForgotPassword() {
     formError: "",
     formSuccess: "",
   });
+
+  // Handle URL parameters for reset link
+  useEffect(() => {
+    const step = searchParams.get('step');
+    if (step === '3') {
+      // User came from reset link, go directly to new password step
+      setState(prev => ({ ...prev, step: 3 }));
+    }
+  }, [searchParams]);
 
   // Navigation handlers
   const handleNext = () => {

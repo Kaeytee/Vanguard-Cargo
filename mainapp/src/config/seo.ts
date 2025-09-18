@@ -1,27 +1,27 @@
 /**
- * SEO Configuration for Ttarius Logistics
+ * SEO Configuration for Vanguard Cargo
  * Centralized SEO settings and structured data schemas
  */
 
 // Base URL configuration
-export const BASE_URL = 'https://ttariuslogistics.com';
+export const BASE_URL = 'https://vanguardcargo.org';
 
 // Default SEO meta tags
 export const DEFAULT_SEO = {
-  siteName: 'Ttarius Logistics',
-  title: 'Ttarius Logistics - Premium Package Forwarding from USA to Ghana',
-  description: 'Ship from any US store to Ghana with Ttarius Logistics. Get your free US address, consolidate packages, and save up to 80% on international shipping. Trusted by thousands of Ghanaians.',
+  siteName: 'Vanguard Cargo',
+  title: 'Vanguard Cargo - Premium Package Forwarding from USA to Ghana',
+  description: 'Ship from any US store to Ghana with Vanguard Cargo. Get your free US address, consolidate packages, and save up to 80% on international shipping. Trusted by thousands of Ghanaians.',
   keywords: 'package forwarding, shipping to Ghana, US address, international shipping, cargo forwarding, Ghana shipping, online shopping USA, package consolidation',
-  author: 'Ttarius Logistics',
+  author: 'Vanguard Cargo',
   image: `${BASE_URL}/og-image.jpg`,
-  twitterHandle: '@TtariusLogistics'
+  twitterHandle: '@vanguardcargo'
 };
 
 // Organization Schema
 export const ORGANIZATION_SCHEMA = {
   "@context": "https://schema.org",
   "@type": "Organization",
-  "name": "Ttarius Logistics",
+  "name": "Vanguard Cargo",
   "url": BASE_URL,
   "logo": `${BASE_URL}/logo.png`,
   "description": "Premium package forwarding service from USA to Ghana. Get your free US address and ship with confidence.",
@@ -39,14 +39,14 @@ export const ORGANIZATION_SCHEMA = {
     "areaServed": ["GH", "US"]
   },
   "sameAs": [
-    "https://facebook.com/ttariuslogistics",
-    "https://twitter.com/ttariuslogistics",
-    "https://instagram.com/ttariuslogistics"
+    "https://facebook.com/vanguardcargo",
+    "https://twitter.com/vanguardcargo",
+    "https://instagram.com/vanguardcargo"
   ],
   "foundingDate": "2024",
   "founders": {
     "@type": "Person",
-    "name": "Ttarius Logistics Founder"
+    "name": "Vanguard Cargo Founder"
   },
   "numberOfEmployees": "50-100",
   "slogan": "Connecting Ghana to Global Markets"
@@ -60,7 +60,7 @@ export const SERVICE_SCHEMA = {
   "description": "International package forwarding from USA to Ghana with consolidation and customs handling",
   "provider": {
     "@type": "Organization",
-    "name": "Ttarius Logistics",
+    "name": "Vanguard Cargo",
     "url": BASE_URL
   },
   "serviceType": "Package Forwarding",
@@ -126,7 +126,7 @@ export const FAQ_SCHEMA = {
 export const WEBSITE_SCHEMA = {
   "@context": "https://schema.org",
   "@type": "WebSite",
-  "name": "Ttarius Logistics",
+  "name": "Vanguard Cargo",
   "url": BASE_URL,
   "potentialAction": {
     "@type": "SearchAction",
@@ -142,10 +142,10 @@ export const WEBSITE_SCHEMA = {
 export const LOCAL_BUSINESS_SCHEMA = {
   "@context": "https://schema.org",
   "@type": "LocalBusiness",
-  "name": "Ttarius Logistics",
+  "name": "Vanguard Cargo",
   "image": `${BASE_URL}/logo.png`,
   "telephone": "+233-XX-XXX-XXXX",
-  "email": "support@ttariuslogistics.com",
+  "email": "support@vanguardcargo.org",
   "address": {
     "@type": "PostalAddress",
     "streetAddress": "Your Street Address",
@@ -185,7 +185,7 @@ export const PACKAGE_FORWARDING_SCHEMA = {
   "category": "Logistics Services",
   "brand": {
     "@type": "Brand",
-    "name": "Ttarius Logistics"
+    "name": "Vanguard Cargo"
   },
   "offers": {
     "@type": "AggregateOffer",

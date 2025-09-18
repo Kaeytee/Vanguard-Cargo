@@ -10,7 +10,8 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search, Calendar } from "lucide-react";
-import { apiService } from "../../services/api";
+import { shipmentService } from "../../services/shipmentService";
+import { useAuth } from "../../hooks/useAuth";
 import { useTranslation } from "../../lib/translations";
 
 /**
@@ -24,6 +25,7 @@ export default function ShipmentHistoryPage() {
   // Navigation hook for routing
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const { user } = useAuth();
 
   /**
    * Define the ShipmentType interface to ensure type safety and consistency
@@ -68,13 +70,18 @@ export default function ShipmentHistoryPage() {
   const dateFilterDropdownRef = useRef<HTMLDivElement>(null);
 
   /**
-   * Simplified API call function using the new API service
-   * The API service automatically handles mock data toggle
+   * Simplified API call function using the new shipmentService
+   * Uses Supabase to fetch real shipment data
    * @returns {Promise<ShipmentType[]>} A promise that resolves to an array of shipments
    */
   const fetchShipments = useCallback(async (): Promise<ShipmentType[]> => {
-    // Use the simplified API service
-    const response = await apiService.getUserShipments(
+    if (!user?.id) {
+      throw new Error('User not authenticated');
+    }
+
+    // Use the Supabase shipmentService
+    const response = await shipmentService.getUserShipments(
+      user.id,
       currentPage, 
       itemsPerPage, 
       activeTab !== 'all' ? activeTab : undefined, 
@@ -93,7 +100,7 @@ export default function ShipmentHistoryPage() {
     } else {
       throw new Error(response.error || 'Failed to fetch shipments');
     }
-  }, [currentPage, itemsPerPage, activeTab, searchQuery]);
+  }, [user?.id, currentPage, itemsPerPage, activeTab, searchQuery]);
 
   // Add CSS animations for the date filter dropdown
   useEffect(() => {
@@ -226,8 +233,7 @@ export default function ShipmentHistoryPage() {
         // Set loading state to true at the start of the request
         setLoading(true);
 
-        // In the future, this will be a real API call
-        // For now, we use our dummy data function
+        // Fetch real shipment data from Supabase
         const data = await fetchShipments();
 
         // Update the shipments state with the fetched data
@@ -266,19 +272,7 @@ export default function ShipmentHistoryPage() {
    * This will automatically update when the shipments data changes
    */
   const counts = useMemo(() => {
-    // If still loading or there's an error, return the static counts for UI
-    if (loading || error || shipments.length === 0) {
-      return {
-        all: 7,
-        pending: 1,
-        delivered: 1,
-        arrived: 2,
-        received: 2,
-        transit: 1,
-      };
-    }
-
-    // Otherwise, calculate the real counts from the data
+    // Calculate the real counts from the data (show 0 if no data)
     return {
       all: shipments.length,
       pending: shipments.filter((s) => s.status === "pending").length,
@@ -287,7 +281,7 @@ export default function ShipmentHistoryPage() {
       received: shipments.filter((s) => s.status === "received").length,
       transit: shipments.filter((s) => s.status === "transit").length,
     };
-  }, [shipments, loading, error]);
+  }, [shipments]);
 
   /**
    * Helper function to parse dates and handle potential invalid formats

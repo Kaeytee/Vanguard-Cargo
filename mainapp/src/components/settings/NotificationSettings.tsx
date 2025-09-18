@@ -1,28 +1,32 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { MdNotificationsNone } from 'react-icons/md';
-import { apiService, type NotificationSettings as NotificationSettingsType } from '../../services/api';
+import { notificationService, type NotificationSettings as NotificationSettingsType } from '../../services/notificationService';
+import { useAuth } from '../../hooks/useAuth';
 
 export default function NotificationSettings() {
+  const { user } = useAuth();
   const [settings, setSettings] = useState<NotificationSettingsType | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadNotificationSettings();
-  }, []);
+  const loadNotificationSettings = useCallback(async () => {
+    if (!user?.id) {
+      setError('User not authenticated');
+      setLoading(false);
+      return;
+    }
 
-  const loadNotificationSettings = async () => {
     try {
       setLoading(true);
       setError(null);
-      const response = await apiService.getNotificationSettings();
+      const response = await notificationService.getSettings(user.id);
       
-      if (response.success && response.data) {
+      if (response.data) {
         setSettings(response.data);
       } else {
-        setError(response.message || 'Failed to load notification settings');
+        setError(response.error || 'Failed to load notification settings');
       }
     } catch (err) {
       setError('Failed to load notification settings');
@@ -30,7 +34,11 @@ export default function NotificationSettings() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user?.id]);
+
+  useEffect(() => {
+    loadNotificationSettings();
+  }, [loadNotificationSettings]);
 
   const handleToggle = (settingName: keyof NotificationSettingsType) => {
     if (settings && typeof settings[settingName] === 'boolean') {
@@ -44,14 +52,14 @@ export default function NotificationSettings() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!settings) return;
+    if (!settings || !user?.id) return;
 
     setSaving(true);
     setError(null);
     setSuccessMessage(null);
 
     try {
-      const response = await apiService.updateNotificationSettings({
+      const response = await notificationService.updateSettings(user.id, {
         shipmentUpdates: settings.shipmentUpdates,
         deliveryAlerts: settings.deliveryAlerts,
         delayNotifications: settings.delayNotifications,
@@ -61,14 +69,12 @@ export default function NotificationSettings() {
         pushNotifications: settings.pushNotifications
       });
       
-      if (response.success) {
+      if (response.success && response.data) {
+        setSettings(response.data);
         setSuccessMessage('Notification settings updated successfully!');
-        if (response.data) {
-          setSettings(response.data);
-        }
         setTimeout(() => setSuccessMessage(null), 3000);
       } else {
-        setError(response.message || 'Failed to update notification settings');
+        setError(response.error || 'Failed to update notification settings');
       }
     } catch (err) {
       setError('Failed to update notification settings');

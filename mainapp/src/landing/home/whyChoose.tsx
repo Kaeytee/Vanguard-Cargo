@@ -22,7 +22,7 @@ export default function WhyChoose() {
 			icon: 'delivery',
 			title: 'Reliable Delivery Service',
 			description: 'We handle everything from US pickup to secure delivery at pickup locations in Ghana',
-			stat: '7-14 Days',
+			stat: '3 Days',
 			statLabel: 'Delivery to Ghana'
 		},
 		{

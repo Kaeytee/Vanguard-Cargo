@@ -1,57 +1,69 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { CheckCircle, Mail, RefreshCw, AlertCircle, ArrowLeft } from 'lucide-react';
-import { apiService } from '../../services/api';
-import { useAuth } from '../../context/AuthProvider';
+import { authService } from '../../services/authService';
+import { useAuth } from '../../hooks/useAuth';
+import AnimateInView from '../../components/ui/animate-in-view';
+import loginbg from '../../images/register-bg.jpg';
+import Image from '../../images/forgot.jpg';
 
 /**
- * EmailVerification component - Handles email verification flow
- * Can be used for both automatic verification (with token from email link)
- * and manual verification (user enters token)
+ * EmailVerification component - Professional email verification flow
+ * Handles automatic verification through email links only
  */
 export default function EmailVerification() {
-  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { user, setUser } = useAuth();
+  const { user, profile, refreshProfile } = useAuth();
   
-  const [status, setStatus] = useState<'loading' | 'success' | 'error' | 'manual'>('loading');
+  const [status, setStatus] = useState<'loading' | 'success' | 'error' | 'waiting'>('loading');
   const [message, setMessage] = useState('');
   const [isResending, setIsResending] = useState(false);
-  const [manualToken, setManualToken] = useState('');
-  const [isVerifying, setIsVerifying] = useState(false);
-
-  // Get token from URL params or show manual entry
-  const tokenFromUrl = searchParams.get('token');
 
   useEffect(() => {
-    const verifyEmailWithToken = async (token: string) => {
+    const handleEmailVerification = async () => {
       try {
         setStatus('loading');
-        const response = await apiService.verifyEmail(token);
         
-        if (response.success) {
+        // First check if user is already verified or has active status
+        if (user?.email_confirmed_at || profile?.status === 'active') {
           setStatus('success');
-          setMessage(response.data.message);
-          
-          // Update user in context if they're logged in
-          if (user) {
-            const updatedUser = {
-              ...user,
-              emailVerified: true,
-              accountStatus: 'ACTIVE' as const
-            };
-            setUser(updatedUser);
-            localStorage.setItem('user', JSON.stringify(updatedUser));
-          }
-          
-          // Redirect to dashboard after 3 seconds
+          setMessage('Your email is already verified! Redirecting to your dashboard...');
           setTimeout(() => {
-            navigate(user ? '/app' : '/login');
-          }, 3000);
+            navigate('/app');
+          }, 1500);
+          return;
+        }
+
+        // Check for Supabase email verification callback
+        if (window.location.hash.includes('access_token')) {
+          // Supabase handles email verification automatically via the session
+          // The user should already be authenticated if they clicked the email link
+          if (user?.email_confirmed_at) {
+            setStatus('success');
+            setMessage('Email verified successfully!');
+            
+            // Refresh profile to get updated verification status
+            await refreshProfile();
+            
+            // Redirect to dashboard after 3 seconds
+            setTimeout(() => {
+              navigate('/app');
+            }, 3000);
+          } else {
+            setStatus('success');
+            setMessage('Email verification in progress...');
+            
+            // Wait a moment then refresh profile
+            setTimeout(async () => {
+              await refreshProfile();
+              navigate('/app');
+            }, 2000);
+          }
         } else {
-          setStatus('error');
-          setMessage(response.error || 'Verification failed');
+          // No verification token found, show waiting screen
+          setStatus('waiting');
+          setMessage('Please check your email and click the verification link we sent you.');
         }
       } catch (error) {
         setStatus('error');
@@ -59,53 +71,8 @@ export default function EmailVerification() {
       }
     };
 
-    if (tokenFromUrl) {
-      // Automatic verification from email link
-      verifyEmailWithToken(tokenFromUrl);
-    } else {
-      // Show manual token entry
-      setStatus('manual');
-    }
-  }, [tokenFromUrl, user, setUser, navigate]);
-
-  const handleManualVerification = async () => {
-    if (!manualToken.trim()) {
-      setMessage('Please enter the verification token');
-      return;
-    }
-
-    setIsVerifying(true);
-    try {
-      const response = await apiService.verifyEmail(manualToken);
-      
-      if (response.success) {
-        setStatus('success');
-        setMessage(response.data.message);
-        
-        // Update user in context if they're logged in
-        if (user) {
-          const updatedUser = {
-            ...user,
-            emailVerified: true,
-            accountStatus: 'ACTIVE' as const
-          };
-          setUser(updatedUser);
-          localStorage.setItem('user', JSON.stringify(updatedUser));
-        }
-        
-        // Redirect to dashboard after 3 seconds
-        setTimeout(() => {
-          navigate(user ? '/app' : '/login');
-        }, 3000);
-      } else {
-        setMessage(response.error || 'Invalid verification token');
-      }
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : 'Verification failed');
-    } finally {
-      setIsVerifying(false);
-    }
-  };
+    handleEmailVerification();
+  }, [user, profile?.status, navigate, refreshProfile]);
 
   const handleResendEmail = async () => {
     if (!user?.email) {
@@ -115,14 +82,27 @@ export default function EmailVerification() {
 
     setIsResending(true);
     try {
-      const response = await apiService.resendVerificationEmail(user.email);
+      console.log('User object:', user);
+      console.log('Resending verification email for user:', user.email);
+      console.log('User email confirmed at:', user?.email_confirmed_at);
       
-      if (response.success) {
-        setMessage('Verification email sent! Please check your inbox.');
+      const result = await authService.resendEmailVerification(user.email);
+      
+      if (!result.error) {
+        setMessage(result.message || 'Verification email sent! Please check your inbox and spam folder.');
       } else {
-        setMessage(response.error || 'Failed to resend email');
+        console.error('Resend failed:', result.error);
+        setMessage(result.message || result.error.message || 'Failed to resend email. Please try again later.');
+        
+        // If user is already verified, redirect them
+        if (result.error.message?.includes('already confirmed')) {
+          setTimeout(() => {
+            navigate('/app');
+          }, 3000);
+        }
       }
     } catch (error) {
+      console.error('Resend error:', error);
       setMessage(error instanceof Error ? error.message : 'Failed to resend email');
     } finally {
       setIsResending(false);
@@ -130,22 +110,51 @@ export default function EmailVerification() {
   };
 
   const handleGoBack = () => {
-    if (user) {
-      navigate('/app');
-    } else {
-      navigate('/login');
-    }
+    // Always go back to login since unverified users shouldn't access the app
+    navigate('/login');
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-      <div className="max-w-md w-full bg-white shadow-2xl rounded-2xl overflow-hidden">
-        <div className="p-8">
-          {/* Header */}
-          <div className="text-center mb-6">
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">Email Verification</h1>
-            <p className="text-gray-600">Verify your email to activate your account</p>
-          </div>
+    <div className="email-verification-container">
+      {/* Main Section */}
+      <section 
+        className="relative min-h-screen flex items-center justify-center p-4"
+        style={{
+          backgroundImage: `url(${loginbg})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat'
+        }}
+      >
+        <AnimateInView variant="fadeInUp" delay={0.2}>
+          <motion.div 
+            className="bg-white rounded-lg shadow-2xl overflow-hidden max-w-4xl w-full flex flex-col md:flex-row"
+            whileHover={{ y: -2 }}
+            transition={{ duration: 0.3 }}
+          >
+            {/* Left Side - Image */}
+            <AnimateInView variant="fadeInLeft" delay={0.4} className="md:w-1/2">
+              <motion.div 
+                className="relative h-64 md:h-full min-h-[500px] flex items-center justify-center"
+                whileHover={{ scale: 1.02 }}
+                transition={{ duration: 0.3 }}
+              >
+                <img 
+                  src={Image}
+                  alt="Delivery person with cargo background"
+                  className="w-full h-full object-cover"
+                />
+              </motion.div>
+            </AnimateInView>
+
+            {/* Right Side - Form Content */}
+            <AnimateInView variant="fadeInRight" delay={0.6} className="md:w-1/2">
+              <div className="p-8 md:p-12 h-full flex flex-col justify-center">
+                {/* Header */}
+                <div className="mb-8">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-2">Email Verification Required</h2>
+                  <p className="text-gray-600">You must verify your email address to access your account and begin shipping</p>
+                </div>
 
           {/* Loading State */}
           {status === 'loading' && (
@@ -209,105 +218,89 @@ export default function EmailVerification() {
                   </button>
                 )}
                 
-                <button
-                  onClick={() => setStatus('manual')}
-                  className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-3 px-6 rounded-lg transition-colors"
-                >
-                  Enter Token Manually
-                </button>
+
               </div>
             </motion.div>
           )}
 
-          {/* Manual Token Entry */}
-          {status === 'manual' && (
+          {/* Waiting for Email Verification */}
+          {status === 'waiting' && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="py-4"
+              className="text-center py-8"
             >
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-                <div className="flex items-start space-x-3">
-                  <Mail className="h-5 w-5 text-blue-500 mt-0.5 flex-shrink-0" />
-                  <div>
-                    <p className="text-sm font-medium text-blue-900">Check Your Email</p>
-                    <p className="text-sm text-blue-700 mt-1">
-                      We sent a verification link to <span className="font-medium">{user?.email}</span>. 
-                      Click the link or enter the token below.
-                    </p>
-                  </div>
-                </div>
+              <div className="bg-blue-100 p-4 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                <Mail className="h-8 w-8 text-blue-500" />
               </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">Check Your Email</h3>
+              <p className="text-gray-600 mb-2">
+                We sent a verification link to <span className="font-medium text-gray-900">{user?.email}</span>
+              </p>
+              <p className="text-sm text-gray-500 mb-4">
+                Click the link in your email to verify your account and continue.
+              </p>
 
-              <div className="space-y-4">
-                <div>
-                  <label htmlFor="token" className="block text-sm font-medium text-gray-700 mb-2">
-                    Verification Token
-                  </label>
-                  <input
-                    type="text"
-                    id="token"
-                    value={manualToken}
-                    onChange={(e) => setManualToken(e.target.value)}
-                    placeholder="Enter verification token"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 outline-none"
-                  />
+              {message && (
+                <div className="text-sm text-green-600 bg-green-50 border border-green-200 rounded-lg p-3 mb-4">
+                  {message}
                 </div>
-
-                {message && (
-                  <div className="text-red-600 text-sm">{message}</div>
-                )}
-
-                <button
-                  onClick={handleManualVerification}
-                  disabled={isVerifying || !manualToken.trim()}
-                  className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
-                >
-                  {isVerifying ? (
-                    <>
-                      <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></div>
-                      <span>Verifying...</span>
-                    </>
-                  ) : (
-                    <span>Verify Email</span>
-                  )}
-                </button>
-
+              )}
+              
+              <div className="space-y-3">
                 {user && (
                   <button
                     onClick={handleResendEmail}
                     disabled={isResending}
-                    className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-3 px-6 rounded-lg transition-colors disabled:opacity-50 flex items-center justify-center space-x-2"
+                    className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors disabled:opacity-50 flex items-center justify-center space-x-2"
                   >
                     {isResending ? (
                       <>
-                        <div className="animate-spin w-4 h-4 border-2 border-gray-600 border-t-transparent rounded-full"></div>
+                        <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></div>
                         <span>Sending...</span>
                       </>
                     ) : (
                       <>
                         <RefreshCw className="h-4 w-4" />
-                        <span>Resend Email</span>
+                        <span>Resend Verification Email</span>
                       </>
                     )}
                   </button>
                 )}
+                
+                {/* Troubleshooting Tips */}
+                <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+                  <p className="text-sm font-medium text-gray-700 mb-2">Not receiving emails?</p>
+                  <ul className="text-xs text-gray-600 space-y-1">
+                    <li>• Check your spam/junk folder</li>
+                    <li>• Ensure {user?.email} is correct</li>
+                    <li>• Wait a few minutes between resend attempts</li>
+                    <li>• Try refreshing this page</li>
+                  </ul>
+                </div>
+                
+                {/* Note: Skip functionality removed for security - email verification is mandatory */}
               </div>
             </motion.div>
           )}
 
-          {/* Back Button */}
-          <div className="mt-6 pt-6 border-t border-gray-200">
-            <button
-              onClick={handleGoBack}
-              className="flex items-center space-x-2 text-gray-600 hover:text-gray-800 transition-colors"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              <span>Back to {user ? 'Dashboard' : 'Login'}</span>
-            </button>
-          </div>
-        </div>
-      </div>
+
+
+                {/* Back Button */}
+                <div className="mt-6 pt-6 border-t border-gray-200">
+                  <button
+                    onClick={handleGoBack}
+                    className="flex items-center space-x-2 text-gray-600 hover:text-gray-800 transition-colors"
+                  >
+                    <ArrowLeft className="h-4 w-4" />
+                    <span>Back to Login</span>
+                  </button>
+                </div>
+              </div>
+            </AnimateInView>
+          </motion.div>
+        </AnimateInView>
+      </section>
     </div>
   );
 }

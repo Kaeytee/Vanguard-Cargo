@@ -1,8 +1,8 @@
 // PreferencesSettings.tsx
 import { useState, useEffect } from 'react';
 import { FaGlobeAsia } from 'react-icons/fa';
-import { usePreferences } from '../../context/PreferencesProvider';
-import { type UserPreferences } from '../../services/api';
+import { usePreferences } from '../../hooks/usePreferences';
+import { type UserPreferences } from '../../services/preferencesService';
 
 function PreferencesSettings() {
   const { 

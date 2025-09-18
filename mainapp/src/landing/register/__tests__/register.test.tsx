@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import userEvent from '@testing-library/user-event'
 import { render, screen, waitFor } from '../../../test/test-utils'
 import React from 'react'
-import { AuthProvider } from '../../../context/AuthProvider'
+import { AuthProvider } from '../../../context/AuthContext'
 import { BrowserRouter } from 'react-router-dom'
 
 // Mock react-router-dom

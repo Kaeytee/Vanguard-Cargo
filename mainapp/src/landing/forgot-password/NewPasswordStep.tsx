@@ -4,7 +4,7 @@ import { Eye, EyeOff, LockKeyhole } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import type { StepProps } from './types';
 import { validationUtils } from './utils';
-import { apiService } from '../../services/api';
+import { authService } from '../../services/authService';
 import { MessageDisplay } from './MessageDisplay';
 
 export const NewPasswordStep: React.FC<StepProps> = ({ state, setState, onNext }) => {
@@ -22,15 +22,13 @@ export const NewPasswordStep: React.FC<StepProps> = ({ state, setState, onNext }
     setState(prev => ({ ...prev, isLoading: true, formError: "" }));
 
     try {
-      const response = await apiService.resetPassword(
-        state.email, 
-        state.verificationCode, 
-        state.newPassword, 
-        state.confirmPassword
-      );
+      const { error } = await authService.updatePassword(state.newPassword);
       
-      if (response.success && response.data) {
-        setState(prev => ({ ...prev, formSuccess: response.data.message }));
+      if (!error) {
+        setState(prev => ({ 
+          ...prev, 
+          formSuccess: "Password updated successfully! Redirecting to login..." 
+        }));
         setTimeout(() => {
           onNext();
           setState(prev => ({ ...prev, isLoading: false, formError: "" }));
@@ -38,7 +36,7 @@ export const NewPasswordStep: React.FC<StepProps> = ({ state, setState, onNext }
       } else {
         setState(prev => ({ 
           ...prev, 
-          formError: response.error || "Failed to reset password. Please try again.",
+          formError: error.message || "Failed to reset password. Please try again.",
           isLoading: false 
         }));
       }

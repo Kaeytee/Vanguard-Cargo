@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from '../../../test/test-utils'
-import { AuthProvider } from '../../../context/AuthProvider'
+import { AuthProvider } from '../../../context/AuthContext'
 
 // Mock the problematic image import directly in the test file
 vi.mock('../../images/delivery-man.png', () => ({

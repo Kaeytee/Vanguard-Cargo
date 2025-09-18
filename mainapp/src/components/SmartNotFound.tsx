@@ -1,5 +1,4 @@
-import React from 'react';
-import { useAuth } from '../context/AuthProvider';
+import { useAuth } from '../hooks/useAuth';
 import NotFoundWithLayout from '../landing/layouts/NotFoundWithLayout';
 import AppNotFoundWithLayout from '../app/layouts/AppNotFoundWithLayout';
 
@@ -10,7 +9,7 @@ import AppNotFoundWithLayout from '../app/layouts/AppNotFoundWithLayout';
  * - If user is logged in: Shows AppNotFound (with app layout)
  * - If user is not logged in: Shows NotFound (landing page layout)
  */
-const SmartNotFound: React.FC = () => {
+const SmartNotFound = () => {
   const { user, loading } = useAuth();
 
   // Show loading state while checking authentication

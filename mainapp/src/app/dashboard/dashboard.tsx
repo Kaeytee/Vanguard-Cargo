@@ -1,31 +1,78 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { Copy, MapPin, Info } from 'lucide-react';
-import { useAuth } from '../../context/AuthProvider';
+import { useAuth } from '../../hooks/useAuth';
 import { motion } from "framer-motion";
+import PackageIntakeWidget from '../../components/PackageIntakeWidget';
+import { packageService, type PackageWithDetails } from '../../services/packageService';
+import { addressService, type USShippingAddress } from '../../services/addressService';
 import shopImage from '../../assets/shop.jpg';
 
 
 const Dashboard: React.FC = () => {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
+  const [packages, setPackages] = useState<PackageWithDetails[]>([]);
+  const [usAddress, setUsAddress] = useState<USShippingAddress | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [packageStats, setPackageStats] = useState({
+    total: 0,
+    pending: 0,
+    inTransit: 0,
+    delivered: 0
+  });
 
-  // Extract first name from user's name or email
-  const firstName = user?.name?.split(' ')[0] || user?.email?.split('@')[0] || 'User';
+  // Extract first name from profile or user email
+  const firstName = profile?.firstName || user?.email?.split('@')[0] || 'User';
 
-  // Generate US address based on user info
-  const generateUSAddress = () => {
-    const userId = user?.id?.slice(-4) || '1234';
-    const userName = user?.name || `${user?.email?.split('@')[0]} User` || 'User Name';
-    
-    return {
-      name: `${userName} (VCG-${userId})`,
-      line1: '444 Alaska Avenue',
-      line2: `Suite #CGP366`,
-      city: 'Torrance',
-      state: 'CA',
-      zipCode: '90503',
-      country: 'USA'
+  // Fetch user data and packages on component mount
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      if (!user) return;
+
+      try {
+        setLoading(true);
+
+        // Fetch user's US shipping address
+        const addressResult = await addressService.getUserAddress(user.id);
+        if (!addressResult.error && addressResult.data) {
+          setUsAddress(addressResult.data);
+        }
+
+        // Fetch user's packages
+        const packagesResult = await packageService.getPackages(user.id);
+        if (!packagesResult.error) {
+          setPackages(packagesResult.data);
+          
+          // Calculate package statistics
+          type PackageStats = { total: number; pending: number; inTransit: number; delivered: number };
+          const stats = packagesResult.data.reduce<PackageStats>((acc, pkg: PackageWithDetails) => {
+            acc.total++;
+            switch (pkg.status) {
+              case 'pending':
+              case 'processing':
+                acc.pending++;
+                break;
+              case 'shipped':
+              case 'in_transit':
+                acc.inTransit++;
+                break;
+              case 'delivered':
+                acc.delivered++;
+                break;
+            }
+            return acc;
+          }, { total: 0, pending: 0, inTransit: 0, delivered: 0 });
+          
+          setPackageStats(stats);
+        }
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error);
+      } finally {
+        setLoading(false);
+      }
     };
-  };
+
+    fetchDashboardData();
+  }, [user]);
 // Popular brands data
 const popularBrands = [
   {
@@ -101,10 +148,14 @@ const popularBrands = [
     url: "https://www2.hm.com"
   }
 ];
-  const usAddress = generateUSAddress();
 
   const copyAddressToClipboard = () => {
-    const addressText = `${usAddress.name}\n${usAddress.line1}\n${usAddress.line2}\n${usAddress.city}, ${usAddress.state} ${usAddress.zipCode}\n${usAddress.country}`;
+    if (!usAddress) return;
+    
+    const userName = (profile?.firstName || profile?.lastName)
+      ? `${profile?.firstName ?? ''} ${profile?.lastName ?? ''}`.trim()
+      : user?.email || 'User';
+    const addressText = `${userName} (VCG-${user?.id?.slice(-4)})\n${usAddress.street_address}\n${usAddress.suite_number}\n${usAddress.city}, ${usAddress.state} ${usAddress.postal_code}\n${usAddress.country}`;
     navigator.clipboard.writeText(addressText).then(() => {
       // You could add a toast notification here
       console.log('Address copied to clipboard');
@@ -127,6 +178,11 @@ const popularBrands = [
         <p className="text-gray-600">
           Now that you have a Vanguard Cargo address, you can use that address to shop on almost any site. Just use your address during checkout and we'll let you know when your items arrive at the warehouse.
         </p>
+      </div>
+
+      {/* Package Intake Widget */}
+      <div className="mb-8">
+        <PackageIntakeWidget />
       </div>
 
       {/* Next Steps Section */}
@@ -186,9 +242,17 @@ const popularBrands = [
               <div className="space-y-2 text-gray-800">
                 {/* Name */}
                 <div className="flex items-center justify-between p-2 rounded border border-gray-100 hover:bg-gray-50">
-                  <span className="font-semibold">{usAddress.name}</span>
+                  <span className="font-semibold">
+                    {(profile?.firstName || profile?.lastName
+                      ? `${profile?.firstName ?? ''} ${profile?.lastName ?? ''}`.trim()
+                      : user?.email) } (VCG-{user?.id?.slice(-4)})
+                  </span>
                   <button
-                    onClick={() => copyToClipboard(usAddress.name)}
+                    onClick={() => copyToClipboard(
+                      (profile?.firstName || profile?.lastName)
+                        ? `${profile?.firstName ?? ''} ${profile?.lastName ?? ''}`.trim()
+                        : user?.email || ''
+                    )}
                     className="text-red-600 hover:text-red-700 p-1"
                     title="Copy name"
                   >
@@ -198,9 +262,9 @@ const popularBrands = [
                 
                 {/* Address Line 1 */}
                 <div className="flex items-center justify-between p-2 rounded border border-gray-100 hover:bg-gray-50">
-                  <span>{usAddress.line1}</span>
+                  <span>{usAddress?.street_address || '123 Warehouse Street'}</span>
                   <button
-                    onClick={() => copyToClipboard(usAddress.line1)}
+                    onClick={() => copyToClipboard(usAddress?.street_address || '123 Warehouse Street')}
                     className="text-red-600 hover:text-red-700 p-1"
                     title="Copy address line 1"
                   >
@@ -210,9 +274,9 @@ const popularBrands = [
                 
                 {/* Address Line 2 */}
                 <div className="flex items-center justify-between p-2 rounded border border-gray-100 hover:bg-gray-50">
-                  <span>{usAddress.line2}</span>
+                  <span>{usAddress?.suite_number || 'Suite #VCG001'}</span>
                   <button
-                    onClick={() => copyToClipboard(usAddress.line2)}
+                    onClick={() => copyToClipboard(usAddress?.suite_number || 'Suite #VCG001')}
                     className="text-red-600 hover:text-red-700 p-1"
                     title="Copy suite number"
                   >
@@ -222,9 +286,9 @@ const popularBrands = [
                 
                 {/* City, State, ZIP */}
                 <div className="flex items-center justify-between p-2 rounded border border-gray-100 hover:bg-gray-50">
-                  <span>{usAddress.city}, {usAddress.state} {usAddress.zipCode}</span>
+                  <span>{usAddress?.city || 'Atlanta'}, {usAddress?.state || 'GA'} {usAddress?.postal_code || '30309'}</span>
                   <button
-                    onClick={() => copyToClipboard(`${usAddress.city}, ${usAddress.state} ${usAddress.zipCode}`)}
+                    onClick={() => copyToClipboard(`${usAddress?.city || 'Atlanta'}, ${usAddress?.state || 'GA'} ${usAddress?.postal_code || '30309'}`)}
                     className="text-red-600 hover:text-red-700 p-1"
                     title="Copy city, state, zip"
                   >
@@ -234,9 +298,9 @@ const popularBrands = [
                 
                 {/* Country */}
                 <div className="flex items-center justify-between p-2 rounded border border-gray-100 hover:bg-gray-50">
-                  <span className="font-medium">{usAddress.country}</span>
+                  <span className="font-medium">{usAddress?.country}</span>
                   <button
-                    onClick={() => copyToClipboard(usAddress.country)}
+                    onClick={() => copyToClipboard(usAddress?.country || '')}
                     className="text-red-600 hover:text-red-700 p-1"
                     title="Copy country"
                   >

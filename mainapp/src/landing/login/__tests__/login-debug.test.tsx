@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render } from '../../../test/test-utils'
-import { AuthProvider } from '../../../context/AuthProvider'
+import { AuthProvider } from '../../../context/AuthContext'
 
 // Mock image imports
 vi.mock('../../../images/delivery-man.png', () => ({ default: 'mock-delivery-man.png' }))

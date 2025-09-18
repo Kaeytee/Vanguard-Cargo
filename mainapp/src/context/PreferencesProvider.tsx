@@ -1,29 +1,14 @@
-import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
-import { apiService, type UserPreferences } from '../services/api';
-
-interface PreferencesContextType {
-  preferences: UserPreferences | null;
-  loading: boolean;
-  error: string | null;
-  updatePreferences: (newPreferences: Partial<UserPreferences>) => Promise<void>;
-  refreshPreferences: () => Promise<void>;
-  // Utility functions for easy access
-  language: string;
-  units: 'metric' | 'imperial';
-  autoRefresh: boolean;
-  // Unit conversion helpers
-  formatWeight: (weight: number) => string;
-  formatDistance: (distance: number) => string;
-  formatTemperature: (temp: number) => string;
-}
-
-const PreferencesContext = createContext<PreferencesContextType | undefined>(undefined);
+import { useState, useEffect, useCallback, type ReactNode } from 'react';
+import { preferencesService, type UserPreferences } from '../services/preferencesService';
+import { useAuth } from '../hooks/useAuth';
+import { PreferencesContext, type PreferencesContextType } from './PreferencesContext';
 
 interface PreferencesProviderProps {
   children: ReactNode;
 }
 
 export function PreferencesProvider({ children }: PreferencesProviderProps) {
+  const { user } = useAuth();
   const [preferences, setPreferences] = useState<UserPreferences | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -41,6 +26,66 @@ export function PreferencesProvider({ children }: PreferencesProviderProps) {
     }
   }, [preferences]);
 
+  const loadPreferences = useCallback(async () => {
+    if (!user?.id) {
+      setLoading(false);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await preferencesService.getUserPreferences(user.id);
+      
+      if (!response.error && response.data) {
+        setPreferences(response.data);
+      } else {
+        setError(response.error?.message || 'Failed to load preferences');
+        // Set default preferences if loading fails
+        const defaultPreferences: UserPreferences = {
+          id: user.id,
+          user_id: user.id,
+          preferred_language: 'en',
+          timezone: 'Africa/Accra',
+          currency: 'USD',
+          email_notifications: true,
+          whatsapp_notifications: true,
+          sms_notifications: false,
+          push_notifications: true,
+          two_factor_enabled: false,
+          marketing_consent: false,
+          language: 'en',
+          units: 'metric',
+          autoRefresh: true,
+        };
+        setPreferences(defaultPreferences);
+      }
+    } catch (err) {
+      console.error('Error loading preferences:', err);
+      setError('Failed to load preferences');
+      // Set default preferences if loading fails
+      const defaultPreferences: UserPreferences = {
+        id: user.id,
+        user_id: user.id,
+        preferred_language: 'en',
+        timezone: 'Africa/Accra',
+        currency: 'USD',
+        email_notifications: true,
+        whatsapp_notifications: true,
+        sms_notifications: false,
+        push_notifications: true,
+        two_factor_enabled: false,
+        marketing_consent: false,
+        language: 'en',
+        units: 'metric',
+        autoRefresh: true,
+      };
+      setPreferences(defaultPreferences);
+    } finally {
+      setLoading(false);
+    }
+  }, [user?.id]);
+
   // Load preferences from localStorage on mount
   useEffect(() => {
     const savedPreferences = localStorage.getItem('userPreferences');
@@ -56,100 +101,46 @@ export function PreferencesProvider({ children }: PreferencesProviderProps) {
     }
     // If no saved preferences, load from API
     loadPreferences();
-  }, []);
+  }, [loadPreferences, user?.id]);
 
-  const loadPreferences = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const response = await apiService.getUserPreferences();
-      
-      if (response.success && response.data) {
-        setPreferences(response.data);
-      } else {
-        setError(response.message || 'Failed to load preferences');
-        // Set default preferences if loading fails
-        setPreferences({
-          id: 'default',
-          userId: 'default',
-          language: 'en',
-          units: 'metric',
-          autoRefresh: true,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
-        });
-      }
-    } catch (err) {
-      console.error('Error loading preferences:', err);
-      setError('Failed to load preferences');
-      // Set default preferences if loading fails
-      setPreferences({
-        id: 'default',
-        userId: 'default',
-        language: 'en',
-        units: 'metric',
-        autoRefresh: true,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const updatePreferences = async (newPreferences: Partial<UserPreferences>) => {
-    if (!preferences) return;
+  const updatePreferences = useCallback(async (newPreferences: Partial<UserPreferences>) => {
+    if (!preferences || !user?.id) return;
 
     try {
-      const response = await apiService.updateUserPreferences(newPreferences);
+      const response = await preferencesService.updateUserPreferences(user.id, newPreferences);
       
-      if (response.success && response.data) {
+      if (!response.error && response.data) {
         setPreferences(response.data);
         setError(null);
       } else {
-        throw new Error(response.message || 'Failed to update preferences');
+        throw new Error(response.error?.message || 'Failed to update preferences');
       }
     } catch (err) {
       console.error('Error updating preferences:', err);
       setError('Failed to update preferences');
       throw err;
     }
-  };
+  }, [preferences, user?.id]);
 
-  const refreshPreferences = async () => {
+  const refreshPreferences = useCallback(async () => {
     await loadPreferences();
-  };
+  }, [loadPreferences]);
 
   // Unit conversion helpers
-  const formatWeight = (weight: number): string => {
-    if (!preferences) return `${weight} kg`;
-    
-    if (preferences.units === 'imperial') {
-      const lbs = (weight * 2.20462).toFixed(1);
-      return `${lbs} lbs`;
-    }
-    return `${weight} kg`;
-  };
+  const formatWeight = useCallback((weight: number): string => {
+    const unit = preferences?.units || 'metric';
+    return preferencesService.formatWeight(weight, unit);
+  }, [preferences?.units]);
 
-  const formatDistance = (distance: number): string => {
-    if (!preferences) return `${distance} km`;
-    
-    if (preferences.units === 'imperial') {
-      const miles = (distance * 0.621371).toFixed(1);
-      return `${miles} mi`;
-    }
-    return `${distance} km`;
-  };
+  const formatDistance = useCallback((distance: number): string => {
+    const unit = preferences?.units || 'metric';
+    return preferencesService.formatDistance(distance, unit);
+  }, [preferences?.units]);
 
-  const formatTemperature = (temp: number): string => {
-    if (!preferences) return `${temp}°C`;
-    
-    if (preferences.units === 'imperial') {
-      const fahrenheit = ((temp * 9/5) + 32).toFixed(1);
-      return `${fahrenheit}°F`;
-    }
-    return `${temp}°C`;
-  };
+  const formatTemperature = useCallback((temp: number): string => {
+    const unit = preferences?.units || 'metric';
+    return preferencesService.formatTemperature(temp, unit);
+  }, [preferences?.units]);
 
   const contextValue: PreferencesContextType = {
     preferences,
@@ -172,10 +163,4 @@ export function PreferencesProvider({ children }: PreferencesProviderProps) {
   );
 }
 
-export function usePreferences(): PreferencesContextType {
-  const context = useContext(PreferencesContext);
-  if (context === undefined) {
-    throw new Error('usePreferences must be used within a PreferencesProvider');
-  }
-  return context;
-}
+
