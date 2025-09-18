@@ -1,8 +1,8 @@
 import Swal from "sweetalert2";
-import { useAuth } from "../context/AuthProvider";
+import { useAuth } from "./useAuth";
 
 export const useLogout = () => {
-  const { logout } = useAuth();
+  const { signOut } = useAuth();
 
   const confirmLogout = async (): Promise<void> => {
     const result = await Swal.fire({
@@ -17,7 +17,7 @@ export const useLogout = () => {
     });
 
     if (result.isConfirmed) {
-      logout();
+      signOut();
     }
   };
 

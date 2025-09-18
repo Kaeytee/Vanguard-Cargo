@@ -11,8 +11,10 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useTranslation, type TranslationKey } from '../../lib/translations';
-import { usePreferences } from '../../context/PreferencesProvider';
-import { apiService, type ShipmentData } from '../../services/api';
+import { usePreferences } from '../../hooks/usePreferences';
+import { shipmentService } from '../../services/shipmentService';
+import type { ShipmentData } from '../../services/api';
+// import { useAuth } from '../../hooks/useAuth'; // Commented out - not currently used
 import { AlertCircle, ArrowDownToLine, CheckCircle, Clock, Copy, Mail, MapPin, Phone, Plane, RefreshCw, Search, User } from 'lucide-react';
 
 /**
@@ -825,9 +827,9 @@ const TrackingPage: React.FC = () => {
      * @returns Array of image URLs or single URL string
      */
     const getImageUrls = (eventType: string): string | string[] => {
-      // In a real application, this would construct URLs to the API endpoint
+      // In production, this would construct URLs to the Supabase storage endpoint
       // that serves package images based on shipment ID and event type
-      // Example: return [`${apiService.apiBaseUrl}/shipments/${shipment.id}/images/${eventType}/1`, ...]
+      // Example: return [`${supabaseUrl}/storage/v1/object/public/shipments/${shipment.id}/images/${eventType}/1.jpg`, ...]
       
       // For now, we'll use placeholder images
       if (eventType === 'received') {
@@ -1022,10 +1024,10 @@ const TrackingPage: React.FC = () => {
     setError(null);
 
     try {
-      // Use the simplified API service (handles mock data toggle automatically)
-      const response = await apiService.trackShipment(searchId.trim());
+      // Use the shipment service to track shipment
+      const result = await shipmentService.getShipmentByNumber(searchId.trim());
       
-      if (response.success) {
+      if (!result.error && result.data) {
         // Map API response to tracking data
         const mapStatus = (status: string): 'pending' | 'in-transit' | 'delivered' | 'exception' => {
           switch (status) {
@@ -1051,29 +1053,61 @@ const TrackingPage: React.FC = () => {
         };
         
         // Generate tracking events
-        const events = generateTrackingEvents(response.data);
+        const shipment = result.data;
+        
+        // Basic tracking events based on status
+        const basicEvents = [
+          {
+            id: '1',
+            timestamp: shipment.created_at,
+            location: 'Miami, FL',
+            status: 'Request Created',
+            description: 'Shipment request created',
+            icon: CheckCircle,
+            completed: true
+          },
+          {
+            id: '2', 
+            timestamp: shipment.updated_at,
+            location: 'Miami, FL',
+            status: shipment.status === 'delivered' ? 'Delivered' : 'In Transit',
+            description: shipment.status === 'delivered' ? 'Package delivered' : 'Package in transit',
+            icon: shipment.status === 'delivered' ? CheckCircle : Plane,
+            completed: shipment.status !== 'pending'
+          }
+        ];
         
         // Create tracking data with progress information
         const trackingData: ShipmentDetails = {
-          id: response.data.id,
-          status: mapStatus(response.data.status),
-          origin: response.data.origin,
-          destination: response.data.destination,
-          estimatedDelivery: response.data.estimatedDelivery,
-          packageType: response.data.type,
-          weight: response.data.weight,
-          service: response.data.service,
-          recipient: response.data.recipientDetails,
-          warehouse: response.data.warehouseDetails,
-          created: response.data.created,
-          events: events,
-          completedSteps: getCompletedSteps(response.data.status),
+          id: shipment.id,
+          status: mapStatus(shipment.status),
+          origin: 'Miami, FL, USA',
+          destination: `${shipment.delivery_city}, ${shipment.delivery_country}`,
+          estimatedDelivery: shipment.created_at, // Using created_at as fallback
+          packageType: shipment.service_type || 'Standard',
+          weight: `${shipment.total_weight_lbs || 0} lbs`,
+          service: shipment.service_type || 'Standard',
+          recipient: {
+            name: shipment.recipient_name,
+            phone: shipment.recipient_phone || '',
+            email: shipment.user_id || '', // Using user_id as fallback
+            address: shipment.delivery_address
+          },
+          warehouse: {
+            name: 'Vanguard Cargo Miami',
+            phone: '+1 (305) 123-4567',
+            email: 'support@vanguardcargo.org',
+            address: '123 Warehouse St, Miami, FL 33101'
+          },
+          created: shipment.created_at,
+          events: basicEvents,
+          completedSteps: getCompletedSteps(shipment.status),
           totalSteps: 5 // Total steps in tracking process
         };
 
         setShipmentData(trackingData);
       } else {
-        throw new Error(response.error || "Tracking number not found. Please check and try again.");
+        throw new Error(result.error?.message || "Tracking number not found. Please check and try again.");
       }
 
       // Update search history

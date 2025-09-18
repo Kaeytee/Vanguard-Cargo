@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { Navigate, useLocation } from "react-router-dom";
-import { useAuth } from "../context/AuthProvider";
+import { useAuth } from "../hooks/useAuth";
 
 /**
  * ProtectedRoutes - Component to protect routes that require authentication
@@ -19,7 +19,7 @@ interface ProtectedRoutesProps {
 
 const ProtectedRoutes: React.FC<ProtectedRoutesProps> = ({ children }) => {
 	// Get user from auth context
-	const { user } = useAuth();
+	const { user, profile } = useAuth();
 	// Get current location to redirect back after login
 	const location = useLocation();
 	// State to track initial loading
@@ -49,23 +49,28 @@ const ProtectedRoutes: React.FC<ProtectedRoutesProps> = ({ children }) => {
 		return <Navigate to="/login" state={{ from: location.pathname }} replace />;
 	}
 
-	// If user is authenticated but has a restricted account status
+	// Check if email is verified - this is now mandatory for all app access
+	if (user && !user.email_confirmed_at) {
+		// Email not verified - redirect to verification page
+		return <Navigate to="/verify-email" replace />;
+	}
+
+	// If user is authenticated and email is verified, check account status
 	if (user) {
-		const accountStatus = user.accountStatus || 'ACTIVE';
+		const accountStatus = profile?.status || 'active';
 		
 		switch (accountStatus) {
-			case 'PENDING_VERIFICATION': {
-				// Allow access but show verification reminder
-				// Only redirect if they're trying to access certain features that require verification
-				const restrictedPaths = ['/app/shipment-history'];
+			case 'pending_verification': {
+				// Email is verified (checked above) but other verification pending
+				// Allow basic access but restrict sensitive operations
+				const restrictedPaths = ['/app/admin', '/app/settings/billing', '/app/settings/security'];
 				if (restrictedPaths.some(path => location.pathname.includes(path))) {
 					return <Navigate to="/verify-email" replace />;
 				}
 				break;
 			}
 				
-			case 'SUSPENDED':
-			case 'RESTRICTED': {
+			case 'suspended': {
 				// Limited access - only allow viewing existing data
 				const allowedPaths = ['/app/dashboard', '/app/tracking', '/app/shipment-history', '/app/profile'];
 				if (!allowedPaths.some(path => location.pathname.includes(path))) {
@@ -74,16 +79,8 @@ const ProtectedRoutes: React.FC<ProtectedRoutesProps> = ({ children }) => {
 				break;
 			}
 				
-			case 'BANNED':
-				// Complete lockout - redirect to login and logout
-				return <Navigate to="/login" replace />;
-				
-			case 'DORMANT':
-				// Account needs reactivation - redirect to reactivation page
-				return <Navigate to="/reactivate-account" replace />;
-				
 			default:
-				// ACTIVE or unknown status - full access
+				// ACTIVE status - full access
 				break;
 		}
 	}

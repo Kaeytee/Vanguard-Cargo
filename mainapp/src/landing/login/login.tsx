@@ -1,8 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Eye, EyeOff } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../context/AuthProvider';
-import { apiService } from '../../services/api';
+import { useAuth } from '../../hooks/useAuth';
 import DeliveryImage from '../../images/deliveryparcel.jpg';
 import LoginBg from '../../images/register-bg.jpg';
 // Import Google reCAPTCHA component
@@ -37,14 +36,47 @@ export default function Login() {
 	const [showPassword, setShowPassword] = useState(false);
 	const [rememberMe, setRememberMe] = useState(false);
 	const [error, setError] = useState("");
+	const [showResendVerification, setShowResendVerification] = useState(false);
+	const [isResending, setIsResending] = useState(false);
+	const [resendMessage, setResendMessage] = useState("");
 	
 	// reCAPTCHA state
 	const [captchaValue, setCaptchaValue] = useState<string | null>(null);
 	const [recaptchaError, setRecaptchaError] = useState(false);
 	const recaptchaRef = useRef<ReCAPTCHA>(null);
 	
-	const { setUser } = useAuth();
+	const { signIn } = useAuth();
 	const navigate = useNavigate();
+
+	/**
+	 * Handle resending email verification
+	 */
+	const handleResendVerification = async () => {
+		if (!email) {
+			setError("Please enter your email address first.");
+			return;
+		}
+
+		setIsResending(true);
+		setResendMessage("");
+		setError("");
+
+		try {
+			const { authService } = await import('../../services/authService');
+			const result = await authService.resendEmailVerification(email);
+			
+			if (result.error) {
+				setError(result.error.message || 'Failed to resend verification email');
+			} else {
+				setResendMessage('Verification email sent! Please check your inbox and spam folder.');
+				setShowResendVerification(false);
+			}
+		} catch {
+			setError('Failed to resend verification email. Please try again.');
+		} finally {
+			setIsResending(false);
+		}
+	};
 	
 	/**
 	 * Check if reCAPTCHA script is loaded and available
@@ -124,7 +156,7 @@ export default function Login() {
 	};
 
 	/**
-	 * Handle login form submission using API
+	 * Handle login form submission using Supabase
 	 */
 	const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
@@ -139,40 +171,49 @@ export default function Login() {
 		setIsLoading(true);
 
 		try {
-			// Send the reCAPTCHA token along with login credentials for server-side verification
-			const response = await apiService.login(email, password, captchaValue || undefined);
+			// Use Supabase AuthContext signIn function
+			const result = await signIn(email, password);
 			
-			if (response.success && response.data) {
-				// Map UserProfile to User interface
-				const user = {
-					id: response.data.user.id,
-					name: `${response.data.user.firstName} ${response.data.user.lastName}`,
-					email: response.data.user.email,
-					image: response.data.user.profileImage,
-					phone: response.data.user.phone,
-					address: response.data.user.address,
-					city: response.data.user.city,
-					state: response.data.user.state,
-					zip: response.data.user.zip,
-					country: response.data.user.country,
-					emailVerified: response.data.user.emailVerified,
-					accountStatus: response.data.user.accountStatus
-				};
+			if (result.error) {
+				const errorMessage = typeof result.error === 'object' && result.error !== null && 'message' in result.error
+					? (result.error as { message: string }).message
+					: result.error?.toString?.() ?? String(result.error);
+				const lowerErrorMessage = errorMessage.toLowerCase();
+				console.log('Login error details:', result.error); // Debug log
 				
-				// Set user in AuthContext
-				setUser(user);
-				
-				// Store auth data
-				localStorage.setItem('authToken', response.data.token);
-				localStorage.setItem('user', JSON.stringify(user));
-				
-				// Navigate to main app/dashboard
-				navigate('/app');
+				// Check for specific error types
+				if (lowerErrorMessage.includes('email not confirmed') || 
+				    lowerErrorMessage.includes('not verified') || 
+				    lowerErrorMessage.includes('confirm your email') ||
+					lowerErrorMessage.includes('verify your email') ||
+					lowerErrorMessage.includes('emailnotverifiederror') ||
+					(typeof result.error === 'object' && result.error !== null && 'name' in result.error && (result.error as { name?: string }).name === 'EmailNotVerifiedError')) {
+					setError("Your email address is not verified. Please check your email and click the verification link, or request a new one below.");
+					setShowResendVerification(true);
+				} else if (lowerErrorMessage.includes('invalid_credentials') || 
+				          lowerErrorMessage.includes('invalid login') ||
+				          lowerErrorMessage.includes('wrong password') ||
+				          lowerErrorMessage.includes('invalid password')) {
+					setError("Invalid email or password. Please check your credentials and try again.");
+					setShowResendVerification(false);
+				} else if (lowerErrorMessage.includes('too_many_requests') || 
+				          lowerErrorMessage.includes('rate limit')) {
+					setError("Too many login attempts. Please wait a few minutes before trying again.");
+					setShowResendVerification(false);
+				} else {
+					// Show user-friendly error message
+					setError(errorMessage || 'Login failed. Please try again.');
+					setShowResendVerification(false);
+				}
 			} else {
-				setError(response.error || 'Login failed. Please try again.');
+				// Clear any existing errors and navigate to dashboard
+				setError("");
+				setShowResendVerification(false);
+				navigate('/app');
 			}
 		} catch (err) {
 			setError(err instanceof Error ? err.message : 'Login failed. Please try again.');
+			setShowResendVerification(false);
 		} finally {
 			setIsLoading(false);
 		}
@@ -211,6 +252,30 @@ export default function Login() {
 								{error && (
 									<div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
 										{error}
+									</div>
+								)}
+
+								{/* Resend Verification */}
+								{showResendVerification && (
+									<div className="bg-blue-50 border border-blue-200 text-blue-800 px-4 py-3 rounded-lg">
+										<p className="text-sm mb-3">
+											<strong>Email verification required.</strong> Check your inbox for the verification link, or request a new one:
+										</p>
+										<button
+											type="button"
+											onClick={handleResendVerification}
+											disabled={isResending || !email}
+											className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200"
+										>
+											{isResending ? 'Sending...' : 'Resend Verification Email'}
+										</button>
+									</div>
+								)}
+
+								{/* Success Message for Resend */}
+								{resendMessage && (
+									<div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg">
+										{resendMessage}
 									</div>
 								)}
 
@@ -329,6 +394,8 @@ export default function Login() {
 										</Link>
 									</p>
 								</div>
+
+								
 							</form>
 						</div>
 					</div>

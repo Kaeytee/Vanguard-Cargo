@@ -20,7 +20,7 @@ const STATIC_PAGES = [
     images: [
       {
         loc: `${BASE_URL}/images/hero-image.jpg`,
-        title: 'Ttarius Logistics - Package Forwarding Service',
+        title: 'Vanguard Cargo - Package Forwarding Service',
         caption: 'Premium package forwarding from USA to Ghana'
       }
     ]
@@ -52,7 +52,7 @@ const STATIC_PAGES = [
     images: [
       {
         loc: `${BASE_URL}/assets/support.jpg`,
-        title: 'Contact Ttarius Logistics',
+        title: 'Contact Vanguard Cargo',
         caption: 'Get in touch with our support team'
       }
     ]
@@ -183,12 +183,12 @@ Crawl-delay: 1`;
 
 // Generate security.txt for responsible disclosure
 function generateSecurityTxt() {
-  return `Contact: mailto:security@ttariuslogistics.com
+  return `Contact: mailto:security@vanguardcargo.org
 Expires: 2025-12-31T23:59:59.000Z
-Encryption: https://ttariuslogistics.com/pgp-key.txt
-Acknowledgments: https://ttariuslogistics.com/security-thanks
-Policy: https://ttariuslogistics.com/security-policy
-Hiring: https://ttariuslogistics.com/careers`;
+Encryption: https://vanguardcargo.org/pgp-key.txt
+Acknowledgments: https://vanguardcargo.org/security-thanks
+Policy: https://vanguardcargo.org/security-policy
+Hiring: https://vanguardcargo.org/careers`;
 }
 
 // Write files

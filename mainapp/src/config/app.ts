@@ -1,20 +1,21 @@
-// Configuration for API vs Mock data
+// App configuration - Now fully integrated with Supabase
 export const APP_CONFIG = {
-  // Use mock data by default unless explicitly set to false
-  useMockData: import.meta.env.REACT_APP_USE_MOCK_DATA !== 'false',
+  // Legacy mock data flag (application now uses Supabase by default)
+  // Only enable for development testing of fallback behavior
+  useMockData: import.meta.env.VITE_USE_MOCK_DATA === 'true',
   
-  // API configuration
-  apiBaseUrl: import.meta.env.API_BASE_URL || 'http://localhost:8080/api',
+  // Legacy API configuration (deprecated - now using Supabase)
+  apiBaseUrl: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api',
   
   // App environment
-  environment: import.meta.env.REACT_APP_ENVIRONMENT || 'development',
+  environment: import.meta.env.VITE_ENVIRONMENT || 'development',
   
   // Debug mode
-  debug: import.meta.env.REACT_APP_DEBUG === 'true',
+  debug: import.meta.env.VITE_DEBUG === 'true',
   
   // App metadata
-  appName: import.meta.env.REACT_APP_APP_NAME || 'Vanguard Cargo',
-  version: import.meta.env.REACT_APP_VERSION || '1.0.0',
+  appName: import.meta.env.VITE_APP_NAME || 'Vanguard Cargo',
+  version: import.meta.env.VITE_APP_VERSION || '1.0.0',
   
   // Feature flags
   features: {

@@ -2,6 +2,7 @@ export const translations = {
   en: {
     // Navigation & Common
     dashboard: 'Dashboard',
+    packageIntake: 'Package Intake',
     tracking: 'Track Package',
     shipmentHistory: 'Shipment History',
     submitShipment: 'Submit Request',
@@ -398,7 +399,7 @@ export type Language = keyof typeof translations;
 export type TranslationKey = keyof typeof translations.en;
 
 export function getTranslation(language: Language, key: TranslationKey): string {
-  return translations[language]?.[key] || translations.en[key] || key;
+  return (translations[language] as Record<TranslationKey, string>)[key] || translations.en[key] || key;
 }
 
 // Hook for using translations in components

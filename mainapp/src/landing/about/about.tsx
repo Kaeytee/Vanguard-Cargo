@@ -1,3 +1,4 @@
+// NOTE: As of 2025-09-17, this About page is NOT shown in the sidebar or routed in the app, per user request. The file is kept for future use or reference.
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -200,7 +201,7 @@ export default function About() {
 											<div className="space-y-3 text-sm">
 												<div className="bg-gray-50 rounded-lg p-3">
 													<div className="font-semibold text-gray-900">Fast & Reliable</div>
-													<div className="text-gray-600">7-14 days delivery guaranteed</div>
+													<div className="text-gray-600">3 Days delivery guaranteed</div>
 												</div>
 												<div className="bg-gray-50 rounded-lg p-3">
 													<div className="font-semibold text-gray-900">Huge Savings</div>

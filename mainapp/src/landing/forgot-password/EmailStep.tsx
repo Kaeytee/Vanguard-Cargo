@@ -4,7 +4,7 @@ import { Mail, ArrowLeft } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import type { StepProps } from './types';
 import { validationUtils } from './utils';
-import { apiService } from '../../services/api';
+import { authService } from '../../services/authService';
 import { MessageDisplay } from './MessageDisplay';
 
 export const EmailStep: React.FC<StepProps> = ({ state, setState, onNext }) => {
@@ -22,10 +22,13 @@ export const EmailStep: React.FC<StepProps> = ({ state, setState, onNext }) => {
     setState(prev => ({ ...prev, isLoading: true, formError: "" }));
 
     try {
-      const response = await apiService.forgotPassword(state.email);
+      const { error } = await authService.resetPassword(state.email);
       
-      if (response.success && response.data) {
-        setState(prev => ({ ...prev, formSuccess: response.data.message }));
+      if (!error) {
+        setState(prev => ({ 
+          ...prev, 
+          formSuccess: "Password reset link sent to your email. Please check your inbox and follow the instructions." 
+        }));
         setTimeout(() => {
           onNext();
           setState(prev => ({ 
@@ -34,16 +37,16 @@ export const EmailStep: React.FC<StepProps> = ({ state, setState, onNext }) => {
             formSuccess: "", 
             formError: "" 
           }));
-        }, 500);
+        }, 2000);
       } else {
         setState(prev => ({ 
           ...prev, 
-          formError: response.error || "Failed to send verification code. Please try again.",
+          formError: error.message || "Failed to send reset link. Please try again.",
           isLoading: false 
         }));
       }
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Failed to send verification code. Please try again.";
+      const errorMessage = err instanceof Error ? err.message : "Failed to send reset link. Please try again.";
       setState(prev => ({ ...prev, formError: errorMessage, isLoading: false }));
     }
   };

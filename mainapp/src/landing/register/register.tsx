@@ -8,7 +8,7 @@ import AnimateInView from '../../components/ui/animate-in-view';
 import registerbg from '../../images/register-bg.jpg';
 import { useNavigate } from 'react-router-dom';
 import DeliveryImage from '../../images/delivery-man.png';
-import { apiService } from '../../services/api';
+import { useAuth } from '../../hooks/useAuth';
 import { RegisterSuccessStep } from './RegisterSuccessStep';
 
 /**
@@ -99,6 +99,7 @@ export default function Register() {
     agreeToTerms: false,
   });
   const navigate = useNavigate();
+  const { signUp } = useAuth();
 
   // Navigation handler for going to login
   const handleGoToLogin = () => {
@@ -213,21 +214,16 @@ export default function Register() {
     setErrors((prev) => ({ ...prev, general: '' }));
 
     try {
-      // Prepare registration data according to API interface
-      const registerRequest = {
-        firstName: formData.firstName,
-        lastName: formData.lastName,
+      // Use Supabase signUp function
+      const result = await signUp({
         email: formData.email,
         password: formData.password,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
         phone: formData.phoneNumber,
-        address: formData.address,
-        country: formData.country,
-        agreeToMarketing: formData.agreeToMarketing // Include marketing preference
-      };
+      });
 
-      const response = await apiService.register(registerRequest);
-      
-      if (response.success && response.data) {
+      if (!result.error) {
         // Store user data before clearing form
         setRegisteredUser({
           email: formData.email,
@@ -270,11 +266,35 @@ export default function Register() {
         // Show success step instead of immediate redirect
         // The success step will handle navigation to login
       } else {
-        setErrors((prev) => ({ ...prev, general: response.error || 'Registration failed. Please try again.' }));
+        // Convert technical errors to user-friendly messages
+        let userFriendlyMessage = 'Registration failed. Please try again.';
+        
+        if (result.error) {
+          const errorMsg = result.error.toLowerCase();
+          
+          if (errorMsg.includes('email') && errorMsg.includes('already')) {
+            userFriendlyMessage = 'An account with this email already exists. Please try logging in instead.';
+          } else if (errorMsg.includes('permission denied') || errorMsg.includes('policy')) {
+            userFriendlyMessage = 'Registration is temporarily unavailable. Please try again in a few minutes.';
+          } else if (errorMsg.includes('network') || errorMsg.includes('connection')) {
+            userFriendlyMessage = 'Network error. Please check your connection and try again.';
+          } else if (errorMsg.includes('password')) {
+            userFriendlyMessage = 'Password must be at least 6 characters long.';
+          } else if (errorMsg.includes('invalid') && errorMsg.includes('email')) {
+            userFriendlyMessage = 'Please enter a valid email address.';
+          } else if (errorMsg.includes('rate') || errorMsg.includes('429') || errorMsg.includes('too many')) {
+            userFriendlyMessage = 'Too many registration attempts. Please wait 5 minutes before trying again.';
+          }
+        }
+        
+        setErrors((prev) => ({ ...prev, general: userFriendlyMessage }));
       }
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Registration failed. Please try again.';
-      setErrors((prev) => ({ ...prev, general: errorMessage }));
+      console.error('Registration error:', err);
+      setErrors((prev) => ({ 
+        ...prev, 
+        general: 'Registration is temporarily unavailable. Please try again in a few minutes.' 
+      }));
     } finally {
       setLoading(false);
     }
@@ -302,40 +322,36 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <section
-        className="relative min-h-screen w-full flex items-center justify-center py-8 px-4 sm:px-6 lg:px-8"
-        style={{
-          backgroundImage: `url(${registerbg})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat',
-        }}
-      >
-        <style>
-          {`
-            .error-shake {
-              animation: shake 0.3s cubic-bezier(.36,.07,.19,.97) both;
-            }
-            @keyframes shake {
-              10%, 90% { transform: translateX(-1px); }
-              20%, 80% { transform: translateX(2px); }
-              30%, 50%, 70% { transform: translateX(-4px); }
-              40%, 60% { transform: translateX(4px); }
-            }
-            @media (max-width: 767px) {
-              .bg-image {
-                background-image: none !important;
-                background-color: #f3f4f6;
-              }
-            }
-          `}
-        </style>
-        <div className="max-w-7xl mx-auto w-full">
-          <div className="flex flex-col lg:flex-row w-full max-w-6xl bg-white shadow-2xl rounded-2xl overflow-hidden">
-            <img src={DeliveryImage} alt="Delivery person with parcels" className="w-full lg:w-1/2  object-cover object-center" />
-            <AnimateInView variant="fadeInRight" delay={0.4} className="w-full lg:w-1/2 p-4 sm:p-6 lg:p-8">
-              <div className="bg-white p-6 sm:p-8 rounded-lg w-full max-w-md mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-red-50 to-red-100 flex items-center justify-center p-4" style={{ backgroundImage: `url(${registerbg})`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
+      <style>
+        {`
+          .error-shake {
+            animation: shake 0.3s cubic-bezier(.36,.07,.19,.97) both;
+          }
+          @keyframes shake {
+            10%, 90% { transform: translateX(-1px); }
+            20%, 80% { transform: translateX(2px); }
+            30%, 50%, 70% { transform: translateX(-4px); }
+            40%, 60% { transform: translateX(4px); }
+          }
+        `}
+      </style>
+      <div className="w-full max-w-6xl bg-white shadow-2xl rounded-2xl overflow-hidden">
+        <div className="flex flex-col lg:flex-row min-h-[700px]">
+          {/* Left panel: Delivery image */}
+          <div className="w-full lg:w-1/2 bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center p-8" style={{ backgroundImage: `url(${DeliveryImage})`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
+            <div className="w-32 h-32 mx-auto mb-6 bg-white/20 rounded-full flex items-center justify-center">
+              <svg className="w-20 h-20" fill="none" viewBox="0 0 24 24">
+                <path d="M19 7h-3V6a4 4 0 0 0-8 0v1H5a1 1 0 0 0-1 1v11a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3V8a1 1 0 0 0-1-1zM10 6a2 2 0 0 1 4 0v1h-4V6zm8 13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V9h2v1a1 1 0 0 0 2 0V9h4v1a1 1 0 0 0 2 0V9h2v10z"/>
+              </svg>
+            </div>
+            <h3 className="text-2xl font-bold mb-2 text-transparent">Join Vanguard</h3>
+            <p className="text-transparent">Your cargo journey starts here</p>
+          </div>
+
+          {/* Right panel: Registration form */}
+          <div className="w-full lg:w-1/2 p-8 lg:p-12 flex flex-col justify-center">
+            <AnimateInView variant="fadeInRight" delay={0.4} className="max-w-lg mx-auto w-full">
                 {success ? (
                   <RegisterSuccessStep
                     email={registeredUser?.email || formData.email}
@@ -344,19 +360,22 @@ export default function Register() {
                   />
                 ) : (
                   <React.Fragment>
-                    <div className="mb-6 text-center">
-                      <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">Create Account</h2>
-                      <p className="text-gray-600 mt-2 text-sm sm:text-base">Begin your cargo journey here</p>
+                    <div className="mb-8 text-center lg:text-left">
+                      <h2 className="text-3xl font-bold text-gray-900 mb-2">Create Account</h2>
+                      <p className="text-gray-600">Begin your cargo journey here</p>
                     </div>
+                    {/* Error Message */}
                     {errors.general && (
-                      <div className="mb-4 text-red-600 text-sm text-center bg-red-50 p-3 rounded-md error-shake">
+                      <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6 error-shake">
                         {errors.general}
                       </div>
                     )}
-                <div className="space-y-4">
+
+                    <form className="space-y-6">
+                      <div className="space-y-4">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-1">
+                      <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-2">
                         First Name *
                       </label>
                       <input
@@ -368,8 +387,8 @@ export default function Register() {
                         onBlur={handleBlur}
                         placeholder="John"
                         className={cn(
-                          'w-full px-4 py-2 border rounded-md transition-colors duration-200',
-                          errors.firstName && touched.firstName ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-red-500 focus:border-red-500'
+                          'w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all duration-200 outline-none',
+                          errors.firstName && touched.firstName ? 'border-red-300' : 'border-gray-300'
                         )}
                         aria-invalid={!!errors.firstName}
                         aria-describedby="firstName-error"
@@ -381,7 +400,7 @@ export default function Register() {
                       )}
                     </div>
                     <div>
-                      <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-1">
+                      <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-2">
                         Last Name *
                       </label>
                       <input
@@ -393,8 +412,8 @@ export default function Register() {
                         onBlur={handleBlur}
                         placeholder="Doe"
                         className={cn(
-                          'w-full px-4 py-2 border rounded-md transition-colors duration-200',
-                          errors.lastName && touched.lastName ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-red-500 focus:border-red-500'
+                          'w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all duration-200 outline-none',
+                          errors.lastName && touched.lastName ? 'border-red-300' : 'border-gray-300'
                         )}
                         aria-invalid={!!errors.lastName}
                         aria-describedby="lastName-error"
@@ -408,7 +427,7 @@ export default function Register() {
                   </div>
                   </div>
                   <div>
-                    <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
                       Email Address *
                     </label>
                     <input
@@ -420,8 +439,8 @@ export default function Register() {
                       onBlur={handleBlur}
                       placeholder="you@example.com"
                       className={cn(
-                        'w-full px-4 py-2 border rounded-md transition-colors duration-200',
-                        errors.email && touched.email ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-red-500 focus:border-red-500'
+                        'w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all duration-200 outline-none',
+                        errors.email && touched.email ? 'border-red-300' : 'border-gray-300'
                       )}
                       aria-invalid={!!errors.email}
                       aria-describedby="email-error"
@@ -443,8 +462,8 @@ export default function Register() {
                       onChange={handlePhoneChange}
                       placeholder="Enter phone number"
                       className={cn(
-                        'w-full px-4 py-2 border rounded-md transition-colors duration-200',
-                        phoneError ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-red-500 focus:border-red-500'
+                        'w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all duration-200 outline-none',
+                        phoneError ? 'border-red-300' : 'border-gray-300'
                       )}
                       data-testid="phone-input"
                       aria-invalid={!!phoneError}
@@ -476,8 +495,8 @@ export default function Register() {
                       onBlur={handleBlur}
                       placeholder="123 Main St"
                       className={cn(
-                        'w-full px-4 py-2 border rounded-md transition-colors duration-200',
-                        errors.address && touched.address ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-red-500 focus:border-red-500'
+                        'w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all duration-200 outline-none',
+                        errors.address && touched.address ? 'border-red-300' : 'border-gray-300'
                       )}
                       aria-invalid={!!errors.address}
                       aria-describedby="address-error"
@@ -503,8 +522,8 @@ export default function Register() {
                         onBlur={handleBlur}
                         placeholder="New York"
                         className={cn(
-                          'w-full px-4 py-2 border rounded-md transition-colors duration-200',
-                          errors.city && touched.city ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-red-500 focus:border-red-500'
+                          'w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all duration-200 outline-none',
+                          errors.city && touched.city ? 'border-red-300' : 'border-gray-300'
                         )}
                         aria-invalid={!!errors.city}
                         aria-describedby="city-error"
@@ -528,7 +547,7 @@ export default function Register() {
                         onBlur={handleBlur}
                         placeholder="NY"
                         className={cn(
-                          'w-full px-4 py-2 border rounded-md transition-colors duration-200',
+                          'w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all duration-200 outline-none',
                           errors.state && touched.state ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-red-500 focus:border-red-500'
                         )}
                         aria-invalid={!!errors.state}
@@ -556,8 +575,8 @@ export default function Register() {
                         onBlur={handleBlur}
                         placeholder="10001"
                         className={cn(
-                          'w-full px-4 py-2 border rounded-md transition-colors duration-200',
-                          errors.zip && touched.zip ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-red-500 focus:border-red-500'
+                          'w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all duration-200 outline-none',
+                          errors.zip && touched.zip ? 'border-red-300' : 'border-gray-300'
                         )}
                         aria-invalid={!!errors.zip}
                         aria-describedby="zip-error"
@@ -581,8 +600,8 @@ export default function Register() {
                         onBlur={handleBlur}
                         placeholder="United States"
                         className={cn(
-                          'w-full px-4 py-2 border rounded-md transition-colors duration-200',
-                          errors.country && touched.country ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-red-500 focus:border-red-500'
+                          'w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all duration-200 outline-none',
+                          errors.country && touched.country ? 'border-red-300' : 'border-gray-300'
                         )}
                         aria-invalid={!!errors.country}
                         aria-describedby="country-error"
@@ -607,22 +626,21 @@ export default function Register() {
                         onChange={handleInputChange}
                         onBlur={handleBlur}
                         className={cn(
-                          'w-full px-4 py-2 pr-12 border rounded-md transition-colors duration-200',
-                          errors.password && touched.password ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-red-500 focus:border-red-500'
+                          'w-full px-4 py-3 pr-12 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all duration-200 outline-none',
+                          errors.password && touched.password ? 'border-red-300' : 'border-gray-300'
                         )}
                         aria-invalid={!!errors.password}
                         aria-describedby="password-error"
                       />
                       <button
                         type="button"
-                        className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                        aria-label="Toggle password visibility"
+                        className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
                         onClick={() => setShowPassword(!showPassword)}
                       >
                         {showPassword ? (
-                          <EyeOff className="w-5 h-5 text-gray-400" data-testid="mock-icon" />
+                          <EyeOff className="w-5 h-5" />
                         ) : (
-                          <Eye className="w-5 h-5 text-gray-400" data-testid="mock-icon" />
+                          <Eye className="w-5 h-5" />
                         )}
                       </button>
                     </div>
@@ -645,22 +663,21 @@ export default function Register() {
                         onChange={handleInputChange}
                         onBlur={handleBlur}
                         className={cn(
-                          'w-full px-4 py-2 pr-12 border rounded-md transition-colors duration-200',
-                          errors.confirmPassword && touched.confirmPassword ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-red-500 focus:border-red-500'
+                          'w-full px-4 py-3 pr-12 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all duration-200 outline-none',
+                          errors.confirmPassword && touched.confirmPassword ? 'border-red-300' : 'border-gray-300'
                         )}
                         aria-invalid={!!errors.confirmPassword}
                         aria-describedby="confirmPassword-error"
                       />
                       <button
                         type="button"
-                        className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                        aria-label="Toggle password visibility"
+                        className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
                         onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                       >
                         {showConfirmPassword ? (
-                          <EyeOff className="w-5 h-5 text-gray-400" data-testid="mock-icon" />
+                          <EyeOff className="w-5 h-5" />
                         ) : (
-                          <Eye className="w-5 h-5 text-gray-400" data-testid="mock-icon" />
+                          <Eye className="w-5 h-5" />
                         )}
                       </button>
                     </div>
@@ -727,51 +744,47 @@ export default function Register() {
                     onClick={handleSubmit}
                     disabled={!isFormValid || loading}
                     className={cn(
-                      'w-full font-semibold px-6 py-3 rounded-md transition-all duration-200 flex items-center justify-center',
+                      'w-full font-semibold px-6 py-3 rounded-lg transition-all duration-200 flex items-center justify-center mt-6',
                       isFormValid && !loading
-                        ? 'bg-red-500 hover:bg-red-600 text-white'
+                        ? 'bg-red-500 hover:bg-red-600 text-white transform hover:scale-105 hover:shadow-lg'
                         : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                     )}
                     aria-busy={loading}
                   >
                     {loading ? (
-                      <span className="flex items-center">
-                        <svg
-                          className="animate-spin h-5 w-5 mr-2 text-white"
-                          viewBox="0 0 24 24"
-                        >
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
-                        </svg>
+                      <>
+                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full mr-2 animate-spin" />
                         Creating account...
-                      </span>
+                      </>
                     ) : (
                       'Create Account'
                     )}
                   </button>
-                  <div className="text-center">
+                  
+                  {/* Login Link */}
+                  <div className="text-center pt-4">
                     <p className="text-sm text-gray-600">
                       Already have an account?{' '}
                       <a
                         href="#"
-                        className="text-red-500 hover:text-red-600 font-medium"
+                        className="text-red-500 hover:text-red-600 font-medium transition-colors"
                         aria-label="Log in"
                         onClick={(e) => {
                           e.preventDefault();
                           navigate('/login');
                         }}
                       >
-                        Log in
+                        Sign In
                       </a>
                     </p>
                   </div>
+                    </form>
                 </React.Fragment>
                 )}
-              </div>
             </AnimateInView>
           </div>
         </div>
-      </section>
+      </div>
     </div>
   );
 }

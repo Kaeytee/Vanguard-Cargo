@@ -59,7 +59,7 @@ export default function Hero() {
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight">
                 Shop in the US.{" "}
                 <span className="text-yellow-400">Ship to Ghana,</span>{" "}
-                <span className="text-green-400">stress-free.</span>
+                <span className="text-green-400">In 3 Days.</span>
               </h1>
               
               <p className="text-xl md:text-2xl text-blue-100 mb-8 leading-relaxed">

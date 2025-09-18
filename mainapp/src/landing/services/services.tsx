@@ -171,7 +171,7 @@ export default function Services() {
 									</div>
 									<div className="flex items-center space-x-3">
 										<div className="w-2 h-2 bg-red-600 rounded-full"></div>
-										<span className="text-gray-700">7-14 days delivery</span>
+										<span className="text-gray-700">3 Days delivery</span>
 									</div>
 									<div className="flex items-center space-x-3">
 										<div className="w-2 h-2 bg-red-600 rounded-full"></div>

@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef, useCallback, Suspense } from 'react';
 import { Camera, Upload, Trash2 } from 'lucide-react';
-import { useTranslation } from '../../lib/translations';
-import { apiService, type UserProfile, type UserProfileData } from '../../services/api';
-import { useUser } from '../../context/useUser';
+import { useTranslation, type TranslationKey } from '../../lib/translations';
+import { authService, type AuthUser } from '../../services/authService';
+import { useAuth } from '../../hooks/useAuth';
+import { fileUploadService } from '../../services/fileUploadService';
 import ErrorBoundary from '../ErrorBoundary';
 
 const validateWhatsAppNumber = async (phoneNumber: string): Promise<boolean> => {
@@ -39,43 +40,27 @@ const LoadingSkeleton = () => (
   </div>
 );
 
-import type { TranslationKey } from '../../lib/translations';
-
 const AccountSettingsContent = ({ t }: { t: (key: TranslationKey) => string }) => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [validatingPhone, setValidatingPhone] = useState(false);
-  const [formErrors, setFormErrors] = useState<Partial<Record<keyof UserProfile, string>> & { general?: string; fullName?: string }>({});
-  const [formData, setFormData] = useState<UserProfile | null>(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [formErrors, setFormErrors] = useState<Partial<Record<keyof AuthUser, string>> & { general?: string; fullName?: string }>({});
+  const [formData, setFormData] = useState<AuthUser | null>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
-  const { user, setUser } = useUser();
+  const { user, profile, refreshProfile } = useAuth();
 
   const loadUserProfile = useCallback(async () => {
     try {
       setLoading(true);
       setFormErrors({});
-      const response = await apiService.getUserProfile();
-      if (response.success && response.data) {
-        const newFormData: UserProfile = {
-          id: `mock-user-id-${Date.now()}`,
-          firstName: response.data.firstName,
-          lastName: response.data.lastName,
-          email: response.data.email,
-          phone: response.data.phone,
-          address: response.data.address,
-          city: response.data.city ?? '',
-          country: response.data.country,
-          zip: response.data.zip ?? '',
-          profileImage: response.data.profileImage ?? '',
-          emailVerified: false,
-          accountStatus: 'ACTIVE',
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        };
-        setFormData(newFormData);
-        setUser(newFormData);
-      } else {
-        setFormErrors({ general: response.message || t('errorLoadingProfile') });
+      
+      if (profile) {
+        // Use the current profile from Supabase auth context
+        setFormData(profile);
+      } else if (user) {
+        // If no profile, try to refresh it
+        await refreshProfile();
       }
     } catch (err) {
       setFormErrors({ general: t('errorLoadingProfile') });
@@ -83,17 +68,17 @@ const AccountSettingsContent = ({ t }: { t: (key: TranslationKey) => string }) =
     } finally {
       setLoading(false);
     }
-  }, [t, setUser]);
+  }, [t, profile, user, refreshProfile]);
 
   useEffect(() => {
     loadUserProfile();
   }, [loadUserProfile]);
 
   useEffect(() => {
-    if (user && !formData) {
-      setFormData(user);
+    if (profile) {
+      setFormData(profile);
     }
-  }, [user, formData]);
+  }, [profile]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -122,25 +107,151 @@ const AccountSettingsContent = ({ t }: { t: (key: TranslationKey) => string }) =
 
   const handleCameraClick = () => cameraInputRef.current?.click();
   const handleUploadClick = () => cameraInputRef.current?.click();
-  const handleDeletePhoto = () => {
+
+  // Helper function to get profile image URL
+  const getProfileImageUrl = () => {
+    const imageUrl = formData?.profileImage || formData?.avatarUrl;
+    
+    if (imageUrl) {
+      return imageUrl;
+    }
+    
+    // Fallback to generated avatar
+    const fullName = (formData?.firstName ?? '') + ' ' + (formData?.lastName ?? '');
+    return `https://ui-avatars.com/api/?name=${encodeURIComponent(fullName)}&size=80&background=e5e7eb&color=374151`;
+  };
+  
+  const handleDeletePhoto = async () => {
+    if (!user?.id) return;
+    
     if (window.confirm(t('confirmDeletePhoto'))) {
-      setFormData((prev) => (prev ? { ...prev, profileImage: '' } : prev));
+      try {
+        setUploadingImage(true);
+        
+        // Delete from Supabase storage
+        const result = await fileUploadService.deleteProfilePicture(user.id);
+        
+        if (result.success) {
+          // Update local state
+          setFormData((prev) => (prev ? { ...prev, profileImage: '', avatarUrl: '' } : prev));
+          
+          // Update in database
+          await authService.updateProfile(user.id, { profileImage: '' });
+          await refreshProfile();
+          
+          alert('Profile picture deleted successfully!');
+        } else {
+          setFormErrors({ general: result.error || 'Failed to delete profile picture' });
+        }
+      } catch (err) {
+        setFormErrors({ general: 'Failed to delete profile picture' });
+        console.error('Delete image error:', err);
+      } finally {
+        setUploadingImage(false);
+      }
     }
   };
 
-  const validateForm = async (): Promise<Partial<Record<keyof UserProfile, string>> & { fullName?: string }> => {
-    const errors: Partial<Record<keyof UserProfile, string>> & { fullName?: string } = {};
-    if (!formData?.firstName?.trim()) errors.firstName = t('requiredField');
-    else if (`${formData.firstName} ${formData.lastName ?? ''}`.trim().split(' ').length < 2)
-      errors.fullName = t('invalidFullName');
-    if (!formData?.email?.trim()) errors.email = t('requiredField');
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) errors.email = t('invalidEmail');
-    if (formData?.phone && !(await validateWhatsAppNumber(formData.phone))) errors.phone = t('invalidPhone');
-    if (!formData?.address?.trim()) errors.address = t('requiredField');
-    if (formData?.city && !/^[a-zA-Z\s-]{2,}$/.test(formData.city)) errors.city = t('invalidCity');
-    if (formData?.country && !/^[a-zA-Z\s-]{2,}$/.test(formData.country)) errors.country = t('invalidCountry');
-    if (!formData?.zip?.trim()) errors.zip = t('requiredField');
-    else if (!/^[0-9A-Za-z\s-]{3,10}$/.test(formData.zip)) errors.zip = t('invalidZip');
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user?.id) return;
+
+    try {
+      setUploadingImage(true);
+      setFormErrors({});
+
+      // Compress image if it's too large
+      let processedFile = file;
+      if (file.size > 1024 * 1024) { // If larger than 1MB
+        processedFile = await fileUploadService.compressImage(file, 400, 0.8);
+      }
+
+      // Upload to Supabase storage
+      const result = await fileUploadService.uploadProfilePicture(processedFile, user.id);
+      
+      if (result.success && result.url) {
+        // Update local state
+        setFormData((prev) => (prev ? { 
+          ...prev, 
+          profileImage: result.url ?? undefined,
+          avatarUrl: result.url ?? undefined 
+        } : prev));
+        
+        // Update in database
+        await authService.updateProfile(user.id, { profileImage: result.url });
+        
+        // Refresh profile and wait a bit for the update to propagate
+        await refreshProfile();
+        
+        // Small delay to ensure UI updates
+        setTimeout(() => {
+          setFormData((prev) => (prev ? { 
+            ...prev, 
+            profileImage: result.url ?? undefined,
+            avatarUrl: result.url ?? undefined 
+          } : prev));
+        }, 100);
+        
+        alert('Profile picture updated successfully!');
+      } else {
+        setFormErrors({ general: result.error || 'Failed to upload profile picture' });
+      }
+    } catch (err) {
+      setFormErrors({ general: 'Failed to upload profile picture' });
+      console.error('File upload error:', err);
+    } finally {
+      setUploadingImage(false);
+      // Clear file input
+      if (e.target) e.target.value = '';
+    }
+  };
+
+  const validateForm = async (): Promise<Partial<Record<keyof AuthUser, string>> & { fullName?: string }> => {
+    const errors: Partial<Record<keyof AuthUser, string>> & { fullName?: string } = {};
+    
+    // Full Name validation (required)
+    if (!formData?.firstName?.trim()) {
+      errors.firstName = t('requiredField');
+    } else if (!formData?.lastName?.trim()) {
+      errors.lastName = t('requiredField');
+    }
+    
+    // Email validation (required)
+    if (!formData?.email?.trim()) {
+      errors.email = t('requiredField');
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      errors.email = t('invalidEmail');
+    }
+    
+    // Phone validation (optional, but validate format if provided)
+    if (formData?.phone?.trim() && !(await validateWhatsAppNumber(formData.phone))) {
+      errors.phone = t('invalidPhone');
+    }
+    
+    // Address validation (required) - check both address and streetAddress fields
+    const addressValue = formData?.address?.trim() || formData?.streetAddress?.trim();
+    if (!addressValue) {
+      errors.address = t('requiredField');
+    }
+    
+    // City validation (optional, but validate format if provided)
+    if (formData?.city?.trim() && !/^[a-zA-Z\s-]{2,}$/.test(formData.city)) {
+      errors.city = t('invalidCity');
+    }
+    
+    // Country validation (optional, but validate format if provided)  
+    if (formData?.country?.trim() && !/^[a-zA-Z\s-]{2,}$/.test(formData.country)) {
+      errors.country = t('invalidCountry');
+    }
+    
+    // Zip Code validation (required) - check both zip and postalCode fields
+    const zipValue = formData?.zip?.trim() || formData?.postalCode?.trim();
+    if (!zipValue) {
+      errors.zip = t('requiredField');
+    } else if (!/^[0-9A-Za-z\s-]{3,10}$/.test(zipValue)) {
+      errors.zip = t('invalidZip');
+    }
+    
     return errors;
   };
 
@@ -163,7 +274,12 @@ const AccountSettingsContent = ({ t }: { t: (key: TranslationKey) => string }) =
     }
 
     try {
-      const updateData: Partial<UserProfileData> = {
+      if (!user?.id || !formData) {
+        setFormErrors({ general: t('error') });
+        return;
+      }
+
+      const updateData = {
         firstName: formData.firstName,
         lastName: formData.lastName,
         email: formData.email,
@@ -174,12 +290,17 @@ const AccountSettingsContent = ({ t }: { t: (key: TranslationKey) => string }) =
         zip: formData.zip,
         profileImage: formData.profileImage,
       };
-      const response = await apiService.updateUserProfile(updateData);
-      if (response.success) {
-        setUser(formData);
+      
+      const response = await authService.updateProfile(user.id, updateData);
+      
+      if (response.success && !response.error) {
+        // Refresh user profile to get updated data
+        await refreshProfile();
+        // The formData will be updated through the useEffect that watches for profile changes
         alert(t('profileUpdated'));
+        setFormErrors({});
       } else {
-        setFormErrors({ general: response.message || t('error') });
+        setFormErrors({ general: response.error?.message || t('error') });
       }
     } catch (err) {
       setFormErrors({ general: t('error') });
@@ -198,17 +319,22 @@ const AccountSettingsContent = ({ t }: { t: (key: TranslationKey) => string }) =
       <div className="flex items-center space-x-6">
         <div className="relative">
           <img
-            src={formData?.profileImage || `https://ui-avatars.com/api/?name=${encodeURIComponent((formData?.firstName ?? '') + ' ' + (formData?.lastName ?? ''))}&size=80&background=e5e7eb&color=374151`}
+            src={getProfileImageUrl()}
             alt={t('profilePhoto')}
             className="w-20 h-20 rounded-full object-cover border-4 border-white shadow-lg"
           />
           <button
             type="button"
             onClick={handleCameraClick}
-            className="absolute -bottom-2 -right-2 w-8 h-8 bg-red-600 text-white rounded-full flex items-center justify-center hover:bg-red-700 transition-colors shadow-lg focus:outline-none focus:ring-2 focus:ring-red-500"
-            aria-label={t('uploadPhoto')}
+            disabled={uploadingImage}
+            className="absolute -bottom-2 -right-2 w-8 h-8 bg-red-600 text-white rounded-full flex items-center justify-center hover:bg-red-700 transition-colors shadow-lg focus:outline-none focus:ring-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            aria-label={uploadingImage ? t('saving') : t('uploadPhoto')}
           >
-            <Camera className="w-4 h-4" />
+            {uploadingImage ? (
+              <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full" />
+            ) : (
+              <Camera className="w-4 h-4" />
+            )}
           </button>
         </div>
         <div className="flex-1">
@@ -266,10 +392,10 @@ const AccountSettingsContent = ({ t }: { t: (key: TranslationKey) => string }) =
                         country: prev.country,
                         zip: prev.zip,
                         id: prev.id,
-                        emailVerified: prev.emailVerified,
+                        isEmailVerified: prev.isEmailVerified,
                         accountStatus: prev.accountStatus,
-                        createdAt: prev.createdAt,
-                        updatedAt: prev.updatedAt,
+                        role: prev.role,
+                        usShippingAddressId: prev.usShippingAddressId,
                       }
                     : prev
                 );
@@ -424,13 +550,23 @@ const AccountSettingsContent = ({ t }: { t: (key: TranslationKey) => string }) =
         </button>
         <button
           type="submit"
-          disabled={saving || validatingPhone}
+          disabled={saving || validatingPhone || uploadingImage}
           className="px-6 py-3 bg-red-600 text-white rounded-xl font-medium hover:bg-red-700 transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
           aria-label={t('saveChanges')}
         >
           {saving ? t('saving') : t('saveChanges')}
         </button>
       </div>
+
+      {/* Hidden file input for profile picture upload */}
+      <input
+        type="file"
+        ref={cameraInputRef}
+        onChange={handleFileChange}
+        accept="image/jpeg,image/jpg,image/png,image/webp"
+        className="hidden"
+        aria-label="Profile picture upload"
+      />
     </form>
   );
 };

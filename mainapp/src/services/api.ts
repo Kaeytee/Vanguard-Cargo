@@ -1,4 +1,13 @@
-// Simplified API service with automatic mock data toggle
+// LEGACY API Service - DEPRECATED
+// This file is maintained for compatibility only.
+// The application now uses Supabase services:
+// - authService.ts for authentication
+// - notificationService.ts for notifications  
+// - shipmentService.ts for shipments
+// - packageService.ts for packages
+// - preferencesService.ts for user preferences
+//
+// This legacy service provides mock data fallback for development only.
 import * as MockData from '../lib/mockShipmentData';
 import { shouldUseMockData } from '../config/app';
 

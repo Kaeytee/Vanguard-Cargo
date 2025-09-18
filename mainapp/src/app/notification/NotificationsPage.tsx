@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Bell, CheckCircle, AlertCircle, Info, Trash2, Eye } from 'lucide-react';
 import { useTranslation } from '../../lib/translations';
-import { apiService, type Notification } from '../../services/api';
+import { notificationService, type Notification } from '../../services/notificationService';
+import { useAuth } from '../../hooks/useAuth';
 
 /**
  * NotificationsPage - Comprehensive notifications management page
@@ -18,8 +19,9 @@ import { apiService, type Notification } from '../../services/api';
  * 
  * @returns {JSX.Element} The NotificationsPage component
  */
-const NotificationsPage: React.FC = () => {
+const NotificationsPage = () => {
   const { t } = useTranslation();
+  const { user } = useAuth();
   
   // State management
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -33,27 +35,43 @@ const NotificationsPage: React.FC = () => {
   const [totalNotifications, setTotalNotifications] = useState<number>(0);
 
   // Load notifications on component mount and when filters change
-  const loadNotifications = React.useCallback(async () => {
+  const loadNotifications = useCallback(async () => {
+    if (!user?.id) return;
+    
     try {
       setLoading(true);
-      const response = await apiService.getNotifications(
-        currentPage,
-        10,
-        filter,
-        categoryFilter
-      );
+      const result = await notificationService.getNotifications(user.id);
       
-      if (response.success) {
-        setNotifications(response.data.items);
-        setTotalPages(response.data.totalPages);
-        setTotalNotifications(response.data.total);
+      if (!result.error && result.data) {
+        // Apply client-side filtering
+        let filteredNotifications = result.data;
+        
+        if (filter === 'read') {
+          filteredNotifications = filteredNotifications.filter(n => n.is_read);
+        } else if (filter === 'unread') {
+          filteredNotifications = filteredNotifications.filter(n => !n.is_read);
+        }
+        
+        if (categoryFilter !== 'all') {
+          filteredNotifications = filteredNotifications.filter(n => n.category === categoryFilter);
+        }
+        
+        // Simulate pagination for consistency
+        const pageSize = 10;
+        const startIndex = (currentPage - 1) * pageSize;
+        const endIndex = startIndex + pageSize;
+        const paginatedNotifications = filteredNotifications.slice(startIndex, endIndex);
+        
+        setNotifications(paginatedNotifications);
+        setTotalPages(Math.ceil(filteredNotifications.length / pageSize));
+        setTotalNotifications(filteredNotifications.length);
       }
     } catch (error) {
       console.error('Error loading notifications:', error);
     } finally {
       setLoading(false);
     }
-  }, [currentPage, filter, categoryFilter]);
+  }, [user?.id, currentPage, filter, categoryFilter]);
 
   useEffect(() => {
     loadNotifications();
@@ -102,19 +120,26 @@ const NotificationsPage: React.FC = () => {
       const notification = notifications.find(n => n.id === notificationId);
       if (!notification) return;
 
-      if (notification.isRead) {
-        await apiService.markNotificationAsUnread(notificationId);
-      } else {
-        await apiService.markNotificationAsRead(notificationId);
-      }
-
+      // Optimistic update first
       setNotifications(prev => 
         prev.map(n => 
-          n.id === notificationId ? { ...n, isRead: !n.isRead } : n
+          n.id === notificationId ? { ...n, is_read: !n.is_read } : n
         )
       );
+
+      if (notification.is_read) {
+        await notificationService.markAsUnread(notificationId);
+      } else {
+        await notificationService.markAsRead(notificationId);
+      }
     } catch (error) {
       console.error('Error updating notification:', error);
+      // Revert on error
+      setNotifications(prev => 
+        prev.map(n => 
+          n.id === notificationId ? { ...n, is_read: !n.is_read } : n
+        )
+      );
     }
   };
 
@@ -122,8 +147,12 @@ const NotificationsPage: React.FC = () => {
    * Delete notification
    */
   const deleteNotification = async (notificationId: string) => {
+    if (!confirm('Are you sure you want to delete this notification?')) {
+      return;
+    }
+
     try {
-      await apiService.deleteNotification(notificationId);
+      await notificationService.deleteNotification(notificationId);
       setNotifications(prev => prev.filter(n => n.id !== notificationId));
       setSelectedNotifications(prev => prev.filter(id => id !== notificationId));
     } catch (error) {
@@ -140,25 +169,46 @@ const NotificationsPage: React.FC = () => {
     try {
       setBulkActionLoading(true);
       
-      for (const notificationId of selectedNotifications) {
-        switch (action) {
-          case 'markRead':
-            await apiService.markNotificationAsRead(notificationId);
-            break;
-          case 'markUnread':
-            await apiService.markNotificationAsUnread(notificationId);
-            break;
-          case 'delete':
-            await apiService.deleteNotification(notificationId);
-            break;
-        }
+      // Use Promise.all for better performance
+      switch (action) {
+        case 'markRead':
+          await Promise.all(
+            selectedNotifications.map(id => notificationService.markAsRead(id))
+          );
+          // Optimistic update
+          setNotifications(prev => 
+            prev.map(n => 
+              selectedNotifications.includes(n.id) ? { ...n, is_read: true } : n
+            )
+          );
+          break;
+        case 'markUnread':
+          await Promise.all(
+            selectedNotifications.map(id => notificationService.markAsUnread(id))
+          );
+          // Optimistic update
+          setNotifications(prev => 
+            prev.map(n => 
+              selectedNotifications.includes(n.id) ? { ...n, is_read: false } : n
+            )
+          );
+          break;
+        case 'delete':
+          await Promise.all(
+            selectedNotifications.map(id => notificationService.deleteNotification(id))
+          );
+          // Optimistic update
+          setNotifications(prev => 
+            prev.filter(n => !selectedNotifications.includes(n.id))
+          );
+          break;
       }
       
-      // Reload notifications after bulk action
-      await loadNotifications();
       setSelectedNotifications([]);
     } catch (error) {
       console.error('Error performing bulk action:', error);
+      // Reload notifications on error to sync with server state
+      await loadNotifications();
     } finally {
       setBulkActionLoading(false);
     }
@@ -313,7 +363,7 @@ const NotificationsPage: React.FC = () => {
               <div
                 key={notification.id}
                 className={`bg-white rounded-lg shadow-sm border p-4 transition-all hover:shadow-md ${
-                  !notification.isRead ? 'border-l-4 border-l-red-500 bg-red-50/30' : ''
+                  !notification.is_read ? 'border-l-4 border-l-red-500 bg-red-50/30' : ''
                 }`}
               >
                 <div className="flex items-start gap-4">
@@ -341,9 +391,9 @@ const NotificationsPage: React.FC = () => {
                           {notification.message}
                         </p>
                         <div className="flex items-center gap-3 text-xs text-gray-500">
-                          <span>{formatDate(notification.createdAt)}</span>
+                          <span>{formatDate(notification.created_at)}</span>
                           <span className="capitalize">{notification.category}</span>
-                          {!notification.isRead && (
+                          {!notification.is_read && (
                             <span className="bg-red-100 text-red-800 px-2 py-1 rounded-full font-medium">
                               New
                             </span>
@@ -356,7 +406,7 @@ const NotificationsPage: React.FC = () => {
                         <button
                           onClick={() => toggleReadStatus(notification.id)}
                           className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
-                          title={notification.isRead ? 'Mark as unread' : 'Mark as read'}
+                          title={notification.is_read ? 'Mark as unread' : 'Mark as read'}
                         >
                           <Eye className="w-4 h-4" />
                         </button>
@@ -370,17 +420,7 @@ const NotificationsPage: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* Action Button */}
-                    {notification.actionUrl && (
-                      <div className="mt-3">
-                        <a
-                          href={notification.actionUrl}
-                          className="inline-flex items-center px-3 py-1 bg-red-600 text-white text-sm rounded-md hover:bg-red-700 transition-colors"
-                        >
-                          View Details
-                        </a>
-                      </div>
-                    )}
+                    {/* Action Button - Future enhancement for specific notification actions */}
                   </div>
                 </div>
               </div>

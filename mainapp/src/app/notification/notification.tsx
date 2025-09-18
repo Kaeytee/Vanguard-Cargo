@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Bell, CheckCircle, AlertCircle, Info, Trash2, Eye } from 'lucide-react';
-import { apiService, type Notification } from '../../services/api';
+import { notificationService, type Notification } from '../../services/notificationService';
+import { useAuth } from '../../hooks/useAuth';
 
 /**
  * NotificationsPage - Comprehensive notifications management page
@@ -16,7 +17,8 @@ import { apiService, type Notification } from '../../services/api';
  * 
  * @returns {JSX.Element} The NotificationsPage component
  */
-const NotificationsPage: React.FC = () => {
+const NotificationsPage = () => {
+  const { user } = useAuth();
   // State management
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -31,27 +33,42 @@ const NotificationsPage: React.FC = () => {
 
   // Load notifications from API
   const loadNotifications = useCallback(async (page: number = 1) => {
+    if (!user) return;
+    
     try {
       setLoading(true);
-      const response = await apiService.getNotifications(
-        page,
-        pageSize,
-        filter === 'all' ? undefined : filter,
-        categoryFilter === 'all' ? undefined : categoryFilter
-      );
+      const result = await notificationService.getNotifications(user.id);
       
-      if (response.success) {
-        setNotifications(response.data.items);
-        setTotalPages(response.data.totalPages);
-        setTotalNotifications(response.data.total);
-        setCurrentPage(response.data.currentPage);
+      if (!result.error && result.data) {
+        // Apply client-side filtering for now
+        let filteredNotifications = result.data;
+        
+        if (filter === 'read') {
+          filteredNotifications = filteredNotifications.filter(n => n.is_read);
+        } else if (filter === 'unread') {
+          filteredNotifications = filteredNotifications.filter(n => !n.is_read);
+        }
+        
+        if (categoryFilter !== 'all') {
+          filteredNotifications = filteredNotifications.filter(n => n.category === categoryFilter);
+        }
+        
+        // Simulate pagination
+        const startIndex = (page - 1) * pageSize;
+        const endIndex = startIndex + pageSize;
+        const paginatedNotifications = filteredNotifications.slice(startIndex, endIndex);
+        
+        setNotifications(paginatedNotifications);
+        setTotalPages(Math.ceil(filteredNotifications.length / pageSize));
+        setTotalNotifications(filteredNotifications.length);
+        setCurrentPage(page);
       }
     } catch (error) {
       console.error('Error loading notifications:', error);
     } finally {
       setLoading(false);
     }
-  }, [filter, categoryFilter, pageSize]);
+  }, [user, filter, categoryFilter, pageSize]);
 
   // Load notifications on component mount and when filters change
   useEffect(() => {
@@ -101,48 +118,48 @@ const NotificationsPage: React.FC = () => {
   const filteredNotifications = notifications;
 
   // Toggle notification read status
-  const toggleReadStatus = async (notificationId: string) => {
+  const toggleNotificationReadStatus = async (notificationId: string) => {
     try {
+      // Find the notification to check its current status before updating
       const notification = notifications.find(n => n.id === notificationId);
-      if (!notification) return;
+      const currentlyRead = notification?.is_read || false;
 
-      // Update local state optimistically
+      // Optimistic update
       setNotifications(prev => 
         prev.map(n => 
-          n.id === notificationId ? { ...n, isRead: !n.isRead } : n
+          n.id === notificationId ? { ...n, is_read: !n.is_read } : n
         )
       );
 
-      // Call API
-      if (notification.isRead) {
-        await apiService.markNotificationAsUnread(notificationId);
+      // Call the appropriate service method based on current status
+      if (currentlyRead) {
+        await notificationService.markAsUnread(notificationId);
       } else {
-        await apiService.markNotificationAsRead(notificationId);
+        await notificationService.markAsRead(notificationId);
       }
     } catch (error) {
-      console.error('Error updating notification:', error);
-      // Revert local state on error
+      console.error('Error toggling notification status:', error);
+      // Revert optimistic update on error
       setNotifications(prev => 
         prev.map(n => 
-          n.id === notificationId ? { ...n, isRead: !n.isRead } : n
+          n.id === notificationId ? { ...n, is_read: !n.is_read } : n
         )
       );
     }
   };
 
-  // Delete notification
+    // Delete notification
   const deleteNotification = async (notificationId: string) => {
+    if (!confirm('Are you sure you want to delete this notification?')) {
+      return;
+    }
+
     try {
-      // Update local state optimistically
+      await notificationService.deleteNotification(notificationId);
       setNotifications(prev => prev.filter(n => n.id !== notificationId));
       setSelectedNotifications(prev => prev.filter(id => id !== notificationId));
-
-      // Call API
-      await apiService.deleteNotification(notificationId);
     } catch (error) {
       console.error('Error deleting notification:', error);
-      // Reload notifications on error
-      loadNotifications(currentPage);
     }
   };
 
@@ -158,32 +175,32 @@ const NotificationsPage: React.FC = () => {
         case 'markRead':
           setNotifications(prev => 
             prev.map(n => 
-              selectedNotifications.includes(n.id) ? { ...n, isRead: true } : n
+              selectedNotifications.includes(n.id) ? { ...n, is_read: true } : n
             )
           );
-          // Call API for each notification
+          // Call Supabase API for each notification
           await Promise.all(
-            selectedNotifications.map(id => apiService.markNotificationAsRead(id))
+            selectedNotifications.map(id => notificationService.markAsRead(id))
           );
           break;
         case 'markUnread':
           setNotifications(prev => 
             prev.map(n => 
-              selectedNotifications.includes(n.id) ? { ...n, isRead: false } : n
+              selectedNotifications.includes(n.id) ? { ...n, is_read: false } : n
             )
           );
-          // Call API for each notification
+          // Call Supabase API for each notification
           await Promise.all(
-            selectedNotifications.map(id => apiService.markNotificationAsUnread(id))
+            selectedNotifications.map(id => notificationService.markAsUnread(id))
           );
           break;
         case 'delete':
           setNotifications(prev => 
             prev.filter(n => !selectedNotifications.includes(n.id))
           );
-          // Call API for each notification
+          // Call Supabase API for each notification
           await Promise.all(
-            selectedNotifications.map(id => apiService.deleteNotification(id))
+            selectedNotifications.map(id => notificationService.deleteNotification(id))
           );
           break;
       }
@@ -332,7 +349,7 @@ const NotificationsPage: React.FC = () => {
               <div
                 key={notification.id}
                 className={`bg-white rounded-lg shadow-sm border p-4 transition-all hover:shadow-md ${
-                  !notification.isRead ? 'border-l-4 border-l-red-500 bg-red-50/30' : ''
+                  !notification.is_read ? 'border-l-4 border-l-red-500 bg-red-50/30' : ''
                 }`}
               >
                 <div className="flex items-start gap-4">
@@ -360,9 +377,9 @@ const NotificationsPage: React.FC = () => {
                           {notification.message}
                         </p>
                         <div className="flex items-center gap-3 text-xs text-gray-500">
-                          <span>{formatDate(notification.createdAt)}</span>
+                          <span>{formatDate(notification.created_at)}</span>
                           <span className="capitalize">{notification.category}</span>
-                          {!notification.isRead && (
+                          {!notification.is_read && (
                             <span className="bg-red-100 text-red-800 px-2 py-1 rounded-full font-medium">
                               New
                             </span>
@@ -373,9 +390,9 @@ const NotificationsPage: React.FC = () => {
                       {/* Actions */}
                       <div className="flex items-center gap-2 flex-shrink-0">
                         <button
-                          onClick={() => toggleReadStatus(notification.id)}
+                          onClick={() => toggleNotificationReadStatus(notification.id)}
                           className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
-                          title={notification.isRead ? 'Mark as unread' : 'Mark as read'}
+                          title={notification.is_read ? 'Mark as unread' : 'Mark as read'}
                         >
                           <Eye className="w-4 h-4" />
                         </button>
@@ -389,17 +406,7 @@ const NotificationsPage: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* Action Button */}
-                    {notification.actionUrl && (
-                      <div className="mt-3">
-                        <a
-                          href={notification.actionUrl}
-                          className="inline-flex items-center px-3 py-1 bg-red-600 text-white text-sm rounded-md hover:bg-red-700 transition-colors"
-                        >
-                          View Details
-                        </a>
-                      </div>
-                    )}
+                    {/* Action Button - Future enhancement for specific notification actions */}
                   </div>
                 </div>
               </div>
