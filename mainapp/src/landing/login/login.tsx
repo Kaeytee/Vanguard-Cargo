@@ -14,6 +14,7 @@ import { EmailVerificationBanner } from '../../components/ui/EmailVerificationBa
 /**
  * Extend Window interface to include grecaptcha property
  * This fixes TypeScript errors when accessing window.grecaptcha
+ * 
  */
 declare global {
   interface Window {
