@@ -98,6 +98,7 @@ export default function Register() {
     country: false,
     agreeToTerms: false,
   });
+  
   const navigate = useNavigate();
   const { signUp } = useAuth();
 
