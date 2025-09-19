@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Eye, EyeOff } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import DeliveryImage from '../../images/deliveryparcel.jpg';
 import LoginBg from '../../images/register-bg.jpg';
@@ -8,6 +8,8 @@ import LoginBg from '../../images/register-bg.jpg';
 import ReCAPTCHA from 'react-google-recaptcha';
 // Import reCAPTCHA configuration
 import { recaptchaConfig } from '../../config/recaptcha';
+// Import email verification banner component
+import { EmailVerificationBanner } from '../../components/ui/EmailVerificationBanner';
 
 /**
  * Extend Window interface to include grecaptcha property
@@ -40,6 +42,10 @@ export default function Login() {
 	const [isResending, setIsResending] = useState(false);
 	const [resendMessage, setResendMessage] = useState("");
 	
+	// Email verification banner state
+	const [showEmailVerificationBanner, setShowEmailVerificationBanner] = useState(false);
+	const [verificationEmail, setVerificationEmail] = useState("");
+	
 	// reCAPTCHA state
 	const [captchaValue, setCaptchaValue] = useState<string | null>(null);
 	const [recaptchaError, setRecaptchaError] = useState(false);
@@ -47,9 +53,39 @@ export default function Login() {
 	
 	const { signIn } = useAuth();
 	const navigate = useNavigate();
+	const location = useLocation();
 
 	/**
-	 * Handle resending email verification
+	 * Handle resending email verification from banner
+	 * @param emailAddress - Email address to send verification to
+	 * @returns Promise with success status and message
+	 */
+	const handleBannerResendVerification = async (emailAddress: string): Promise<{ success: boolean; message: string }> => {
+		try {
+			const { authService } = await import('../../services/authService');
+			const result = await authService.resendEmailVerification(emailAddress);
+			
+			if (result.error) {
+				return {
+					success: false,
+					message: result.error.message || 'Failed to resend verification email'
+				};
+			} else {
+				return {
+					success: true,
+					message: 'Verification email sent! Please check your inbox and spam folder.'
+				};
+			}
+		} catch {
+			return {
+				success: false,
+				message: 'Failed to resend verification email. Please try again.'
+			};
+		}
+	};
+
+	/**
+	 * Handle resending email verification (legacy function)
 	 */
 	const handleResendVerification = async () => {
 		if (!email) {
@@ -78,6 +114,24 @@ export default function Login() {
 		}
 	};
 	
+	/**
+	 * Check URL parameters for email verification notification
+	 * Display banner if user came from registration
+	 */
+	useEffect(() => {
+		const urlParams = new URLSearchParams(location.search);
+		const fromRegistration = urlParams.get('from') === 'registration';
+		const emailParam = urlParams.get('email');
+		
+		if (fromRegistration && emailParam) {
+			// Show email verification banner
+			setShowEmailVerificationBanner(true);
+			setVerificationEmail(decodeURIComponent(emailParam));
+			// Pre-fill email field
+			setEmail(decodeURIComponent(emailParam));
+		}
+	}, [location.search]);
+
 	/**
 	 * Check if reCAPTCHA script is loaded and available
 	 * This helps detect issues with script loading in production
@@ -168,7 +222,7 @@ export default function Login() {
 			return;
 		}
 
-		setIsLoading(true);
+		// Removed setIsLoading(true) to prevent blue loading screen during login
 
 		try {
 			// Use Supabase AuthContext signIn function
@@ -188,7 +242,10 @@ export default function Login() {
 					lowerErrorMessage.includes('verify your email') ||
 					lowerErrorMessage.includes('emailnotverifiederror') ||
 					(typeof result.error === 'object' && result.error !== null && 'name' in result.error && (result.error as { name?: string }).name === 'EmailNotVerifiedError')) {
-					setError("Your email address is not verified. Please check your email and click the verification link, or request a new one below.");
+					// Show email verification banner instead of regular error
+					setShowEmailVerificationBanner(true);
+					setVerificationEmail(email);
+					setError("Your email address is not verified. Please check your email and click the verification link.");
 					setShowResendVerification(true);
 				} else if (lowerErrorMessage.includes('invalid_credentials') || 
 				          lowerErrorMessage.includes('invalid login') ||
@@ -196,26 +253,30 @@ export default function Login() {
 				          lowerErrorMessage.includes('invalid password')) {
 					setError("Invalid email or password. Please check your credentials and try again.");
 					setShowResendVerification(false);
+					setShowEmailVerificationBanner(false);
 				} else if (lowerErrorMessage.includes('too_many_requests') || 
 				          lowerErrorMessage.includes('rate limit')) {
 					setError("Too many login attempts. Please wait a few minutes before trying again.");
 					setShowResendVerification(false);
+					setShowEmailVerificationBanner(false);
 				} else {
 					// Show user-friendly error message
 					setError(errorMessage || 'Login failed. Please try again.');
 					setShowResendVerification(false);
+					setShowEmailVerificationBanner(false);
 				}
 			} else {
 				// Clear any existing errors and navigate to dashboard
 				setError("");
 				setShowResendVerification(false);
+				setShowEmailVerificationBanner(false);
 				navigate('/app');
 			}
 		} catch (err) {
 			setError(err instanceof Error ? err.message : 'Login failed. Please try again.');
 			setShowResendVerification(false);
 		} finally {
-			setIsLoading(false);
+			// Removed setIsLoading(false) to prevent loading state changes
 		}
 	};
 
@@ -248,6 +309,16 @@ export default function Login() {
 							</div>
 
 							<form onSubmit={handleSubmit} className="space-y-6">
+								{/* Email Verification Banner */}
+								{showEmailVerificationBanner && verificationEmail && (
+									<EmailVerificationBanner
+										email={verificationEmail}
+										onResendVerification={handleBannerResendVerification}
+										onDismiss={() => setShowEmailVerificationBanner(false)}
+										dismissible={true}
+									/>
+								)}
+
 								{/* Error Message */}
 								{error && (
 									<div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
@@ -255,8 +326,8 @@ export default function Login() {
 									</div>
 								)}
 
-								{/* Resend Verification */}
-								{showResendVerification && (
+								{/* Resend Verification (Legacy - kept for backward compatibility) */}
+								{showResendVerification && !showEmailVerificationBanner && (
 									<div className="bg-blue-50 border border-blue-200 text-blue-800 px-4 py-3 rounded-lg">
 										<p className="text-sm mb-3">
 											<strong>Email verification required.</strong> Check your inbox for the verification link, or request a new one:
@@ -272,8 +343,8 @@ export default function Login() {
 									</div>
 								)}
 
-								{/* Success Message for Resend */}
-								{resendMessage && (
+								{/* Success Message for Resend (Legacy) */}
+								{resendMessage && !showEmailVerificationBanner && (
 									<div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg">
 										{resendMessage}
 									</div>
@@ -364,21 +435,14 @@ export default function Login() {
 								{/* Submit Button */}
 								<button
 									type="submit"
-									disabled={!isFormValid || isLoading}
+									disabled={!isFormValid}
 									className={`w-full font-semibold px-6 py-3 rounded-lg transition-all duration-200 flex items-center justify-center ${
-										isFormValid && !isLoading
+										isFormValid
 											? "bg-red-500 hover:bg-red-600 text-white transform hover:scale-105 hover:shadow-lg"
 											: "bg-gray-300 text-gray-500 cursor-not-allowed"
 									}`}
 								>
-									{isLoading ? (
-										<>
-											<div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full mr-2 animate-spin" />
-											Signing in...
-										</>
-									) : (
-										'Sign In'
-									)}
+									Sign In
 								</button>
 
 								{/* Register Link */}

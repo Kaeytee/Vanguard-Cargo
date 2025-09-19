@@ -163,7 +163,6 @@ export default function EmailVerification() {
               animate={{ opacity: 1 }}
               className="text-center py-8"
             >
-              <div className="animate-spin w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
               <p className="text-gray-600">Verifying your email...</p>
             </motion.div>
           )}

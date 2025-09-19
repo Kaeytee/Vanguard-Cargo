@@ -75,8 +75,7 @@ function PreferencesSettings() {
         </div>
         <p className="text-gray-500 mb-6">Customize your app preferences</p>
         <div className="flex items-center justify-center p-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-          <span className="ml-2">Loading preferences...</span>
+          <span className="text-gray-600">Loading preferences...</span>
         </div>
       </div>
     );
