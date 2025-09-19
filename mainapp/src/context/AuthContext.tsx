@@ -100,7 +100,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const signIn = async (email: string, password: string): Promise<{ error: string | null }> => {
     try {
-      setLoading(true);
+      // Removed setLoading(true) to prevent blue loading screen during login
       const { error, user: authUser } = await authService.signIn({ email, password });
       
       if (error) {
@@ -123,7 +123,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       console.error('Sign in error:', error);
       return { error: 'An unexpected error occurred' };
     } finally {
-      setLoading(false);
+      // Removed setLoading(false) to prevent loading state changes
     }
   };
 
@@ -135,7 +135,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     phone?: string;
   }): Promise<{ error: string | null }> => {
     try {
-      setLoading(true);
+      // Removed setLoading(true) to prevent blue loading screen during registration
       const { error } = await authService.signUp(data);
       
       if (error) {
@@ -147,7 +147,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       console.error('Sign up error:', error);
       return { error: 'An unexpected error occurred' };
     } finally {
-      setLoading(false);
+      // Removed setLoading(false) to prevent loading state changes
     }
   };
 

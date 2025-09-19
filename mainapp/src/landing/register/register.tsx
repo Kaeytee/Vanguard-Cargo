@@ -4,7 +4,6 @@ import PhoneInput, { isValidPhoneNumber } from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
 import { parsePhoneNumber } from 'libphonenumber-js';
 import { cn } from '../../lib/utils';
-import AnimateInView from '../../components/ui/animate-in-view';
 import registerbg from '../../images/register-bg.jpg';
 import { useNavigate } from 'react-router-dom';
 import DeliveryImage from '../../images/delivery-man.png';
@@ -66,7 +65,6 @@ export default function Register() {
     agreeToTerms: '',
     general: '',
   });
-  const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [registeredUser, setRegisteredUser] = useState<{
     email: string;
@@ -79,6 +77,7 @@ export default function Register() {
     email: boolean;
     password: boolean;
     confirmPassword: boolean;
+    phoneNumber: boolean;
     address: boolean;
     city: boolean;
     state: boolean;
@@ -91,6 +90,7 @@ export default function Register() {
     email: false,
     password: false,
     confirmPassword: false,
+    phoneNumber: false,
     address: false,
     city: false,
     state: false,
@@ -101,37 +101,57 @@ export default function Register() {
   const navigate = useNavigate();
   const { signUp } = useAuth();
 
-  // Navigation handler for going to login
-  const handleGoToLogin = () => {
-    navigate('/login');
-  };
 
-  // Handle form input changes
+  // Handle form input changes with real-time validation
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
+    
+    // Update form data
     setFormData((prev) => ({
       ...prev,
       [name]: type === 'checkbox' ? checked : value,
     }));
+    
+    // Mark field as touched
     setTouched((prev) => ({ ...prev, [name]: true }));
+    
+    // Real-time validation for the specific field
+    const updatedFormData = {
+      ...formData,
+      [name]: type === 'checkbox' ? checked : value,
+    };
+    
+    // Validate specific field
+    const fieldErrors = validateField(name, updatedFormData);
+    setErrors((prev) => ({
+      ...prev,
+      [name]: fieldErrors,
+    }));
   };
 
-  // Handle phone number change
+  // Handle phone number change with real-time validation
   const handlePhoneChange = (value?: string) => {
     // First update the phone number in the form data
     setFormData((prev) => ({ ...prev, phoneNumber: value || '' }));
     
-    // Validate the phone number
+    // Mark phone field as touched
+    setTouched((prev) => ({ ...prev, phoneNumber: true }));
+    
+    // Real-time validation for phone number
     if (value && !isValidPhoneNumber(value)) {
       setPhoneError('Please enter a valid phone number');
-      return; // Exit early if invalid
+      setErrors((prev) => ({ ...prev, phoneNumber: 'Please enter a valid phone number' }));
+    } else if (!value) {
+      setPhoneError('Phone number is required');
+      setErrors((prev) => ({ ...prev, phoneNumber: 'Phone number is required' }));
+    } else {
+      // Clear any phone error
+      setPhoneError('');
+      setErrors((prev) => ({ ...prev, phoneNumber: '' }));
     }
     
-    // Clear any phone error
-    setPhoneError('');
-    
     // Auto-set country based on phone number using libphonenumber-js
-    if (value) {
+    if (value && isValidPhoneNumber(value)) {
       try {
         // Parse the phone number to get country information
         const phoneNumberData = parsePhoneNumber(value);
@@ -141,15 +161,11 @@ export default function Register() {
           const countryName = new Intl.DisplayNames(['en'], { type: 'region' }).of(phoneNumberData.country);
           
           if (countryName) {
-            // Removed debug log for production
-            
             // Update the country field with the detected country name
             // Use a separate state update to ensure it renders properly
             setTimeout(() => {
               setFormData((prev) => {
-                // Removed debug log for production
                 const updated = { ...prev, country: countryName };
-                // Removed debug log for production
                 return updated;
               });
               
@@ -171,6 +187,34 @@ export default function Register() {
   // Email validation helper
   const isValidEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
+  // Validate single field for real-time validation
+  const validateField = (fieldName: string, data: typeof formData): string => {
+    switch (fieldName) {
+      case 'firstName':
+        return !data.firstName ? 'First name is required' : '';
+      case 'lastName':
+        return !data.lastName ? 'Last name is required' : '';
+      case 'email':
+        if (!data.email) return 'Email is required';
+        return !isValidEmail(data.email) ? 'Please enter a valid email address' : '';
+      case 'password':
+        if (!data.password) return 'Password is required';
+        return data.password.length < 8 ? 'Password must be at least 8 characters' : '';
+      case 'confirmPassword':
+        if (!data.confirmPassword) return 'Please confirm your password';
+        return data.password !== data.confirmPassword ? 'Passwords do not match' : '';
+      case 'phoneNumber':
+        if (!data.phoneNumber) return 'Phone number is required';
+        return !isValidPhoneNumber(data.phoneNumber) ? 'Valid phone number is required' : '';
+      case 'country':
+        return !data.country ? 'Country is required' : '';
+      case 'agreeToTerms':
+        return !data.agreeToTerms ? 'You must agree to the terms of service' : '';
+      default:
+        return '';
+    }
+  };
+
   // Validate all fields
   const validate = () => {
     const newErrors: typeof errors = {
@@ -188,30 +232,44 @@ export default function Register() {
       agreeToTerms: '',
       general: '',
     };
-    if (!formData.firstName) newErrors.firstName = 'First name is required';
-    if (!formData.lastName) newErrors.lastName = 'Last name is required';
-    if (!formData.email) newErrors.email = 'Email is required';
-    else if (!isValidEmail(formData.email)) newErrors.email = 'Please enter a valid email address';
-    if (!formData.password) newErrors.password = 'Password is required';
-    else if (formData.password.length < 8) newErrors.password = 'Password must be at least 8 characters';
-    if (!formData.confirmPassword) newErrors.confirmPassword = 'Please confirm your password';
-    else if (formData.password !== formData.confirmPassword)
-      newErrors.confirmPassword = 'Passwords do not match';
-    if (!formData.phoneNumber || !isValidPhoneNumber(formData.phoneNumber))
-      newErrors.phoneNumber = 'Valid phone number is required';
-    if (!formData.country) newErrors.country = 'Country is required';
-    if (!formData.agreeToTerms) newErrors.agreeToTerms = 'You must agree to the terms of service';
+    
+    // Use validateField for each field
+    newErrors.firstName = validateField('firstName', formData);
+    newErrors.lastName = validateField('lastName', formData);
+    newErrors.email = validateField('email', formData);
+    newErrors.password = validateField('password', formData);
+    newErrors.confirmPassword = validateField('confirmPassword', formData);
+    newErrors.phoneNumber = validateField('phoneNumber', formData);
+    newErrors.country = validateField('country', formData);
+    newErrors.agreeToTerms = validateField('agreeToTerms', formData);
+    
     return newErrors;
   };
 
   // Handle form submission
-  const handleSubmit = async () => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    // Prevent default form submission behavior
+    e.preventDefault();
+    
+    // Validate form
     const newErrors = validate();
     setErrors(newErrors);
-    if (Object.values(newErrors).some((error) => error)) return;
+    
+    // Check if there are any errors
+    if (Object.values(newErrors).some(error => error)) {
+      // If there are errors, focus on the first error field
+      const firstErrorField = Object.keys(newErrors).find(key => newErrors[key as keyof typeof newErrors]);
+      if (firstErrorField) {
+        const errorElement = document.getElementById(firstErrorField);
+        if (errorElement) {
+          errorElement.focus();
+        }
+      }
+      return;
+    }
 
-    setLoading(true);
-    setErrors((prev) => ({ ...prev, general: '' }));
+    // Removed loading state to eliminate blue loading screen
+    setErrors(prev => ({ ...prev, general: '' }));
 
     try {
       // Use Supabase signUp function
@@ -255,6 +313,7 @@ export default function Register() {
           email: false,
           password: false,
           confirmPassword: false,
+          phoneNumber: false,
           address: false,
           city: false,
           state: false,
@@ -291,12 +350,12 @@ export default function Register() {
       }
     } catch (err) {
       console.error('Registration error:', err);
-      setErrors((prev) => ({ 
+      setErrors(prev => ({ 
         ...prev, 
         general: 'Registration is temporarily unavailable. Please try again in a few minutes.' 
       }));
     } finally {
-      setLoading(false);
+      // Removed setLoading(false) to eliminate loading state
     }
   };
 
@@ -317,8 +376,13 @@ export default function Register() {
   const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
     const { name } = e.target;
     setTouched((prev) => ({ ...prev, [name]: true }));
-    const newErrors = validate();
-    setErrors(newErrors);
+    
+    // Validate only the specific field that lost focus
+    const fieldError = validateField(name, formData);
+    setErrors((prev) => ({
+      ...prev,
+      [name]: fieldError,
+    }));
   };
 
   return (
@@ -351,12 +415,14 @@ export default function Register() {
 
           {/* Right panel: Registration form */}
           <div className="w-full lg:w-1/2 p-8 lg:p-12 flex flex-col justify-center">
-            <AnimateInView variant="fadeInRight" delay={0.4} className="max-w-lg mx-auto w-full">
+            <div className="max-w-lg mx-auto w-full">
                 {success ? (
                   <RegisterSuccessStep
                     email={registeredUser?.email || formData.email}
-                    userName={registeredUser ? `${registeredUser.firstName} ${registeredUser.lastName}` : `${formData.firstName} ${formData.lastName}`}
-                    onGoToLogin={handleGoToLogin}
+                    userName={`${registeredUser?.firstName || formData.firstName} ${registeredUser?.lastName || formData.lastName}`}
+                    onGoToLogin={() => {
+                      navigate(`/login?email=${encodeURIComponent(registeredUser?.email || formData.email)}&fromRegistration=true`);
+                    }}
                   />
                 ) : (
                   <React.Fragment>
@@ -371,7 +437,7 @@ export default function Register() {
                       </div>
                     )}
 
-                    <form className="space-y-6">
+                    <form onSubmit={handleSubmit} className="space-y-6">
                       <div className="space-y-4">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
@@ -710,7 +776,14 @@ export default function Register() {
                       </div>
                       <span className="text-sm text-gray-700">
                         I agree to the{' '}
-                        <a href="#" className="text-red-500 hover:text-red-600 font-medium">
+                        <a 
+                          href="#" 
+                          className="text-red-500 hover:text-red-600 font-medium"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            // TODO: Open terms of service modal or navigate to terms page
+                          }}
+                        >
                           terms of service
                         </a>
                       </span>
@@ -741,24 +814,16 @@ export default function Register() {
                     </label>
                   </div>
                   <button
-                    onClick={handleSubmit}
-                    disabled={!isFormValid || loading}
+                    type="submit"
+                    disabled={!isFormValid}
                     className={cn(
                       'w-full font-semibold px-6 py-3 rounded-lg transition-all duration-200 flex items-center justify-center mt-6',
-                      isFormValid && !loading
+                      isFormValid
                         ? 'bg-red-500 hover:bg-red-600 text-white transform hover:scale-105 hover:shadow-lg'
                         : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                     )}
-                    aria-busy={loading}
                   >
-                    {loading ? (
-                      <>
-                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full mr-2 animate-spin" />
-                        Creating account...
-                      </>
-                    ) : (
-                      'Create Account'
-                    )}
+                    Create Account
                   </button>
                   
                   {/* Login Link */}
@@ -781,7 +846,7 @@ export default function Register() {
                     </form>
                 </React.Fragment>
                 )}
-            </AnimateInView>
+            </div>
           </div>
         </div>
       </div>

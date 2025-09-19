@@ -1,6 +1,7 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 import ScrollToTop from './components/ScrollToTop'; // Import ScrollToTop for UX improvement
 import { ThemeProvider } from './context/ThemeProvider';
 import { PreferencesProvider } from './context/PreferencesProvider';
@@ -21,6 +22,8 @@ createRoot(document.getElementById('root')!).render(
         <AuthProvider>
           <PreferencesProvider>
             <App />
+            {/* SpeedInsights component for Vercel performance monitoring */}
+            <SpeedInsights />
           </PreferencesProvider>
         </AuthProvider>
       </ThemeProvider>
