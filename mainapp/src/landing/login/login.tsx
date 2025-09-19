@@ -14,6 +14,7 @@ import { EmailVerificationBanner } from '../../components/ui/EmailVerificationBa
 /**
  * Extend Window interface to include grecaptcha property
  * This fixes TypeScript errors when accessing window.grecaptcha
+ * 
  */
 declare global {
   interface Window {
@@ -34,7 +35,6 @@ export default function Login() {
 	// Form state variables
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
-	const [isLoading, setIsLoading] = useState(false);
 	const [showPassword, setShowPassword] = useState(false);
 	const [rememberMe, setRememberMe] = useState(false);
 	const [error, setError] = useState("");
