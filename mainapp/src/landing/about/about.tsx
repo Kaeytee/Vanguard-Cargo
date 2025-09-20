@@ -1,4 +1,4 @@
-// NOTE: As of 2025-09-17, this About page is NOT shown in the sidebar or routed in the app, per user request. The file is kept for future use or reference.
+// About page component for the logistics application - displays company information, mission, and values
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';

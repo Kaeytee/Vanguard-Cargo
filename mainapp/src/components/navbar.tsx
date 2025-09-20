@@ -85,7 +85,6 @@ export default function Navbar() {
     ...(user ? [{ href: "/dashboard", label: "My Packages" }] : []),
     { href: "/", label: "Home" },
     { href: "/services", label: "How It Works" },
-    { href: "/about", label: "Why Choose Us" },
     { href: "/contact", label: "Support" },
   ];
 
@@ -147,7 +146,7 @@ export default function Navbar() {
                     : "text-gray-700 hover:text-primary"
                 )}
               >
-                {link.label === "How It Works" ? "Services" : link.label === "Why Choose Us" ? "About" : link.label}
+{link.label === "How It Works" ? "Services" : link.label}
                 <span
                   className={cn(
                     "absolute bottom-0 left-0 h-0.5 bg-red-600 transition-all duration-200",
