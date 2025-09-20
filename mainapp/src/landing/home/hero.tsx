@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { CheckCircle, Star, Globe, Plane, MapPin, Rocket, ShoppingBag } from "lucide-react";
-import svgBackground from "../../assets/svg.png";
+import svgBackground from "../../assets/logo.png";
 
 export default function Hero() {
   const [currentTestimonial, setCurrentTestimonial] = useState(0);
