@@ -5,7 +5,7 @@ import AuthProvider from "./context/AuthContext";
 import Navbar from "./components/navbar";
 import Footer from "./components/footer";
 import Home from "./landing/home/home";
-// import About from "./landing/about/about"; // About page is not routed or shown (per user request)
+import About from "./landing/about/about";
 import Services from "./landing/services/services";
 import Contact from "./landing/contact/contact";
 import Login from "./landing/login/login";
@@ -67,7 +67,7 @@ export default function App() {
           </>
         }
       />
-      {/* <Route
+      <Route
         path="/about"
         element={
           <>
@@ -76,7 +76,7 @@ export default function App() {
             <Footer />
           </>
         }
-      /> */}  // About page is not routed or shown (per user request)
+      />
       <Route
         path="/services"
         element={
