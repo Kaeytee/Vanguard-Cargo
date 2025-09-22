@@ -218,6 +218,7 @@ class AuthService {
           phone_number,
           role,
           status,
+          suite_number,
           us_shipping_address_id,
           street_address,
           city,
@@ -241,6 +242,7 @@ class AuthService {
         role: data.role,
         phone: data.phone_number,  // Note: now using phone_number
         status: data.status,
+        suite_number: data.suite_number,
         usShippingAddressId: data.us_shipping_address_id,
         streetAddress: data.street_address,
         city: data.city,

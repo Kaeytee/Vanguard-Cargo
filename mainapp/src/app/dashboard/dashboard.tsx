@@ -215,9 +215,9 @@ const popularBrands = [
                   </span>
                   <button
                     onClick={() => copyToClipboard(
-                      (userProfile?.firstName || userProfile?.lastName)
+                      `${(userProfile?.firstName || userProfile?.lastName)
                         ? `${userProfile?.firstName ?? ''} ${userProfile?.lastName ?? ''}`.trim()
-                        : user?.email || ''
+                        : user?.email || ''} (${userProfile?.suite_number || ''})`
                     )}
                     className="text-red-600 hover:text-red-700 p-1"
                     title="Copy name"

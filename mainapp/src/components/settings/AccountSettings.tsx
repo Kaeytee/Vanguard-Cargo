@@ -501,7 +501,7 @@ const AccountSettingsContent = ({ t }: { t: (key: TranslationKey) => string }) =
             </label>
             <input
               type="text"
-              name="address"
+              name="streetAddress"
               id="address"
               value={formData?.streetAddress ?? ''}
               onChange={handleInputChange}
@@ -521,7 +521,7 @@ const AccountSettingsContent = ({ t }: { t: (key: TranslationKey) => string }) =
             </label>
             <input
               type="text"
-              name="zip"
+              name="postalCode"
               id="zip"
               value={formData?.postalCode ?? ''}
               onChange={handleInputChange}
