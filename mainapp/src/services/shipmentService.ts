@@ -1,7 +1,34 @@
-import { supabase, type Tables, type Inserts } from '../lib/supabase';
+import { supabase } from '../lib/supabase';
 
-export type Shipment = Tables<'shipments'>;
-export type NewShipment = Inserts<'shipments'>;
+// Define a local interface to match the new 'shipments' table schema
+export interface DbShipment {
+  id: string;
+  user_id: string;
+  shipment_number: string;
+  service_type: string | null;
+  status: string;
+  recipient_name: string | null;
+  recipient_address: string | null; // This will be mapped to delivery_address
+  created_at: string;
+  updated_at: string | null;
+  // Fields missing from UI model that are in the new DB model
+  delivery_city?: string | null;
+  delivery_country?: string | null;
+}
+
+// This is the shape the UI expects, with fields from the old schema
+export interface Shipment extends Omit<DbShipment, 'recipient_address'> {
+  delivery_address: string | null;
+  // Fields missing from new schema, set to default values
+  total_cost: number | null;
+  estimated_cost: number | null;
+  cost_status: string | null;
+  recipient_phone: string | null;
+  total_weight_lbs: number | null;
+  total_packages: number | null;
+}
+
+export type NewShipment = Partial<Omit<Shipment, 'id' | 'created_at' | 'updated_at'>>;
 
 export interface ShipmentWithDetails extends Shipment {
   packages?: Array<{
@@ -82,11 +109,10 @@ class ShipmentService {
         return { data: [], error };
       }
 
-      // Transform data - packages will be fetched separately if needed
-      const shipmentsWithDetails: ShipmentWithDetails[] = (data || []).map(shipment => ({
-        ...shipment,
-        packages: [], // Will be populated by separate query if needed
-      }));
+      // Transform DB data to the shape the UI expects
+      const shipmentsWithDetails: ShipmentWithDetails[] = (data || []).map(dbShipment => 
+        this.mapDbShipmentToUiShipment(dbShipment as DbShipment)
+      );
 
       return { data: shipmentsWithDetails, error: null, count: count || 0 };
     } catch (err) {
@@ -114,11 +140,8 @@ class ShipmentService {
         return { data: null, error: new Error('Shipment not found') };
       }
 
-      // Return shipment without packages for now to avoid RLS issues
-      const shipmentWithDetails: ShipmentWithDetails = {
-        ...data[0],
-        packages: [], // Can be populated separately if needed
-      };
+      // Transform DB data to the shape the UI expects
+      const shipmentWithDetails: ShipmentWithDetails = this.mapDbShipmentToUiShipment(data[0] as DbShipment);
 
       return { data: shipmentWithDetails, error: null };
     } catch (err) {
@@ -146,11 +169,8 @@ class ShipmentService {
         return { data: null, error: new Error('Shipment not found') };
       }
 
-      // Return the first shipment without packages for now to avoid RLS issues
-      const shipmentWithDetails: ShipmentWithDetails = {
-        ...data[0],
-        packages: [], // Can be populated separately if needed
-      };
+      // Transform DB data to the shape the UI expects
+      const shipmentWithDetails: ShipmentWithDetails = this.mapDbShipmentToUiShipment(data[0] as DbShipment);
 
       return { data: shipmentWithDetails, error: null };
     } catch (err) {
@@ -383,14 +403,17 @@ class ShipmentService {
       }
 
       // Transform data to match component interface
-      const items = (data || []).map(shipment => ({
+      const items = (data || []).map(dbShipment => {
+        const shipment = this.mapDbShipmentToUiShipment(dbShipment as DbShipment);
+        return {
         id: shipment.id || shipment.shipment_number || 'N/A',
         date: shipment.created_at ? new Date(shipment.created_at).toLocaleDateString() : 'N/A',
         destination: `${shipment.delivery_city || 'Unknown'}, ${shipment.delivery_country || 'Unknown'}`,
         recipient: shipment.recipient_name || 'Unknown',
         type: shipment.service_type || 'Standard',
         status: shipment.status || 'pending'
-      }));
+        };
+      });
 
       return {
         success: true,
@@ -409,6 +432,28 @@ class ShipmentService {
         error: 'Failed to fetch shipments'
       };
     }
+  }
+
+  // --- Data Transformation ---
+
+  private mapDbShipmentToUiShipment(dbShipment: DbShipment): ShipmentWithDetails {
+    const uiShipment: Shipment = {
+      ...dbShipment,
+      // Map recipient_address to delivery_address for UI compatibility
+      delivery_address: dbShipment.recipient_address,
+      // Set default values for fields missing from the new schema
+      total_cost: null,
+      estimated_cost: null,
+      cost_status: null,
+      recipient_phone: null,
+      total_weight_lbs: null, // This would require joining/calculating from packages
+      total_packages: null, // This would require joining/calculating from package_shipments
+    };
+
+    return {
+      ...uiShipment,
+      packages: [], // Packages are fetched separately to avoid RLS issues
+    };
   }
 }
 

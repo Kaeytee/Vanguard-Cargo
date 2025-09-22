@@ -197,48 +197,83 @@ export interface Database {
           updated_at?: string;
         };
       };
-      us_shipping_addresses: {
+      addresses: {
         Row: {
           id: string;
           user_id: string;
-          suite_number: string;
-          street_address: string;
-          city: string;
-          state: string;
-          postal_code: string;
-          country: string;
-          warehouse_id: string | null;
-          is_active: boolean;
+          type: 'shipping' | 'billing' | 'both';
+          line1: string | null;
+          line2: string | null;
+          city: string | null;
+          state_province: string | null;
+          postal_code: string | null;
+          country: string | null;
+          is_default: boolean;
           created_at: string;
-          updated_at: string;
+          updated_at: string | null;
+          warehouse_id: string | null;
         };
         Insert: {
           id?: string;
           user_id: string;
-          suite_number: string;
-          street_address: string;
-          city: string;
-          state: string;
-          postal_code: string;
-          country?: string;
-          warehouse_id?: string | null;
-          is_active?: boolean;
+          type: 'shipping' | 'billing' | 'both';
+          line1?: string | null;
+          line2?: string | null;
+          city?: string | null;
+          state_province?: string | null;
+          postal_code?: string | null;
+          country?: string | null;
+          is_default?: boolean;
           created_at?: string;
-          updated_at?: string;
+          updated_at?: string | null;
+          warehouse_id?: string | null;
         };
         Update: {
           id?: string;
           user_id?: string;
-          suite_number?: string;
-          street_address?: string;
+          type?: 'shipping' | 'billing' | 'both';
+          line1?: string | null;
+          line2?: string | null;
+          city?: string | null;
+          state_province?: string | null;
+          postal_code?: string | null;
+          country?: string | null;
+          is_default?: boolean;
+          created_at?: string;
+          updated_at?: string | null;
+          warehouse_id?: string | null;
+        };
+      };
+      warehouses: {
+        Row: {
+          id: string;
+          name: string;
+          code: string;
+          city: string;
+          state: string;
+          phone: string;
+          created_at: string;
+          updated_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          code: string;
+          city: string;
+          state: string;
+          phone: string;
+          created_at?: string;
+          updated_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          code?: string;
           city?: string;
           state?: string;
-          postal_code?: string;
-          country?: string;
-          warehouse_id?: string | null;
-          is_active?: boolean;
+          phone?: string;
           created_at?: string;
-          updated_at?: string;
+          updated_at?: string | null;
         };
       };
       notifications: {

@@ -1,7 +1,36 @@
-import { supabase, type Tables, type Inserts } from '../lib/supabase';
+import { supabase } from '../lib/supabase';
 
-export type Package = Tables<'packages'>;
-export type NewPackage = Inserts<'packages'>;
+// Define a local interface to match the new 'packages' table schema
+export interface DbPackage {
+  id: string;
+  user_id: string;
+  tracking_number: string;
+  sender_name: string | null;
+  declared_value: number | null;
+  weight: number | null; // New schema uses 'weight' in kg
+  dimensions: { length: number; width: number; height: number; } | null; // New schema uses a JSONB field
+  status: string;
+  warehouse_id: string | null;
+  created_at: string;
+  updated_at: string | null;
+  // Joined warehouse data
+  warehouses?: { name: string; city: string; code: string; } | null;
+}
+
+// This is the shape the UI expects, with fields from the old schema
+export interface Package extends Omit<DbPackage, 'weight' | 'dimensions'> {
+  sender_email?: string | null; // Missing from new schema
+  sender_phone?: string | null; // Missing from new schema
+  weight_lbs: number | null; // Converted from kg
+  length_in: number | null;
+  width_in: number | null;
+  height_in: number | null;
+  billable_weight_lbs: number | null; // Missing from new schema
+  storage_fee_accumulated: number | null; // Missing from new schema
+  free_storage_until: string | null; // Missing from new schema
+}
+
+export type NewPackage = Partial<Omit<Package, 'id' | 'created_at' | 'updated_at'>>;
 
 export interface PackageWithDetails extends Package {
   warehouse_name?: string;
@@ -69,13 +98,10 @@ class PackageService {
         return { data: [], error };
       }
 
-      // Transform data to include calculated fields
-      const packagesWithDetails: PackageWithDetails[] = (data || []).map(pkg => ({
-        ...pkg,
-        warehouse_name: pkg.warehouses?.name || 'Unknown',
-        days_in_storage: this.calculateDaysInStorage(pkg.created_at),
-        is_overdue: this.isOverdue(pkg.free_storage_until),
-      }));
+      // Transform DB data to the shape the UI expects
+      const packagesWithDetails: PackageWithDetails[] = (data || []).map(dbPkg => 
+        this.mapDbPackageToUiPackage(dbPkg as DbPackage)
+      );
 
       return { data: packagesWithDetails, error: null, count: count || 0 };
     } catch (err) {
@@ -151,12 +177,7 @@ class PackageService {
         return { data: null, error };
       }
 
-      const packageWithDetails: PackageWithDetails = {
-        ...data,
-        warehouse_name: data.warehouses?.name || 'Unknown',
-        days_in_storage: this.calculateDaysInStorage(data.created_at),
-        is_overdue: this.isOverdue(data.free_storage_until),
-      };
+      const packageWithDetails: PackageWithDetails = this.mapDbPackageToUiPackage(data as DbPackage);
 
       return { data: packageWithDetails, error: null };
     } catch (err) {
@@ -166,19 +187,20 @@ class PackageService {
   }
 
   // Create new package (admin/staff only)
-  async createPackage(packageData: NewPackage): Promise<{ data: Package | null; error: Error | null }> {
+  async createPackage(packageData: NewPackage): Promise<{ data: PackageWithDetails | null; error: Error | null }> {
     try {
+      const dbPayload = this.mapUiPackageToDbPackage(packageData);
       const { data, error } = await supabase
         .from('packages')
-        .insert(packageData)
-        .select()
+        .insert(dbPayload)
+        .select('*, warehouses:warehouse_id(name, city, code)')
         .single();
 
       if (error) {
         return { data: null, error };
       }
 
-      return { data, error: null };
+      return { data: this.mapDbPackageToUiPackage(data as DbPackage), error: null };
     } catch (err) {
       console.error('Create package error:', err);
       return { data: null, error: err as Error };
@@ -189,23 +211,21 @@ class PackageService {
   async updatePackage(
     packageId: string, 
     updates: Partial<Package>
-  ): Promise<{ data: Package | null; error: Error | null }> {
+  ): Promise<{ data: PackageWithDetails | null; error: Error | null }> {
     try {
+      const dbPayload = this.mapUiPackageToDbPackage(updates, true);
       const { data, error } = await supabase
         .from('packages')
-        .update({
-          ...updates,
-          updated_at: new Date().toISOString(),
-        })
+        .update(dbPayload)
         .eq('id', packageId)
-        .select()
+        .select('*, warehouses:warehouse_id(name, city, code)')
         .single();
 
       if (error) {
         return { data: null, error };
       }
 
-      return { data, error: null };
+      return { data: this.mapDbPackageToUiPackage(data as DbPackage), error: null };
     } catch (err) {
       console.error('Update package error:', err);
       return { data: null, error: err as Error };
@@ -297,6 +317,67 @@ class PackageService {
         error: err as Error,
       };
     }
+  }
+
+  // --- Data Transformation --- 
+
+  private mapUiPackageToDbPackage(uiPackage: Partial<Package>, isUpdate = false): Record<string, any> {
+    const LBS_TO_KG = 0.453592;
+    const dbPayload: Record<string, any> = {};
+
+    // Direct mappings
+    if (uiPackage.user_id) dbPayload.user_id = uiPackage.user_id;
+    if (uiPackage.tracking_number) dbPayload.tracking_number = uiPackage.tracking_number;
+    if (uiPackage.sender_name) dbPayload.sender_name = uiPackage.sender_name;
+    if (uiPackage.declared_value) dbPayload.declared_value = uiPackage.declared_value;
+    if (uiPackage.status) dbPayload.status = uiPackage.status;
+    if (uiPackage.warehouse_id) dbPayload.warehouse_id = uiPackage.warehouse_id;
+
+    // Convert weight from lbs to kg
+    if (uiPackage.weight_lbs) {
+      dbPayload.weight = uiPackage.weight_lbs * LBS_TO_KG;
+    }
+
+    // Consolidate dimensions into JSONB object
+    if (uiPackage.length_in || uiPackage.width_in || uiPackage.height_in) {
+      dbPayload.dimensions = {
+        length: uiPackage.length_in,
+        width: uiPackage.width_in,
+        height: uiPackage.height_in,
+      };
+    }
+
+    if (isUpdate) {
+      dbPayload.updated_at = new Date().toISOString();
+    }
+
+    return dbPayload;
+  }
+
+  private mapDbPackageToUiPackage(dbPackage: DbPackage): PackageWithDetails {
+    const KG_TO_LBS = 2.20462;
+    const uiPackage: Package = {
+      ...dbPackage,
+      // Convert weight from kg to lbs
+      weight_lbs: dbPackage.weight ? dbPackage.weight * KG_TO_LBS : null,
+      // Extract dimensions from JSONB field
+      length_in: dbPackage.dimensions?.length ?? null,
+      width_in: dbPackage.dimensions?.width ?? null,
+      height_in: dbPackage.dimensions?.height ?? null,
+      // Set defaults for fields missing in the new schema to avoid UI errors
+      sender_email: null,
+      sender_phone: null,
+      billable_weight_lbs: null, 
+      storage_fee_accumulated: null,
+      free_storage_until: null, // This field is missing, so isOverdue will be false
+    };
+
+    return {
+      ...uiPackage,
+      warehouse_name: dbPackage.warehouses?.name || 'Unknown',
+      days_in_storage: this.calculateDaysInStorage(uiPackage.created_at),
+      is_overdue: this.isOverdue(uiPackage.free_storage_until),
+    };
   }
 
   // Helper functions

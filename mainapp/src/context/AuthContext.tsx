@@ -34,13 +34,30 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [loading, setLoading] = useState(true);
 
   // Load user profile when user changes
-  const loadProfile = useCallback(async (userId: string) => {
+  const loadProfile = useCallback(async (user: User) => {
+    const userId = user.id;
     try {
-      const userProfile = await authService.getUserProfile(userId);
+      let userProfile = await authService.getUserProfile(userId);
+
+      // If profile doesn't exist for a logged-in user, create it on the fly.
+      // This fixes accounts that were created before the register_user RPC was added to the signup flow.
+      if (!userProfile) {
+        console.warn(`Profile not found for user ${userId}. Attempting to create it now.`);
+        const { error: creationError } = await authService.createUserProfile(user.id, user.email!, user.user_metadata);
+
+        if (creationError) {
+          console.error('Failed to auto-create user profile:', creationError);
+          setProfile(null);
+          return;
+        }
+
+        // Re-fetch the profile after creating it
+        userProfile = await authService.getUserProfile(userId);
+        console.log(`Successfully created and loaded profile for user ${userId}.`);
+      }
       
-      // If user has pending_verification status but their email is confirmed (they can sign in),
-      // automatically update their status to active
-      if (userProfile?.status === 'pending_verification' && user?.email_confirmed_at) {
+      // If user has pending_verification status but their email is confirmed, auto-activate.
+      if (userProfile?.status === 'pending_verification' && user.email_confirmed_at) {
         console.log('Auto-activating user account - email verified through sign-in');
         await authService.updateUserProfile(userId, { status: 'active' });
         // Reload profile with updated status
@@ -53,7 +70,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       console.error('Error loading profile:', error);
       setProfile(null);
     }
-  }, [user?.email_confirmed_at]);
+  }, []);
 
   // Initialize auth state
   useEffect(() => {
@@ -65,7 +82,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         if (currentSession) {
           setSession(currentSession);
           setUser(currentSession.user);
-          await loadProfile(currentSession.user.id);
+          await loadProfile(currentSession.user);
         }
       } catch (error) {
         console.error('Error initializing auth:', error);
@@ -82,7 +99,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setUser(session?.user ?? null);
       
       if (session?.user) {
-        await loadProfile(session.user.id);
+        await loadProfile(session.user);
         
         // Refresh notifications and setup real-time for the authenticated user
         const notificationService = PackageNotificationService.getInstance();
@@ -167,11 +184,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
-  const refreshProfile = async (): Promise<void> => {
+  const refreshProfile = useCallback(async (): Promise<void> => {
     if (user) {
-      await loadProfile(user.id);
+      await loadProfile(user);
     }
-  };
+  }, [user, loadProfile]);
 
   const value = {
     user,

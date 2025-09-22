@@ -4,15 +4,18 @@ import { useAuth } from '../../hooks/useAuth';
 import { motion } from "framer-motion";
 import PackageIntakeWidget from '../../components/PackageIntakeWidget';
 import { addressService, type USShippingAddress } from '../../services/addressService';
+import { authService, type AuthUser } from '../../services/authService';
 import shopImage from '../../assets/shop.jpg';
 
 
 const Dashboard: React.FC = () => {
-  const { user, profile } = useAuth();
+  const { user } = useAuth();
   const [usAddress, setUsAddress] = useState<USShippingAddress | null>(null);
+  const [userProfile, setUserProfile] = useState<AuthUser | null>(null);
+
 
   // Extract first name from profile or user email
-  const firstName = profile?.firstName || user?.email?.split('@')[0] || 'User';
+  const firstName = userProfile?.firstName || user?.email?.split('@')[0] || 'User';
 
   // Fetch user data on component mount
   useEffect(() => {
@@ -20,6 +23,12 @@ const Dashboard: React.FC = () => {
       if (!user) return;
 
       try {
+        // Fetch user's profile to get suite_number
+        const profileResult = await authService.getUserProfile(user.id);
+        if (profileResult) {
+          setUserProfile(profileResult);
+        }
+
         // Fetch user's US shipping address
         const addressResult = await addressService.getUserAddress(user.id);
         if (!addressResult.error && addressResult.data) {
@@ -109,12 +118,10 @@ const popularBrands = [
 ];
 
   const copyAddressToClipboard = () => {
-    if (!usAddress) return;
-    
-    const userName = (profile?.firstName || profile?.lastName)
-      ? `${profile?.firstName ?? ''} ${profile?.lastName ?? ''}`.trim()
-      : user?.email || 'User';
-    const addressText = `${userName} (VCG-${user?.id?.slice(-4)})\n${usAddress.street_address}\n${usAddress.suite_number}\n${usAddress.city}, ${usAddress.state} ${usAddress.postal_code}\n${usAddress.country}`;
+    if (!usAddress || !userProfile) return;
+
+    const addressText = addressService.formatAddress(usAddress, userProfile.suite_number);
+
     navigator.clipboard.writeText(addressText).then(() => {
       // You could add a toast notification here
       console.log('Address copied to clipboard');
@@ -202,14 +209,14 @@ const popularBrands = [
                 {/* Name */}
                 <div className="flex items-center justify-between p-2 rounded border border-gray-100 hover:bg-gray-50">
                   <span className="font-semibold">
-                    {(profile?.firstName || profile?.lastName
-                      ? `${profile?.firstName ?? ''} ${profile?.lastName ?? ''}`.trim()
-                      : user?.email) } (VCG-{user?.id?.slice(-4)})
+                    {(userProfile?.firstName || userProfile?.lastName
+                      ? `${userProfile?.firstName ?? ''} ${userProfile?.lastName ?? ''}`.trim()
+                      : user?.email) } ({userProfile?.suite_number})
                   </span>
                   <button
                     onClick={() => copyToClipboard(
-                      (profile?.firstName || profile?.lastName)
-                        ? `${profile?.firstName ?? ''} ${profile?.lastName ?? ''}`.trim()
+                      (userProfile?.firstName || userProfile?.lastName)
+                        ? `${userProfile?.firstName ?? ''} ${userProfile?.lastName ?? ''}`.trim()
                         : user?.email || ''
                     )}
                     className="text-red-600 hover:text-red-700 p-1"
@@ -221,9 +228,9 @@ const popularBrands = [
                 
                 {/* Address Line 1 */}
                 <div className="flex items-center justify-between p-2 rounded border border-gray-100 hover:bg-gray-50">
-                  <span>{usAddress?.street_address || '123 Warehouse Street'}</span>
+                  <span>{usAddress?.line1 || '123 Warehouse Street'}</span>
                   <button
-                    onClick={() => copyToClipboard(usAddress?.street_address || '123 Warehouse Street')}
+                    onClick={() => copyToClipboard(usAddress?.line1 || '123 Warehouse Street')}
                     className="text-red-600 hover:text-red-700 p-1"
                     title="Copy address line 1"
                   >
@@ -233,9 +240,9 @@ const popularBrands = [
                 
                 {/* Address Line 2 */}
                 <div className="flex items-center justify-between p-2 rounded border border-gray-100 hover:bg-gray-50">
-                  <span>{usAddress?.suite_number || 'Suite #VCG001'}</span>
+                  <span>{userProfile?.suite_number || 'Suite #VCG001'}</span>
                   <button
-                    onClick={() => copyToClipboard(usAddress?.suite_number || 'Suite #VCG001')}
+                    onClick={() => copyToClipboard(userProfile?.suite_number || 'Suite #VCG001')}
                     className="text-red-600 hover:text-red-700 p-1"
                     title="Copy suite number"
                   >
@@ -245,9 +252,9 @@ const popularBrands = [
                 
                 {/* City, State, ZIP */}
                 <div className="flex items-center justify-between p-2 rounded border border-gray-100 hover:bg-gray-50">
-                  <span>{usAddress?.city || 'Atlanta'}, {usAddress?.state || 'GA'} {usAddress?.postal_code || '30309'}</span>
+                  <span>{usAddress?.city || 'Atlanta'}, {usAddress?.state_province || 'GA'} {usAddress?.postal_code || '30309'}</span>
                   <button
-                    onClick={() => copyToClipboard(`${usAddress?.city || 'Atlanta'}, ${usAddress?.state || 'GA'} ${usAddress?.postal_code || '30309'}`)}
+                    onClick={() => copyToClipboard(`${usAddress?.city || 'Atlanta'}, ${usAddress?.state_province || 'GA'} ${usAddress?.postal_code || '30309'}`)}
                     className="text-red-600 hover:text-red-700 p-1"
                     title="Copy city, state, zip"
                   >

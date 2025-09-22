@@ -229,9 +229,9 @@ const AccountSettingsContent = ({ t }: { t: (key: TranslationKey) => string }) =
     }
     
     // Address validation (required) - check both address and streetAddress fields
-    const addressValue = formData?.address?.trim() || formData?.streetAddress?.trim();
+    const addressValue = formData?.streetAddress?.trim() || formData?.streetAddress?.trim();
     if (!addressValue) {
-      errors.address = t('requiredField');
+      errors.streetAddress = t('requiredField');
     }
     
     // City validation (optional, but validate format if provided)
@@ -245,11 +245,11 @@ const AccountSettingsContent = ({ t }: { t: (key: TranslationKey) => string }) =
     }
     
     // Zip Code validation (required) - check both zip and postalCode fields
-    const zipValue = formData?.zip?.trim() || formData?.postalCode?.trim();
+    const zipValue = formData?.postalCode?.trim();
     if (!zipValue) {
-      errors.zip = t('requiredField');
+      errors.postalCode = t('requiredField');
     } else if (!/^[0-9A-Za-z\s-]{3,10}$/.test(zipValue)) {
-      errors.zip = t('invalidZip');
+      errors.postalCode = t('invalidZip');
     }
     
     return errors;
@@ -284,10 +284,10 @@ const AccountSettingsContent = ({ t }: { t: (key: TranslationKey) => string }) =
         lastName: formData.lastName,
         email: formData.email,
         phone: formData.phone,
-        address: formData.address,
+        streetAddress: formData.streetAddress,
         city: formData.city,
         country: formData.country,
-        zip: formData.zip,
+        postalCode: formData.postalCode,
         profileImage: formData.profileImage,
       };
       
@@ -387,10 +387,10 @@ const AccountSettingsContent = ({ t }: { t: (key: TranslationKey) => string }) =
                         lastName: lastName.join(' '),
                         email: prev.email,
                         phone: prev.phone,
-                        address: prev.address,
+                        streetAddress: prev.streetAddress,
                         city: prev.city,
                         country: prev.country,
-                        zip: prev.zip,
+                        postalCode: prev.postalCode,
                         id: prev.id,
                         isEmailVerified: prev.isEmailVerified,
                         accountStatus: prev.accountStatus,
@@ -503,17 +503,17 @@ const AccountSettingsContent = ({ t }: { t: (key: TranslationKey) => string }) =
               type="text"
               name="address"
               id="address"
-              value={formData?.address ?? ''}
+              value={formData?.streetAddress ?? ''}
               onChange={handleInputChange}
               className={`w-full px-4 py-3 border rounded-xl focus:outline-none transition-all ${
-                formErrors.address ? 'border-red-500' : 'border-gray-300 focus:ring-2 focus:ring-red-500 focus:border-transparent'
+                formErrors.streetAddress ? 'border-red-500' : 'border-gray-300 focus:ring-2 focus:ring-red-500 focus:border-transparent'
               }`}
               placeholder={t('address')}
               required
               aria-required="true"
               aria-describedby="address-error"
             />
-            {formErrors.address && <p id="address-error" className="mt-1 text-sm text-red-600">{formErrors.address}</p>}
+            {formErrors.streetAddress && <p id="address-error" className="mt-1 text-sm text-red-600">{formErrors.streetAddress}</p>}
           </div>
           <div>
             <label htmlFor="zip" className="block text-sm font-semibold text-gray-700 mb-2">
@@ -523,17 +523,17 @@ const AccountSettingsContent = ({ t }: { t: (key: TranslationKey) => string }) =
               type="text"
               name="zip"
               id="zip"
-              value={formData?.zip ?? ''}
+              value={formData?.postalCode ?? ''}
               onChange={handleInputChange}
               className={`w-full px-4 py-3 border rounded-xl focus:outline-none transition-all ${
-                formErrors.zip ? 'border-red-500' : 'border-gray-300 focus:ring-2 focus:ring-red-500 focus:border-transparent'
+                formErrors.postalCode ? 'border-red-500' : 'border-gray-300 focus:ring-2 focus:ring-red-500 focus:border-transparent'
               }`}
               placeholder={t('zipCode')}
               required
               aria-required="true"
               aria-describedby="zip-error"
             />
-            {formErrors.zip && <p id="zip-error" className="mt-1 text-sm text-red-600">{formErrors.zip}</p>}
+            {formErrors.postalCode && <p id="zip-error" className="mt-1 text-sm text-red-600">{formErrors.postalCode}</p>}
           </div>
         </div>
       </div>

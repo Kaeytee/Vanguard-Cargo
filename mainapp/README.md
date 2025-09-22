@@ -741,6 +741,25 @@ export default tseslint.config({
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
+## Recent Changes
+
+### `AuthUser` Interface Update
+
+The `AuthUser` interface in `src/services/authService.ts` has been updated to include optional address-related properties:
+
+```typescript
+export interface AuthUser {
+  // ... existing properties
+  usShippingAddressId?: string | number;
+  streetAddress?: string;
+  city?: string;
+  country?: string;
+  postalCode?: string;
+}
+```
+
+This change was made to support the inclusion of shipping address information in the user profile and to resolve a TypeScript error that occurred when fetching user data.
+
 ---
 
 **Note**: This README provides the complete frontend implementation guide for the Vanguard Cargo client application. For detailed backend integration information, refer to the [clientapp.md](./clientapp.md) documentation.

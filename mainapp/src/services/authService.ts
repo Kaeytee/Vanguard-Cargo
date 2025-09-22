@@ -6,23 +6,26 @@ export interface AuthUser {
   email: string;
   firstName: string;
   lastName: string;
-  role: 'customer' | 'admin' | 'warehouse_staff';
+  role: 'client' | 'warehouse' | 'superadmin';
   phone?: string;
+  suite_number?: string;
   status: 'pending_verification' | 'active' | 'suspended';
-  usShippingAddressId?: string;
-  streetAddress?: string;
-  address?: string; // Alias for streetAddress
-  city?: string;
-  country?: string;
-  postalCode?: string;
-  zip?: string; // Alias for postalCode
   avatarUrl?: string;
   profileImage?: string; // Alias for avatarUrl
   isEmailVerified?: boolean;
-  accountStatus?: string; // Additional status field
+  accountStatus?: string;
+  usShippingAddressId?: string | number;
+  streetAddress?: string;
+  city?: string;
+  country?: string;
+  postalCode?: string;
 }
 
 export interface SignUpData {
+  streetAddress: any;
+  city: any;
+  country: any;
+  postalCode: any;
   email: string;
   password: string;
   firstName: string;
@@ -36,7 +39,6 @@ export interface SignInData {
 }
 
 class AuthService {
-  // Sign up new user
   async signUp(data: SignUpData): Promise<{ user: User | null; error: AuthError | null }> {
     try {
       // Send first_name and last_name as user_metadata to Supabase
@@ -51,12 +53,36 @@ class AuthService {
           },
         },
       });
-
+  
       if (error) {
         return { user: null, error };
       }
-
-      // No need to manually insert into user_profiles if using trigger
+  
+      // Now, upsert the user profile with all the information
+      if (authData.user) {
+        const { error: profileError } = await supabase
+          .from('users')
+          .upsert({
+            id: authData.user.id,
+            email: data.email,
+            first_name: data.firstName,
+            last_name: data.lastName,
+            phone_number: data.phone,
+            street_address: data.streetAddress,
+            city: data.city,
+            country: data.country,
+            postal_code: data.postalCode,
+            status: 'pending_verification',
+            email_verified: false,
+          }, {
+            onConflict: 'id'
+          });
+  
+        if (profileError) {
+          console.error('Error upserting user profile:', profileError);
+        }
+      }
+  
       return { user: authData.user, error: null };
     } catch (err) {
       console.error('Sign up error:', err);
@@ -64,7 +90,29 @@ class AuthService {
     }
   }
 
-  // Sign in user
+  async createUserProfile(userId: string, email: string, metadata: any): Promise<{ error: string | null }> {
+    try {
+      const { error } = await supabase
+        .from('users')
+        .upsert({
+          id: userId,
+          email: email,
+          first_name: metadata.first_name || 'User',
+          last_name: metadata.last_name || 'Name',
+          phone_number: metadata.phone_number,
+          status: 'active',
+          email_verified: true
+        }, {
+          onConflict: 'id'
+        });
+
+      return { error: error ? error.message : null };
+    } catch (error) {
+      console.error('Error creating user profile:', error);
+      return { error: 'Failed to create user profile' };
+    }
+  }
+
   async signIn(data: SignInData): Promise<{ user: User | null; error: AuthError | null }> {
     try {
       const { data: authData, error } = await supabase.auth.signInWithPassword({
@@ -73,13 +121,10 @@ class AuthService {
       });
 
       if (error) {
-        console.error('Supabase auth error:', error);
         return { user: null, error };
       }
 
-      // Check if email is verified before allowing login
       if (authData.user && !authData.user.email_confirmed_at) {
-        // Email not verified - sign out the user and return error
         await supabase.auth.signOut();
         return { 
           user: null, 
@@ -91,13 +136,12 @@ class AuthService {
         };
       }
 
-      // Update last activity and mark as active only for verified users
       if (authData.user && authData.user.email_confirmed_at) {
         await supabase
-          .from('user_profiles')
+          .from('users')
           .update({ 
             last_activity_at: new Date().toISOString(),
-            status: 'active' // Mark as active since email is verified
+            status: 'active'
           })
           .eq('id', authData.user.id);
       }
@@ -109,7 +153,6 @@ class AuthService {
     }
   }
 
-  // Sign out user
   async signOut(): Promise<{ error: AuthError | null }> {
     try {
       const { error } = await supabase.auth.signOut();
@@ -120,11 +163,8 @@ class AuthService {
     }
   }
 
-  // Resend email verification
   async resendEmailVerification(email: string): Promise<{ error: AuthError | null; message?: string }> {
     try {
-      console.log('Attempting to resend verification email to:', email);
-      
       const { error } = await supabase.auth.resend({
         type: 'signup',
         email: email,
@@ -134,30 +174,11 @@ class AuthService {
       });
 
       if (error) {
-        console.error('Supabase resend error:', error);
-        
-        // Handle specific error cases
         if (error.message.includes('already confirmed')) {
-          return { 
-            error, 
-            message: 'Your email is already verified! You can proceed to login.' 
-          };
-        } else if (error.message.includes('rate limit')) {
-          return { 
-            error, 
-            message: 'Please wait a few minutes before requesting another verification email.' 
-          };
-        } else if (error.message.includes('not found')) {
-          return { 
-            error, 
-            message: 'User not found. Please check your email or register again.' 
-          };
+          return { error, message: 'Your email is already verified! You can proceed to login.' };
         }
-        
-        return { error: error as AuthError, message: error.message };
+        return { error, message: error.message };
       }
-
-      console.log('Verification email resent successfully');
       return { error: null, message: 'Verification email sent successfully!' };
     } catch (err) {
       console.error('Resend verification error:', err);
@@ -165,7 +186,6 @@ class AuthService {
     }
   }
 
-  // Get current session
   async getSession(): Promise<Session | null> {
     try {
       const { data } = await supabase.auth.getSession();
@@ -176,7 +196,6 @@ class AuthService {
     }
   }
 
-  // Get current user
   async getCurrentUser(): Promise<User | null> {
     try {
       const { data } = await supabase.auth.getUser();
@@ -187,17 +206,16 @@ class AuthService {
     }
   }
 
-  // Get user profile with additional data
   async getUserProfile(userId: string): Promise<AuthUser | null> {
     try {
       const { data, error } = await supabase
-        .from('user_profiles')
+        .from('users')  // Changed from 'user_profiles' to 'users'
         .select(`
           id,
           email,
           first_name,
           last_name,
-          phone,
+          phone_number,
           role,
           status,
           us_shipping_address_id,
@@ -209,19 +227,19 @@ class AuthService {
         `)
         .eq('id', userId)
         .single();
-
+  
       if (error || !data) {
         console.error('Get user profile error:', error);
         return null;
       }
-
+  
       return {
         id: data.id,
         email: data.email,
         firstName: data.first_name,
         lastName: data.last_name,
         role: data.role,
-        phone: data.phone,
+        phone: data.phone_number,  // Note: now using phone_number
         status: data.status,
         usShippingAddressId: data.us_shipping_address_id,
         streetAddress: data.street_address,
@@ -236,12 +254,18 @@ class AuthService {
     }
   }
 
-  // Update user profile
   async updateUserProfile(userId: string, updates: Partial<AuthUser>): Promise<{ error: AuthError | null }> {
     try {
+      const dbUpdates: Record<string, any> = {};
+      if (updates.firstName) dbUpdates.first_name = updates.firstName;
+      if (updates.lastName) dbUpdates.last_name = updates.lastName;
+      if (updates.phone) dbUpdates.phone_number = updates.phone;
+      if (updates.avatarUrl) dbUpdates.avatar_url = updates.avatarUrl;
+      if (updates.status) dbUpdates.status = updates.status;
+
       const { error } = await supabase
-        .from('user_profiles')
-        .update(updates)
+        .from('users')
+        .update(dbUpdates)
         .eq('id', userId);
       
       if (error) {
@@ -256,34 +280,11 @@ class AuthService {
     }
   }
 
-  // Reset password (forgot password flow)
   async resetPassword(email: string): Promise<{ error: AuthError | null }> {
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/forgot-password?step=3`,
       });
-      
-      // Log password reset request (we don't have user_id for forgot password)
-      try {
-        // First try to find the user by email to log the event
-        const { data: userData } = await supabase
-          .from('user_profiles')
-          .select('id')
-          .eq('email', email)
-          .single();
-          
-        if (userData) {
-          await supabase.rpc('log_security_event', {
-            p_user_id: userData.id,
-            p_event_type: 'password_reset_request',
-            p_event_details: { method: 'email', email },
-            p_success: !error
-          });
-        }
-      } catch (logError) {
-        console.warn('Failed to log password reset event:', logError);
-      }
-      
       return { error };
     } catch (err) {
       console.error('Reset password error:', err);
@@ -291,12 +292,9 @@ class AuthService {
     }
   }
 
-  // Update password (for password reset flow)
   async updatePassword(password: string): Promise<{ error: AuthError | null }> {
     try {
-      const { error } = await supabase.auth.updateUser({
-        password: password,
-      });
+      const { error } = await supabase.auth.updateUser({ password });
       return { error };
     } catch (err) {
       console.error('Update password error:', err);
@@ -304,132 +302,38 @@ class AuthService {
     }
   }
 
-  // Change password (for security settings - uses Supabase's reauthenticate approach)
-  async changePassword(data: {
-    currentPassword: string;
-    newPassword: string;
-    confirmPassword: string;
-  }): Promise<{ error: string | null; success: boolean }> {
+  async changePassword(data: { currentPassword: string; newPassword: string; confirmPassword: string; }): Promise<{ error: string | null; success: boolean }> {
     try {
-      // Validate passwords match
       if (data.newPassword !== data.confirmPassword) {
         return { error: 'New passwords do not match', success: false };
       }
-
-      // Validate password strength
-      if (data.newPassword.length < 8) {
-        return { error: 'Password must be at least 8 characters long', success: false };
+      const { error } = await supabase.auth.updateUser({ password: data.newPassword });
+      if (error) {
+        return { error: error.message, success: false };
       }
-
-      // Additional password strength checks
-      const hasUpperCase = /[A-Z]/.test(data.newPassword);
-      const hasLowerCase = /[a-z]/.test(data.newPassword);
-      const hasNumbers = /\d/.test(data.newPassword);
-
-      if (!hasUpperCase || !hasLowerCase || !hasNumbers) {
-        return { 
-          error: 'Password must contain at least one uppercase letter, one lowercase letter, and one number', 
-          success: false 
-        };
-      }
-
-      // Get current user
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      if (userError || !user || !user.email) {
-        return { error: 'User not authenticated', success: false };
-      }
-
-      // For Supabase password changes, we'll use a more direct approach
-      // Note: In production, you might want to add additional verification steps
-      
-      // Update to new password using Supabase Auth
-      const { error: updateError } = await supabase.auth.updateUser({
-        password: data.newPassword,
-      });
-
-      if (updateError) {
-        console.error('Change password error:', updateError);
-        
-        // Log failed password change attempt
-        try {
-          await supabase.rpc('log_security_event', {
-            p_user_id: user.id,
-            p_event_type: 'password_change',
-            p_event_details: { error: updateError.message },
-            p_success: false
-          });
-        } catch (logError) {
-          console.warn('Failed to log security event:', logError);
-        }
-        
-        // Handle specific error cases
-        if (updateError.message.includes('same')) {
-          return { error: 'New password must be different from current password', success: false };
-        }
-        
-        return { error: updateError.message, success: false };
-      }
-
-      // Log successful password change
-      try {
-        await supabase.rpc('log_security_event', {
-          p_user_id: user.id,
-          p_event_type: 'password_change',
-          p_event_details: { method: 'security_settings' },
-          p_success: true
-        });
-      } catch (logError) {
-        console.warn('Failed to log security event:', logError);
-      }
-
       return { error: null, success: true };
-
     } catch (err) {
       console.error('Change password error:', err);
-      return { error: 'Failed to change password. Please try again.', success: false };
+      return { error: 'Failed to change password.', success: false };
     }
   }
 
-  // Update user profile
-  async updateProfile(userId: string, updates: {
-    firstName?: string;
-    lastName?: string;
-    phone?: string;
-    email?: string;
-    address?: string;
-    city?: string;
-    country?: string;
-    zip?: string;
-    profileImage?: string;
-  }): Promise<{ error: Error | null; success?: boolean }> {
+  async updateProfile(userId: string, updates: { firstName?: string; lastName?: string; phone?: string; email?: string; profileImage?: string; }): Promise<{ error: Error | null; success?: boolean }> {
     try {
-      // Prepare update data for user_profiles table
-      const profileUpdates: Record<string, string | null> = {
-        updated_at: new Date().toISOString(),
-      };
-
+      const profileUpdates: Record<string, string | null> = {};
       if (updates.firstName !== undefined) profileUpdates.first_name = updates.firstName;
       if (updates.lastName !== undefined) profileUpdates.last_name = updates.lastName;
-      if (updates.phone !== undefined) profileUpdates.phone = updates.phone;
-      if (updates.address !== undefined) profileUpdates.street_address = updates.address;
-      if (updates.city !== undefined) profileUpdates.city = updates.city;
-      if (updates.country !== undefined) profileUpdates.country = updates.country;
-      if (updates.zip !== undefined) profileUpdates.postal_code = updates.zip;
+      if (updates.phone !== undefined) profileUpdates.phone_number = updates.phone;
       if (updates.profileImage !== undefined) profileUpdates.avatar_url = updates.profileImage;
 
       const { error } = await supabase
-        .from('user_profiles')
+        .from('users')
         .update(profileUpdates)
         .eq('id', userId);
 
-      // If email is being updated, also update auth user
       if (updates.email && !error) {
-        const { error: emailError } = await supabase.auth.updateUser({
-          email: updates.email,
-        });
-        
+        const { error: emailError } = await supabase.auth.updateUser({ email: updates.email });
         if (emailError) {
-          console.error('Email update error:', emailError);
           return { error: emailError, success: false };
         }
       }
@@ -441,29 +345,18 @@ class AuthService {
     }
   }
 
-  // Resend email verification
   async resendVerificationEmail(email: string): Promise<{ error: string | null }> {
     try {
-      const { error } = await supabase.auth.resend({
-        type: 'signup',
-        email: email,
-      });
-
-      if (error) {
-        return { error: error.message };
-      }
-
-      return { error: null };
+      const { error } = await supabase.auth.resend({ type: 'signup', email });
+      return { error: error ? error.message : null };
     } catch (err) {
       console.error('Resend verification error:', err);
       return { error: err instanceof Error ? err.message : 'Failed to resend verification email' };
     }
   }
 
-  // Listen to auth state changes
   onAuthStateChange(callback: (session: Session | null) => void) {
-    return supabase.auth.onAuthStateChange((event, session) => {
-      console.log('Auth state changed:', event, session?.user?.email);
+    return supabase.auth.onAuthStateChange((_event, session) => {
       callback(session);
     });
   }
