@@ -15,7 +15,7 @@
           "value": "http"
         }
       ],
-      "destination": "https://vanguardcargo.org/$1",
+      "destination": "https://vanguardcargo.co/$1",
       "permanent": true
     }
   ],

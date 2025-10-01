@@ -45,7 +45,7 @@ export const MOCK_SHIPMENTS: MockShipmentData[] = [
     warehouseDetails: {
       name: "Vanguard Cargo Ghana",
       phone: "+233 30 123 4567",
-      email: "warehouse@vanguardcargo.org",
+      email: "warehouse@vanguardcargo.co",
       address: "15 Independence Avenue, Accra, Ghana"
     },
     estimatedDelivery: "2025-02-25",
@@ -70,7 +70,7 @@ export const MOCK_SHIPMENTS: MockShipmentData[] = [
     warehouseDetails: {
       name: "Vanguard Cargo Kumasi",
       phone: "+233 32 456 7890",
-      email: "kumasi@vanguardcargo.org",
+      email: "kumasi@vanguardcargo.co",
       address: "25 Kejetia Market Road, Kumasi, Ghana"
     },
     estimatedDelivery: "2025-02-24",
@@ -95,7 +95,7 @@ export const MOCK_SHIPMENTS: MockShipmentData[] = [
     warehouseDetails: {
       name: "Vanguard Cargo Tema Port",
       phone: "+233 30 987 6543",
-      email: "tema@vanguardcargo.org",
+      email: "tema@vanguardcargo.co",
       address: "Port of Tema, Community 1, Tema, Ghana"
     },
     estimatedDelivery: "2025-02-17",
@@ -120,7 +120,7 @@ export const MOCK_SHIPMENTS: MockShipmentData[] = [
     warehouseDetails: {
       name: "Vanguard Cargo Ghana",
       phone: "+233 30 123 4567",
-      email: "warehouse@vanguardcargo.org",
+      email: "warehouse@vanguardcargo.co",
       address: "15 Independence Avenue, Accra, Ghana"
     },
     estimatedDelivery: "2025-02-04",
@@ -145,7 +145,7 @@ export const MOCK_SHIPMENTS: MockShipmentData[] = [
     warehouseDetails: {
       name: "Vanguard Cargo Ghana",
       phone: "+233 30 123 4567",
-      email: "warehouse@vanguardcargo.org",
+      email: "warehouse@vanguardcargo.co",
       address: "15 Independence Avenue, Accra, Ghana"
     },
     estimatedDelivery: "2025-01-25",
@@ -170,7 +170,7 @@ export const MOCK_SHIPMENTS: MockShipmentData[] = [
     warehouseDetails: {
       name: "Vanguard Cargo Tamale",
       phone: "+233 37 234 5678",
-      email: "tamale@vanguardcargo.org",
+      email: "tamale@vanguardcargo.co",
       address: "Central Market Area, Tamale, Ghana"
     },
     estimatedDelivery: "2025-01-04",
@@ -195,7 +195,7 @@ export const MOCK_SHIPMENTS: MockShipmentData[] = [
     warehouseDetails: {
       name: "Vanguard Cargo Cape Coast",
       phone: "+233 33 345 6789",
-      email: "capecoast@vanguardcargo.org",
+      email: "capecoast@vanguardcargo.co",
       address: "Victoria Park, Cape Coast, Ghana"
     },
     estimatedDelivery: "2024-11-14",

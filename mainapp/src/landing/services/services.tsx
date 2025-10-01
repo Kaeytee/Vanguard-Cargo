@@ -117,7 +117,7 @@ export default function Services() {
 				title="Package Forwarding Services - Ship from USA to Ghana | Vanguard Cargo"
 				description="Comprehensive package forwarding services from USA to Ghana. Free US address, package consolidation, customs handling, and reliable delivery. Get up to 80% savings on international shipping."
 				keywords="package forwarding services, USA to Ghana shipping, package consolidation, customs clearance, international shipping services, cargo forwarding, freight services, US address service"
-				url="https://www.vanguardcargo.org/services"
+				url="https://www.vanguardcargo.co/services"
 			/>
 			
 			{/* Enhanced Services Hero Section */}

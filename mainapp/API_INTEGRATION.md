@@ -148,7 +148,7 @@ Your API should return shipment data in this format:
   "warehouseDetails": {
     "name": "Vanguard Cargo Ghana",
     "phone": "+233 30 123 4567",
-    "email": "warehouse@vanguardcargo.org",
+    "email": "warehouse@vanguardcargo.co",
     "address": "15 Independence Avenue, Accra, Ghana"
   },
   "estimatedDelivery": "2025-02-25",

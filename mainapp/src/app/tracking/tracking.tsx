@@ -1096,7 +1096,7 @@ const TrackingPage: React.FC = () => {
           warehouse: {
             name: 'Vanguard Cargo Miami',
             phone: '+1 (305) 123-4567',
-            email: 'support@vanguardcargo.org',
+            email: 'support@vanguardcargo.co',
             address: '123 Warehouse St, Miami, FL 33101'
           },
           created: shipment.created_at,

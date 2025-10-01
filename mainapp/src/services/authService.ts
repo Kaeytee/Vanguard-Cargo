@@ -41,7 +41,9 @@ export interface SignInData {
 class AuthService {
   async signUp(data: SignUpData): Promise<{ user: User | null; error: AuthError | null }> {
     try {
-      // Send first_name and last_name as user_metadata to Supabase
+      console.log('Starting user registration for:', data.email);
+      
+      // Step 1: Create auth user with metadata
       const { data: authData, error } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
@@ -49,43 +51,79 @@ class AuthService {
           data: {
             first_name: data.firstName,
             last_name: data.lastName,
-            phone: data.phone,
-          },
-        },
-      });
-  
-      if (error) {
-        return { user: null, error };
-      }
-  
-      // Now, upsert the user profile with all the information
-      if (authData.user) {
-        const { error: profileError } = await supabase
-          .from('users')
-          .upsert({
-            id: authData.user.id,
-            email: data.email,
-            first_name: data.firstName,
-            last_name: data.lastName,
             phone_number: data.phone,
             street_address: data.streetAddress,
             city: data.city,
             country: data.country,
             postal_code: data.postalCode,
-            status: 'pending_verification',
-            email_verified: false,
-          }, {
-            onConflict: 'id'
-          });
+          },
+        },
+      });
   
-        if (profileError) {
-          console.error('Error upserting user profile:', profileError);
-        }
+      if (error || !authData.user) {
+        console.error('Auth signup failed:', error);
+        return { user: null, error };
       }
-  
-      return { user: authData.user, error: null };
+
+      console.log('Auth user created successfully:', authData.user.id);
+      
+      // Step 2: Create user profile using secure RPC function
+      try {
+        console.log('Creating user profile via secure RPC function...');
+        
+        const { data: profileResult, error: rpcError } = await supabase.rpc('create_user_profile_secure', {
+          user_id: authData.user.id,
+          email: authData.user.email,
+          first_name: data.firstName || 'User',
+          last_name: data.lastName || 'Name',
+          phone_number: data.phone || null,
+          street_address: data.streetAddress || null,
+          city: data.city || null,
+          country: data.country || null,
+          postal_code: data.postalCode || null
+        });
+
+        if (rpcError) {
+          console.error('RPC function error:', rpcError);
+          return { 
+            user: null, 
+            error: { 
+              message: `Registration failed: ${rpcError.message}`,
+              name: 'ProfileCreationError'
+            } as AuthError 
+          };
+        }
+
+        if (!profileResult?.success) {
+          console.error('Profile creation failed:', profileResult?.error);
+          return { 
+            user: null, 
+            error: { 
+              message: `Registration failed: ${profileResult?.error || 'Unknown error'}`,
+              name: 'ProfileCreationError'
+            } as AuthError 
+          };
+        }
+
+        console.log('User profile created successfully:', profileResult);
+        console.log('Suite number assigned:', profileResult.user?.suite_number);
+        console.log('Registration completed successfully for:', data.email);
+        
+        return { user: authData.user, error: null };
+        
+      } catch (profileCreationError) {
+        console.error('Profile creation process failed:', profileCreationError);
+        return { 
+          user: null, 
+          error: { 
+            message: 'Registration failed during profile creation',
+            name: 'ProfileCreationError'
+          } as AuthError 
+        };
+      }
+      
     } catch (err) {
-      console.error('Sign up error:', err);
+      console.error('Registration process failed:', err);
       return { user: null, error: err as AuthError };
     }
   }
@@ -377,6 +415,7 @@ class AuthService {
       callback(session);
     });
   }
+
 }
 
 export const authService = new AuthService();

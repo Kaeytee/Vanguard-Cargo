@@ -280,6 +280,10 @@ export default function Register() {
         firstName: formData.firstName,
         lastName: formData.lastName,
         phone: formData.phoneNumber,
+        streetAddress: formData.address,
+        city: formData.city,
+        country: formData.country,
+        postalCode: formData.zip,
       });
 
       if (!result.error) {

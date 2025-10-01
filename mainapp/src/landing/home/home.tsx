@@ -13,7 +13,7 @@ export default function Home() {
 				title="Vanguard Cargo - Premium Package Forwarding from USA to Ghana"
 				description="Ship from any US store to Ghana with Vanguard Cargo. Get your free US address, consolidate packages, and save up to 80% on international shipping. Trusted by thousands of Ghanaians worldwide."
 				keywords="package forwarding Ghana, USA to Ghana shipping, international shipping, US address Ghana, cargo forwarding, online shopping USA, package consolidation, shipping service Ghana, freight forwarding"
-				url="https://www.vanguardcargo.org/"
+				url="https://www.vanguardcargo.co/"
 			/>
 
 			{/* Hero Section */}

@@ -157,10 +157,10 @@ WebSocket Server → PackageNotificationService → usePackageNotifications Hook
 ### Environment Configuration
 ```bash
 # Real-time notifications
-REACT_APP_WEBSOCKET_URL=wss://api.vanguardcargo.org/ws/notifications
+REACT_APP_WEBSOCKET_URL=wss://api.vanguardcargo.co/ws/notifications
 
 # Package photos storage
-REACT_APP_PACKAGE_PHOTOS_URL=https://cdn.vanguardcargo.org/packages
+REACT_APP_PACKAGE_PHOTOS_URL=https://cdn.vanguardcargo.co/packages
 
 # Notification services
 REACT_APP_EMAIL_SERVICE_KEY=your_email_service_key

@@ -8,7 +8,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const BASE_URL = 'https://www.vanguardcargo.org';
+const BASE_URL = 'https://www.vanguardcargo.co';
 
 // Static pages with their priorities and change frequencies
 const STATIC_PAGES = [
@@ -183,12 +183,12 @@ Crawl-delay: 1`;
 
 // Generate security.txt for responsible disclosure
 function generateSecurityTxt() {
-  return `Contact: mailto:security@vanguardcargo.org
+  return `Contact: mailto:security@vanguardcargo.co
 Expires: 2025-12-31T23:59:59.000Z
-Encryption: https://www.vanguardcargo.org/pgp-key.txt
-Acknowledgments: https://www.vanguardcargo.org/security-thanks
-Policy: https://www.vanguardcargo.org/security-policy
-Hiring: https://www.vanguardcargo.org/careers`;
+Encryption: https://www.vanguardcargo.co/pgp-key.txt
+Acknowledgments: https://www.vanguardcargo.co/security-thanks
+Policy: https://www.vanguardcargo.co/security-policy
+Hiring: https://www.vanguardcargo.co/careers`;
 }
 
 // Write files
