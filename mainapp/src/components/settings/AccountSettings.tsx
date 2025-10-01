@@ -47,6 +47,8 @@ const AccountSettingsContent = ({ t }: { t: (key: TranslationKey) => string }) =
   const [uploadingImage, setUploadingImage] = useState(false);
   const [formErrors, setFormErrors] = useState<Partial<Record<keyof AuthUser, string>> & { general?: string; fullName?: string }>({});
   const [formData, setFormData] = useState<AuthUser | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const { user, profile, refreshProfile } = useAuth();
 
@@ -80,6 +82,15 @@ const AccountSettingsContent = ({ t }: { t: (key: TranslationKey) => string }) =
     }
   }, [profile]);
 
+  useEffect(() => {
+    // Cleanup the preview URL when the component unmounts or the file changes
+    return () => {
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [previewUrl]);
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => (prev ? { ...prev, [name]: value } : prev));
@@ -110,12 +121,15 @@ const AccountSettingsContent = ({ t }: { t: (key: TranslationKey) => string }) =
 
   // Helper function to get profile image URL
   const getProfileImageUrl = () => {
+    if (previewUrl) {
+      return previewUrl;
+    }
     const imageUrl = formData?.profileImage || formData?.avatarUrl;
-    
+
     if (imageUrl) {
       return imageUrl;
     }
-    
+
     // Fallback to generated avatar
     const fullName = (formData?.firstName ?? '') + ' ' + (formData?.lastName ?? '');
     return `https://ui-avatars.com/api/?name=${encodeURIComponent(fullName)}&size=80&background=e5e7eb&color=374151`;
@@ -152,58 +166,26 @@ const AccountSettingsContent = ({ t }: { t: (key: TranslationKey) => string }) =
     }
   };
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file || !user?.id) return;
-
-    try {
-      setUploadingImage(true);
-      setFormErrors({});
-
-      // Compress image if it's too large
-      let processedFile = file;
-      if (file.size > 1024 * 1024) { // If larger than 1MB
-        processedFile = await fileUploadService.compressImage(file, 400, 0.8);
-      }
-
-      // Upload to Supabase storage
-      const result = await fileUploadService.uploadProfilePicture(processedFile, user.id);
-      
-      if (result.success && result.url) {
-        // Update local state
-        setFormData((prev) => (prev ? { 
-          ...prev, 
-          profileImage: result.url ?? undefined,
-          avatarUrl: result.url ?? undefined 
-        } : prev));
-        
-        // Update in database
-        await authService.updateProfile(user.id, { profileImage: result.url });
-        
-        // Refresh profile and wait a bit for the update to propagate
-        await refreshProfile();
-        
-        // Small delay to ensure UI updates
-        setTimeout(() => {
-          setFormData((prev) => (prev ? { 
-            ...prev, 
-            profileImage: result.url ?? undefined,
-            avatarUrl: result.url ?? undefined 
-          } : prev));
-        }, 100);
-        
-        alert('Profile picture updated successfully!');
-      } else {
-        setFormErrors({ general: result.error || 'Failed to upload profile picture' });
-      }
-    } catch (err) {
-      setFormErrors({ general: 'Failed to upload profile picture' });
-      console.error('File upload error:', err);
-    } finally {
-      setUploadingImage(false);
-      // Clear file input
-      if (e.target) e.target.value = '';
+    if (e.target) {
+      e.target.value = ''; // Clear the input to allow re-selecting the same file
     }
+
+    if (!file) {
+      setSelectedFile(null);
+      setPreviewUrl(null);
+      return;
+    }
+
+    setSelectedFile(file);
+
+    // Create a preview URL and revoke the old one if it exists
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+    }
+    const objectUrl = URL.createObjectURL(file);
+    setPreviewUrl(objectUrl);
   };
 
   const validateForm = async (): Promise<Partial<Record<keyof AuthUser, string>> & { fullName?: string }> => {
@@ -228,11 +210,7 @@ const AccountSettingsContent = ({ t }: { t: (key: TranslationKey) => string }) =
       errors.phone = t('invalidPhone');
     }
     
-    // Address validation (required) - check both address and streetAddress fields
-    const addressValue = formData?.streetAddress?.trim() || formData?.streetAddress?.trim();
-    if (!addressValue) {
-      errors.streetAddress = t('requiredField');
-    }
+    // Address validation (optional) - no validation needed
     
     // City validation (optional, but validate format if provided)
     if (formData?.city?.trim() && !/^[a-zA-Z\s-]{2,}$/.test(formData.city)) {
@@ -244,11 +222,9 @@ const AccountSettingsContent = ({ t }: { t: (key: TranslationKey) => string }) =
       errors.country = t('invalidCountry');
     }
     
-    // Zip Code validation (required) - check both zip and postalCode fields
+    // Zip Code validation (optional) - only validate format if provided
     const zipValue = formData?.postalCode?.trim();
-    if (!zipValue) {
-      errors.postalCode = t('requiredField');
-    } else if (!/^[0-9A-Za-z\s-]{3,10}$/.test(zipValue)) {
+    if (zipValue && !/^[0-9A-Za-z\s-]{3,10}$/.test(zipValue)) {
       errors.postalCode = t('invalidZip');
     }
     
@@ -279,6 +255,32 @@ const AccountSettingsContent = ({ t }: { t: (key: TranslationKey) => string }) =
         return;
       }
 
+      let profileImageUrl = formData.profileImage;
+
+      // If a new file is selected, upload it first
+      if (selectedFile) {
+        setUploadingImage(true);
+
+        // Process the file: correct MIME type and compress if necessary
+        const processedFile = await fileUploadService.processAndCompressImage(selectedFile);
+
+        const result = await fileUploadService.uploadProfilePicture(processedFile, user.id);
+        setUploadingImage(false);
+
+        if (result.success && result.url) {
+          profileImageUrl = result.url;
+          setSelectedFile(null); // Clear the selected file after successful upload
+          if (previewUrl) {
+            URL.revokeObjectURL(previewUrl);
+            setPreviewUrl(null);
+          }
+        } else {
+          setFormErrors({ general: result.error || 'Failed to upload profile picture' });
+          setSaving(false);
+          return;
+        }
+      }
+
       const updateData = {
         firstName: formData.firstName,
         lastName: formData.lastName,
@@ -288,9 +290,9 @@ const AccountSettingsContent = ({ t }: { t: (key: TranslationKey) => string }) =
         city: formData.city,
         country: formData.country,
         postalCode: formData.postalCode,
-        profileImage: formData.profileImage,
+        profileImage: profileImageUrl, // Use the potentially new URL
       };
-      
+
       const response = await authService.updateProfile(user.id, updateData);
       
       if (response.success && !response.error) {
@@ -497,7 +499,7 @@ const AccountSettingsContent = ({ t }: { t: (key: TranslationKey) => string }) =
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label htmlFor="address" className="block text-sm font-semibold text-gray-700 mb-2">
-              {t('address')} <span className="text-red-500">*</span>
+              {t('address')}
             </label>
             <input
               type="text"
@@ -509,15 +511,13 @@ const AccountSettingsContent = ({ t }: { t: (key: TranslationKey) => string }) =
                 formErrors.streetAddress ? 'border-red-500' : 'border-gray-300 focus:ring-2 focus:ring-red-500 focus:border-transparent'
               }`}
               placeholder={t('address')}
-              required
-              aria-required="true"
               aria-describedby="address-error"
             />
             {formErrors.streetAddress && <p id="address-error" className="mt-1 text-sm text-red-600">{formErrors.streetAddress}</p>}
           </div>
           <div>
             <label htmlFor="zip" className="block text-sm font-semibold text-gray-700 mb-2">
-              {t('zipCode')} <span className="text-red-500">*</span>
+              {t('zipCode')}
             </label>
             <input
               type="text"
@@ -529,8 +529,6 @@ const AccountSettingsContent = ({ t }: { t: (key: TranslationKey) => string }) =
                 formErrors.postalCode ? 'border-red-500' : 'border-gray-300 focus:ring-2 focus:ring-red-500 focus:border-transparent'
               }`}
               placeholder={t('zipCode')}
-              required
-              aria-required="true"
               aria-describedby="zip-error"
             />
             {formErrors.postalCode && <p id="zip-error" className="mt-1 text-sm text-red-600">{formErrors.postalCode}</p>}
@@ -563,7 +561,7 @@ const AccountSettingsContent = ({ t }: { t: (key: TranslationKey) => string }) =
         type="file"
         ref={cameraInputRef}
         onChange={handleFileChange}
-        accept="image/jpeg,image/jpg,image/png,image/webp"
+        accept="image/*"
         className="hidden"
         aria-label="Profile picture upload"
       />

@@ -1,4 +1,6 @@
 import { supabase, type Tables } from '../lib/supabase';
+import { SupabaseErrorHandler } from '../utils/supabaseErrorHandler';
+import { DatabaseDebugger } from '../utils/databaseDebugger';
 
 // Extend the base address type to include optional joined warehouse data
 export type AddressWithWarehouse = Tables<'addresses'> & {
@@ -9,72 +11,80 @@ export type AddressWithWarehouse = Tables<'addresses'> & {
 export type USShippingAddress = AddressWithWarehouse;
 
 class AddressService {
-  // Get user's US shipping address
+  // Get user's US shipping address with enhanced error handling
   async getUserAddress(userId: string): Promise<{ data: USShippingAddress | null; error: Error | null }> {
     try {
-      // Step 1: Fetch the address without the warehouse join
+      // Step 1: Fetch the address with proper error handling
       const { data: addressData, error: addressError } = await supabase
         .from('addresses')
         .select('*')
         .eq('user_id', userId)
         .eq('is_default', true)
         .in('type', ['shipping', 'both'])
+        .order('created_at', { ascending: false })
         .limit(1)
-        .single();
+        .maybeSingle(); // Use maybeSingle() to handle no results gracefully
 
+      // Handle address fetch error using our error handler
       if (addressError) {
-        // If no address found, it's not a critical error, just return null.
-        if (addressError.code === 'PGRST116') {
-          return { data: null, error: null };
+        const errorResponse = SupabaseErrorHandler.handlePostgrestError(addressError, 'Fetch user address');
+        if (!errorResponse.success) {
+          console.error('Get user address error:', errorResponse.error);
+          return { data: null, error: errorResponse.error };
         }
-        console.error('Get user address error:', addressError);
-        return { data: null, error: addressError };
       }
 
+      // If no address found, return null without error
       if (!addressData) {
         return { data: null, error: null };
       }
 
-      let warehouseData = null;
+      // Type assertion for addressData to ensure proper typing
+      const typedAddressData = addressData as Tables<'addresses'>;
+      let warehouseData: Tables<'warehouses'> | null = null;
+
       // Step 2: If a warehouse_id exists, fetch the warehouse details
-      if (addressData.warehouse_id) {
+      if (typedAddressData.warehouse_id) {
         const { data: whData, error: whError } = await supabase
           .from('warehouses')
           .select('*')
-          .eq('id', addressData.warehouse_id)
-          .single();
+          .eq('id', typedAddressData.warehouse_id)
+          .maybeSingle();
         
         if (whError) {
-          console.warn('Could not fetch warehouse details:', whError);
-        } else {
-          warehouseData = whData;
+          const warehouseErrorResponse = SupabaseErrorHandler.handlePostgrestError(whError, 'Fetch warehouse details');
+          console.warn('Could not fetch warehouse details:', warehouseErrorResponse.error);
+        } else if (whData) {
+          warehouseData = whData as Tables<'warehouses'>;
         }
       }
 
       // Step 3: Combine the address and warehouse data
       const fullAddress: USShippingAddress = {
-        ...addressData,
+        ...typedAddressData,
         warehouses: warehouseData,
       };
 
       return { data: fullAddress, error: null };
     } catch (err) {
-      console.error('Get user address error:', err);
-      return { data: null, error: err as Error };
+      const errorResponse = SupabaseErrorHandler.handleGenericError(err, 'Get user address');
+      return { data: null, error: errorResponse.error };
     }
   }
 
   // Check if user has an assigned address
   async hasAssignedAddress(userId: string): Promise<{ data: boolean; error: Error | null }> {
     try {
+      // Use count query with proper error handling
       const { count, error } = await supabase
-        .from('addresses') // Changed from 'us_shipping_addresses'
-        .select('*', { count: 'exact', head: true })
+        .from('addresses')
+        .select('id', { count: 'exact', head: true }) // Only select id for count, more efficient
         .eq('user_id', userId)
         .eq('is_default', true)
         .in('type', ['shipping', 'both']); // Filter for shipping or both types
 
       if (error) {
+        console.error('Check assigned address error:', error);
         return { data: false, error };
       }
 
@@ -216,6 +226,68 @@ Important Notes:
       return { data, error: null };
     } catch (err) {
       console.error('Update user address error:', err);
+      return { data: null, error: err as Error };
+    }
+  }
+
+  // Debug method to test warehouse data retrieval and schema
+  async debugWarehouseData(userId: string): Promise<{ 
+    report: string; 
+    data: any; 
+    error: Error | null; 
+  }> {
+    try {
+      console.log('🔍 Starting warehouse data debug for user:', userId);
+      
+      // Use the comprehensive debugger
+      const debugResult = await DatabaseDebugger.runComprehensiveDebug(userId);
+      
+      return debugResult;
+    } catch (err) {
+      const errorMessage = `Debug failed: ${err}`;
+      console.error('💥 Debug warehouse data error:', err);
+      return { 
+        report: errorMessage, 
+        data: null, 
+        error: err as Error 
+      };
+    }
+  }
+
+  // Create a default address for testing purposes
+  async createTestAddress(userId: string, warehouseId: string): Promise<{ 
+    data: Tables<'addresses'> | null; 
+    error: Error | null; 
+  }> {
+    try {
+      console.log('🏗️ Creating test address for user:', userId);
+      
+      const { data, error } = await supabase
+        .from('addresses')
+        .insert({
+          user_id: userId,
+          type: 'shipping',
+          line1: '123 Warehouse Street',
+          line2: null,
+          city: 'Atlanta',
+          state_province: 'GA',
+          postal_code: '30309',
+          country: 'USA',
+          is_default: true,
+          warehouse_id: warehouseId
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('❌ Error creating test address:', error);
+        return { data: null, error };
+      }
+
+      console.log('✅ Test address created successfully:', data);
+      return { data, error: null };
+    } catch (err) {
+      console.error('💥 Exception creating test address:', err);
       return { data: null, error: err as Error };
     }
   }

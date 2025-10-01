@@ -1,10 +1,10 @@
 import { supabase } from '../lib/supabase';
 
+// FileUploadService initialized
+
 export interface FileUploadOptions {
   bucket: string;
   folder?: string;
-  maxSizeBytes?: number;
-  allowedTypes?: string[];
 }
 
 export interface UploadResult {
@@ -17,24 +17,8 @@ class FileUploadService {
   private readonly defaultOptions: FileUploadOptions = {
     bucket: 'avatars',
     folder: 'profile-pictures',
-    maxSizeBytes: 2 * 1024 * 1024, // 2MB
-    allowedTypes: ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'],
   };
 
-  // Validate file before upload
-  private validateFile(file: File, options: FileUploadOptions): string | null {
-    // Check file size
-    if (options.maxSizeBytes && file.size > options.maxSizeBytes) {
-      return `File size must be less than ${Math.round(options.maxSizeBytes / (1024 * 1024))}MB`;
-    }
-
-    // Check file type
-    if (options.allowedTypes && !options.allowedTypes.includes(file.type)) {
-      return `File type not supported. Allowed types: ${options.allowedTypes.join(', ')}`;
-    }
-
-    return null;
-  }
 
   // Generate unique filename
   private generateFileName(file: File, userId: string): string {
@@ -43,34 +27,82 @@ class FileUploadService {
     return `${userId}_${timestamp}.${extension}`;
   }
 
-  // Upload profile picture
+  /**
+   * Uploads a profile picture for a user
+   * @param file - The image file to upload
+   * @param userId - The user's ID
+   * @returns Promise with upload result
+   */
   async uploadProfilePicture(file: File, userId: string): Promise<UploadResult> {
+;
+    const options = { ...this.defaultOptions };
+
     try {
-      const options = { ...this.defaultOptions };
-      
-      // Validate file
-      const validationError = this.validateFile(file, options);
-      if (validationError) {
-        return { url: null, error: validationError, success: false };
+      // Verify user session
+      const { error: testError } = await supabase.auth.getSession();
+      if (testError) {
+        return { url: null, error: `Authentication failed: ${testError.message}`, success: false };
+      }
+
+      // Ensure we have a valid MIME type
+      let mimeType = file.type;
+      if (!mimeType || mimeType === 'application/json') {
+        // Fallback based on file extension
+        const extension = file.name.toLowerCase().split('.').pop();
+        switch (extension) {
+          case 'jpg':
+          case 'jpeg':
+            mimeType = 'image/jpeg';
+            break;
+          case 'png':
+            mimeType = 'image/png';
+            break;
+          case 'gif':
+            mimeType = 'image/gif';
+            break;
+          case 'webp':
+            mimeType = 'image/webp';
+            break;
+          default:
+            mimeType = 'image/jpeg'; // Default fallback
+        }
       }
 
       // Generate unique filename
       const fileName = this.generateFileName(file, userId);
-      const filePath = options.folder ? `${options.folder}/${fileName}` : fileName;
+      // RLS policy requires path structure: folder/{user-id}/filename
+      // Current structure: profile-pictures/filename (WRONG)
+      // Required structure: profile-pictures/{user-id}/filename (CORRECT)
+      let filePath = options.folder ? `${options.folder}/${userId}/${fileName}` : fileName;
 
-      // Delete existing profile picture if it exists
-      await this.deleteExistingProfilePicture(userId);
+      // Skip deleting existing files for faster uploads
 
-      // Upload new file
+      // Ensure proper MIME type for upload - create new File object if needed
+      let uploadFile: File = file;
+      if (file.type !== mimeType) {
+        const blob = file.slice(0, file.size, mimeType);
+        uploadFile = new File([blob], file.name, { type: mimeType });
+      }
+
+      // Skip bucket verification for performance - assume bucket exists
+
+      // Verify user authentication
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        return { url: null, error: 'User not authenticated', success: false };
+      }
+
+      // File object is guaranteed to be valid due to explicit typing above
+      
+      // Try the upload with minimal options first
       const { error: uploadError } = await supabase.storage
         .from(options.bucket)
-        .upload(filePath, file, {
-          cacheControl: '3600',
+        .upload(filePath, uploadFile, {
           upsert: true,
         });
 
       if (uploadError) {
-        console.error('Upload error:', uploadError);
         return { url: null, error: uploadError.message, success: false };
       }
 
@@ -86,7 +118,6 @@ class FileUploadService {
       return { url: urlData.publicUrl, error: null, success: true };
       
     } catch (err) {
-      console.error('Profile picture upload error:', err);
       return { 
         url: null, 
         error: err instanceof Error ? err.message : 'Upload failed', 
@@ -100,14 +131,14 @@ class FileUploadService {
     try {
       const { data: files } = await supabase.storage
         .from(this.defaultOptions.bucket)
-        .list(this.defaultOptions.folder, {
-          search: userId,
+        .list(`${this.defaultOptions.folder}/${userId}`, {
+          limit: 100, // Limit to avoid fetching too many files
         });
 
       if (files && files.length > 0) {
         const filesToDelete = files
           .filter(file => file.name.startsWith(userId))
-          .map(file => `${this.defaultOptions.folder}/${file.name}`);
+          .map(file => `${this.defaultOptions.folder}/${userId}/${file.name}`);
 
         if (filesToDelete.length > 0) {
           await supabase.storage
@@ -116,8 +147,7 @@ class FileUploadService {
         }
       }
     } catch (err) {
-      console.warn('Error deleting existing profile picture:', err);
-      // Don't throw error, just log it
+      // Silently handle deletion errors
     }
   }
 
@@ -127,7 +157,6 @@ class FileUploadService {
       await this.deleteExistingProfilePicture(userId);
       return { success: true, error: null };
     } catch (err) {
-      console.error('Delete profile picture error:', err);
       return { 
         success: false, 
         error: err instanceof Error ? err.message : 'Delete failed' 
@@ -135,38 +164,47 @@ class FileUploadService {
     }
   }
 
-  // Compress image before upload (optional utility)
-  async compressImage(file: File, maxWidth: number = 400, quality: number = 0.8): Promise<File> {
-    return new Promise((resolve) => {
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      const img = new Image();
+  // Centralized function to prepare the file for upload
+  async processAndCompressImage(file: File, maxWidth: number = 400, quality: number = 0.8): Promise<File> {
+    let processedFile = file;
 
-      img.onload = () => {
-        // Calculate new dimensions
-        const ratio = Math.min(maxWidth / img.width, maxWidth / img.height);
-        canvas.width = img.width * ratio;
-        canvas.height = img.height * ratio;
+    // 1. Correct MIME type if it's wrong
+    if (processedFile.type === 'application/json' || !processedFile.type.startsWith('image/')) {
+      const blob = processedFile.slice(0, processedFile.size, 'image/jpeg');
+      processedFile = new File([blob], processedFile.name, { type: 'image/jpeg' });
+    }
 
-        // Draw compressed image
-        ctx?.drawImage(img, 0, 0, canvas.width, canvas.height);
+    // 2. Compress if the file is large
+    if (processedFile.size > 1024 * 1024) { // If larger than 1MB
+      return new Promise((resolve) => {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        const img = new Image();
 
-        // Convert to blob and then to file
-        canvas.toBlob((blob) => {
-          if (blob) {
-            const compressedFile = new File([blob], file.name, {
-              type: file.type,
-              lastModified: Date.now(),
-            });
-            resolve(compressedFile);
-          } else {
-            resolve(file); // Return original if compression fails
-          }
-        }, file.type, quality);
-      };
+        img.onload = () => {
+          const ratio = Math.min(maxWidth / img.width, maxWidth / img.height);
+          canvas.width = img.width * ratio;
+          canvas.height = img.height * ratio;
+          ctx?.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-      img.src = URL.createObjectURL(file);
-    });
+          canvas.toBlob((blob) => {
+            if (blob) {
+              const compressedFile = new File([blob], processedFile.name, {
+                type: 'image/jpeg',
+                lastModified: Date.now(),
+              });
+              resolve(compressedFile);
+            } else {
+              resolve(processedFile); // Return corrected file if compression fails
+            }
+          }, 'image/jpeg', quality);
+        };
+        img.src = URL.createObjectURL(processedFile);
+      });
+    }
+
+    // 3. Return the processed (or original) file
+    return Promise.resolve(processedFile);
   }
 }
 

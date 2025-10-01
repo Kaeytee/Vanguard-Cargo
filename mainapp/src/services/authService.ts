@@ -219,12 +219,11 @@ class AuthService {
           role,
           status,
           suite_number,
-          us_shipping_address_id,
+          avatar_url,
           street_address,
           city,
           country,
-          postal_code,
-          avatar_url
+          postal_code
         `)
         .eq('id', userId)
         .single();
@@ -240,15 +239,18 @@ class AuthService {
         firstName: data.first_name,
         lastName: data.last_name,
         role: data.role,
-        phone: data.phone_number,  // Note: now using phone_number
+        phone: data.phone_number,  // Load actual phone from signup
         status: data.status,
         suite_number: data.suite_number,
-        usShippingAddressId: data.us_shipping_address_id,
-        streetAddress: data.street_address,
-        city: data.city,
-        country: data.country,
-        postalCode: data.postal_code,
+        usShippingAddressId: undefined, // Column removed from database
+        streetAddress: data.street_address, // Load from database
+        city: data.city, // Load from database
+        country: data.country, // Load from database
+        postalCode: data.postal_code, // Load from database
         avatarUrl: data.avatar_url,
+        profileImage: data.avatar_url, // Add profileImage alias
+        isEmailVerified: true, // Set default for existing users
+        accountStatus: data.status, // Map status to accountStatus
       };
     } catch (err) {
       console.error('Get user profile error:', err);
@@ -263,7 +265,14 @@ class AuthService {
       if (updates.lastName) dbUpdates.last_name = updates.lastName;
       if (updates.phone) dbUpdates.phone_number = updates.phone;
       if (updates.avatarUrl) dbUpdates.avatar_url = updates.avatarUrl;
+      if (updates.profileImage) dbUpdates.avatar_url = updates.profileImage;
       if (updates.status) dbUpdates.status = updates.status;
+      
+      // Add address field updates
+      if (updates.streetAddress !== undefined) dbUpdates.street_address = updates.streetAddress;
+      if (updates.city !== undefined) dbUpdates.city = updates.city;
+      if (updates.country !== undefined) dbUpdates.country = updates.country;
+      if (updates.postalCode !== undefined) dbUpdates.postal_code = updates.postalCode;
 
       const { error } = await supabase
         .from('users')
@@ -320,13 +329,19 @@ class AuthService {
     }
   }
 
-  async updateProfile(userId: string, updates: { firstName?: string; lastName?: string; phone?: string; email?: string; profileImage?: string; }): Promise<{ error: Error | null; success?: boolean }> {
+  async updateProfile(userId: string, updates: { firstName?: string; lastName?: string; phone?: string; email?: string; profileImage?: string; streetAddress?: string; city?: string; country?: string; postalCode?: string; }): Promise<{ error: Error | null; success?: boolean }> {
     try {
       const profileUpdates: Record<string, string | null> = {};
       if (updates.firstName !== undefined) profileUpdates.first_name = updates.firstName;
       if (updates.lastName !== undefined) profileUpdates.last_name = updates.lastName;
       if (updates.phone !== undefined) profileUpdates.phone_number = updates.phone;
       if (updates.profileImage !== undefined) profileUpdates.avatar_url = updates.profileImage;
+      
+      // Add address field updates
+      if (updates.streetAddress !== undefined) profileUpdates.street_address = updates.streetAddress;
+      if (updates.city !== undefined) profileUpdates.city = updates.city;
+      if (updates.country !== undefined) profileUpdates.country = updates.country;
+      if (updates.postalCode !== undefined) profileUpdates.postal_code = updates.postalCode;
 
       const { error } = await supabase
         .from('users')

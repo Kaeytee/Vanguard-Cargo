@@ -397,14 +397,7 @@ class PackageService {
     try {
       const { data, error, count } = await supabase
         .from('packages')
-        .select(`
-          *,
-          warehouses:warehouse_id (
-            name,
-            city,
-            code
-          )
-        `, { count: 'exact' })
+        .select('*', { count: 'exact' })
         .eq('user_id', userId)
         .in('status', ['pending_arrival', 'arrived', 'inspected'])
         .order('created_at', { ascending: false })
