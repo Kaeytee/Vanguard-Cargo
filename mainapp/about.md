@@ -1,6 +1,6 @@
 # About Vanguard Cargo - Client Application
 
-Vanguard Cargo is a comprehensive cargo management platform designed to streamline the process of shipping, tracking, and managing packages for customers, warehouse administrators, and super-admins. The application is built with React, TypeScript, and Vite on the frontend, and integrates with a Spring Boot REST API backend and a PostgreSQL database. It supports real-time features, robust authentication, and cross-border warehouse operations.
+Vanguard Cargo is a comprehensive logistics management platform designed to streamline the process of shipping, tracking, and managing packages for customers, warehouse administrators, and super-admins. The application is built with React, TypeScript, and Vite on the frontend, and integrates with a Spring Boot REST API backend and a PostgreSQL database. It supports real-time features, robust authentication, and cross-border warehouse operations.
 
 ## Purpose
 The application enables customers to:
@@ -41,4 +41,4 @@ Warehouse admins and super-admins have advanced capabilities for managing reques
 - **WebSocket:** For real-time notifications and tracking updates
 
 ## Summary
-Vanguard Cargo provides a modern, secure, and scalable solution for cargo management, focusing on user experience, real-time operations, and robust integration with backend services. It is suitable for cargo companies seeking to digitize and automate their shipping and customer management workflows.
+Vanguard Cargo provides a modern, secure, and scalable solution for logistics management, focusing on user experience, real-time operations, and robust integration with backend services. It is suitable for logistics companies seeking to digitize and automate their shipping and customer management workflows.

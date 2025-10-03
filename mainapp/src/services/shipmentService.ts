@@ -1,7 +1,39 @@
-import { supabase, type Tables, type Inserts } from '../lib/supabase';
+import { supabase } from '../lib/supabase';
+import { ShipmentStatus, ShipmentStatusUtils, type ShipmentStatusInfo } from '../types';
 
-export type Shipment = Tables<'shipments'>;
-export type NewShipment = Inserts<'shipments'>;
+// Define a local interface to match the new 'shipments' table schema
+export interface DbShipment {
+  id: string;
+  user_id: string;
+  tracking_number: string;
+  service_type: string | null;
+  status: string;
+  recipient_name: string | null;
+  delivery_address: string | null;
+  delivery_city: string | null;
+  delivery_country: string | null;
+  recipient_phone: string | null;
+  total_weight: number | null;
+  total_value: number | null;
+  shipping_cost: number | null;
+  estimated_delivery: string | null;
+  created_at: string;
+  updated_at: string | null;
+}
+
+// This is the shape the UI expects, with fields from the old schema
+export interface Shipment extends Omit<DbShipment, 'recipient_address'> {
+  delivery_address: string | null;
+  // Fields missing from new schema, set to default values
+  total_cost: number | null;
+  estimated_cost: number | null;
+  cost_status: string | null;
+  recipient_phone: string | null;
+  total_weight_lbs: number | null;
+  total_packages: number | null;
+}
+
+export type NewShipment = Partial<Omit<Shipment, 'id' | 'created_at' | 'updated_at'>>;
 
 export interface ShipmentWithDetails extends Shipment {
   packages?: Array<{
@@ -62,7 +94,7 @@ class ShipmentService {
       }
 
       if (filters?.search) {
-        query = query.or(`shipment_number.ilike.%${filters.search}%,recipient_name.ilike.%${filters.search}%`);
+        query = query.or(`tracking_number.ilike.%${filters.search}%,recipient_name.ilike.%${filters.search}%`);
       }
 
       if (filters?.dateFrom) {
@@ -82,11 +114,10 @@ class ShipmentService {
         return { data: [], error };
       }
 
-      // Transform data - packages will be fetched separately if needed
-      const shipmentsWithDetails: ShipmentWithDetails[] = (data || []).map(shipment => ({
-        ...shipment,
-        packages: [], // Will be populated by separate query if needed
-      }));
+      // Transform DB data to the shape the UI expects
+      const shipmentsWithDetails: ShipmentWithDetails[] = (data || []).map(dbShipment => 
+        this.mapDbShipmentToUiShipment(dbShipment as DbShipment)
+      );
 
       return { data: shipmentsWithDetails, error: null, count: count || 0 };
     } catch (err) {
@@ -114,11 +145,8 @@ class ShipmentService {
         return { data: null, error: new Error('Shipment not found') };
       }
 
-      // Return shipment without packages for now to avoid RLS issues
-      const shipmentWithDetails: ShipmentWithDetails = {
-        ...data[0],
-        packages: [], // Can be populated separately if needed
-      };
+      // Transform DB data to the shape the UI expects
+      const shipmentWithDetails: ShipmentWithDetails = this.mapDbShipmentToUiShipment(data[0] as DbShipment);
 
       return { data: shipmentWithDetails, error: null };
     } catch (err) {
@@ -134,7 +162,7 @@ class ShipmentService {
       const { data, error } = await supabase
         .from('shipments')
         .select('*')
-        .eq('shipment_number', shipmentNumber)
+        .eq('tracking_number', shipmentNumber)
         .limit(1);
 
       if (error) {
@@ -146,11 +174,8 @@ class ShipmentService {
         return { data: null, error: new Error('Shipment not found') };
       }
 
-      // Return the first shipment without packages for now to avoid RLS issues
-      const shipmentWithDetails: ShipmentWithDetails = {
-        ...data[0],
-        packages: [], // Can be populated separately if needed
-      };
+      // Transform DB data to the shape the UI expects
+      const shipmentWithDetails: ShipmentWithDetails = this.mapDbShipmentToUiShipment(data[0] as DbShipment);
 
       return { data: shipmentWithDetails, error: null };
     } catch (err) {
@@ -246,41 +271,222 @@ class ShipmentService {
     }
   }
 
-  // Get shipment status options
-  getShipmentStatuses(): Array<{ value: string; label: string; color: string }> {
-    return [
-      { value: 'awaiting_quote', label: 'Awaiting Quote', color: 'gray' },
-      { value: 'quote_ready', label: 'Quote Ready', color: 'blue' },
-      { value: 'payment_pending', label: 'Payment Pending', color: 'yellow' },
-      { value: 'processing', label: 'Processing', color: 'blue' },
-      { value: 'shipped', label: 'Shipped', color: 'indigo' },
-      { value: 'in_transit', label: 'In Transit', color: 'blue' },
-      { value: 'customs_clearance', label: 'Customs Clearance', color: 'orange' },
-      { value: 'out_for_delivery', label: 'Out for Delivery', color: 'green' },
-      { value: 'delivered', label: 'Delivered', color: 'green' },
-      { value: 'cancelled', label: 'Cancelled', color: 'red' },
-    ];
+  // Update shipment status with comprehensive validation
+  async updateShipmentStatus(
+    shipmentId: string,
+    newStatus: string,
+    _notes?: string, // Currently unused but kept for future audit trail functionality
+    userId?: string // For audit trail
+  ): Promise<{ data: ShipmentWithDetails | null; error: Error | null }> {
+    try {
+      // First, get the current shipment to validate the transition
+      const { data: currentShipment, error: fetchError } = await supabase
+        .from('shipments')
+        .select('status, user_id')
+        .eq('id', shipmentId)
+        .single();
+
+      if (fetchError) {
+        return { data: null, error: fetchError };
+      }
+
+      if (!currentShipment) {
+        return { data: null, error: new Error('Shipment not found') };
+      }
+
+      // Validate the status transition using our business rules
+      const isValidTransition = ShipmentStatusUtils.isValidTransition(
+        currentShipment.status as any,
+        newStatus as any
+      );
+
+      if (!isValidTransition) {
+        const rule = ShipmentStatusUtils.getTransitionRule(
+          currentShipment.status as any,
+          newStatus as any
+        );
+        const validNextStatuses = ShipmentStatusUtils.getValidNextStatuses(currentShipment.status as any);
+        
+        return {
+          data: null,
+          error: new Error(
+            `Invalid status transition from '${currentShipment.status}' to '${newStatus}'. ` +
+            `Valid next statuses are: ${validNextStatuses.join(', ')}. ` +
+            `${rule ? `Rule: ${rule}` : ''}`
+          )
+        };
+      }
+
+      // Get the business rule for this transition for logging
+      const transitionRule = ShipmentStatusUtils.getTransitionRule(
+        currentShipment.status as any,
+        newStatus as any
+      );
+
+      // Update the shipment status
+      const { data, error } = await supabase
+        .from('shipments')
+        .update({
+          status: newStatus,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', shipmentId)
+        .select()
+        .single();
+
+      if (error) {
+        return { data: null, error };
+      }
+
+      // Log the status change for audit trail
+      if (userId && transitionRule) {
+        console.log(`Shipment ${shipmentId} status changed from ${currentShipment.status} to ${newStatus} by user ${userId}. Rule: ${transitionRule}`);
+        // TODO: Implement audit logging to database
+      }
+
+      // Send notification if status change affects customer
+      if (ShipmentStatusUtils.requiresCustomerAction(newStatus as any)) {
+        // TODO: Trigger customer notification
+        console.log(`Customer notification required for shipment ${shipmentId} - status: ${newStatus}`);
+      }
+
+      // Transform and return the updated shipment
+      const shipmentWithDetails = this.mapDbShipmentToUiShipment(data as DbShipment);
+      return { data: shipmentWithDetails, error: null };
+    } catch (err) {
+      console.error('Update shipment status error:', err);
+      return { data: null, error: err as Error };
+    }
   }
 
-  // Get service type options
-  getServiceTypes(): Array<{ value: string; label: string; description: string }> {
-    return [
-      {
-        value: 'economy',
-        label: 'Economy',
-        description: 'Budget-friendly option with longer delivery time',
-      },
-      {
-        value: 'standard',
-        label: 'Standard',
-        description: 'Balanced option with reliable delivery',
-      },
-      {
-        value: 'express',
-        label: 'Express',
-        description: 'Fastest delivery option',
-      },
-    ];
+  // Validate shipment status transition (utility method)
+  validateStatusTransition(
+    currentStatus: string,
+    newStatus: string
+  ): { isValid: boolean; error?: string; rule?: string } {
+    const isValid = ShipmentStatusUtils.isValidTransition(currentStatus as any, newStatus as any);
+    
+    if (!isValid) {
+      const validNextStatuses = ShipmentStatusUtils.getValidNextStatuses(currentStatus as any);
+      return {
+        isValid: false,
+        error: `Invalid transition from '${currentStatus}' to '${newStatus}'. Valid options: ${validNextStatuses.join(', ')}`
+      };
+    }
+
+    const rule = ShipmentStatusUtils.getTransitionRule(currentStatus as any, newStatus as any);
+    return {
+      isValid: true,
+      rule: rule || undefined
+    };
+  }
+
+  // Get shipments requiring warehouse action
+  async getShipmentsRequiringWarehouseAction(
+    limit = 50,
+    offset = 0
+  ): Promise<{ data: ShipmentWithDetails[]; error: Error | null; count?: number }> {
+    try {
+      // Get all statuses that require warehouse action
+      const warehouseStatuses = ShipmentStatusUtils.getAllStatuses()
+        .filter(status => ShipmentStatusUtils.requiresWarehouseAction(status.value))
+        .map(status => status.value);
+
+      const { data, error, count } = await supabase
+        .from('shipments')
+        .select('*', { count: 'exact' })
+        .in('status', warehouseStatuses)
+        .order('created_at', { ascending: true }) // Oldest first for FIFO processing
+        .range(offset, offset + limit - 1);
+
+      if (error) {
+        return { data: [], error };
+      }
+
+      const shipmentsWithDetails: ShipmentWithDetails[] = (data || []).map(dbShipment => 
+        this.mapDbShipmentToUiShipment(dbShipment as DbShipment)
+      );
+
+      return { data: shipmentsWithDetails, error: null, count: count || 0 };
+    } catch (err) {
+      console.error('Get shipments requiring warehouse action error:', err);
+      return { data: [], error: err as Error };
+    }
+  }
+
+  // Get shipments requiring customer action
+  async getShipmentsRequiringCustomerAction(
+    userId: string,
+    limit = 50,
+    offset = 0
+  ): Promise<{ data: ShipmentWithDetails[]; error: Error | null; count?: number }> {
+    try {
+      // Get all statuses that require customer action
+      const customerStatuses = ShipmentStatusUtils.getAllStatuses()
+        .filter(status => ShipmentStatusUtils.requiresCustomerAction(status.value))
+        .map(status => status.value);
+
+      const { data, error, count } = await supabase
+        .from('shipments')
+        .select('*', { count: 'exact' })
+        .eq('user_id', userId)
+        .in('status', customerStatuses)
+        .order('created_at', { ascending: true })
+        .range(offset, offset + limit - 1);
+
+      if (error) {
+        return { data: [], error };
+      }
+
+      const shipmentsWithDetails: ShipmentWithDetails[] = (data || []).map(dbShipment => 
+        this.mapDbShipmentToUiShipment(dbShipment as DbShipment)
+      );
+
+      return { data: shipmentsWithDetails, error: null, count: count || 0 };
+    } catch (err) {
+      console.error('Get shipments requiring customer action error:', err);
+      return { data: [], error: err as Error };
+    }
+  }
+
+  // Get trackable shipments for customer
+  async getTrackableShipments(
+    userId: string,
+    limit = 50,
+    offset = 0
+  ): Promise<{ data: ShipmentWithDetails[]; error: Error | null; count?: number }> {
+    try {
+      // Get all statuses that are trackable by customer
+      const trackableStatuses = ShipmentStatusUtils.getAllStatuses()
+        .filter(status => ShipmentStatusUtils.isTrackableByCustomer(status.value))
+        .map(status => status.value);
+
+      const { data, error, count } = await supabase
+        .from('shipments')
+        .select('*', { count: 'exact' })
+        .eq('user_id', userId)
+        .in('status', trackableStatuses)
+        .order('created_at', { ascending: false })
+        .range(offset, offset + limit - 1);
+
+      if (error) {
+        return { data: [], error };
+      }
+
+      const shipmentsWithDetails: ShipmentWithDetails[] = (data || []).map(dbShipment => 
+        this.mapDbShipmentToUiShipment(dbShipment as DbShipment)
+      );
+
+      return { data: shipmentsWithDetails, error: null, count: count || 0 };
+    } catch (err) {
+      console.error('Get trackable shipments error:', err);
+      return { data: [], error: err as Error };
+    }
+  }
+
+  // Get shipment status options using centralized types
+  getShipmentStatuses(): ShipmentStatusInfo[] {
+    return ShipmentStatusUtils.getAllStatuses();
   }
 
   // Get shipments summary for dashboard
@@ -309,9 +515,9 @@ class ShipmentService {
 
       const summary = {
         total: data.length,
-        awaiting_quote: data.filter(s => ['awaiting_quote', 'quote_ready', 'payment_pending'].includes(s.status)).length,
-        in_transit: data.filter(s => ['processing', 'shipped', 'in_transit', 'customs_clearance', 'out_for_delivery'].includes(s.status)).length,
-        delivered: data.filter(s => s.status === 'delivered').length,
+        awaiting_quote: data.filter(s => [ShipmentStatus.AWAITING_QUOTE, ShipmentStatus.QUOTE_READY, ShipmentStatus.PAYMENT_PENDING].includes(s.status as any)).length,
+        in_transit: data.filter(s => [ShipmentStatus.PROCESSING, ShipmentStatus.SHIPPED, ShipmentStatus.IN_TRANSIT, ShipmentStatus.CUSTOMS_CLEARANCE, ShipmentStatus.OUT_FOR_DELIVERY].includes(s.status as any)).length,
+        delivered: data.filter(s => s.status === ShipmentStatus.DELIVERED).length,
         total_cost: data.reduce((sum, s) => sum + (s.total_cost || 0), 0),
       };
 
@@ -365,7 +571,7 @@ class ShipmentService {
       }
 
       if (search) {
-        query = query.or(`shipment_number.ilike.%${search}%,recipient_name.ilike.%${search}%`);
+        query = query.or(`tracking_number.ilike.%${search}%,recipient_name.ilike.%${search}%`);
       }
 
       // Apply pagination
@@ -383,14 +589,17 @@ class ShipmentService {
       }
 
       // Transform data to match component interface
-      const items = (data || []).map(shipment => ({
-        id: shipment.id || shipment.shipment_number || 'N/A',
+      const items = (data || []).map(dbShipment => {
+        const shipment = this.mapDbShipmentToUiShipment(dbShipment as DbShipment);
+        return {
+        id: shipment.tracking_number || shipment.id || 'N/A', // Prioritize tracking_number for tracking functionality
         date: shipment.created_at ? new Date(shipment.created_at).toLocaleDateString() : 'N/A',
         destination: `${shipment.delivery_city || 'Unknown'}, ${shipment.delivery_country || 'Unknown'}`,
         recipient: shipment.recipient_name || 'Unknown',
         type: shipment.service_type || 'Standard',
         status: shipment.status || 'pending'
-      }));
+        };
+      });
 
       return {
         success: true,
@@ -409,6 +618,26 @@ class ShipmentService {
         error: 'Failed to fetch shipments'
       };
     }
+  }
+
+  // --- Data Transformation ---
+
+  private mapDbShipmentToUiShipment(dbShipment: DbShipment): ShipmentWithDetails {
+    const uiShipment: Shipment = {
+      ...dbShipment,
+      // delivery_address is already in the correct format
+      // Set default values for fields missing from the new schema
+      total_cost: dbShipment.shipping_cost,
+      estimated_cost: dbShipment.shipping_cost,
+      cost_status: dbShipment.shipping_cost ? 'calculated' : 'pending',
+      total_weight_lbs: dbShipment.total_weight, // Convert from kg to lbs if needed
+      total_packages: null, // This would require joining/calculating from package_shipments
+    };
+
+    return {
+      ...uiShipment,
+      packages: [], // Packages are fetched separately to avoid RLS issues
+    };
   }
 }
 

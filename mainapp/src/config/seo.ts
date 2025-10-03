@@ -4,7 +4,7 @@
  */
 
 // Base URL configuration
-export const BASE_URL = 'https://vanguardcargo.org';
+export const BASE_URL = 'https://vanguardcargo.co';
 
 // Default SEO meta tags
 export const DEFAULT_SEO = {
@@ -145,7 +145,7 @@ export const LOCAL_BUSINESS_SCHEMA = {
   "name": "Vanguard Cargo",
   "image": `${BASE_URL}/logo.png`,
   "telephone": "+233-XX-XXX-XXXX",
-  "email": "support@vanguardcargo.org",
+  "email": "support@vanguardcargo.co",
   "address": {
     "@type": "PostalAddress",
     "streetAddress": "Your Street Address",

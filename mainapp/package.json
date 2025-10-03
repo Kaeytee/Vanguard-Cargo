@@ -13,7 +13,9 @@
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:run": "vitest run",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "package:auto-move": "npx ts-node src/utils/runPackageAutoMove.ts",
+    "package:status": "npx ts-node -e \"import('./src/utils/runPackageAutoMove.js').then(m => m.getProcessingStatus())\""
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.57.4",

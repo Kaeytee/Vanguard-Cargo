@@ -2,19 +2,18 @@
 
 /**
  * [2025-05-26] Awaiting Shipment List Page
- * This page displays all shipments with filterable tabs for different status types.
  * Provides a professional UI matching the design requirements with status cards and searchable table.
- * -- Cascade AI
  */
 
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search, Calendar } from "lucide-react";
-import { shipmentService } from "../../services/shipmentService";
 import { useAuth } from "../../hooks/useAuth";
-import { useTranslation } from "../../lib/translations";
+import { supabase } from "../../lib/supabase";
+// Removed debug imports - no longer needed
 
 /**
+{{ ... }}
  * ShipmentHistoryPage component
  * Displays a professional awaiting shipment list page with:
  * - Status filter tabs with counts
@@ -24,8 +23,20 @@ import { useTranslation } from "../../lib/translations";
 export default function ShipmentHistoryPage() {
   // Navigation hook for routing
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  
+  // Get authenticated user
   const { user } = useAuth();
+  
+  // Mock translation function - replace with actual i18n when available
+  const t = (key: string) => {
+    const translations: Record<string, string> = {
+      'shipmentHistoryTitle': 'Shipment History',
+      'viewShipmentHistory': 'View and track your shipment history',
+      'noShipments': 'No shipments found',
+      'noShipmentsMatch': 'No shipments match your current filters'
+    };
+    return translations[key] || key;
+  };
 
   /**
    * Define the ShipmentType interface to ensure type safety and consistency
@@ -38,7 +49,7 @@ export default function ShipmentHistoryPage() {
     destination: string; // Destination location
     recipient: string; // Name of recipient
     type: string; // Type of shipment (Box, Document, etc.)
-    status: string; // Current status (pending, delivered, etc.)
+    status: string; // Current status (processing, shipped, delivered, etc.)
   }
 
   /**
@@ -64,41 +75,90 @@ export default function ShipmentHistoryPage() {
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
   const [dateFilterActive, setDateFilterActive] = useState<boolean>(false);
-
   // Reference to the date filter button for positioning the dropdown
   const dateFilterButtonRef = useRef<HTMLButtonElement>(null);
   const dateFilterDropdownRef = useRef<HTMLDivElement>(null);
 
   /**
-   * Simplified API call function using the new shipmentService
-   * Uses Supabase to fetch real shipment data
-   * @returns {Promise<ShipmentType[]>} A promise that resolves to an array of shipments
+   * Fetches package data for the authenticated user
+   * Shows only user's individual packages (no consolidated shipments)
+   * Includes packages in processing, shipped, in_transit, arrived, and delivered statuses
+   * @returns {Promise<ShipmentType[]>} A promise that resolves to an array of packages
    */
   const fetchShipments = useCallback(async (): Promise<ShipmentType[]> => {
     if (!user?.id) {
       throw new Error('User not authenticated');
     }
 
-    // Use the Supabase shipmentService
-    const response = await shipmentService.getUserShipments(
-      user.id,
-      currentPage, 
-      itemsPerPage, 
-      activeTab !== 'all' ? activeTab : undefined, 
-      searchQuery || undefined
-    );
-    
-    if (response.success) {
-      return response.data.items.map(shipment => ({
-        id: shipment.id,
-        date: shipment.date,
-        destination: shipment.destination,
-        recipient: shipment.recipient,
-        type: shipment.type,
-        status: shipment.status
-      }));
-    } else {
-      throw new Error(response.error || 'Failed to fetch shipments');
+    try {
+      // Fetch only packages (no shipments) - show user's individual packages only
+      const { data: packagesData, error: packagesError } = await supabase
+        .from('packages')
+        .select(`
+          id,
+          package_id,
+          tracking_number,
+          status,
+          shipped_at,
+          processed_at,
+          created_at,
+          store_name,
+          vendor_name,
+          description,
+          declared_value,
+          weight,
+          users!packages_user_id_fkey(
+            id,
+            first_name,
+            last_name,
+            street_address,
+            city,
+            country,
+            phone_number
+          )
+        `)
+        .eq('user_id', user.id)
+        .in('status', ['processing', 'shipped', 'in_transit', 'arrived', 'delivered']) // Include all relevant package statuses
+        .order('created_at', { ascending: false });
+
+      if (packagesError) {
+        console.error('Error fetching packages:', packagesError);
+        throw new Error('Failed to fetch package data');
+      }
+
+      const allShipments: ShipmentType[] = [];
+
+      // Process packages only (no shipments)
+      if (packagesData) {
+        const packageItems = packagesData.map((pkg: any) => {
+          // Handle user data (users is an array from the join)
+          const userData = Array.isArray(pkg.users) ? pkg.users[0] : pkg.users;
+          
+          return {
+            id: pkg.package_id || pkg.tracking_number || pkg.id, // Match TrackingService priority: package_id first
+            date: pkg.shipped_at ? new Date(pkg.shipped_at).toLocaleDateString() : 
+                  pkg.processed_at ? new Date(pkg.processed_at).toLocaleDateString() :
+                  pkg.created_at ? new Date(pkg.created_at).toLocaleDateString() : 'N/A',
+            destination: userData ? `${userData.city || 'Unknown'}, ${userData.country || 'Unknown'}` : 'Unknown',
+            recipient: userData ? `${userData.first_name || ''} ${userData.last_name || ''}`.trim() || 'Unknown' : 'Unknown',
+            type: `Package (${pkg.status.charAt(0).toUpperCase() + pkg.status.slice(1).replace('_', ' ')})`, // Show status in type
+            status: pkg.status
+          };
+        });
+        allShipments.push(...packageItems);
+      }
+
+      // Sort all shipments by date (newest first)
+      allShipments.sort((a, b) => {
+        const dateA = new Date(a.date).getTime();
+        const dateB = new Date(b.date).getTime();
+        return dateB - dateA;
+      });
+
+      return allShipments;
+    } catch (error) {
+      console.error('Error fetching comprehensive shipment data:', error);
+      throw new Error('Failed to fetch shipment data');
     }
   }, [user?.id, currentPage, itemsPerPage, activeTab, searchQuery]);
 
@@ -227,13 +287,20 @@ export default function ShipmentHistoryPage() {
    * 5. Always turn off loading state when done
    */
   useEffect(() => {
+    // Only fetch data if user is authenticated
+    if (!user?.id) {
+      setLoading(false);
+      setError("Please log in to view your shipment history.");
+      return;
+    }
+
     // Create an async function to fetch the data
     const getShipments = async () => {
       try {
         // Set loading state to true at the start of the request
         setLoading(true);
 
-        // Fetch real shipment data from Supabase
+        // Fetch comprehensive shipment data (shipments + shipped packages)
         const data = await fetchShipments();
 
         // Update the shipments state with the fetched data
@@ -255,16 +322,16 @@ export default function ShipmentHistoryPage() {
 
     // Call the function immediately
     getShipments();
-  }, [fetchShipments]);
+  }, [fetchShipments, user?.id]);
 
-  // Define all possible shipment statuses
+  // Define all possible shipment statuses using centralized configuration
   const statuses = {
     all: "All Shipments",
-    pending: "Pending",
-    delivered: "Delivered",
+    processing: "Processing", 
+    shipped: "Shipped",
+    in_transit: "In Transit",
     arrived: "Arrived",
-    received: "Received",
-    transit: "In Transit",
+    delivered: "Delivered",
   };
 
   /**
@@ -275,11 +342,11 @@ export default function ShipmentHistoryPage() {
     // Calculate the real counts from the data (show 0 if no data)
     return {
       all: shipments.length,
-      pending: shipments.filter((s) => s.status === "pending").length,
-      delivered: shipments.filter((s) => s.status === "delivered").length,
+      processing: shipments.filter((s) => s.status === "processing").length,
+      shipped: shipments.filter((s) => s.status === "shipped").length,
+      in_transit: shipments.filter((s) => s.status === "in_transit").length,
       arrived: shipments.filter((s) => s.status === "arrived").length,
-      received: shipments.filter((s) => s.status === "received").length,
-      transit: shipments.filter((s) => s.status === "transit").length,
+      delivered: shipments.filter((s) => s.status === "delivered").length,
     };
   }, [shipments]);
 
@@ -424,34 +491,31 @@ export default function ShipmentHistoryPage() {
 
   /**
    * Returns the appropriate CSS classes for a status badge based on status
-   * Each status has a specific color scheme to match the design in the image
+   * Uses centralized status configuration for consistent styling
    * @param status - The shipment status string
    * @returns A string of CSS classes for the badge
    */
   const getStatusBadge = (status: string): string => {
-    // Common styling for all badges
-    const baseStyles = "px-2 py-1 rounded-full text-xs font-medium";
-
-    // Status-specific styling
-    switch (status) {
-      case "pending":
-        // Yellow background with darker yellow text for pending status
-        return `${baseStyles} bg-yellow-100 text-yellow-800`;
-      case "delivered":
-        // Green background with darker green text for delivered status
-        return `${baseStyles} bg-green-100 text-green-800`;
-      case "arrived":
-        // Green background with darker green text for arrived status
-        return `${baseStyles} bg-green-100 text-green-800`;
-      case "received":
-        // Blue background with darker blue text for received status
-        return `${baseStyles} bg-blue-100 text-blue-800`;
-      case "transit":
-        // Blue background with darker blue text for in transit status
-        return `${baseStyles} bg-blue-100 text-blue-800`;
+    const baseClasses = "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium";
+    
+    switch (status.toLowerCase()) {
+      case 'delivered':
+        return `${baseClasses} bg-green-100 text-green-800`;
+      case 'arrived':
+        return `${baseClasses} bg-green-100 text-green-800`;
+      case 'received':
+        return `${baseClasses} bg-blue-100 text-blue-800`;
+      case 'transit':
+      case 'in_transit':
+        return `${baseClasses} bg-blue-100 text-blue-800`;
+      case 'shipped':
+        return `${baseClasses} bg-indigo-100 text-indigo-800`;
+      case 'processing':
+        return `${baseClasses} bg-yellow-100 text-yellow-800`;
+      case 'cancelled':
+        return `${baseClasses} bg-red-100 text-red-800`;
       default:
-        // Gray fallback for any unrecognized status
-        return `${baseStyles} bg-gray-100 text-gray-800`;
+        return `${baseClasses} bg-gray-100 text-gray-800`;
     }
   };
 
@@ -465,15 +529,20 @@ export default function ShipmentHistoryPage() {
   };
 
   return (
-    <div className="min-h-screen py-6 bg-gray-100 transition-colors duration-300">
+    <div className="min-h-screen py-6 bg-transparent transition-colors duration-300">
       {/* Page Header */}
       <div className="mb-4 px-4 sm:px-10">
-        <h1 className="text-2xl font-bold text-gray-900">
-          {t('shipmentHistoryTitle')}
-        </h1>
-        <p className="text-sm text-gray-500">
-          {t('viewShipmentHistory')}
-        </p>
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">
+              {t('shipmentHistoryTitle')}
+            </h1>
+            <p className="text-sm text-gray-500">
+              {t('viewShipmentHistory')}
+            </p>
+          </div>
+          
+        </div>
       </div>
 
       {/* Status Tabs with Counts - Fully Responsive Grid Layout */}
@@ -704,7 +773,7 @@ export default function ShipmentHistoryPage() {
 
             {/* Empty State - No Shipments */}
             {!loading && !error && filteredShipments.length === 0 && (
-              <div className="text-center py-10">
+              <div className="text-center py-16">
                 <svg
                   className="mx-auto h-12 w-12 text-gray-400"
                   fill="none"

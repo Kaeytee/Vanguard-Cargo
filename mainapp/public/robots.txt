@@ -39,7 +39,7 @@ Allow: /*.svg
 Allow: /*.webp
 
 # Sitemap location
-Sitemap: https://www.vanguardcargo.org/sitemap.xml
+Sitemap: https://www.vanguardcargo.co/sitemap.xml
 
 # Crawl delay (be respectful)
 Crawl-delay: 1

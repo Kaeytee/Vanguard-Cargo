@@ -1,7 +1,24 @@
-import { supabase, type Tables } from '../lib/supabase';
+import { supabase } from '../lib/supabase';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 
-export type Notification = Tables<'notifications'>;
+// Define a local interface to match the new 'notifications' table schema
+export interface Notification {
+  id: string;
+  user_id: string;
+  title: string;
+  message: string;
+  // The 'type' in the new schema ('email', 'sms') is different from the old UI type ('success', 'warning').
+  // We will need to adapt the UI to handle this. For now, we map it as a string.
+  type: string;
+  read_status: boolean; // Changed from is_read
+  created_at: string;
+
+  // The following fields are aliased for backward compatibility within this service
+  is_read?: boolean;
+  category?: string; // No longer in the new schema, will be undefined
+  priority?: string; // No longer in the new schema, will be undefined
+}
+
 
 export interface NotificationFilters {
   isRead?: boolean;
@@ -45,7 +62,7 @@ class NotificationService {
     try {
       let query = supabase
         .from('notifications')
-        .select('*', { count: 'exact' })
+        .select('*, is_read:read_status', { count: 'exact' }) // Remap read_status to is_read
         .eq('user_id', userId)
         .order('created_at', { ascending: false });
 
@@ -58,13 +75,14 @@ class NotificationService {
         query = query.eq('type', filters.type);
       }
 
-      if (filters?.category) {
-        query = query.eq('category', filters.category);
-      }
-
-      if (filters?.priority) {
-        query = query.eq('priority', filters.priority);
-      }
+      // Filtering by category and priority is removed as these fields are not in the new schema.
+      // if (filters?.category) {
+      //   query = query.eq('category', filters.category);
+      // }
+      //
+      // if (filters?.priority) {
+      //   query = query.eq('priority', filters.priority);
+      // }
 
       // Apply pagination
       query = query.range(offset, offset + limit - 1);
@@ -87,7 +105,7 @@ class NotificationService {
     try {
       const { error } = await supabase
         .from('notifications')
-        .update({ is_read: true })
+        .update({ read_status: true })
         .eq('id', notificationId);
 
       return { error };
@@ -102,7 +120,7 @@ class NotificationService {
     try {
       const { error } = await supabase
         .from('notifications')
-        .update({ is_read: false })
+        .update({ read_status: false })
         .eq('id', notificationId);
 
       return { error };
@@ -117,9 +135,9 @@ class NotificationService {
     try {
       const { error } = await supabase
         .from('notifications')
-        .update({ is_read: true })
+        .update({ read_status: true })
         .eq('user_id', userId)
-        .eq('is_read', false);
+        .eq('read_status', false);
 
       return { error };
     } catch (err) {
@@ -150,7 +168,7 @@ class NotificationService {
         .from('notifications')
         .select('*', { count: 'exact', head: true })
         .eq('user_id', userId)
-        .eq('is_read', false);
+        .eq('read_status', false);
 
       if (error) {
         return { data: 0, error };
@@ -173,28 +191,8 @@ class NotificationService {
     ];
   }
 
-  // Get notification categories
-  getNotificationCategories(): Array<{ value: string; label: string; color: string }> {
-    return [
-      { value: 'package_update', label: 'Package Update', color: 'blue' },
-      { value: 'shipment_update', label: 'Shipment Update', color: 'green' },
-      { value: 'address_assignment', label: 'Address Assignment', color: 'purple' },
-      { value: 'shipping_quote', label: 'Shipping Quote', color: 'yellow' },
-      { value: 'payment_reminder', label: 'Payment Reminder', color: 'orange' },
-      { value: 'storage_fee', label: 'Storage Fee', color: 'red' },
-      { value: 'system_alert', label: 'System Alert', color: 'gray' },
-    ];
-  }
-
-  // Get priority levels
-  getPriorityLevels(): Array<{ value: string; label: string; color: string }> {
-    return [
-      { value: 'low', label: 'Low', color: 'gray' },
-      { value: 'medium', label: 'Medium', color: 'blue' },
-      { value: 'high', label: 'High', color: 'orange' },
-      { value: 'urgent', label: 'Urgent', color: 'red' },
-    ];
-  }
+  // getNotificationCategories and getPriorityLevels are removed because 'category' and 'priority' fields
+  // are no longer part of the 'notifications' table in the new schema.
 
   // Subscribe to real-time notifications
   subscribeToNotifications(

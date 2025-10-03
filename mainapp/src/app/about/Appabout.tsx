@@ -285,7 +285,7 @@ const AppAbout: React.FC = () => {
             <br />
             Phone: +233 800 123 4567
             <br />
-            Email: info@vanguardcargo.org
+            Email: info@vanguardcargo.co
           </p>
         </motion.div>
         {/* Map on the right */}

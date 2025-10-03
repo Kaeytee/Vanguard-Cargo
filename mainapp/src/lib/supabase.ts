@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { SUPABASE_CONFIG } from '../config/supabase';
 
-// Create Supabase client with Cloudflare cookie error handling
+// Create Supabase client with enhanced error handling and proper headers
 export const supabase = createClient(
   SUPABASE_CONFIG.url,
   SUPABASE_CONFIG.anonKey,
@@ -11,7 +11,13 @@ export const supabase = createClient(
     global: {
       headers: {
         'User-Agent': 'vanguard-cargo/1.0.0',
+        'Accept': 'application/json',
+        // Removed 'Content-Type': 'application/json' to allow proper file uploads
+        'Prefer': 'return=representation', // Ensures proper response format
       },
+    },
+    db: {
+      schema: 'public',
     },
   }
 );
@@ -197,46 +203,90 @@ export interface Database {
           updated_at?: string;
         };
       };
-      us_shipping_addresses: {
+      addresses: {
         Row: {
           id: string;
           user_id: string;
-          suite_number: string;
-          street_address: string;
-          city: string;
-          state: string;
-          postal_code: string;
-          country: string;
+          type: 'shipping' | 'billing' | 'both';
+          line1: string | null;
+          line2: string | null;
+          city: string | null;
+          state_province: string | null;
+          postal_code: string | null;
+          country: string | null;
+          is_default: boolean;
+          created_at: string;
+          updated_at: string | null;
           warehouse_id: string | null;
-          is_active: boolean;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          type: 'shipping' | 'billing' | 'both';
+          line1?: string | null;
+          line2?: string | null;
+          city?: string | null;
+          state_province?: string | null;
+          postal_code?: string | null;
+          country?: string | null;
+          is_default?: boolean;
+          created_at?: string;
+          updated_at?: string | null;
+          warehouse_id?: string | null;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          type?: 'shipping' | 'billing' | 'both';
+          line1?: string | null;
+          line2?: string | null;
+          city?: string | null;
+          state_province?: string | null;
+          postal_code?: string | null;
+          country?: string | null;
+          is_default?: boolean;
+          created_at?: string;
+          updated_at?: string | null;
+          warehouse_id?: string | null;
+        };
+      };
+      warehouses: {
+        Row: {
+          id: string;
+          name: string;
+          address: string;
+          city: string;
+          country: string;
+          capacity: number;
+          current_occupancy: number;
+          warehouse_admin_id: string | null;
+          status: string;
           created_at: string;
           updated_at: string;
         };
         Insert: {
           id?: string;
-          user_id: string;
-          suite_number: string;
-          street_address: string;
+          name: string;
+          address: string;
           city: string;
-          state: string;
-          postal_code: string;
-          country?: string;
-          warehouse_id?: string | null;
-          is_active?: boolean;
+          country: string;
+          capacity?: number;
+          current_occupancy?: number;
+          warehouse_admin_id?: string | null;
+          status?: string;
           created_at?: string;
           updated_at?: string;
         };
         Update: {
           id?: string;
-          user_id?: string;
-          suite_number?: string;
-          street_address?: string;
+          name?: string;
+          address?: string;
           city?: string;
-          state?: string;
-          postal_code?: string;
           country?: string;
-          warehouse_id?: string | null;
-          is_active?: boolean;
+          capacity?: number;
+          current_occupancy?: number;
+          warehouse_admin_id?: string | null;
+          status?: string;
           created_at?: string;
           updated_at?: string;
         };

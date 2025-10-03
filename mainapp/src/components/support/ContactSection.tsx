@@ -9,6 +9,7 @@ import {
   AlertCircle,
   CheckCircle,
 } from "lucide-react";
+import { CONTACT_INFO, getPhoneLink } from "../../constants/contact";
 
 interface ContactSectionProps {
   containerVariants: import("framer-motion").Variants;
@@ -86,12 +87,20 @@ const ContactSection: React.FC<ContactSectionProps> = ({
                 <div className="bg-red-100 p-2 rounded-full mr-3">
                   <Phone size={18} className="text-red-500" />
                 </div>
-                <a
-                  href="tel:+233302555147"
-                  className="text-gray-800 font-medium hover:text-red-500 transition-colors text-sm sm:text-base"
-                >
-                  +233 302 555 0147
-                </a>
+                <div className="space-y-1">
+                  <a
+                    href={getPhoneLink(CONTACT_INFO.MOBILE_PHONE)}
+                    className="block text-gray-800 font-medium hover:text-red-500 transition-colors text-sm sm:text-base"
+                  >
+                    {CONTACT_INFO.MOBILE_DISPLAY} (Mobile)
+                  </a>
+                  <a
+                    href={getPhoneLink(CONTACT_INFO.LANDLINE_PHONE)}
+                    className="block text-gray-800 font-medium hover:text-red-500 transition-colors text-sm sm:text-base"
+                  >
+                    {CONTACT_INFO.LANDLINE_DISPLAY} (Landline)
+                  </a>
+                </div>
               </div>
             </div>
 
@@ -105,10 +114,10 @@ const ContactSection: React.FC<ContactSectionProps> = ({
                   <Mail size={18} className="text-red-500" />
                 </div>
                 <a
-                  href="mailto:support@Vanguardcargo.org"
+                  href={`mailto:${CONTACT_INFO.SUPPORT_EMAIL}`}
                   className="text-gray-800 font-medium hover:text-red-500 transition-colors text-sm sm:text-base"
                 >
-                  support@Vanguardcargo.org
+                  {CONTACT_INFO.SUPPORT_EMAIL}
                 </a>
               </div>
             </div>
@@ -123,7 +132,7 @@ const ContactSection: React.FC<ContactSectionProps> = ({
                   <MessageSquare size={18} className="text-red-500" />
                 </div>
                 <span className="text-gray-800 font-medium text-sm sm:text-base">
-                  Vanguard Cargo Center, East Legon, Accra, Ghana
+                  {CONTACT_INFO.ADDRESS.FULL}
                 </span>
               </div>
             </div>
@@ -134,9 +143,9 @@ const ContactSection: React.FC<ContactSectionProps> = ({
                 Office Hours
               </h4>
               <ul className="text-gray-700 text-xs sm:text-sm">
-                <li>Mon - Fri: 8:00 AM – 8:00 PM</li>
-                <li>Sat: 9:00 AM – 5:00 PM</li>
-                <li>Sun: Closed</li>
+                <li>{CONTACT_INFO.BUSINESS_HOURS.WEEKDAYS}</li>
+                <li>{CONTACT_INFO.BUSINESS_HOURS.SATURDAY}</li>
+                <li>{CONTACT_INFO.BUSINESS_HOURS.SUNDAY}</li>
               </ul>
             </div>
           </div>

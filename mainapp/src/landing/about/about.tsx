@@ -70,7 +70,7 @@ export default function About() {
 				title="About Vanguard Cargo - Your Trusted Package Forwarding Partner"
 				description="Learn about Vanguard Cargo's mission to connect Ghana with global markets through reliable package forwarding. Discover our story, values, and commitment to excellence in international shipping."
 				keywords="about Vanguard Cargo, package forwarding company, international shipping Ghana, cargo company history, logistics services, shipping expertise, Ghana international trade"
-				url="https://www.vanguardcargo.org/about"
+				url="https://www.vanguardcargo.co/about"
 			/>
 			
 			{/* Enhanced About Hero Section */}

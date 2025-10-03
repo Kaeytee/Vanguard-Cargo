@@ -57,7 +57,7 @@ export default function Contact() {
 			icon: Phone,
 			title: 'Phone',
 			description: 'Available 24/7 for urgent matters',
-			details: '(+233) 302-555-0147'
+			details: '+233 544 197 819 (Mobile)\n030 398 2320 (Landline)'
 		},
 		{
 			icon: MapPin,
@@ -69,7 +69,7 @@ export default function Contact() {
 			icon: Mail,
 			title: 'Email',
 			description: 'Response within 24 hours',
-			details: 'support@Vanguardcargo.org'
+			details: 'support@vanguardcargo.co'
 		}
 	];
 
@@ -121,7 +121,7 @@ export default function Contact() {
 				title="Contact Vanguard Cargo - Get Support for Your Package Forwarding"
 				description="Get in touch with Vanguard Cargo for expert package forwarding support. Contact our team for shipping quotes, tracking assistance, or general inquiries. We're here to help with your USA to Ghana shipping needs."
 				keywords="contact Vanguard Cargo, package forwarding support, shipping customer service, Ghana logistics contact, international shipping help, cargo forwarding assistance"
-				url="https://www.vanguardcargo.org/contact"
+				url="https://www.vanguardcargo.co/contact"
 			/>
 			
 			{/* Enhanced Contact Hero Section */}
@@ -195,12 +195,12 @@ export default function Contact() {
 								
 								{/* Quick action button */}
 								<motion.a 
-									href="tel:+233302555147"
+									href="tel:+233544197819"
 									className="inline-flex items-center bg-red-600 hover:bg-red-700 text-white font-bold px-8 py-4 rounded-lg transition-all duration-300"
 									whileHover={{ scale: 1.05, y: -2 }}
 									whileTap={{ scale: 0.95 }}
 								>
-									Call Us Now: +233 302 555 0147
+									Call Us Now: +233 544 197 819
 								</motion.a>
 							</div>
 						</AnimateInView>
@@ -220,7 +220,7 @@ export default function Contact() {
 										<div className="space-y-4">
 											<div className="bg-gray-50 rounded-lg p-4">
 												<div className="text-sm text-gray-600">Email Support</div>
-												<div className="font-semibold text-gray-900">support@www.vanguardcargo.org</div>
+												<div className="font-semibold text-gray-900">support@www.vanguardcargo.co</div>
 											</div>
 											<div className="bg-gray-50 rounded-lg p-4">
 												<div className="text-sm text-gray-600">Office Hours</div>

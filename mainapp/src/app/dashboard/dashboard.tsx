@@ -4,6 +4,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { motion } from "framer-motion";
 import PackageIntakeWidget from '../../components/PackageIntakeWidget';
 import { addressService, type USShippingAddress } from '../../services/addressService';
+// Removed unused import
 import shopImage from '../../assets/shop.jpg';
 
 
@@ -11,6 +12,7 @@ const Dashboard: React.FC = () => {
   const { user, profile } = useAuth();
   const [usAddress, setUsAddress] = useState<USShippingAddress | null>(null);
 
+  // Use profile from AuthContext instead of separate state
   // Extract first name from profile or user email
   const firstName = profile?.firstName || user?.email?.split('@')[0] || 'User';
 
@@ -109,12 +111,10 @@ const popularBrands = [
 ];
 
   const copyAddressToClipboard = () => {
-    if (!usAddress) return;
-    
-    const userName = (profile?.firstName || profile?.lastName)
-      ? `${profile?.firstName ?? ''} ${profile?.lastName ?? ''}`.trim()
-      : user?.email || 'User';
-    const addressText = `${userName} (VCG-${user?.id?.slice(-4)})\n${usAddress.street_address}\n${usAddress.suite_number}\n${usAddress.city}, ${usAddress.state} ${usAddress.postal_code}\n${usAddress.country}`;
+    if (!usAddress || !profile) return;
+
+    const addressText = addressService.formatAddress(usAddress, profile.suite_number);
+
     navigator.clipboard.writeText(addressText).then(() => {
       // You could add a toast notification here
       console.log('Address copied to clipboard');
@@ -145,7 +145,7 @@ const popularBrands = [
       </div>
 
       {/* Next Steps Section */}
-      <div className="bg-gray-50 rounded-2xl p-8 mb-8">
+      <div className="bg-transparent backdrop-blur-sm rounded-2xl p-8 mb-8 shadow-sm">
         <h2 className="text-2xl font-semibold text-gray-900 mb-6 text-center">
           What's next?
         </h2>
@@ -164,7 +164,7 @@ const popularBrands = [
         <div className="grid md:grid-cols-2 gap-8 items-center max-w-4xl mx-auto">
           {/* Left side - Step illustration placeholder */}
           <div className="flex flex-col items-center">
-            <div className="bg-white rounded-full w-16 h-16 flex items-center justify-center mb-4 shadow-md">
+            <div className="bg-transparent backdrop-blur-sm rounded-full w-16 h-16 flex items-center justify-center mb-4 shadow-md">
               <span className="text-2xl font-bold text-red-600">1</span>
             </div>
             <h4 className="text-lg font-semibold text-gray-900 mb-2">Shop online at your favorite stores</h4>
@@ -177,13 +177,13 @@ const popularBrands = [
 
           {/* Right side - Address section */}
           <div className="flex flex-col items-center">
-            <div className="bg-white rounded-full w-16 h-16 flex items-center justify-center mb-4 shadow-md">
+            <div className="bg-white/90 backdrop-blur-sm rounded-full w-16 h-16 flex items-center justify-center mb-4 shadow-md">
               <span className="text-2xl font-bold text-red-600">2</span>
             </div>
             <h4 className="text-lg font-semibold text-gray-900 mb-4">Use your Vanguard Cargo address at checkout</h4>
             
             {/* Professional Address Card */}
-            <div className="w-full bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+            <div className="w-full bg-white/80 backdrop-blur-sm rounded-xl border border-gray-200 shadow-sm p-6">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                   <MapPin className="w-5 h-5 text-red-600" />
@@ -204,13 +204,13 @@ const popularBrands = [
                   <span className="font-semibold">
                     {(profile?.firstName || profile?.lastName
                       ? `${profile?.firstName ?? ''} ${profile?.lastName ?? ''}`.trim()
-                      : user?.email) } (VCG-{user?.id?.slice(-4)})
+                      : user?.email) } ({profile?.suite_number})
                   </span>
                   <button
                     onClick={() => copyToClipboard(
-                      (profile?.firstName || profile?.lastName)
+                      `${(profile?.firstName || profile?.lastName)
                         ? `${profile?.firstName ?? ''} ${profile?.lastName ?? ''}`.trim()
-                        : user?.email || ''
+                        : user?.email || ''} (${profile?.suite_number || ''})`
                     )}
                     className="text-red-600 hover:text-red-700 p-1"
                     title="Copy name"
@@ -221,9 +221,9 @@ const popularBrands = [
                 
                 {/* Address Line 1 */}
                 <div className="flex items-center justify-between p-2 rounded border border-gray-100 hover:bg-gray-50">
-                  <span>{usAddress?.street_address || '123 Warehouse Street'}</span>
+                  <span>4700 Eisenhower Avenue</span>
                   <button
-                    onClick={() => copyToClipboard(usAddress?.street_address || '123 Warehouse Street')}
+                    onClick={() => copyToClipboard('4700 Eisenhower Avenue')}
                     className="text-red-600 hover:text-red-700 p-1"
                     title="Copy address line 1"
                   >
@@ -233,9 +233,9 @@ const popularBrands = [
                 
                 {/* Address Line 2 */}
                 <div className="flex items-center justify-between p-2 rounded border border-gray-100 hover:bg-gray-50">
-                  <span>{usAddress?.suite_number || 'Suite #VCG001'}</span>
+                  <span>ALX-E2</span>
                   <button
-                    onClick={() => copyToClipboard(usAddress?.suite_number || 'Suite #VCG001')}
+                    onClick={() => copyToClipboard( 'ALX-E2')}
                     className="text-red-600 hover:text-red-700 p-1"
                     title="Copy suite number"
                   >
@@ -245,9 +245,9 @@ const popularBrands = [
                 
                 {/* City, State, ZIP */}
                 <div className="flex items-center justify-between p-2 rounded border border-gray-100 hover:bg-gray-50">
-                  <span>{usAddress?.city || 'Atlanta'}, {usAddress?.state || 'GA'} {usAddress?.postal_code || '30309'}</span>
+                  <span>{usAddress?.city || 'Alexandria'}, {usAddress?.state_province || 'VA'} {usAddress?.postal_code || '22304'}</span>
                   <button
-                    onClick={() => copyToClipboard(`${usAddress?.city || 'Atlanta'}, ${usAddress?.state || 'GA'} ${usAddress?.postal_code || '30309'}`)}
+                    onClick={() => copyToClipboard(`${usAddress?.city || 'Alexandria'}, ${usAddress?.state_province || 'VA'} ${usAddress?.postal_code || '22304'}`)}
                     className="text-red-600 hover:text-red-700 p-1"
                     title="Copy city, state, zip"
                   >
@@ -257,9 +257,9 @@ const popularBrands = [
                 
                 {/* Country */}
                 <div className="flex items-center justify-between p-2 rounded border border-gray-100 hover:bg-gray-50">
-                  <span className="font-medium">{usAddress?.country}</span>
+                  <span className="font-medium">{usAddress?.country || 'USA'}</span>
                   <button
-                    onClick={() => copyToClipboard(usAddress?.country || '')}
+                    onClick={() => copyToClipboard(usAddress?.country || 'USA')}
                     className="text-red-600 hover:text-red-700 p-1"
                     title="Copy country"
                   >
@@ -268,7 +268,7 @@ const popularBrands = [
                 </div>
               </div>
 
-              <div className="mt-4 p-3 bg-red-50 rounded-lg">
+              <div className="mt-4 p-3 bg-red-50/80 backdrop-blur-sm rounded-lg">
                 <div className="flex items-start gap-2">
                   <Info className="w-4 h-4 text-red-600 mt-0.5 flex-shrink-0" />
                   <p className="text-sm text-red-800">
@@ -293,7 +293,7 @@ const popularBrands = [
       </div>
 
           {/* Popular Brands & Shops Section */}
-          <section className="py-16 bg-white">
+          <section className="py-16 bg-white/60 backdrop-blur-sm">
             <div className="container mx-auto px-4">
               <div className="text-center mb-12">
                 <motion.h2

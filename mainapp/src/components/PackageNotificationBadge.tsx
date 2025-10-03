@@ -41,9 +41,13 @@ export default function PackageNotificationBadge() {
     if (!notification.read) {
       markAsRead(notification.id);
     }
-    if (notification.actionUrl) {
-      window.location.href = notification.actionUrl;
-    }
+    
+    console.log('🔔 Notification clicked:', notification);
+    console.log('📦 Navigating to shipment history page');
+    
+    // Navigate to shipment history page instead of tracking page
+    window.location.href = '/app/shipment-history';
+    
     setIsOpen(false);
   };
 
@@ -78,6 +82,7 @@ export default function PackageNotificationBadge() {
           <motion.span
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
+            data-notification-badge
             className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full min-w-[1.25rem] h-5 flex items-center justify-center px-1"
           >
             {unreadCount > 99 ? '99+' : unreadCount}

@@ -1,7 +1,43 @@
-import { supabase, type Tables, type Inserts } from '../lib/supabase';
+import { supabase } from '../lib/supabase';
+import { PackageStatus, PackageStatusUtils, type PackageStatusInfo } from '../types';
 
-export type Package = Tables<'packages'>;
-export type NewPackage = Inserts<'packages'>;
+// Define interface to match the actual 'packages' table schema
+export interface DbPackage {
+  id: string;
+  package_id: string;
+  tracking_number: string;
+  user_id: string;
+  status: string;
+  description: string | null;
+  weight: number | null; // DECIMAL field in database
+  declared_value: number | null;
+  store_name: string | null;
+  vendor_name: string | null;
+  notes: string | null;
+  scanned_by: string | null;
+  intake_date: string | null;
+  created_at: string;
+  updated_at: string | null;
+  // No warehouse join needed - hardcoded in frontend
+}
+
+// This is the shape the UI expects, matching the actual database schema
+export interface Package extends DbPackage {
+  // Additional computed fields for UI
+  sender_name?: string | null; // Map from store_name for compatibility
+  sender_email?: string | null; // Not in database
+  sender_phone?: string | null; // Not in database
+  weight_lbs: number | null; // Converted from weight
+  length_in: number | null; // Not in database
+  width_in: number | null; // Not in database
+  height_in: number | null; // Not in database
+  billable_weight_lbs: number | null; // Not in database
+  storage_fee_accumulated: number | null; // Not in database
+  free_storage_until: string | null; // Not in database
+  warehouse_id?: string | null; // Not in database - hardcoded
+}
+
+export type NewPackage = Partial<Omit<Package, 'id' | 'created_at' | 'updated_at'>>;
 
 export interface PackageWithDetails extends Package {
   warehouse_name?: string;
@@ -69,13 +105,10 @@ class PackageService {
         return { data: [], error };
       }
 
-      // Transform data to include calculated fields
-      const packagesWithDetails: PackageWithDetails[] = (data || []).map(pkg => ({
-        ...pkg,
-        warehouse_name: pkg.warehouses?.name || 'Unknown',
-        days_in_storage: this.calculateDaysInStorage(pkg.created_at),
-        is_overdue: this.isOverdue(pkg.free_storage_until),
-      }));
+      // Transform DB data to the shape the UI expects
+      const packagesWithDetails: PackageWithDetails[] = (data || []).map(dbPkg => 
+        this.mapDbPackageToUiPackage(dbPkg as DbPackage)
+      );
 
       return { data: packagesWithDetails, error: null, count: count || 0 };
     } catch (err) {
@@ -151,12 +184,7 @@ class PackageService {
         return { data: null, error };
       }
 
-      const packageWithDetails: PackageWithDetails = {
-        ...data,
-        warehouse_name: data.warehouses?.name || 'Unknown',
-        days_in_storage: this.calculateDaysInStorage(data.created_at),
-        is_overdue: this.isOverdue(data.free_storage_until),
-      };
+      const packageWithDetails: PackageWithDetails = this.mapDbPackageToUiPackage(data as DbPackage);
 
       return { data: packageWithDetails, error: null };
     } catch (err) {
@@ -166,19 +194,20 @@ class PackageService {
   }
 
   // Create new package (admin/staff only)
-  async createPackage(packageData: NewPackage): Promise<{ data: Package | null; error: Error | null }> {
+  async createPackage(packageData: NewPackage): Promise<{ data: PackageWithDetails | null; error: Error | null }> {
     try {
+      const dbPayload = this.mapUiPackageToDbPackage(packageData);
       const { data, error } = await supabase
         .from('packages')
-        .insert(packageData)
-        .select()
+        .insert(dbPayload)
+        .select('*, warehouses:warehouse_id(name, city, code)')
         .single();
 
       if (error) {
         return { data: null, error };
       }
 
-      return { data, error: null };
+      return { data: this.mapDbPackageToUiPackage(data as DbPackage), error: null };
     } catch (err) {
       console.error('Create package error:', err);
       return { data: null, error: err as Error };
@@ -189,12 +218,84 @@ class PackageService {
   async updatePackage(
     packageId: string, 
     updates: Partial<Package>
+  ): Promise<{ data: PackageWithDetails | null; error: Error | null }> {
+    try {
+      const dbPayload = this.mapUiPackageToDbPackage(updates, true);
+      const { data, error } = await supabase
+        .from('packages')
+        .update(dbPayload)
+        .eq('id', packageId)
+        .select('*, warehouses:warehouse_id(name, city, code)')
+        .single();
+
+      if (error) {
+        return { data: null, error };
+      }
+
+      return { data: this.mapDbPackageToUiPackage(data as DbPackage), error: null };
+    } catch (err) {
+      console.error('Update package error:', err);
+      return { data: null, error: err as Error };
+    }
+  }
+
+  // Update package status (admin/staff only) with comprehensive validation
+  async updatePackageStatus(
+    packageId: string,
+    newStatus: string,
+    _notes?: string, // Prefixed with underscore to indicate intentionally unused
+    userId?: string // For audit trail
   ): Promise<{ data: Package | null; error: Error | null }> {
     try {
+      // First, get the current package to validate the transition
+      const { data: currentPackage, error: fetchError } = await supabase
+        .from('packages')
+        .select('status, user_id')
+        .eq('id', packageId)
+        .single();
+
+      if (fetchError) {
+        return { data: null, error: fetchError };
+      }
+
+      if (!currentPackage) {
+        return { data: null, error: new Error('Package not found') };
+      }
+
+      // Validate the status transition using our business rules
+      const isValidTransition = PackageStatusUtils.isValidTransition(
+        currentPackage.status as any,
+        newStatus as any
+      );
+
+      if (!isValidTransition) {
+        const rule = PackageStatusUtils.getTransitionRule(
+          currentPackage.status as any,
+          newStatus as any
+        );
+        const validNextStatuses = PackageStatusUtils.getValidNextStatuses(currentPackage.status as any);
+        
+        return {
+          data: null,
+          error: new Error(
+            `Invalid status transition from '${currentPackage.status}' to '${newStatus}'. ` +
+            `Valid next statuses are: ${validNextStatuses.join(', ')}. ` +
+            `${rule ? `Rule: ${rule}` : ''}`
+          )
+        };
+      }
+
+      // Get the business rule for this transition for logging
+      const transitionRule = PackageStatusUtils.getTransitionRule(
+        currentPackage.status as any,
+        newStatus as any
+      );
+
+      // Update the package status
       const { data, error } = await supabase
         .from('packages')
         .update({
-          ...updates,
+          status: newStatus,
           updated_at: new Date().toISOString(),
         })
         .eq('id', packageId)
@@ -205,32 +306,16 @@ class PackageService {
         return { data: null, error };
       }
 
-      return { data, error: null };
-    } catch (err) {
-      console.error('Update package error:', err);
-      return { data: null, error: err as Error };
-    }
-  }
+      // Log the status change for audit trail (optional - could be implemented later)
+      if (userId && transitionRule) {
+        console.log(`Package ${packageId} status changed from ${currentPackage.status} to ${newStatus} by user ${userId}. Rule: ${transitionRule}`);
+        // TODO: Implement audit logging to database
+      }
 
-  // Update package status (admin/staff only)
-  async updatePackageStatus(
-    packageId: string,
-    status: string,
-    // notes?: string // Commented out - not currently used
-  ): Promise<{ data: Package | null; error: Error | null }> {
-    try {
-      const { data, error } = await supabase
-        .from('packages')
-        .update({
-          status,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', packageId)
-        .select()
-        .single();
-
-      if (error) {
-        return { data: null, error };
+      // Send notification if status change affects customer
+      if (PackageStatusUtils.requiresCustomerAction(newStatus as any)) {
+        // TODO: Trigger customer notification
+        console.log(`Customer notification required for package ${packageId} - status: ${newStatus}`);
       }
 
       return { data, error: null };
@@ -240,21 +325,113 @@ class PackageService {
     }
   }
 
-  // Get package status options
-  getPackageStatuses(): Array<{ value: string; label: string; color: string }> {
-    return [
-      { value: 'pending_arrival', label: 'Pending Arrival', color: 'gray' },
-      { value: 'arrived', label: 'Arrived', color: 'blue' },
-      { value: 'inspected', label: 'Inspected', color: 'yellow' },
-      { value: 'ready_for_shipment', label: 'Ready for Shipment', color: 'green' },
-      { value: 'consolidated', label: 'Consolidated', color: 'purple' },
-      { value: 'shipped', label: 'Shipped', color: 'indigo' },
-      { value: 'in_transit', label: 'In Transit', color: 'blue' },
-      { value: 'customs_clearance', label: 'Customs Clearance', color: 'orange' },
-      { value: 'delivered', label: 'Delivered', color: 'green' },
-      { value: 'returned', label: 'Returned', color: 'red' },
-      { value: 'lost', label: 'Lost', color: 'red' },
-    ];
+  // Validate package status transition (utility method)
+  validateStatusTransition(
+    currentStatus: string,
+    newStatus: string
+  ): { isValid: boolean; error?: string; rule?: string } {
+    const isValid = PackageStatusUtils.isValidTransition(currentStatus as any, newStatus as any);
+    
+    if (!isValid) {
+      const validNextStatuses = PackageStatusUtils.getValidNextStatuses(currentStatus as any);
+      return {
+        isValid: false,
+        error: `Invalid transition from '${currentStatus}' to '${newStatus}'. Valid options: ${validNextStatuses.join(', ')}`
+      };
+    }
+
+    const rule = PackageStatusUtils.getTransitionRule(currentStatus as any, newStatus as any);
+    return {
+      isValid: true,
+      rule: rule || undefined
+    };
+  }
+
+  // Get packages requiring warehouse action
+  async getPackagesRequiringWarehouseAction(
+    limit = 50,
+    offset = 0
+  ): Promise<{ data: PackageWithDetails[]; error: Error | null; count?: number }> {
+    try {
+      // Get all statuses that require warehouse action
+      const warehouseStatuses = PackageStatusUtils.getAllStatuses()
+        .filter(status => PackageStatusUtils.requiresWarehouseAction(status.value))
+        .map(status => status.value);
+
+      const { data, error, count } = await supabase
+        .from('packages')
+        .select(`
+          *,
+          warehouses:warehouse_id (
+            name,
+            city,
+            code
+          )
+        `, { count: 'exact' })
+        .in('status', warehouseStatuses)
+        .order('created_at', { ascending: true }) // Oldest first for FIFO processing
+        .range(offset, offset + limit - 1);
+
+      if (error) {
+        return { data: [], error };
+      }
+
+      const packagesWithDetails: PackageWithDetails[] = (data || []).map(dbPkg => 
+        this.mapDbPackageToUiPackage(dbPkg as DbPackage)
+      );
+
+      return { data: packagesWithDetails, error: null, count: count || 0 };
+    } catch (err) {
+      console.error('Get packages requiring warehouse action error:', err);
+      return { data: [], error: err as Error };
+    }
+  }
+
+  // Get packages requiring customer action
+  async getPackagesRequiringCustomerAction(
+    userId: string,
+    limit = 50,
+    offset = 0
+  ): Promise<{ data: PackageWithDetails[]; error: Error | null; count?: number }> {
+    try {
+      // Get all statuses that require customer action
+      const customerStatuses = PackageStatusUtils.getAllStatuses()
+        .filter(status => PackageStatusUtils.requiresCustomerAction(status.value))
+        .map(status => status.value);
+
+      const { data, error, count } = await supabase
+        .from('packages')
+        .select(`
+          *,
+          warehouses:warehouse_id (
+            name,
+            city,
+            code
+          )
+        `, { count: 'exact' })
+        .eq('user_id', userId)
+        .in('status', customerStatuses)
+        .order('created_at', { ascending: true })
+        .range(offset, offset + limit - 1);
+
+      if (error) {
+        return { data: [], error };
+      }
+
+      const packagesWithDetails: PackageWithDetails[] = (data || []).map(dbPkg => 
+        this.mapDbPackageToUiPackage(dbPkg as DbPackage)
+      );
+
+      return { data: packagesWithDetails, error: null, count: count || 0 };
+    } catch (err) {
+      console.error('Get packages requiring customer action error:', err);
+      return { data: [], error: err as Error };
+    }
+  }
+
+  // Get package status options using centralized types
+  getPackageStatuses(): PackageStatusInfo[] {
+    return PackageStatusUtils.getAllStatuses();
   }
 
   // Get packages summary for dashboard
@@ -281,11 +458,14 @@ class PackageService {
         };
       }
 
+      const pendingStatuses = [PackageStatus.PENDING_ARRIVAL, PackageStatus.ARRIVED, PackageStatus.INSPECTED];
+      const transitStatuses = [PackageStatus.SHIPPED, PackageStatus.IN_TRANSIT, PackageStatus.CUSTOMS_CLEARANCE];
+      
       const summary = {
         total: data.length,
-        pending: data.filter(p => ['pending_arrival', 'arrived', 'inspected'].includes(p.status)).length,
-        in_transit: data.filter(p => ['shipped', 'in_transit', 'customs_clearance'].includes(p.status)).length,
-        delivered: data.filter(p => p.status === 'delivered').length,
+        pending: data.filter(p => pendingStatuses.includes(p.status as any)).length,
+        in_transit: data.filter(p => transitStatuses.includes(p.status as any)).length,
+        delivered: data.filter(p => p.status === PackageStatus.DELIVERED).length,
         overdue: data.filter(p => this.isOverdue(p.free_storage_until)).length,
       };
 
@@ -299,6 +479,69 @@ class PackageService {
     }
   }
 
+  // --- Data Transformation --- 
+
+  private mapUiPackageToDbPackage(uiPackage: Partial<Package>, isUpdate = false): Record<string, any> {
+    const LBS_TO_KG = 0.453592;
+    const dbPayload: Record<string, any> = {};
+
+    // Direct mappings
+    if (uiPackage.user_id) dbPayload.user_id = uiPackage.user_id;
+    if (uiPackage.tracking_number) dbPayload.tracking_number = uiPackage.tracking_number;
+    if (uiPackage.sender_name) dbPayload.sender_name = uiPackage.sender_name;
+    if (uiPackage.declared_value) dbPayload.declared_value = uiPackage.declared_value;
+    if (uiPackage.status) dbPayload.status = uiPackage.status;
+    if (uiPackage.warehouse_id) dbPayload.warehouse_id = uiPackage.warehouse_id;
+
+    // Convert weight from lbs to kg
+    if (uiPackage.weight_lbs) {
+      dbPayload.weight = uiPackage.weight_lbs * LBS_TO_KG;
+    }
+
+    // Consolidate dimensions into JSONB object
+    if (uiPackage.length_in || uiPackage.width_in || uiPackage.height_in) {
+      dbPayload.dimensions = {
+        length: uiPackage.length_in,
+        width: uiPackage.width_in,
+        height: uiPackage.height_in,
+      };
+    }
+
+    if (isUpdate) {
+      dbPayload.updated_at = new Date().toISOString();
+    }
+
+    return dbPayload;
+  }
+
+  private mapDbPackageToUiPackage(dbPackage: DbPackage): PackageWithDetails {
+    const LBS_CONVERSION = 2.20462; // 1 kg = 2.20462 lbs
+    const uiPackage: Package = {
+      ...dbPackage,
+      // Convert weight to lbs (assuming database weight is in kg)
+      weight_lbs: dbPackage.weight ? dbPackage.weight * LBS_CONVERSION : null,
+      // Map store_name to sender_name for UI compatibility
+      sender_name: dbPackage.store_name,
+      // Set defaults for fields not in database schema
+      sender_email: null,
+      sender_phone: null,
+      length_in: null,
+      width_in: null,
+      height_in: null,
+      billable_weight_lbs: null, 
+      storage_fee_accumulated: null,
+      free_storage_until: null,
+      warehouse_id: null, // Hardcoded in frontend
+    };
+
+    return {
+      ...uiPackage,
+      warehouse_name: 'ALX-E2 Warehouse', // Hardcoded warehouse name
+      days_in_storage: this.calculateDaysInStorage(uiPackage.created_at),
+      is_overdue: this.isOverdue(uiPackage.free_storage_until),
+    };
+  }
+
   // Helper functions
   private calculateDaysInStorage(createdAt: string): number {
     const created = new Date(createdAt);
@@ -307,7 +550,7 @@ class PackageService {
     return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   }
 
-  // Get incoming packages for review (arrived, pending_arrival, inspected)
+  // Get incoming packages for review - all packages for the user regardless of status
   async getIncomingPackages(
     userId: string,
     limit = 50,
@@ -316,32 +559,20 @@ class PackageService {
     try {
       const { data, error, count } = await supabase
         .from('packages')
-        .select(`
-          *,
-          warehouses:warehouse_id (
-            name,
-            city,
-            code
-          )
-        `, { count: 'exact' })
+        .select('*', { count: 'exact' })
         .eq('user_id', userId)
-        .in('status', ['pending_arrival', 'arrived', 'inspected'])
         .order('created_at', { ascending: false })
         .range(offset, offset + limit - 1);
 
       if (error) {
+        console.error('Supabase error:', error);
         return { data: [], error };
       }
 
-      // Transform data to match expected interface
-      const packagesWithDetails: PackageWithDetails[] = (data || []).map(pkg => ({
-        ...pkg,
-        warehouse_name: pkg.warehouses?.name || 'Unknown Warehouse',
-        days_in_storage: pkg.free_storage_until 
-          ? Math.ceil((new Date().getTime() - new Date(pkg.created_at).getTime()) / (1000 * 60 * 60 * 24))
-          : 0,
-        is_overdue: this.isOverdue(pkg.free_storage_until)
-      }));
+      // Transform data to match expected interface using the existing mapping function
+      const packagesWithDetails: PackageWithDetails[] = (data || []).map(dbPkg => 
+        this.mapDbPackageToUiPackage(dbPkg as DbPackage)
+      );
 
       return { data: packagesWithDetails, error: null, count: count || 0 };
     } catch (err) {

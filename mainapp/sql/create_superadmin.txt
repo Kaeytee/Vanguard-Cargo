@@ -1,0 +1,31 @@
+# Step 1: Create auth user
+# IMPORTANT: Replace YOUR_SERVICE_ROLE_KEY with your actual service role key from Supabase Dashboard > Settings > API
+curl -X POST "https://rsxxjcsmcrcxdmyuytzc.supabase.co/auth/v1/admin/users" \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJzeHhqY3NtY3JjeGRteXV5dHpjIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1ODgwNDkzNSwiZXhwIjoyMDc0MzgwOTM1fQ.PYo8ZPc_RZ7gmc3uWUIpS1_x6WVk13tQitjpAycmC9o" \
+  -H "Content-Type: application/json" \
+  -H "apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJzeHhqY3NtY3JjeGRteXV5dHpjIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1ODgwNDkzNSwiZXhwIjoyMDc0MzgwOTM1fQ.PYo8ZPc_RZ7gmc3uWUIpS1_x6WVk13tQitjpAycmC9o" \
+  -d '{
+    "email": "admin@vanguardcargo.co",
+    "password": "VanguardAdmin2024!",
+    "email_confirm": true,
+    "user_metadata": {
+      "first_name": "Admin",
+      "last_name": "User"
+    }
+  }'
+
+# Step 2: Create profile (use the ID returned from step 1)
+curl -X POST "https://rsxxjcsmcrcxdmyuytzc.supabase.co/rest/v1/users" \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJzeHhqY3NtY3JjeGRteXV5dHpjIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1ODgwNDkzNSwiZXhwIjoyMDc0MzgwOTM1fQ.PYo8ZPc_RZ7gmc3uWUIpS1_x6WVk13tQitjpAycmC9o" \
+  -H "Content-Type: application/json" \
+  -H "apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJzeHhqY3NtY3JjeGRteXV5dHpjIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1ODgwNDkzNSwiZXhwIjoyMDc0MzgwOTM1fQ.PYo8ZPc_RZ7gmc3uWUIpS1_x6WVk13tQitjpAycmC9o" \
+  -H "Prefer: return=representation" \
+  -d '{
+    "id": "03425a26-2c0d-48da-a3ca-141f0dac0e2d",
+    "email": "admin@vanguardcargo.co",
+    "first_name": "Admin",
+    "last_name": "User",
+    "role": "superadmin",
+    "status": "active",
+    "email_verified": true
+  }'

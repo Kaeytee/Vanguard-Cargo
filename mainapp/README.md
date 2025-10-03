@@ -741,6 +741,48 @@ export default tseslint.config({
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
+## Recent Changes
+
+### `AuthUser` Interface Update
+
+The `AuthUser` interface in `src/services/authService.ts` has been updated to include optional address-related properties:
+
+```typescript
+export interface AuthUser {
+  // ... existing properties
+  usShippingAddressId?: string | number;
+  streetAddress?: string;
+  city?: string;
+  country?: string;
+  postalCode?: string;
+}
+```
+
+This change was made to support the inclusion of shipping address information in the user profile and to resolve a TypeScript error that occurred when fetching user data.
+
+### `addressService` Query Fix
+
+Resolved a `406 Not Acceptable` error in the `getUserAddress` function within `src/services/addressService.ts`. The error was caused by an ambiguous database query that could return multiple default shipping addresses.
+
+**Fix Details:**
+- Added an `.order('created_at', { ascending: false })` clause to the Supabase query.
+- This ensures the query is deterministic, always returning the most recently created default address.
+
+```typescript
+// src/services/addressService.ts
+const { data: addressData, error: addressError } = await supabase
+  .from('addresses')
+  .select('*')
+  .eq('user_id', userId)
+  .eq('is_default', true)
+  .in('type', ['shipping', 'both'])
+  .order('created_at', { ascending: false }) // <-- Fix applied here
+  .limit(1)
+  .single();
+```
+
+This change prevents potential database errors and ensures that a consistent address is fetched for the user.
+
 ---
 
 **Note**: This README provides the complete frontend implementation guide for the Vanguard Cargo client application. For detailed backend integration information, refer to the [clientapp.md](./clientapp.md) documentation.

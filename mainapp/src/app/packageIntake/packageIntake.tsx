@@ -1,24 +1,21 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
 import {
   Package,
   Calendar,
   CheckCircle,
   Clock,
   AlertCircle,
-  Archive,
   Edit3,
-  Pause,
   DollarSign,
   X,
-  Plus,
   Eye
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import SEO from "../../components/SEO";
 import { PackageEditModal } from "../../components/PackageEditModal";
 import { packageService, type PackageWithDetails } from "../../services/packageService";
 import { useAuth } from "../../hooks/useAuth";
+import { supabase } from "../../lib/supabase";
 
 /**
  * Package Intake - Professional package management interface
@@ -49,29 +46,20 @@ export interface IncomingPackage extends PackageWithDetails {
     width: number;
     height: number;
   };
-  description: string;
   value?: number;
-  status: 'arrived' | 'ready_for_review' | 'pending_action' | 'approved' | 'consolidated' | 'on_hold';
+  status: 'pending' | 'received' | 'processing' | 'shipped' | 'in_transit' | 'arrived' | 'delivered' | 'ready_for_review' | 'pending_action' | 'approved' | 'consolidated' | 'on_hold';
   priority: 'standard' | 'express' | 'urgent';
   fragile?: boolean;
   requiresInspection?: boolean;
-  notes?: string;
   originAddress?: string;
 }
 
-interface ConsolidationGroup {
-  id: string;
-  packages: IncomingPackage[];
-  estimatedSavings: number;
-  totalWeight: string;
-  shippingCost: number;
-}
+// Removed ConsolidationGroup interface - no longer needed
 
 // Mock data for development
 
 
 export default function PackageIntake() {
-  const navigate = useNavigate();
   const { user } = useAuth();
   // const { t } = useTranslation(); // Commented out - not currently used
   
@@ -79,12 +67,8 @@ export default function PackageIntake() {
   const [packages, setPackages] = useState<IncomingPackage[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedPackages, setSelectedPackages] = useState<Set<string>>(new Set());
-  const [showConsolidationModal, setShowConsolidationModal] = useState(false);
-  const [consolidationGroups, setConsolidationGroups] = useState<ConsolidationGroup[]>([]);
-  const [filterStatus, setFilterStatus] = useState<string>('all');
-  const [sortBy, setSortBy] = useState<'arrival_date' | 'priority' | 'store'>('arrival_date');
-  const [showBulkActions, setShowBulkActions] = useState(false);
+  // Removed selection and consolidation functionality
+  // Removed filtering and sorting - package intake now shows all packages
   const [actionInProgress, setActionInProgress] = useState<string | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingPackage, setEditingPackage] = useState<IncomingPackage | null>(null);
@@ -104,28 +88,14 @@ export default function PackageIntake() {
         } else {
           // Transform Supabase data to match component interface
           const transformedPackages: IncomingPackage[] = response.data.map(pkg => ({
-            id: pkg.id,
-            user_id: pkg.user_id,
-            tracking_number: pkg.tracking_number,
-            trackingNumber: pkg.tracking_number, // Legacy field
-            sender_name: pkg.sender_name,
-            sender_email: pkg.sender_email,
-            sender_phone: pkg.sender_phone,
-            declared_value: pkg.declared_value,
-            weight_lbs: pkg.weight_lbs,
-            length_in: pkg.length_in,
-            width_in: pkg.width_in,
-            height_in: pkg.height_in,
-            billable_weight_lbs: pkg.billable_weight_lbs,
-            status: (pkg.status as "arrived" | "ready_for_review" | "pending_action" | "approved" | "consolidated" | "on_hold") || "arrived",
-            warehouse_id: pkg.warehouse_id,
-            storage_fee_accumulated: pkg.storage_fee_accumulated,
-            created_at: pkg.created_at,
-            updated_at: pkg.updated_at,
-            arrivalDate: pkg.created_at ? new Date(pkg.created_at).toISOString().split('T')[0] : '',
+            // Copy all base package fields
+            ...pkg,
+            // Map database status to component status
+            status: (pkg.status as IncomingPackage['status']) || 'received',
+            // Add UI-specific fields
             arrivalTime: pkg.created_at ? new Date(pkg.created_at).toLocaleTimeString() : '',
-            estimatedWeight: pkg.weight_lbs ? `${pkg.weight_lbs} lbs` : 'Unknown',
-            storeName: pkg.sender_name || 'Unknown Store',
+            estimatedWeight: pkg.weight_lbs ? `${pkg.weight_lbs.toFixed(2)} lbs` : 'Unknown',
+            storeName: pkg.store_name || pkg.sender_name || 'Unknown Store',
             dimensions: pkg.length_in && pkg.width_in && pkg.height_in ? {
               length: pkg.length_in,
               width: pkg.width_in,
@@ -135,10 +105,8 @@ export default function PackageIntake() {
             priority: 'standard' as const,
             fragile: false, // Default value
             originAddress: 'Unknown', // Default value
-            notes: '', // Default value
-            description: 'Package', // Default value
             packagePhotos: [], // Default value
-            storeLogoUrl: undefined
+            storeLogoUrl: undefined,
           }));
           
           setPackages(transformedPackages);
@@ -155,132 +123,60 @@ export default function PackageIntake() {
     loadPackages();
   }, [user?.id]);
 
-  // Filter and sort packages
-  const filteredAndSortedPackages = useMemo(() => {
-    let filtered = packages;
-
-    // Apply status filter
-    if (filterStatus !== 'all') {
-      filtered = packages.filter(pkg => pkg.status === filterStatus);
-    }
-
-    // Apply sorting
-    filtered.sort((a, b) => {
-      switch (sortBy) {
-        case 'arrival_date':
-          return new Date(b.arrivalTime || '').getTime() - new Date(a.arrivalTime || '').getTime();
-        case 'priority': {
-          const priorityOrder = { urgent: 3, express: 2, standard: 1 };
-          return priorityOrder[b.priority] - priorityOrder[a.priority];
-        }
-        case 'store':
-          return (a.storeName || '').localeCompare(b.storeName || '');
-        default:
-          return 0;
-      }
+  // Show all packages without filtering - sorted by arrival date (newest first)
+  const displayedPackages = useMemo(() => {
+    return packages.sort((a, b) => {
+      return new Date(b.created_at || '').getTime() - new Date(a.created_at || '').getTime();
     });
-
-    return filtered;
-  }, [packages, filterStatus, sortBy]);
-
-  // Status counts for filter tabs
-  const statusCounts = useMemo(() => {
-    return {
-      all: packages.length,
-      arrived: packages.filter(p => p.status === 'arrived').length,
-      ready_for_review: packages.filter(p => p.status === 'ready_for_review').length,
-      pending_action: packages.filter(p => p.status === 'pending_action').length,
-      approved: packages.filter(p => p.status === 'approved').length,
-      on_hold: packages.filter(p => p.status === 'on_hold').length
-    };
   }, [packages]);
 
-  // Handle package selection
-  const togglePackageSelection = useCallback((packageId: string) => {
-    setSelectedPackages(prev => {
-      const newSelection = new Set(prev);
-      if (newSelection.has(packageId)) {
-        newSelection.delete(packageId);
-      } else {
-        newSelection.add(packageId);
-      }
-      setShowBulkActions(newSelection.size > 0);
-      return newSelection;
-    });
-  }, []);
+  // Package count for display
+  const packageCount = packages.length;
 
-  // Select all packages
-  const selectAllPackages = useCallback(() => {
-    const allIds = new Set(filteredAndSortedPackages.map(p => p.id));
-    setSelectedPackages(allIds);
-    setShowBulkActions(allIds.size > 0);
-  }, [filteredAndSortedPackages]);
+  // Removed package selection functionality - simplified interface
 
-  // Clear selection
-  const clearSelection = useCallback(() => {
-    setSelectedPackages(new Set());
-    setShowBulkActions(false);
-  }, []);
-
-  // Package actions
+  // Package actions - Process package (change status from pending to received)
   const approveShipment = useCallback(async (packageId: string) => {
     setActionInProgress(packageId);
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Direct database update without complex validation
+      // Change status from 'pending' to 'received' when package is physically scanned
+      const now = new Date().toISOString();
+      const { error } = await supabase
+        .from('packages')
+        .update({
+          status: 'received',
+          received_at: now,
+          updated_at: now,
+        })
+        .eq('id', packageId)
+        .select()
+        .single();
       
+      if (error) {
+        console.error("Error updating package status:", error);
+        setError("Failed to process package. Please try again.");
+        return;
+      }
+      
+      // Update local state with the new status
       setPackages(prev => prev.map(pkg => 
         pkg.id === packageId 
-          ? { ...pkg, status: 'approved' as const }
+          ? { ...pkg, status: 'received' as const }
           : pkg
       ));
       
-      // Show success notification (you can integrate with your notification system)
-      console.log(`Package ${packageId} approved for shipment`);
+      console.log(`Package ${packageId} status updated to received`);
     } catch (err) {
-      console.error("Error approving shipment:", err);
+      console.error("Error processing package:", err);
+      setError("Failed to process package. Please try again.");
     } finally {
       setActionInProgress(null);
     }
   }, []);
 
-  const holdAtWarehouse = useCallback(async (packageId: string) => {
-    setActionInProgress(packageId);
-    try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      setPackages(prev => prev.map(pkg => 
-        pkg.id === packageId 
-          ? { ...pkg, status: 'on_hold' as const }
-          : pkg
-      ));
-      
-      console.log(`Package ${packageId} placed on hold`);
-    } catch (err) {
-      console.error("Error holding package:", err);
-    } finally {
-      setActionInProgress(null);
-    }
-  }, []);
 
-  const startConsolidation = useCallback(() => {
-    if (selectedPackages.size < 2) {
-      alert("Please select at least 2 packages to consolidate");
-      return;
-    }
-    
-    const selectedPkgs = packages.filter(p => selectedPackages.has(p.id));
-    const consolidationGroup: ConsolidationGroup = {
-      id: `CONSOL_${Date.now()}`,
-      packages: selectedPkgs,
-      estimatedSavings: 15.50, // Mock calculation
-      totalWeight: "4.5 lbs", // Mock calculation
-      shippingCost: 45.99 // Mock calculation
-    };
-    
-    setConsolidationGroups([consolidationGroup]);
-    setShowConsolidationModal(true);
-  }, [selectedPackages, packages]);
+  // Removed consolidation functionality
 
   const handleEditPackage = useCallback((pkg: IncomingPackage) => {
     setEditingPackage(pkg);
@@ -300,6 +196,17 @@ export default function PackageIntake() {
     const baseClasses = "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium";
     
     switch (status) {
+      case 'pending':
+        return `${baseClasses} bg-yellow-100 text-yellow-800`;
+      case 'received':
+        return `${baseClasses} bg-blue-100 text-blue-800`;
+      case 'processing':
+        return `${baseClasses} bg-orange-100 text-orange-800`;
+      case 'shipped':
+        return `${baseClasses} bg-purple-100 text-purple-800`;
+      case 'delivered':
+        return `${baseClasses} bg-green-100 text-green-800`;
+      // Legacy statuses for compatibility
       case 'arrived':
         return `${baseClasses} bg-blue-100 text-blue-800`;
       case 'ready_for_review':
@@ -308,6 +215,8 @@ export default function PackageIntake() {
         return `${baseClasses} bg-orange-100 text-orange-800`;
       case 'approved':
         return `${baseClasses} bg-green-100 text-green-800`;
+      case 'consolidated':
+        return `${baseClasses} bg-purple-100 text-purple-800`;
       case 'on_hold':
         return `${baseClasses} bg-gray-100 text-gray-800`;
       default:
@@ -342,7 +251,7 @@ export default function PackageIntake() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-transparent flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading your packages...</p>
@@ -353,7 +262,7 @@ export default function PackageIntake() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-transparent flex items-center justify-center">
         <div className="text-center">
           <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">Unable to load packages</h3>
@@ -370,7 +279,7 @@ export default function PackageIntake() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-transparent">
       <SEO 
         title="Package Intake - Vanguard Cargo"
         description="Review and manage your incoming packages at our warehouse. Quick actions for shipment approval, consolidation, and more."
@@ -388,158 +297,42 @@ export default function PackageIntake() {
                 </p>
               </div>
               
-              {/* Quick Stats */}
+              {/* Package Count */}
               <div className="hidden md:flex items-center space-x-6">
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-red-600">{statusCounts.all}</div>
+                  <div className="text-2xl font-bold text-red-600">{packageCount}</div>
                   <div className="text-xs text-gray-500">Total Packages</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-orange-600">{statusCounts.pending_action}</div>
-                  <div className="text-xs text-gray-500">Need Action</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-green-600">{statusCounts.approved}</div>
-                  <div className="text-xs text-gray-500">Approved</div>
                 </div>
               </div>
             </div>
 
-            {/* Status Filter Tabs */}
-            <div className="mt-6">
-              <nav className="flex space-x-8 overflow-x-auto">
-                {[
-                  { key: 'all', label: 'All Packages', count: statusCounts.all },
-                  { key: 'arrived', label: 'Just Arrived', count: statusCounts.arrived },
-                  { key: 'ready_for_review', label: 'Ready for Review', count: statusCounts.ready_for_review },
-                  { key: 'pending_action', label: 'Pending Action', count: statusCounts.pending_action },
-                  { key: 'approved', label: 'Approved', count: statusCounts.approved },
-                  { key: 'on_hold', label: 'On Hold', count: statusCounts.on_hold }
-                ].map(({ key, label, count }) => (
-                  <button
-                    key={key}
-                    onClick={() => setFilterStatus(key)}
-                    className={`whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm transition-colors ${
-                      filterStatus === key
-                        ? 'border-red-500 text-red-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                    }`}
-                  >
-                    {label}
-                    {count > 0 && (
-                      <span className={`ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        filterStatus === key
-                          ? 'bg-red-100 text-red-800'
-                          : 'bg-gray-100 text-gray-600'
-                      }`}>
-                        {count}
-                      </span>
-                    )}
-                  </button>
-                ))}
-              </nav>
-            </div>
+            {/* Simplified header - no filters */}
           </div>
         </div>
       </div>
-
-      {/* Controls Bar */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="py-4 flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              {/* Sort dropdown */}
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
-                className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
-              >
-                <option value="arrival_date">Sort by Arrival Date</option>
-                <option value="priority">Sort by Priority</option>
-                <option value="store">Sort by Store</option>
-              </select>
-
-              {/* Selection controls */}
-              {filteredAndSortedPackages.length > 0 && (
-                <div className="flex items-center space-x-2">
-                  <button
-                    onClick={selectAllPackages}
-                    className="text-sm text-red-600 hover:text-red-700 font-medium"
-                  >
-                    Select All
-                  </button>
-                  {selectedPackages.size > 0 && (
-                    <button
-                      onClick={clearSelection}
-                      className="text-sm text-gray-600 hover:text-gray-700 font-medium"
-                    >
-                      Clear Selection
-                    </button>
-                  )}
-                </div>
-              )}
-            </div>
-
-            {/* Bulk actions */}
-            <AnimatePresence>
-              {showBulkActions && (
-                <motion.div
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 20 }}
-                  className="flex items-center space-x-2"
-                >
-                  <span className="text-sm text-gray-600">
-                    {selectedPackages.size} selected
-                  </span>
-                  <button
-                    onClick={startConsolidation}
-                    className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700 transition-colors flex items-center"
-                  >
-                    <Archive className="w-4 h-4 mr-1" />
-                    Consolidate
-                  </button>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-        </div>
-      </div>
+      {/* Removed controls bar - no filtering or sorting needed */}
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {filteredAndSortedPackages.length === 0 ? (
+        {displayedPackages.length === 0 ? (
           /* Empty State */
-          <div className="text-center py-12">
+          <div className="text-center bg-white/80 backdrop-blur-sm rounded-lg py-12">
             <Package className="mx-auto h-12 w-12 text-gray-400" />
             <h3 className="mt-2 text-sm font-medium text-gray-900">No packages found</h3>
             <p className="mt-1 text-sm text-gray-500">
-              {filterStatus === 'all' 
-                ? "You don't have any packages at the warehouse right now."
-                : `No packages with status "${filterStatus.replace('_', ' ')}" found.`
-              }
+              No packages have arrived at our warehouse yet.
             </p>
-            <div className="mt-6">
-              <button
-                onClick={() => navigate('/app/dashboard')}
-                className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Submit New Request
-              </button>
-            </div>
           </div>
         ) : (
           /* Package Grid */
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredAndSortedPackages.map((pkg) => (
+            {displayedPackages.map((pkg) => (
               <PackageCard
                 key={pkg.id}
                 package={pkg}
-                isSelected={selectedPackages.has(pkg.id)}
-                onToggleSelection={() => togglePackageSelection(pkg.id)}
+                isSelected={false}
+                onToggleSelection={() => {}}
                 onApproveShipment={() => approveShipment(pkg.id)}
-                onHoldAtWarehouse={() => holdAtWarehouse(pkg.id)}
                 onEditDetails={() => handleEditPackage(pkg)}
                 isActionInProgress={actionInProgress === pkg.id}
                 getStatusBadge={getStatusBadge}
@@ -551,17 +344,7 @@ export default function PackageIntake() {
         )}
       </div>
 
-      {/* Consolidation Modal */}
-      <ConsolidationModal
-        isOpen={showConsolidationModal}
-        onClose={() => setShowConsolidationModal(false)}
-        consolidationGroups={consolidationGroups}
-        onConfirmConsolidation={() => {
-          // Handle consolidation confirmation
-          setShowConsolidationModal(false);
-          clearSelection();
-        }}
-      />
+      {/* Removed consolidation modal */}
 
       {/* Package Edit Modal */}
       <PackageEditModal
@@ -583,7 +366,6 @@ interface PackageCardProps {
   isSelected: boolean;
   onToggleSelection: () => void;
   onApproveShipment: () => void;
-  onHoldAtWarehouse: () => void;
   onEditDetails: () => void;
   isActionInProgress: boolean;
   getStatusBadge: (status: IncomingPackage['status']) => string;
@@ -596,7 +378,6 @@ const PackageCard: React.FC<PackageCardProps> = ({
   isSelected,
   onToggleSelection,
   onApproveShipment,
-  onHoldAtWarehouse,
   onEditDetails,
   isActionInProgress,
   getStatusBadge,
@@ -740,40 +521,27 @@ const PackageCard: React.FC<PackageCardProps> = ({
 
       {/* Action Buttons */}
       <div className="px-4 pb-4">
-        <div className="grid grid-cols-2 gap-2">
-          <button
-            onClick={onApproveShipment}
-            disabled={isActionInProgress || pkg.status === 'approved'}
-            className="flex items-center justify-center px-3 py-2 border border-transparent text-xs font-medium rounded-md text-white bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            {isActionInProgress ? (
-              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-            ) : (
-              <>
-                <CheckCircle className="w-3 h-3 mr-1" />
-                {pkg.status === 'approved' ? 'Approved' : 'Approve'}
-              </>
-            )}
-          </button>
-          
-          <button
-            onClick={onHoldAtWarehouse}
-            disabled={isActionInProgress || pkg.status === 'on_hold'}
-            className="flex items-center justify-center px-3 py-2 border border-gray-300 text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            {pkg.status === 'on_hold' ? (
-              <>
-                <Pause className="w-3 h-3 mr-1" />
-                On Hold
-              </>
-            ) : (
-              <>
-                <Clock className="w-3 h-3 mr-1" />
-                Hold
-              </>
-            )}
-          </button>
-        </div>
+        <button
+          onClick={onApproveShipment}
+          disabled={isActionInProgress || pkg.status !== 'pending'}
+          className="w-full flex items-center justify-center px-3 py-2 border border-transparent text-xs font-medium rounded-md text-white bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        >
+          {isActionInProgress ? (
+            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+          ) : (
+            <>
+              <CheckCircle className="w-3 h-3 mr-1" />
+              {pkg.status === 'pending' ? 'Scan & Receive' : 
+               pkg.status === 'received' ? 'Received' :
+               pkg.status === 'processing' ? 'Processing' : 
+               pkg.status === 'shipped' ? 'Shipped' : 
+               pkg.status === 'in_transit' ? 'In Transit' :
+               pkg.status === 'arrived' ? 'Arrived' : 
+               pkg.status === 'delivered' ? 'Delivered' : 
+               pkg.status.charAt(0).toUpperCase() + pkg.status.slice(1)}
+            </>
+          )}
+        </button>
         
         <button
           onClick={onEditDetails}
@@ -886,103 +654,5 @@ const PhotoModal: React.FC<PhotoModalProps> = ({ isOpen, onClose, photos, packag
   );
 };
 
-// Consolidation Modal Component
-interface ConsolidationModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  consolidationGroups: ConsolidationGroup[];
-  onConfirmConsolidation: () => void;
-}
-
-const ConsolidationModal: React.FC<ConsolidationModalProps> = ({ 
-  isOpen, 
-  onClose, 
-  consolidationGroups, 
-  onConfirmConsolidation 
-}) => {
-  if (!isOpen || consolidationGroups.length === 0) return null;
-
-  const group = consolidationGroups[0];
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
-      <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-hidden">
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <h3 className="text-lg font-medium text-gray-900">Consolidate Packages</h3>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
-          >
-            <X className="w-6 h-6" />
-          </button>
-        </div>
-        
-        <div className="p-6 space-y-6">
-          {/* Consolidation Summary */}
-          <div className="bg-green-50 rounded-lg p-4">
-            <div className="flex items-center">
-              <DollarSign className="w-5 h-5 text-green-600 mr-2" />
-              <span className="text-green-800 font-medium">
-                Estimated Savings: ${group.estimatedSavings}
-              </span>
-            </div>
-            <div className="mt-2 text-sm text-green-700">
-              By consolidating {group.packages.length} packages, you'll save on shipping costs!
-            </div>
-          </div>
-
-          {/* Package List */}
-          <div>
-            <h4 className="text-sm font-medium text-gray-900 mb-3">Packages to Consolidate</h4>
-            <div className="space-y-2">
-              {group.packages.map((pkg) => (
-                <div key={pkg.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-md">
-                  <div className="flex items-center space-x-3">
-                    <Package className="w-4 h-4 text-gray-400" />
-                    <div>
-                      <div className="text-sm font-medium text-gray-900">{pkg.storeName}</div>
-                      <div className="text-xs text-gray-500">{pkg.description}</div>
-                    </div>
-                  </div>
-                  <div className="text-sm text-gray-600">{pkg.estimatedWeight}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Shipping Details */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Total Weight
-              </label>
-              <div className="text-lg font-medium text-gray-900">{group.totalWeight}</div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Shipping Cost
-              </label>
-              <div className="text-lg font-medium text-gray-900">${group.shippingCost}</div>
-            </div>
-          </div>
-        </div>
-
-        <div className="flex items-center justify-end space-x-3 p-6 border-t border-gray-200">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={onConfirmConsolidation}
-            className="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-md hover:bg-red-700 transition-colors"
-          >
-            Confirm Consolidation
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
+// Removed ConsolidationModal component - simplified interface
 
