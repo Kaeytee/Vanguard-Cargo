@@ -124,8 +124,18 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
         {/* Main content area where child routes will be rendered */}
         <main className="flex-1 overflow-hidden">
           <div className="h-full overflow-y-auto">
-            <div className="p-4 sm:p-6 lg:p-8 min-h-full bg-gray-50">
-              <div className="max-w-full">
+            <div className="p-4 sm:p-6 lg:p-8 min-h-full bg-gray-50 relative">
+              {/* Logo watermark background */}
+              <div 
+                className="absolute inset-0 bg-no-repeat bg-center bg-cover pointer-events-none"
+                style={{
+                  backgroundImage: "url('/src/assets/logo.png')",
+                  backgroundSize: '300px 300px',
+                  backgroundPosition: 'center center'
+                }}
+              />
+              {/* Content overlay */}
+              <div className="relative z-10 max-w-full">
                 {children ? children : <Outlet />}
               </div>
             </div>

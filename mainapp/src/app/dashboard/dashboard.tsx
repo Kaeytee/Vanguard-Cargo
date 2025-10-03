@@ -145,7 +145,7 @@ const popularBrands = [
       </div>
 
       {/* Next Steps Section */}
-      <div className="bg-gray-50 rounded-2xl p-8 mb-8">
+      <div className="bg-transparent backdrop-blur-sm rounded-2xl p-8 mb-8 shadow-sm">
         <h2 className="text-2xl font-semibold text-gray-900 mb-6 text-center">
           What's next?
         </h2>
@@ -164,7 +164,7 @@ const popularBrands = [
         <div className="grid md:grid-cols-2 gap-8 items-center max-w-4xl mx-auto">
           {/* Left side - Step illustration placeholder */}
           <div className="flex flex-col items-center">
-            <div className="bg-white rounded-full w-16 h-16 flex items-center justify-center mb-4 shadow-md">
+            <div className="bg-transparent backdrop-blur-sm rounded-full w-16 h-16 flex items-center justify-center mb-4 shadow-md">
               <span className="text-2xl font-bold text-red-600">1</span>
             </div>
             <h4 className="text-lg font-semibold text-gray-900 mb-2">Shop online at your favorite stores</h4>
@@ -177,13 +177,13 @@ const popularBrands = [
 
           {/* Right side - Address section */}
           <div className="flex flex-col items-center">
-            <div className="bg-white rounded-full w-16 h-16 flex items-center justify-center mb-4 shadow-md">
+            <div className="bg-white/90 backdrop-blur-sm rounded-full w-16 h-16 flex items-center justify-center mb-4 shadow-md">
               <span className="text-2xl font-bold text-red-600">2</span>
             </div>
             <h4 className="text-lg font-semibold text-gray-900 mb-4">Use your Vanguard Cargo address at checkout</h4>
             
             {/* Professional Address Card */}
-            <div className="w-full bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+            <div className="w-full bg-white/80 backdrop-blur-sm rounded-xl border border-gray-200 shadow-sm p-6">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                   <MapPin className="w-5 h-5 text-red-600" />
@@ -268,7 +268,7 @@ const popularBrands = [
                 </div>
               </div>
 
-              <div className="mt-4 p-3 bg-red-50 rounded-lg">
+              <div className="mt-4 p-3 bg-red-50/80 backdrop-blur-sm rounded-lg">
                 <div className="flex items-start gap-2">
                   <Info className="w-4 h-4 text-red-600 mt-0.5 flex-shrink-0" />
                   <p className="text-sm text-red-800">
@@ -293,7 +293,7 @@ const popularBrands = [
       </div>
 
           {/* Popular Brands & Shops Section */}
-          <section className="py-16 bg-white">
+          <section className="py-16 bg-white/60 backdrop-blur-sm">
             <div className="container mx-auto px-4">
               <div className="text-center mb-12">
                 <motion.h2
