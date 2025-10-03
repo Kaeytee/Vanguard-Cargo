@@ -138,7 +138,7 @@ export const TRACKING_STATUSES: Record<string, TrackingStatus> = {
     color: 'bg-indigo-100 text-indigo-800',
     category: 'processing'
   },
-  'in_transit': {
+  'shipment_in_transit': {
     code: 'SHP-006',
     name: 'In Transit',
     description: 'Shipment is in transit to destination country',
@@ -165,7 +165,7 @@ export const TRACKING_STATUSES: Record<string, TrackingStatus> = {
     color: 'bg-green-100 text-green-800',
     category: 'transit'
   },
-  'delivered': {
+  'shipment_delivered': {
     code: 'SHP-009',
     name: 'Delivered',
     description: 'Shipment has been successfully delivered to recipient',
@@ -249,9 +249,24 @@ export interface TrackingData {
 export class TrackingService {
   /**
    * Get tracking status information by status code
+   * Maps database status values to tracking status objects
    */
-  static getStatusInfo(status: string): TrackingStatus {
-    return TRACKING_STATUSES[status.toLowerCase()] || TRACKING_STATUSES['exception'];
+  static getStatusInfo(status: string, type: 'package' | 'shipment' = 'package'): TrackingStatus {
+    const statusKey = status.toLowerCase();
+    
+    // Handle status mapping for different types
+    if (type === 'shipment') {
+      // Map shipment statuses to their specific keys
+      if (statusKey === 'in_transit') {
+        return TRACKING_STATUSES['shipment_in_transit'] || TRACKING_STATUSES['exception'];
+      }
+      if (statusKey === 'delivered') {
+        return TRACKING_STATUSES['shipment_delivered'] || TRACKING_STATUSES['exception'];
+      }
+    }
+    
+    // Default mapping for packages and other statuses
+    return TRACKING_STATUSES[statusKey] || TRACKING_STATUSES['exception'];
   }
 
   /**
@@ -429,8 +444,8 @@ export class TrackingService {
         return { data: null, error: null }; // No packages found in this shipment
       }
 
-      // Extract packages from junction table result
-      const packagesInShipment = packageShipmentData.map(item => item.packages);
+      // Extract packages from junction table result and properly type them
+      const packagesInShipment = packageShipmentData.map((item: any) => item.packages).filter(Boolean);
 
       if (!packagesInShipment || packagesInShipment.length === 0) {
         return { data: null, error: null }; // No packages found
@@ -439,14 +454,14 @@ export class TrackingService {
       // Filter by current authenticated user if userId is provided
       let userPackages = packagesInShipment;
       if (userId) {
-        userPackages = packagesInShipment.filter(pkg => pkg.user_id === userId);
+        userPackages = packagesInShipment.filter((pkg: any) => pkg.user_id === userId);
         if (userPackages.length === 0) {
           return { data: null, error: null }; // No packages found for this user in the shipment
         }
       }
 
-      const pkg = userPackages[0];
-      const user = Array.isArray(pkg.users) ? pkg.users[0] : pkg.users;
+      const pkg: any = userPackages[0];
+      const user: any = Array.isArray(pkg.users) ? pkg.users[0] : pkg.users;
 
       const trackingData: TrackingData = {
         trackingNumber: pkg.package_id || pkg.tracking_number || pkg.id, // Show PACKAGE tracking number, not shipment
@@ -678,64 +693,6 @@ export class TrackingService {
     return events;
   }
 
-  /**
-   * Generate tracking events for consolidated shipment (package within shipment)
-   * Combines package and shipment information for comprehensive tracking
-   */
-  private static generateConsolidatedShipmentEvents(packageData: any, shipmentData: any): TrackingEvent[] {
-    const events: TrackingEvent[] = [];
-    const packageCreatedDate = new Date(packageData.created_at);
-    const shipmentCreatedDate = new Date(shipmentData.created_at);
-
-    // 1. Package received at facility
-    events.push({
-      id: '1',
-      timestamp: packageCreatedDate.toLocaleString(),
-      location: 'Vanguard Cargo Facility, Miami, FL',
-      status: this.getStatusInfo('received'),
-      description: 'Package received at Vanguard Cargo facility',
-      details: `Your package (${packageData.package_id || packageData.tracking_number}) from ${packageData.store_name || packageData.vendor_name || 'retailer'} has been received and logged into our secure warehouse system.`,
-      completed: true
-    });
-
-    // 2. Package processed for consolidation
-    events.push({
-      id: '2',
-      timestamp: shipmentCreatedDate.toLocaleString(),
-      location: 'Vanguard Cargo Processing Center, Miami, FL',
-      status: this.getStatusInfo('processing_shipment'),
-      description: 'Package consolidated for international shipment',
-      details: `Your package has been consolidated with other packages into shipment ${shipmentData.tracking_number} for efficient international shipping to Ghana.`,
-      completed: true
-    });
-
-    // Add subsequent events based on shipment status
-    const statusProgression = [
-      'ready_for_pickup', 'in_transit', 'customs_clearance', 'out_for_delivery', 'delivered'
-    ];
-
-    const currentIndex = statusProgression.indexOf(shipmentData.status);
-    
-    statusProgression.forEach((status, index) => {
-      if (index <= currentIndex) {
-        const eventDate = new Date(shipmentCreatedDate.getTime() + (index + 1) * 24 * 60 * 60 * 1000);
-        const statusInfo = this.getStatusInfo(status);
-        
-        events.push({
-          id: (index + 3).toString(), // Start from 3 since we have 2 package events
-          timestamp: eventDate.toLocaleString(),
-          location: this.getLocationForStatus(status),
-          status: statusInfo,
-          description: statusInfo.description,
-          details: statusInfo.customerMessage,
-          completed: index < currentIndex,
-          estimatedDate: index === currentIndex ? undefined : eventDate.toLocaleDateString()
-        });
-      }
-    });
-
-    return events;
-  }
 
   /**
    * Generate tracking events for a shipment

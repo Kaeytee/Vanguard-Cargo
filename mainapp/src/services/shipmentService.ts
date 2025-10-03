@@ -275,7 +275,7 @@ class ShipmentService {
   async updateShipmentStatus(
     shipmentId: string,
     newStatus: string,
-    notes?: string,
+    _notes?: string, // Currently unused but kept for future audit trail functionality
     userId?: string // For audit trail
   ): Promise<{ data: ShipmentWithDetails | null; error: Error | null }> {
     try {

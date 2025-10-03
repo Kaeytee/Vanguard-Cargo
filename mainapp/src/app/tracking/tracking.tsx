@@ -10,7 +10,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { useTranslation, type TranslationKey } from '../../lib/translations';
+// Translation imports removed as not currently used
 import { useAuth } from '../../hooks/useAuth';
 import { TrackingService, type TrackingData, type TrackingEvent } from '../../services/trackingService';
 import { AlertCircle, ArrowDownToLine, CheckCircle, Clock, Copy, MapPin, Plane, RefreshCw, Search, Package, Settings, Truck, Calculator, FileText, CreditCard, Shield, AlertTriangle, RotateCcw } from 'lucide-react';
@@ -45,8 +45,7 @@ const SearchForm: React.FC<{
   handleSearch: () => void;
   loading: boolean;
   searchHistory: string[];
-  t: (key: TranslationKey) => string;
-}> = ({ trackingNumber, setTrackingNumber, handleSearch, loading, searchHistory, t }) => {
+}> = ({ trackingNumber, setTrackingNumber, handleSearch, loading, searchHistory }) => {
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !loading) {
       handleSearch();
@@ -357,7 +356,7 @@ const TrackingTimeline: React.FC<{
  */
 const TrackingPage: React.FC = () => {
   const [searchParams] = useSearchParams();
-  const { t } = useTranslation();
+  // Translation hook removed as not currently used
   const { user } = useAuth();
   const [trackingNumber, setTrackingNumber] = useState<string>("");
   const [trackingData, setTrackingData] = useState<TrackingData | null>(null);
@@ -451,7 +450,6 @@ const TrackingPage: React.FC = () => {
           handleSearch={handleSearch}
           loading={loading}
           searchHistory={searchHistory}
-          t={t}
         />
 
         {/* Error Message */}

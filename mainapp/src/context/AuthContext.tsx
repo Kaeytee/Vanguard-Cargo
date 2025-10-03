@@ -153,7 +153,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }): Promise<{ error: string | null }> => {
     try {
       // Removed setLoading(true) to prevent blue loading screen during registration
-      const { error } = await authService.signUp(data);
+      const { error } = await authService.signUp({
+        ...data,
+        streetAddress: '', // Will be filled in later during profile setup
+        city: '',
+        country: '',
+        postalCode: ''
+      });
       
       if (error) {
         return { error: error.message };

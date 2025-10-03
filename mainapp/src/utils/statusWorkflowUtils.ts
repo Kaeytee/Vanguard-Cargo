@@ -73,7 +73,8 @@ export class StatusWorkflowValidator {
    * @returns Validation result with detailed feedback
    */
   static validatePackageTransition(context: StatusTransitionContext): WorkflowValidationResult {
-    const { currentStatus, newStatus, userRole, userId } = context;
+    const { currentStatus, newStatus, userRole } = context;
+    // userId available in context for future audit trail functionality
     
     // Basic transition validation using PackageStatusUtils
     const basicValidation = PackageStatusUtils.isValidTransition(
@@ -173,7 +174,7 @@ export class StatusWorkflowValidator {
   private static validateRolePermissions(
     newStatus: string,
     userRole: string | undefined,
-    entityType: 'package' | 'shipment'
+    _entityType: 'package' | 'shipment' // Kept for future role-based validation
   ): WorkflowValidationResult {
     if (!userRole) {
       return {
@@ -271,7 +272,7 @@ export class StatusWorkflowValidator {
         PackageStatus.CONSOLIDATED
       ];
       
-      if (!validPreShippingStatuses.includes(currentStatus as PackageStatusValue)) {
+      if (!validPreShippingStatuses.includes(currentStatus as any)) {
         return {
           isValid: false,
           error: `Packages must be 'ready_for_shipment' or 'consolidated' before shipping`,
@@ -298,7 +299,7 @@ export class StatusWorkflowValidator {
         ShipmentStatus.IN_TRANSIT
       ];
       
-      if (!validPreArrivalStatuses.includes(currentStatus as ShipmentStatusValue)) {
+      if (!validPreArrivalStatuses.includes(currentStatus as any)) {
         return {
           isValid: false,
           error: `Shipments can only be marked as 'arrived' from 'shipped' or 'in_transit' status`,
@@ -325,7 +326,7 @@ export class StatusWorkflowValidator {
         ShipmentStatus.ARRIVED
       ];
       
-      if (!validPreCustomsStatuses.includes(currentStatus as ShipmentStatusValue)) {
+      if (!validPreCustomsStatuses.includes(currentStatus as any)) {
         return {
           isValid: false,
           error: `Shipments must be 'in_transit' or 'arrived' before customs clearance`,
@@ -450,7 +451,8 @@ export class StatusWorkflowValidator {
    * @param entityType - Type of entity
    * @returns Boolean indicating if immediate attention is required
    */
-  static requiresImmediateAttention(newStatus: string, entityType: 'package' | 'shipment'): boolean {
+  static requiresImmediateAttention(newStatus: string, _entityType: 'package' | 'shipment'): boolean {
+    // entityType parameter kept for future functionality differentiation
     const urgentStatuses = [
       PackageStatus.DAMAGED,
       PackageStatus.LOST,
@@ -459,7 +461,7 @@ export class StatusWorkflowValidator {
       ShipmentStatus.CUSTOMS_CLEARANCE
     ];
 
-    return urgentStatuses.includes(newStatus);
+    return urgentStatuses.includes(newStatus as any);
   }
 
   /**
@@ -577,7 +579,4 @@ export class WorkflowAutomationEngine {
 // EXPORT UTILITIES
 // ============================================================================
 
-export {
-  StatusWorkflowValidator,
-  WorkflowAutomationEngine
-};
+// Classes are already exported above with 'export class' declarations
