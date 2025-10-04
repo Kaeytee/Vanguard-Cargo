@@ -3,6 +3,7 @@ import { Copy, MapPin, Info } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { motion } from "framer-motion";
 import PackageIntakeWidget from '../../components/PackageIntakeWidget';
+import WhatsAppStatusWidget from '../../components/WhatsAppStatusWidget';
 import { addressService, type USShippingAddress } from '../../services/addressService';
 // Removed unused import
 import shopImage from '../../assets/shop.jpg';
@@ -139,9 +140,17 @@ const popularBrands = [
         </p>
       </div>
 
-      {/* Package Intake Widget */}
-      <div className="mb-8">
-        <PackageIntakeWidget />
+      {/* Dashboard Widgets */}
+      <div className="grid lg:grid-cols-2 gap-6 mb-8">
+        {/* Package Intake Widget */}
+        <div>
+          <PackageIntakeWidget />
+        </div>
+        
+        {/* WhatsApp Status Widget */}
+        <div>
+          <WhatsAppStatusWidget />
+        </div>
       </div>
 
       {/* Next Steps Section */}
