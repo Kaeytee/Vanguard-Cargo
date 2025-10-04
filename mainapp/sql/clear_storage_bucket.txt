@@ -4,9 +4,19 @@
 # This script will clear all files from the avatars storage bucket
 # Run this AFTER clearing database and auth users
 # 
+# SECURITY WARNING: This script requires your actual Supabase service role key
+# Never commit real credentials to version control!
+# 
+# SETUP INSTRUCTIONS:
+# 1. Get your service role key from Supabase Dashboard > Settings > API
+# 2. Replace YOUR_SUPABASE_SERVICE_ROLE_KEY with your actual key
+# 3. Replace YOUR_SUPABASE_PROJECT_URL with your project URL
+# 4. Run this script in a secure environment only
+# 
 # @author Senior Software Engineer
-# @version 1.0.0
+# @version 2.0.0 (Security Enhanced)
 # @created 2025-09-26
+# @updated 2025-10-04
 # =====================================================
 
 echo "====================================================="
@@ -15,9 +25,9 @@ echo "====================================================="
 
 # Step 1: List all files in the avatars bucket
 echo "Step 1: Listing all files in avatars bucket..."
-curl -X GET "https://rsxxjcsmcrcxdmyuytzc.supabase.co/storage/v1/object/list/avatars" \
-  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJzeHhqY3NtY3JjeGRteXV5dHpjIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1ODgwNDkzNSwiZXhwIjoyMDc0MzgwOTM1fQ.PYo8ZPc_RZ7gmc3uWUIpS1_x6WVk13tQitjpAycmC9o" \
-  -H "apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJzeHhqY3NtY3JjeGRteXV5dHpjIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1ODgwNDkzNSwiZXhwIjoyMDc0MzgwOTM1fQ.PYo8ZPc_RZ7gmc3uWUIpS1_x6WVk13tQitjpAycmC9o"
+curl -X GET "YOUR_SUPABASE_PROJECT_URL/storage/v1/object/list/avatars" \
+  -H "Authorization: Bearer YOUR_SUPABASE_SERVICE_ROLE_KEY" \
+  -H "apikey: YOUR_SUPABASE_SERVICE_ROLE_KEY"
 
 echo ""
 echo "====================================================="
@@ -30,32 +40,42 @@ echo ""
 
 # Step 2: Delete individual files (replace FILENAME_HERE with actual file names)
 echo "# Delete file template (run for each file):"
-echo 'curl -X DELETE "https://rsxxjcsmcrcxdmyuytzc.supabase.co/storage/v1/object/avatars/FILENAME_HERE" \'
-echo '  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJzeHhqY3NtY3JjeGRteXV5dHpjIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1ODgwNDkzNSwiZXhwIjoyMDc0MzgwOTM1fQ.PYo8ZPc_RZ7gmc3uWUIpS1_x6WVk13tQitjpAycmC9o" \'
-echo '  -H "apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJzeHhqY3NtY3JjeGRteXV5dHpjIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1ODgwNDkzNSwiZXhwIjoyMDc0MzgwOTM1fQ.PYo8ZPc_RZ7gmc3uWUIpS1_x6WVk13tQitjpAycmC9o"'
+echo 'curl -X DELETE "YOUR_SUPABASE_PROJECT_URL/storage/v1/object/avatars/FILENAME_HERE" \'
+echo '  -H "apikey: YOUR_SUPABASE_SERVICE_ROLE_KEY"'
 
 echo ""
 echo "# Alternative: Delete multiple files at once (if supported)"
 echo "# Note: This may not work - Supabase typically requires individual file deletion"
-echo 'curl -X DELETE "https://rsxxjcsmcrcxdmyuytzc.supabase.co/storage/v1/object/avatars" \'
-echo '  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJzeHhqY3NtY3JjeGRteXV5dHpjIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1ODgwNDkzNSwiZXhwIjoyMDc0MzgwOTM1fQ.PYo8ZPc_RZ7gmc3uWUIpS1_x6WVk13tQitjpAycmC9o" \'
-echo '  -H "apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJzeHhqY3NtY3JjeGRteXV5dHpjIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1ODgwNDkzNSwiZXhwIjoyMDc0MzgwOTM1fQ.PYo8ZPc_RZ7gmc3uWUIpS1_x6WVk13tQitjpAycmC9o" \'
+echo 'curl -X DELETE "YOUR_SUPABASE_PROJECT_URL/storage/v1/object/avatars" \'
+echo '  -H "Authorization: Bearer YOUR_SUPABASE_SERVICE_ROLE_KEY" \'
+echo '  -H "apikey: YOUR_SUPABASE_SERVICE_ROLE_KEY" \'
 echo '  -H "Content-Type: application/json" \'
-echo '  -d '"'"'{"prefixes": [""]}'"'"
+echo '  -d '"'"'{"prefixes": [""]}'"'
 
 echo ""
 echo "# Step 3: Verify bucket is empty"
-echo 'curl -X GET "https://rsxxjcsmcrcxdmyuytzc.supabase.co/storage/v1/object/list/avatars" \'
-echo '  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJzeHhqY3NtY3JjeGRteXV5dHpjIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1ODgwNDkzNSwiZXhwIjoyMDc0MzgwOTM1fQ.PYo8ZPc_RZ7gmc3uWUIpS1_x6WVk13tQitjpAycmC9o" \'
-echo '  -H "apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJzeHhqY3NtY3JjeGRteXV5dHpjIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1ODgwNDkzNSwiZXhwIjoyMDc0MzgwOTM1fQ.PYo8ZPc_RZ7gmc3uWUIpS1_x6WVk13tQitjpAycmC9o"'
+echo 'curl -X GET "YOUR_SUPABASE_PROJECT_URL/storage/v1/object/list/avatars" \'
+echo '  -H "Authorization: Bearer YOUR_SUPABASE_SERVICE_ROLE_KEY" \'
+echo '  -H "apikey: YOUR_SUPABASE_SERVICE_ROLE_KEY"'
 
 echo ""
 echo "====================================================="
 echo "CLEANUP ORDER:"
 echo "====================================================="
-echo "1. Run clear_all_users.sql (database cleanup)"
 echo "2. Run clear_supabase_auth.txt (auth users cleanup)"
 echo "3. Run this script (storage cleanup)"
 echo "4. Verify all systems are clean"
 echo "5. Ready for production deployment"
+echo "====================================================="
+echo ""
+echo "====================================================="
+echo "SECURITY REMINDERS:"
+echo "====================================================="
+echo "1. Never commit this file with real credentials to version control"
+echo "2. Use environment variables in production environments"
+echo "3. Rotate service keys regularly after cleanup operations"
+echo "4. Monitor API usage for unauthorized access"
+echo "5. Delete this file after use or store securely"
+echo "6. Verify all credentials are removed from git history"
+echo "7. Consider using Supabase CLI for automated cleanup in CI/CD"
 echo "====================================================="
