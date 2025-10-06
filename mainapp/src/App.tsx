@@ -28,6 +28,8 @@ import ProtectedRoutes from "./components/protectedRoutes";
 import AppLayout from "./components/AppLayout";
 import SmartNotFound from "./components/SmartNotFound";
 import AppNotFoundWithLayout from "./app/layouts/AppNotFoundWithLayout";
+import TermsOfService from "./pages/TermsOfService";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
 import { featureFlags } from "./config/featureFlags";
 
 // Create a client for React Query
@@ -95,6 +97,26 @@ export default function App() {
           <>
             <Navbar />
             <Contact />
+            <Footer />
+          </>
+        }
+      />
+      <Route
+        path="/terms-of-service"
+        element={
+          <>
+            <Navbar />
+            <TermsOfService />
+            <Footer />
+          </>
+        }
+      />
+      <Route
+        path="/privacy-policy"
+        element={
+          <>
+            <Navbar />
+            <PrivacyPolicy />
             <Footer />
           </>
         }

@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { X, ChevronDown, MessageCircle, Check, AlertCircle } from 'lucide-react';
+import { X, ChevronDown, MessageCircle, Check, AlertCircle, Shield } from 'lucide-react';
+import { WhatsAppVerificationService } from '../services/whatsappVerificationService';
+import type { VerificationStep } from '../services/whatsappVerificationService';
+import { useAuth } from '../hooks/useAuth';
 
 /**
  * WhatsApp Verification Modal Component
@@ -67,13 +70,19 @@ const WhatsAppVerificationModal: React.FC<WhatsAppVerificationModalProps> = ({
   isVerified,
   currentNumber
 }) => {
+  // Get user from auth context
+  const { user } = useAuth();
+  
   // Component state management
   const [selectedCountryCode, setSelectedCountryCode] = useState('+233'); // Default to Ghana
   const [phoneNumber, setPhoneNumber] = useState('');
+  const [otpCode, setOtpCode] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [showCountryDropdown, setShowCountryDropdown] = useState(false);
+  const [currentStep, setCurrentStep] = useState<VerificationStep>('phone_input');
+  const [verificationMessage, setVerificationMessage] = useState<string>('');
 
   // Parse existing number if available
   useEffect(() => {
@@ -104,37 +113,122 @@ const WhatsAppVerificationModal: React.FC<WhatsAppVerificationModalProps> = ({
   }, [showCountryDropdown]);
 
   /**
-   * Handles the verification process
+   * Handles sending OTP code
    */
-  const handleVerify = async () => {
+  const handleSendOTP = async () => {
+    if (!user?.id) {
+      setError('User not authenticated');
+      return;
+    }
+
     setError(null);
-    setSuccess(false);
+    setIsLoading(true);
     
     if (!phoneNumber.trim()) {
       setError('Please enter your WhatsApp number');
+      setIsLoading(false);
       return;
     }
     
     const fullWhatsAppNumber = selectedCountryCode + phoneNumber.trim();
     
-    const phoneRegex = /^[\+]?[1-9][\d]{8,14}$/;
-    if (!phoneRegex.test(fullWhatsAppNumber.replace(/\s+/g, ''))) {
-      setError('Please enter a valid WhatsApp number');
+    try {
+      // Step 1: Validate phone number and check for duplicates
+      const validation = await WhatsAppVerificationService.validatePhoneNumber(fullWhatsAppNumber, user.id);
+      
+      if (!validation.success) {
+        setError(validation.error || 'Phone number validation failed');
+        setIsLoading(false);
+        return;
+      }
+
+      // Step 2: Send OTP code
+      const otpResult = await WhatsAppVerificationService.sendOTPCode(fullWhatsAppNumber);
+      
+      if (otpResult.success) {
+        setCurrentStep('otp_verification');
+        setVerificationMessage(otpResult.message || 'Verification code sent!');
+      } else {
+        setError(otpResult.error || 'Failed to send verification code');
+      }
+    } catch (err) {
+      setError('Network error. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  /**
+   * Handles OTP verification
+   */
+  const handleVerifyOTP = async () => {
+    if (!user?.id) {
+      setError('User not authenticated');
+      return;
+    }
+
+    setError(null);
+    setIsLoading(true);
+    
+    if (!otpCode.trim() || otpCode.length !== 6) {
+      setError('Please enter the 6-digit verification code');
+      setIsLoading(false);
       return;
     }
     
-    setIsLoading(true);
+    const fullWhatsAppNumber = selectedCountryCode + phoneNumber.trim();
     
     try {
-      const result = await onVerify(fullWhatsAppNumber);
+      // Verify OTP code
+      const otpResult = await WhatsAppVerificationService.verifyOTPCode(fullWhatsAppNumber, otpCode);
       
-      if (result.success) {
+      if (!otpResult.success) {
+        setError(otpResult.error || 'Invalid verification code');
+        setIsLoading(false);
+        return;
+      }
+
+      // Complete verification
+      const completionResult = await WhatsAppVerificationService.completeVerification(fullWhatsAppNumber, user.id);
+      
+      if (completionResult.success) {
+        setCurrentStep('completed');
         setSuccess(true);
+        setVerificationMessage('WhatsApp number verified successfully!');
+        
+        // Call the original onVerify callback for UI updates
+        await onVerify(fullWhatsAppNumber);
+        
+        // Auto-close modal after success
         setTimeout(() => {
           onClose();
         }, 2000);
       } else {
-        setError(result.error || 'Verification failed');
+        setError(completionResult.error || 'Failed to complete verification');
+      }
+    } catch (err) {
+      setError('Network error. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  /**
+   * Handles resending OTP code
+   */
+  const handleResendOTP = async () => {
+    const fullWhatsAppNumber = selectedCountryCode + phoneNumber.trim();
+    
+    setError(null);
+    setIsLoading(true);
+    
+    try {
+      const otpResult = await WhatsAppVerificationService.sendOTPCode(fullWhatsAppNumber);
+      
+      if (otpResult.success) {
+        setVerificationMessage('New verification code sent!');
+      } else {
+        setError(otpResult.error || 'Failed to resend verification code');
       }
     } catch (err) {
       setError('Network error. Please try again.');
@@ -236,61 +330,119 @@ const WhatsAppVerificationModal: React.FC<WhatsAppVerificationModalProps> = ({
               </div>
             </div>
 
-            {/* Phone Number Input */}
-            <div>
-              <label htmlFor="whatsapp" className="block text-sm font-medium text-gray-700 mb-2">
-                WhatsApp Number
-              </label>
-              <div className="flex gap-2">
-                {/* Country Code Selector */}
-                <div className="relative">
-                  <button
-                    type="button"
-                    onClick={() => setShowCountryDropdown(!showCountryDropdown)}
-                    className="flex items-center gap-2 px-3 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors min-w-[120px]"
-                    disabled={isLoading}
-                  >
-                    <span className="text-lg">
-                      {COUNTRY_CODES.find(cc => cc.code === selectedCountryCode)?.flag || '🌍'}
-                    </span>
-                    <span className="font-mono text-sm">{selectedCountryCode}</span>
-                    <ChevronDown className="w-4 h-4 text-gray-400" />
-                  </button>
+            {/* Step 1: Phone Number Input */}
+            {currentStep === 'phone_input' && (
+              <div>
+                <label htmlFor="whatsapp" className="block text-sm font-medium text-gray-700 mb-2">
+                  WhatsApp Number
+                </label>
+                <div className="flex gap-2">
+                  {/* Country Code Selector */}
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setShowCountryDropdown(!showCountryDropdown)}
+                      className="flex items-center gap-2 px-3 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors min-w-[120px]"
+                      disabled={isLoading}
+                    >
+                      <span className="text-lg">
+                        {COUNTRY_CODES.find(cc => cc.code === selectedCountryCode)?.flag || '🌍'}
+                      </span>
+                      <span className="font-mono text-sm">{selectedCountryCode}</span>
+                      <ChevronDown className="w-4 h-4 text-gray-400" />
+                    </button>
+                    
+                    {/* Country Dropdown */}
+                    {showCountryDropdown && (
+                      <div className="absolute top-full left-0 mt-1 w-72 bg-white border border-gray-300 rounded-lg shadow-lg z-10 max-h-60 overflow-y-auto">
+                        {COUNTRY_CODES.map((country) => (
+                          <button
+                            key={country.code}
+                            type="button"
+                            onClick={() => handleCountryCodeSelect(country.code)}
+                            className="w-full flex items-center gap-3 px-4 py-2 text-left hover:bg-gray-50 focus:bg-gray-50 transition-colors"
+                          >
+                            <span className="text-lg">{country.flag}</span>
+                            <span className="font-mono text-sm w-12">{country.code}</span>
+                            <span className="text-sm text-gray-700 truncate">{country.country}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                   
-                  {/* Country Dropdown */}
-                  {showCountryDropdown && (
-                    <div className="absolute top-full left-0 mt-1 w-72 bg-white border border-gray-300 rounded-lg shadow-lg z-10 max-h-60 overflow-y-auto">
-                      {COUNTRY_CODES.map((country) => (
-                        <button
-                          key={country.code}
-                          type="button"
-                          onClick={() => handleCountryCodeSelect(country.code)}
-                          className="w-full flex items-center gap-3 px-4 py-2 text-left hover:bg-gray-50 focus:bg-gray-50 transition-colors"
-                        >
-                          <span className="text-lg">{country.flag}</span>
-                          <span className="font-mono text-sm w-12">{country.code}</span>
-                          <span className="text-sm text-gray-700 truncate">{country.country}</span>
-                        </button>
-                      ))}
-                    </div>
-                  )}
+                  {/* Phone Number Input */}
+                  <input
+                    id="whatsapp"
+                    type="tel"
+                    value={phoneNumber}
+                    onChange={(e) => handlePhoneInputChange(e.target.value)}
+                    placeholder="123456789"
+                    className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors"
+                    disabled={isLoading}
+                  />
                 </div>
-                
-                {/* Phone Number Input */}
-                <input
-                  id="whatsapp"
-                  type="tel"
-                  value={phoneNumber}
-                  onChange={(e) => handlePhoneInputChange(e.target.value)}
-                  placeholder="123456789"
-                  className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors"
-                  disabled={isLoading}
-                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Select your country code and enter your WhatsApp number
+                </p>
               </div>
-              <p className="text-xs text-gray-500 mt-1">
-                Select your country code and enter your WhatsApp number
-              </p>
-            </div>
+            )}
+
+            {/* Step 2: OTP Verification */}
+            {currentStep === 'otp_verification' && (
+              <div>
+                <div className="text-center mb-4">
+                  <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Shield className="w-8 h-8 text-blue-600" />
+                  </div>
+                  <h4 className="text-lg font-semibold text-gray-900 mb-2">
+                    Verification Code Sent
+                  </h4>
+                  <p className="text-sm text-gray-600">
+                    We've sent a 6-digit code to <br />
+                    <span className="font-mono font-medium">{selectedCountryCode} {phoneNumber}</span>
+                  </p>
+                </div>
+
+                <div>
+                  <label htmlFor="otp" className="block text-sm font-medium text-gray-700 mb-2">
+                    Enter Verification Code
+                  </label>
+                  <input
+                    id="otp"
+                    type="text"
+                    value={otpCode}
+                    onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                    placeholder="123456"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors text-center text-lg font-mono tracking-wider"
+                    disabled={isLoading}
+                    maxLength={6}
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Enter the 6-digit code sent to your WhatsApp
+                  </p>
+                </div>
+
+                {/* Resend Code */}
+                <div className="text-center">
+                  <button
+                    onClick={handleResendOTP}
+                    disabled={isLoading}
+                    className="text-sm text-red-600 hover:text-red-700 disabled:opacity-50"
+                  >
+                    Didn't receive the code? Resend
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Success Message */}
+            {verificationMessage && !error && (
+              <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-lg">
+                <Check className="w-4 h-4 text-green-600" />
+                <span className="text-sm text-green-700">{verificationMessage}</span>
+              </div>
+            )}
 
             {/* Error Message */}
             {error && (
@@ -309,23 +461,46 @@ const WhatsAppVerificationModal: React.FC<WhatsAppVerificationModalProps> = ({
               >
                 Cancel
               </button>
-              <button
-                onClick={handleVerify}
-                disabled={isLoading || !phoneNumber.trim()}
-                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
-              >
-                {isLoading ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    Verifying...
-                  </>
-                ) : (
-                  <>
-                    <MessageCircle className="w-4 h-4" />
-                    Verify Number
-                  </>
-                )}
-              </button>
+              
+              {currentStep === 'phone_input' && (
+                <button
+                  onClick={handleSendOTP}
+                  disabled={isLoading || !phoneNumber.trim()}
+                  className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+                >
+                  {isLoading ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      Sending Code...
+                    </>
+                  ) : (
+                    <>
+                      <MessageCircle className="w-4 h-4" />
+                      Send Code
+                    </>
+                  )}
+                </button>
+              )}
+
+              {currentStep === 'otp_verification' && (
+                <button
+                  onClick={handleVerifyOTP}
+                  disabled={isLoading || otpCode.length !== 6}
+                  className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+                >
+                  {isLoading ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      Verifying...
+                    </>
+                  ) : (
+                    <>
+                      <Check className="w-4 h-4" />
+                      Verify Code
+                    </>
+                  )}
+                </button>
+              )}
             </div>
           </div>
         )}

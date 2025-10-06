@@ -1,5 +1,5 @@
 import React, { createContext, useState, useEffect, type ReactNode } from 'react';
-import type { UserProfile } from '../services/api';
+import type { AuthUser } from '../services/authService';
 import type { UserContextType } from './useUser';
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -9,7 +9,7 @@ interface UserProviderProps {
 }
 
 export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
-  const [user, setUser] = useState<UserProfile | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

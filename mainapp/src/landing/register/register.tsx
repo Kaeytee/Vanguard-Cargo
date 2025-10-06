@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Eye, EyeOff, Check } from 'lucide-react';
-import PhoneInput, { isValidPhoneNumber } from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
-import { parsePhoneNumber } from 'libphonenumber-js';
+import PhoneInput, { isValidPhoneNumber } from 'react-phone-number-input';
+import { usePlacesAutocomplete } from '../../hooks/usePlacesAutocomplete';
 import { cn } from '../../lib/utils';
 import registerbg from '../../images/register-bg.jpg';
 import { useNavigate } from 'react-router-dom';
@@ -29,13 +29,16 @@ export default function Register() {
     password: '',
     confirmPassword: '',
     agreeToTerms: false,
-    agreeToMarketing: false,
   });
 
   // UI state and validation
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [phoneError, setPhoneError] = useState('');
+  const [addressVerified, setAddressVerified] = useState(false);
+  
+  // Refs for address autocomplete
+  const addressRef = useRef<HTMLInputElement>(null);
   const [errors, setErrors] = useState<{
     firstName: string;
     lastName: string;
@@ -130,15 +133,15 @@ export default function Register() {
     }));
   };
 
-  // Handle phone number change with real-time validation
+  // Handle phone number change with professional validation
   const handlePhoneChange = (value?: string) => {
-    // First update the phone number in the form data
+    // Update the phone number in form data
     setFormData((prev) => ({ ...prev, phoneNumber: value || '' }));
     
     // Mark phone field as touched
     setTouched((prev) => ({ ...prev, phoneNumber: true }));
     
-    // Real-time validation for phone number
+    // Professional validation using isValidPhoneNumber
     if (value && !isValidPhoneNumber(value)) {
       setPhoneError('Please enter a valid phone number');
       setErrors((prev) => ({ ...prev, phoneNumber: 'Please enter a valid phone number' }));
@@ -146,44 +149,56 @@ export default function Register() {
       setPhoneError('Phone number is required');
       setErrors((prev) => ({ ...prev, phoneNumber: 'Phone number is required' }));
     } else {
-      // Clear any phone error
+      // Clear any phone error - number is valid
       setPhoneError('');
       setErrors((prev) => ({ ...prev, phoneNumber: '' }));
     }
-    
-    // Auto-set country based on phone number using libphonenumber-js
-    if (value && isValidPhoneNumber(value)) {
-      try {
-        // Parse the phone number to get country information
-        const phoneNumberData = parsePhoneNumber(value);
-        
-        if (phoneNumberData && phoneNumberData.country) {
-          // Get the country name from the country code
-          const countryName = new Intl.DisplayNames(['en'], { type: 'region' }).of(phoneNumberData.country);
-          
-          if (countryName) {
-            // Update the country field with the detected country name
-            // Use a separate state update to ensure it renders properly
-            setTimeout(() => {
-              setFormData((prev) => {
-                const updated = { ...prev, country: countryName };
-                return updated;
-              });
-              
-              // Mark the country field as touched to trigger validation
-              setTouched((prev) => ({ ...prev, country: true }));
-              
-              // Clear any country field error since we've set it automatically
-              setErrors((prev) => ({ ...prev, country: '' }));
-            }, 0);
-          }
-        }
-      } catch (error) {
-        // If there's an error parsing the phone number, don't update the country
-        console.log('Error detecting country from phone number:', error);
-      }
-    }
   };
+
+  // Handle address selection from Mapbox Places Autocomplete
+  const handleAddressSelect = (addressComponents: {
+    address: string;
+    city: string;
+    state: string;
+    zip: string;
+    country: string;
+  }) => {
+    // Update form data with selected address components
+    setFormData((prev) => ({
+      ...prev,
+      address: addressComponents.address,
+      city: addressComponents.city,
+      state: addressComponents.state,
+      zip: addressComponents.zip,
+      country: addressComponents.country,
+    }));
+
+    // Mark address fields as touched
+    setTouched((prev) => ({
+      ...prev,
+      address: true,
+      city: true,
+      state: true,
+      zip: true,
+      country: true,
+    }));
+
+    // Clear address-related errors since we have a verified address
+    setErrors((prev) => ({
+      ...prev,
+      address: '',
+      city: '',
+      state: '',
+      zip: '',
+      country: '',
+    }));
+
+    // Mark address as verified
+    setAddressVerified(true);
+  };
+
+  // Initialize Mapbox Places Autocomplete with debouncing and caching
+  const { predictions, fetchPredictions, clearPredictions, getCoordinates, isLoading: isAddressAPILoading, error: addressAPIError } = usePlacesAutocomplete();
 
   // Email validation helper
   const isValidEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -191,15 +206,20 @@ export default function Register() {
   // Validate single field for real-time validation
   const validateField = (fieldName: string, data: typeof formData): string => {
     switch (fieldName) {
-      case 'firstName':
-        return !data.firstName ? 'First name is required' : '';
-      case 'lastName':
-        return !data.lastName ? 'Last name is required' : '';
-      case 'email':
-        if (!data.email) return 'Email is required';
-        return !isValidEmail(data.email) ? 'Please enter a valid email address' : '';
+      case 'address':
+        if (!data.address) return 'Address is required';
+        if (data.address.length < 5) return 'Please enter a valid address (minimum 5 characters)';
+        // Allow manual addresses - don't require autocomplete verification
+        return '';
+      case 'city':
+        return !data.city ? 'City is required' : '';
+      case 'state':
+        return !data.state ? 'State is required' : '';
+      case 'zip':
+        return !data.zip ? 'ZIP code is required' : '';
+      case 'country':
+        return !data.country ? 'Country is required' : '';
       case 'password':
-        if (!data.password) return 'Password is required';
         return data.password.length < 8 ? 'Password must be at least 8 characters' : '';
       case 'confirmPassword':
         if (!data.confirmPassword) return 'Please confirm your password';
@@ -306,7 +326,6 @@ export default function Register() {
           password: '',
           confirmPassword: '',
           agreeToTerms: false,
-          agreeToMarketing: false,
         });
         setTouched({
           firstName: false,
@@ -522,20 +541,25 @@ export default function Register() {
                     <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700 mb-1">
                       Phone Number *
                     </label>
-                    <PhoneInput
-                      id="phoneNumber"
-                      name="phoneNumber"
-                      value={formData.phoneNumber}
-                      onChange={handlePhoneChange}
-                      placeholder="Enter phone number"
-                      className={cn(
-                        'w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all duration-200 outline-none',
-                        phoneError ? 'border-red-300' : 'border-gray-300'
-                      )}
-                      data-testid="phone-input"
-                      aria-invalid={!!phoneError}
-                      aria-describedby="phoneNumber-error"
-                    />
+
+                    <div className="relative">
+                      <PhoneInput
+                        id="phoneNumber"
+                        international
+                        defaultCountry="GH"
+                        value={formData.phoneNumber}
+                        onChange={(value) => {
+                          handlePhoneChange(value);
+                        }}
+                        className={cn(
+                          'w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all duration-200 outline-none',
+                          phoneError ? 'border-red-300' : 'border-gray-300'
+                        )}
+                        aria-invalid={!!phoneError}
+                        aria-describedby="phoneNumber-error"
+                      />
+                    </div>
+
                     {phoneError && (
                       <p id="phoneNumber-error" className="mt-1 text-sm text-red-600">
                         {phoneError}
@@ -553,24 +577,82 @@ export default function Register() {
                     <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-1">
                       Address
                     </label>
-                    <input
-                      type="text"
-                      id="address"
-                      name="address"
-                      value={formData.address}
-                      onChange={handleInputChange}
-                      onBlur={handleBlur}
-                      placeholder="123 Main St"
-                      className={cn(
-                        'w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all duration-200 outline-none',
-                        errors.address && touched.address ? 'border-red-300' : 'border-gray-300'
+                    <div className="relative">
+                      <input
+                        ref={addressRef}
+                        type="text"
+                        id="address"
+                        name="address"
+                        value={formData.address}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          handleInputChange(e);
+                          // Fetch predictions as user types
+                          fetchPredictions(value);
+                          // Reset verification if user clears the field
+                          if (value === '' && addressVerified) {
+                            setAddressVerified(false);
+                          }
+                        }}
+                        onBlur={handleBlur}
+                        placeholder="123 Main Street, Accra"
+                        className={cn(
+                          'w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all duration-200 outline-none',
+                          errors.address && touched.address ? 'border-red-300' : 'border-gray-300',
+                          addressVerified ? 'border-green-300 bg-green-50' : ''
+                        )}
+                        aria-invalid={!!errors.address}
+                        aria-describedby="address-error"
+                      />
+                      
+                      {/* Address Suggestions Dropdown */}
+                      {predictions.length > 0 && (
+                        <ul className="absolute z-10 w-full bg-white border border-gray-300 rounded-lg mt-1 max-h-60 overflow-y-auto shadow-lg">
+                          {predictions.map((prediction) => (
+                            <li
+                              key={prediction.place_id}
+                              onClick={() => {
+                                // Set the selected address
+                                setFormData(prev => ({ ...prev, address: prediction.description }));
+                                setAddressVerified(true);
+                                
+                                // Store coordinates for future use (shipping, mapping, etc.)
+                                const coordinates = getCoordinates(prediction);
+                                if (coordinates) {
+                                  console.log('📍 Address coordinates:', coordinates);
+                                  // You can store coordinates in form data or separate state if needed
+                                  // setFormData(prev => ({ ...prev, coordinates }));
+                                }
+                                
+                                // Clear predictions after selection
+                                clearPredictions();
+                              }}
+                              className="px-4 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+                            >
+                              <div className="text-sm font-medium text-gray-900">
+                                {prediction.structured_formatting?.main_text || prediction.description}
+                              </div>
+                              <div className="text-xs text-gray-500">
+                                {prediction.structured_formatting?.secondary_text || ''}
+                              </div>
+                            </li>
+                          ))}
+                        </ul>
                       )}
-                      aria-invalid={!!errors.address}
-                      aria-describedby="address-error"
-                    />
+                    </div>
                     {errors.address && touched.address && (
                       <p id="address-error" className="mt-1 text-sm text-red-600">
                         {errors.address}
+                      </p>
+                    )}
+                    {addressVerified && (
+                      <p className="mt-1 text-sm text-green-600">
+                        ✅ Address verified with Mapbox
+                      </p>
+                    )}
+                    {addressAPIError && (
+                      <p className="mt-1 text-sm text-orange-600">
+                        ⚠️ Address suggestions unavailable: {addressAPIError}. You can still enter your address manually.
                       </p>
                     )}
                   </div>
@@ -778,41 +860,27 @@ export default function Register() {
                       <span className="text-sm text-gray-700">
                         I agree to the{' '}
                         <a 
-                          href="#" 
-                          className="text-red-500 hover:text-red-600 font-medium"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            // TODO: Open terms of service modal or navigate to terms page
-                          }}
+                          href="/terms-of-service" 
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-red-500 hover:text-red-600 font-medium underline"
                         >
-                          terms of service
+                          Terms of Service
+                        </a>
+                        {' '}and{' '}
+                        <a 
+                          href="/privacy-policy" 
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-red-500 hover:text-red-600 font-medium underline"
+                        >
+                          Privacy Policy
                         </a>
                       </span>
                     </label>
                     {errors.agreeToTerms && touched.agreeToTerms && (
                       <p className="ml-8 text-sm text-red-600">You must agree to the terms and conditions</p>
                     )}
-                    <label className="flex items-start space-x-3 cursor-pointer">
-                      <div className="relative">
-                        <input
-                          type="checkbox"
-                          name="agreeToMarketing"
-                          checked={formData.agreeToMarketing}
-                          onChange={handleInputChange}
-                          className="sr-only"
-                          aria-label="I agree to receive marketing communications"
-                        />
-                        <div
-                          className={cn(
-                            'w-5 h-5 border-2 rounded flex items-center justify-center transition-colors duration-200 p-2',
-                            formData.agreeToMarketing ? 'bg-red-500 border-red-500' : 'border-gray-300'
-                          )}
-                        >
-                          {formData.agreeToMarketing && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
-                        </div>
-                      </div>
-                      <span className="text-sm text-gray-700 pb-4">I agree to receive marketing communications</span>
-                    </label>
                   </div>
                   <button
                     type="submit"

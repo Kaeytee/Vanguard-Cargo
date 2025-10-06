@@ -32,7 +32,7 @@ export const TRACKING_STATUSES: Record<string, TrackingStatus> = {
     code: 'PKG-001',
     name: 'Package Pending',
     description: 'Package information received, awaiting physical arrival at warehouse',
-    customerMessage: 'Your package information has been received. We are awaiting the physical package at our Miami facility.',
+    customerMessage: 'Your package information has been received. We are awaiting the physical package at our Alexandria facility.',
     icon: 'Clock',
     color: 'bg-gray-100 text-gray-800',
     category: 'pending'
@@ -41,7 +41,7 @@ export const TRACKING_STATUSES: Record<string, TrackingStatus> = {
     code: 'PKG-002', 
     name: 'Package Received',
     description: 'Package physically received and scanned at Vanguard Cargo warehouse',
-    customerMessage: 'Your package has been received and scanned at our Vanguard Cargo facility in Miami. It is now ready for processing.',
+    customerMessage: 'Your package has been received and scanned at our Vanguard Cargo facility in Alexandria. It is now ready for processing.',
     icon: 'Package',
     color: 'bg-blue-100 text-blue-800',
     category: 'processing'
@@ -58,8 +58,8 @@ export const TRACKING_STATUSES: Record<string, TrackingStatus> = {
   'shipped': {
     code: 'PKG-004',
     name: 'Package Shipped',
-    description: 'Package included in shipment and dispatched from Miami warehouse',
-    customerMessage: 'Your package has been included in a shipment and dispatched from our Miami facility. It is now being prepared for international transit.',
+    description: 'Package included in shipment and dispatched from Alexandria warehouse',
+    customerMessage: 'Your package has been included in a shipment and dispatched from our Alexandria facility. It is now being prepared for international transit.',
     icon: 'Truck',
     color: 'bg-purple-100 text-purple-800',
     category: 'transit'
@@ -67,8 +67,8 @@ export const TRACKING_STATUSES: Record<string, TrackingStatus> = {
   'in_transit': {
     code: 'PKG-005',
     name: 'Package In Transit',
-    description: 'Package is traveling from Miami to Ghana via international shipping',
-    customerMessage: 'Your package is now in transit from Miami to Ghana. Transit time is typically 3-7 days.',
+    description: 'Package is traveling from Alexandria to Ghana via international shipping',
+    customerMessage: 'Your package is now in transit from Alexandria to Ghana. Transit time is typically 3-7 days.',
     icon: 'Plane',
     color: 'bg-indigo-100 text-indigo-800',
     category: 'transit'
@@ -368,7 +368,7 @@ export class TrackingService {
         trackingNumber: pkg.package_id || pkg.tracking_number || pkg.id,
         type: 'package',
         currentStatus,
-        origin: 'Vanguard Cargo Facility, Miami, FL, USA',
+        origin: 'Vanguard Cargo Facility, Alexandria, VA 22304, USA',
         destination: `${user?.city || 'Unknown'}, ${user?.country || 'Unknown'}`,
         recipient: {
           name: `${user?.first_name || ''} ${user?.last_name || ''}`.trim() || 'Unknown',
@@ -467,7 +467,7 @@ export class TrackingService {
         trackingNumber: pkg.package_id || pkg.tracking_number || pkg.id, // Show PACKAGE tracking number, not shipment
         type: 'package', // User's individual package
         currentStatus: this.getStatusInfo(pkg.status), // Use PACKAGE status, not shipment status
-        origin: 'Vanguard Cargo Facility, Miami, FL, USA',
+        origin: 'Vanguard Cargo Facility, Alexandria, VA 22304, USA',
         destination: `${user?.city || 'Unknown'}, ${user?.country || 'Unknown'}`,
         recipient: {
           name: `${user?.first_name || ''} ${user?.last_name || ''}`.trim() || 'Unknown',
@@ -533,7 +533,7 @@ export class TrackingService {
         trackingNumber: shipment.tracking_number,
         type: 'shipment',
         currentStatus,
-        origin: 'Vanguard Cargo Facility, Miami, FL, USA',
+        origin: 'Vanguard Cargo Facility, Alexandria, VA 22304, USA',
         destination: `${shipment.delivery_city || 'Unknown'}, ${shipment.delivery_country || 'Unknown'}`,
         recipient: {
           name: shipment.recipient_name || 'Unknown',
@@ -583,7 +583,7 @@ export class TrackingService {
       location: 'Package Information Received',
       status: this.getStatusInfo('pending'),
       description: 'Package information received',
-      details: `Package information from ${packageData.store_name || packageData.vendor_name || 'retailer'} has been received. Awaiting physical package arrival at our Miami facility.`,
+      details: `Package information from ${packageData.store_name || packageData.vendor_name || 'retailer'} has been received. Awaiting physical package arrival at our Alexandria facility.`,
       completed: currentIndex >= 0,
       estimatedDate: currentIndex >= 0 ? undefined : 'Awaiting arrival'
     });
@@ -595,12 +595,12 @@ export class TrackingService {
     events.push({
       id: `pkg-${packageData.id}-received`,
       timestamp: currentIndex >= 1 ? receivedDate.toLocaleString() : 'Estimated: ' + receivedDate.toLocaleDateString(),
-      location: 'Vanguard Cargo Facility, Miami, FL',
+      location: 'Vanguard Cargo Facility, Alexandria, VA 22304',
       status: this.getStatusInfo('received'),
       description: 'Package received and scanned',
       details: currentIndex >= 1 ? 
-        'Your package has been physically received and scanned at our Vanguard Cargo facility in Miami. Package inspection and documentation completed.' :
-        'Your package will be received and scanned at our Miami facility.',
+        'Your package has been physically received and scanned at our Vanguard Cargo facility in Alexandria. Package inspection and documentation completed.' :
+        'Your package will be received and scanned at our Alexandria facility.',
       completed: currentIndex >= 1,
       estimatedDate: currentIndex >= 1 ? undefined : receivedDate.toLocaleDateString()
     });
@@ -612,7 +612,7 @@ export class TrackingService {
     events.push({
       id: `pkg-${packageData.id}-processing`,
       timestamp: currentIndex >= 2 ? processedDate.toLocaleString() : 'Estimated: ' + processedDate.toLocaleDateString(),
-      location: 'Vanguard Cargo Processing Center, Miami, FL',
+      location: 'Vanguard Cargo Processing Center, Alexandria, VA 22304',
       status: this.getStatusInfo('processing'),
       description: 'Package ready for shipment',
       details: currentIndex >= 2 ? 
@@ -629,12 +629,12 @@ export class TrackingService {
     events.push({
       id: `pkg-${packageData.id}-shipped`,
       timestamp: currentIndex >= 3 ? shippedDate.toLocaleString() : 'Estimated: ' + shippedDate.toLocaleDateString(),
-      location: 'Vanguard Cargo Warehouse, Miami, FL',
+      location: 'Vanguard Cargo Warehouse, Alexandria, VA 22304',
       status: this.getStatusInfo('shipped'),
       description: 'Package included in shipment',
       details: currentIndex >= 3 ? 
-        'Your package has been included in a shipment and dispatched from our Miami facility. It is now being prepared for international transit.' :
-        'Your package will be included in a shipment and dispatched from our Miami facility.',
+        'Your package has been included in a shipment and dispatched from our Alexandria facility. It is now being prepared for international transit.' :
+        'Your package will be included in a shipment and dispatched from our Alexandria facility.',
       completed: currentIndex >= 3,
       estimatedDate: currentIndex >= 3 ? undefined : shippedDate.toLocaleDateString()
     });
@@ -646,12 +646,12 @@ export class TrackingService {
     events.push({
       id: `pkg-${packageData.id}-in_transit`,
       timestamp: currentIndex >= 4 ? inTransitDate.toLocaleString() : 'Estimated: ' + inTransitDate.toLocaleDateString(),
-      location: 'Miami International Airport, FL',
+      location: 'Alexandria International Airport, VA 22304',
       status: this.getStatusInfo('in_transit'),
       description: 'Package in transit to Ghana',
       details: currentIndex >= 4 ? 
-        'Your package is now in transit from Miami to Ghana. Transit time is typically 3-7 days.' :
-        'Your package will be in transit from Miami International Airport to Ghana.',
+        'Your package is now in transit from Alexandria to Ghana. Transit time is typically 3-7 days.' :
+        'Your package will be in transit from Alexandria International Airport to Ghana.',
       completed: currentIndex >= 4,
       estimatedDate: currentIndex >= 4 ? undefined : inTransitDate.toLocaleDateString()
     });
@@ -804,9 +804,9 @@ export class TrackingService {
       case 'quote_ready':
       case 'payment_pending':
       case 'processing_shipment':
-        return 'Vanguard Cargo Processing Center, Miami, FL';
+        return 'Vanguard Cargo Processing Center, Alexandria, VA 22304';
       case 'ready_for_pickup':
-        return 'Miami International Airport, FL';
+        return 'Alexandria International Airport, VA 22304';
       case 'in_transit':
         return 'International Transit to Ghana';
       case 'customs_clearance':
@@ -815,7 +815,7 @@ export class TrackingService {
       case 'delivered':
         return 'Ghana Local Delivery Network';
       default:
-        return 'Vanguard Cargo Facility, Miami, FL';
+        return 'Vanguard Cargo Facility, Alexandria, VA 22304';
     }
   }
 }

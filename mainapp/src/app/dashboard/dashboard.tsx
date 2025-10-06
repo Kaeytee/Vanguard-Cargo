@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Copy, MapPin, Info } from 'lucide-react';
+import { Copy, MapPin, Info, Check, AlertTriangle } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { motion } from "framer-motion";
 import PackageIntakeWidget from '../../components/PackageIntakeWidget';
@@ -12,6 +12,7 @@ import shopImage from '../../assets/shop.jpg';
 const Dashboard: React.FC = () => {
   const { user, profile } = useAuth();
   const [usAddress, setUsAddress] = useState<USShippingAddress | null>(null);
+  const [copiedStates, setCopiedStates] = useState<{[key: string]: boolean}>({});
 
   // Use profile from AuthContext instead of separate state
   // Extract first name from profile or user email
@@ -57,7 +58,7 @@ const popularBrands = [
   },
   {
     name: "Samsung",
-    logo: "https://upload.wikimedia.org/wikipedia/commons/2/24/Samsung_Logo.svg",
+    logo: "https://logos-world.net/wp-content/uploads/2020/04/Samsung-Logo-700x394.png",
     category: "Electronics",
     url: "https://www.samsung.com"
   },
@@ -117,14 +118,19 @@ const popularBrands = [
     const addressText = addressService.formatAddress(usAddress, profile.suite_number);
 
     navigator.clipboard.writeText(addressText).then(() => {
-      // You could add a toast notification here
-      console.log('Address copied to clipboard');
+      setCopiedStates(prev => ({ ...prev, 'full-address': true }));
+      setTimeout(() => {
+        setCopiedStates(prev => ({ ...prev, 'full-address': false }));
+      }, 2000);
     });
   };
 
-  const copyToClipboard = (text: string) => {
+  const copyToClipboard = (text: string, key: string) => {
     navigator.clipboard.writeText(text).then(() => {
-      console.log('Copied to clipboard:', text);
+      setCopiedStates(prev => ({ ...prev, [key]: true }));
+      setTimeout(() => {
+        setCopiedStates(prev => ({ ...prev, [key]: false }));
+      }, 2000);
     });
   };
 
@@ -135,9 +141,28 @@ const popularBrands = [
         <h1 className="text-3xl font-bold text-gray-900 mb-2">
           Hello, {firstName}!
         </h1>
-        <p className="text-gray-600">
-          Now that you have a Vanguard Cargo address, you can use that address to shop on almost any site. Just use your address during checkout and we'll let you know when your items arrive at the warehouse.
-        </p>
+{/* Important Instructions */}
+<div className="mt-4 space-y-3">
+                
+                
+                <div className="p-3 sm:p-4 bg-amber-50/80 backdrop-blur-sm rounded-lg border border-amber-200">
+                  <div className="flex items-start gap-2 sm:gap-3">
+                    <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5 text-amber-600 mt-0.5 flex-shrink-0" />
+                    <div className="text-xs sm:text-sm text-amber-800">
+                      <p className="font-semibold mb-1 text-sm sm:text-base">⚠️ MANDATORY: Use Complete Address Details</p>
+                      <p className="mb-2">When checking out online, you MUST include:</p>
+                      <ul className="list-disc list-inside mt-1 space-y-1 pl-2">
+                        <li><strong>Your full name and suite number</strong> in the recipient field</li>
+                        <li><strong>Complete address</strong> exactly as shown above</li>
+                        <li><strong>All address lines</strong> - don't skip any part</li>
+                      </ul>
+                      <p className="mt-2 font-medium text-amber-900 bg-amber-100/50 p-2 rounded text-center">
+                        📦 Missing any detail may cause delivery delays or package loss!
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
       </div>
 
       {/* Dashboard Widgets */}
@@ -148,9 +173,9 @@ const popularBrands = [
         </div>
         
         {/* WhatsApp Status Widget */}
-        <div>
+        {/* <div>
           <WhatsAppStatusWidget />
-        </div>
+        </div> */}
       </div>
 
       {/* Next Steps Section */}
@@ -189,8 +214,15 @@ const popularBrands = [
             <div className="bg-white/90 backdrop-blur-sm rounded-full w-16 h-16 flex items-center justify-center mb-4 shadow-md">
               <span className="text-2xl font-bold text-red-600">2</span>
             </div>
-            <h4 className="text-lg font-semibold text-gray-900 mb-4">Use your Vanguard Cargo address at checkout</h4>
-            
+            <h4 className="text-lg bg-white font-semibold text-gray-900 mb-4">Use your Vanguard Cargo address at checkout</h4>
+            <div className="p-3 bg-red-50/80 backdrop-blur-sm rounded-lg">
+                  <div className="flex items-start gap-2">
+                    <Info className="w-4 h-4 text-red-600 mt-0.5 flex-shrink-0" />
+                    <p className="text-sm text-red-800">
+                      Click the copy button next to each line to copy individual address fields, or use the button below to copy the complete address.
+                    </p>
+                  </div>
+                </div>
             {/* Professional Address Card */}
             <div className="w-full bg-white/80 backdrop-blur-sm rounded-xl border border-gray-200 shadow-sm p-6">
               <div className="flex items-center justify-between mb-4">
@@ -202,8 +234,17 @@ const popularBrands = [
                   onClick={copyAddressToClipboard}
                   className="flex items-center gap-2 text-red-600 hover:text-red-700 text-sm font-medium transition-colors"
                 >
-                  <Copy className="w-4 h-4" />
-                  Copy
+                  {copiedStates['full-address'] ? (
+                    <>
+                      <Check className="w-4 h-4" />
+                      Copied!
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-4 h-4" />
+                      Copy
+                    </>
+                  )}
                 </button>
               </div>
               
@@ -219,12 +260,17 @@ const popularBrands = [
                     onClick={() => copyToClipboard(
                       `${(profile?.firstName || profile?.lastName)
                         ? `${profile?.firstName ?? ''} ${profile?.lastName ?? ''}`.trim()
-                        : user?.email || ''} (${profile?.suite_number || ''})`
+                        : user?.email || ''} (${profile?.suite_number || ''})`,
+                      'name'
                     )}
                     className="text-red-600 hover:text-red-700 p-1"
                     title="Copy name"
                   >
-                    <Copy className="w-3 h-3" />
+                    {copiedStates['name'] ? (
+                      <Check className="w-3 h-3" />
+                    ) : (
+                      <Copy className="w-3 h-3" />
+                    )}
                   </button>
                 </div>
                 
@@ -232,11 +278,15 @@ const popularBrands = [
                 <div className="flex items-center justify-between p-2 rounded border border-gray-100 hover:bg-gray-50">
                   <span>4700 Eisenhower Avenue</span>
                   <button
-                    onClick={() => copyToClipboard('4700 Eisenhower Avenue')}
+                    onClick={() => copyToClipboard('4700 Eisenhower Avenue', 'address1')}
                     className="text-red-600 hover:text-red-700 p-1"
                     title="Copy address line 1"
                   >
-                    <Copy className="w-3 h-3" />
+                    {copiedStates['address1'] ? (
+                      <Check className="w-3 h-3" />
+                    ) : (
+                      <Copy className="w-3 h-3" />
+                    )}
                   </button>
                 </div>
                 
@@ -244,11 +294,15 @@ const popularBrands = [
                 <div className="flex items-center justify-between p-2 rounded border border-gray-100 hover:bg-gray-50">
                   <span>ALX-E2</span>
                   <button
-                    onClick={() => copyToClipboard( 'ALX-E2')}
+                    onClick={() => copyToClipboard('ALX-E2', 'address2')}
                     className="text-red-600 hover:text-red-700 p-1"
                     title="Copy suite number"
                   >
-                    <Copy className="w-3 h-3" />
+                    {copiedStates['address2'] ? (
+                      <Check className="w-3 h-3" />
+                    ) : (
+                      <Copy className="w-3 h-3" />
+                    )}
                   </button>
                 </div>
                 
@@ -256,11 +310,15 @@ const popularBrands = [
                 <div className="flex items-center justify-between p-2 rounded border border-gray-100 hover:bg-gray-50">
                   <span>{usAddress?.city || 'Alexandria'}, {usAddress?.state_province || 'VA'} {usAddress?.postal_code || '22304'}</span>
                   <button
-                    onClick={() => copyToClipboard(`${usAddress?.city || 'Alexandria'}, ${usAddress?.state_province || 'VA'} ${usAddress?.postal_code || '22304'}`)}
+                    onClick={() => copyToClipboard(`${usAddress?.city || 'Alexandria'}, ${usAddress?.state_province || 'VA'} ${usAddress?.postal_code || '22304'}`, 'city')}
                     className="text-red-600 hover:text-red-700 p-1"
                     title="Copy city, state, zip"
                   >
-                    <Copy className="w-3 h-3" />
+                    {copiedStates['city'] ? (
+                      <Check className="w-3 h-3" />
+                    ) : (
+                      <Copy className="w-3 h-3" />
+                    )}
                   </button>
                 </div>
                 
@@ -268,23 +326,20 @@ const popularBrands = [
                 <div className="flex items-center justify-between p-2 rounded border border-gray-100 hover:bg-gray-50">
                   <span className="font-medium">{usAddress?.country || 'USA'}</span>
                   <button
-                    onClick={() => copyToClipboard(usAddress?.country || 'USA')}
+                    onClick={() => copyToClipboard(usAddress?.country || 'USA', 'country')}
                     className="text-red-600 hover:text-red-700 p-1"
                     title="Copy country"
                   >
-                    <Copy className="w-3 h-3" />
+                    {copiedStates['country'] ? (
+                      <Check className="w-3 h-3" />
+                    ) : (
+                      <Copy className="w-3 h-3" />
+                    )}
                   </button>
                 </div>
               </div>
 
-              <div className="mt-4 p-3 bg-red-50/80 backdrop-blur-sm rounded-lg">
-                <div className="flex items-start gap-2">
-                  <Info className="w-4 h-4 text-red-600 mt-0.5 flex-shrink-0" />
-                  <p className="text-sm text-red-800">
-                    Click the copy button next to each line to copy individual address fields, or use the button below to copy the complete address.
-                  </p>
-                </div>
-              </div>
+              
             </div>
           </div>
         </div>
@@ -293,10 +348,23 @@ const popularBrands = [
         <div className="text-center mt-8">
           <button
             onClick={copyAddressToClipboard}
-            className="bg-red-600 hover:bg-red-700 text-white px-8 py-3 rounded-lg font-medium transition-colors inline-flex items-center gap-2"
+            className={`px-8 py-3 rounded-lg font-medium transition-all duration-300 inline-flex items-center gap-2 ${
+              copiedStates['full-address'] 
+                ? 'bg-green-600 hover:bg-green-700 text-white' 
+                : 'bg-red-600 hover:bg-red-700 text-white'
+            }`}
           >
-            <Copy className="w-4 h-4" />
-            COPY MY ADDRESS
+            {copiedStates['full-address'] ? (
+              <>
+                <Check className="w-4 h-4" />
+                ADDRESS COPIED!
+              </>
+            ) : (
+              <>
+                <Copy className="w-4 h-4" />
+                COPY MY ADDRESS
+              </>
+            )}
           </button>
         </div>
       </div>

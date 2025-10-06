@@ -36,7 +36,7 @@ export default function Services() {
 		{
 			icon: Plane,
 			title: 'US Address & Shopping',
-			description: 'Get your personal US shipping address instantly and start shopping from any US store. We provide a real Miami address that works with all major retailers including Amazon, Nike, Best Buy, and thousands more.',
+			description: 'Get your personal US shipping address instantly and start shopping from any US store. We provide a real Alexandria address that works with all major retailers including Amazon, Nike, Best Buy, and thousands more.',
 			benefits: [
 				'Instant US address activation',
 				'Works with all US online stores',

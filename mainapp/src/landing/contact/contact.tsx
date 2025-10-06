@@ -5,12 +5,16 @@ import {
 	MapPin, 
 	Mail, 
 	Send,
-	ChevronDown
+	ChevronDown,
+	CheckCircle,
+	XCircle
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import AnimateInView from '../../components/ui/animate-in-view';
 import SEO from '../../components/SEO';
 import supportImage from '../../assets/support.jpg';
+import { SupportService } from '../../services/supportService';
+import type { SupportMessageData } from '../../services/supportService';
 
 /**
  * Contact component - Displays the Contact page content with animations
@@ -24,6 +28,12 @@ export default function Contact() {
 		subject: '',
 		message: ''
 	});
+
+	// Form submission states
+	const [isSubmitting, setIsSubmitting] = useState(false);
+	const [isSubmitted, setIsSubmitted] = useState(false);
+	const [submitError, setSubmitError] = useState<string | null>(null);
+	const [submitSuccess, setSubmitSuccess] = useState<string | null>(null);
 
 	// FAQ state
 	const [expandedFAQ, setExpandedFAQ] = useState<number | null>(0);
@@ -44,11 +54,62 @@ export default function Contact() {
 		}));
 	};
 
-	// Handle form submission
-	const handleSubmit = () => {
-		console.log('Form submitted:', formData);
-		// Add your form submission logic here
-		alert('Message sent successfully!');
+	// Handle form submission with real email functionality
+	const handleSubmit = async () => {
+		// Clear previous messages
+		setSubmitError(null);
+		setSubmitSuccess(null);
+		setIsSubmitting(true);
+
+		try {
+			// Validate form data
+			if (!formData.fullName.trim() || !formData.email.trim() || !formData.subject.trim() || !formData.message.trim()) {
+				setSubmitError('Please fill in all required fields.');
+				return;
+			}
+
+			// Prepare message data for the support service
+			const messageData: SupportMessageData = {
+				name: formData.fullName.trim(),
+				email: formData.email.trim(),
+				subject: formData.subject.trim(),
+				message: formData.message.trim(),
+				category: 'general', // Default category for contact form
+			};
+
+			// Submit support message via service
+			const response = await SupportService.submitSupportMessage(messageData);
+
+			if (response.success) {
+				// Success - show success message
+				setSubmitSuccess(response.message);
+				setIsSubmitted(true);
+
+				// Reset form after successful submission
+				setFormData({
+					fullName: '',
+					email: '',
+					subject: '',
+					message: ''
+				});
+
+				// Reset success status after 8 seconds
+				setTimeout(() => {
+					setIsSubmitted(false);
+					setSubmitSuccess(null);
+				}, 8000);
+
+			} else {
+				// Error - show error message
+				setSubmitError(response.error || response.message);
+			}
+
+		} catch (error) {
+			console.error('Form submission error:', error);
+			setSubmitError('An unexpected error occurred. Please try again.');
+		} finally {
+			setIsSubmitting(false);
+		}
 	};
 
 	// Contact information items
@@ -328,13 +389,40 @@ export default function Contact() {
 
 									<motion.button
 										onClick={handleSubmit}
-										className="w-full bg-red-500 hover:bg-red-600 text-white font-semibold px-6 py-3 rounded-md transition-colors duration-200 flex items-center justify-center space-x-2"
-										whileHover={{ scale: 1.02, y: -2 }}
-										whileTap={{ scale: 0.98 }}
+										disabled={isSubmitting}
+										className="w-full bg-red-500 hover:bg-red-600 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold px-6 py-3 rounded-md transition-colors duration-200 flex items-center justify-center space-x-2"
+										whileHover={!isSubmitting ? { scale: 1.02, y: -2 } : {}}
+										whileTap={!isSubmitting ? { scale: 0.98 } : {}}
 									>
 										<Send className="w-4 h-4" />
-										<span>Send Message</span>
+										<span>{isSubmitting ? 'Sending...' : 'Send Message'}</span>
 									</motion.button>
+
+									{/* Success Message */}
+									{isSubmitted && submitSuccess && (
+										<motion.div 
+											className="text-green-600 text-sm mt-4 flex items-center bg-green-50 p-3 rounded-md border border-green-200"
+											initial={{ opacity: 0, y: 10 }}
+											animate={{ opacity: 1, y: 0 }}
+											transition={{ duration: 0.3 }}
+										>
+											<CheckCircle className="mr-2 w-4 h-4 flex-shrink-0" />
+											<span>{submitSuccess}</span>
+										</motion.div>
+									)}
+									
+									{/* Error Message */}
+									{submitError && (
+										<motion.div 
+											className="text-red-600 text-sm mt-4 flex items-center bg-red-50 p-3 rounded-md border border-red-200"
+											initial={{ opacity: 0, y: 10 }}
+											animate={{ opacity: 1, y: 0 }}
+											transition={{ duration: 0.3 }}
+										>
+											<XCircle className="mr-2 w-4 h-4 flex-shrink-0" />
+											<span>{submitError}</span>
+										</motion.div>
+									)}
 								</div>
 							</motion.div>
 						</AnimateInView>

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   Send,
@@ -8,8 +8,12 @@ import {
   HelpCircle,
   AlertCircle,
   CheckCircle,
+  XCircle,
 } from "lucide-react";
 import { CONTACT_INFO, getPhoneLink } from "../../constants/contact";
+import { SupportService } from "../../services/supportService";
+import type { SupportMessageData } from "../../services/supportService";
+import { useAuth } from "../../hooks/useAuth";
 
 interface ContactSectionProps {
   containerVariants: import("framer-motion").Variants;
@@ -25,39 +29,97 @@ const ContactSection: React.FC<ContactSectionProps> = ({
   const [email, setEmail] = useState("");
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
-  const [category, setCategory] = useState("general");
+  const [category, setCategory] = useState<SupportMessageData['category']>("general");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [submitSuccess, setSubmitSuccess] = useState<string | null>(null);
+  const [isLoadingUser, setIsLoadingUser] = useState(true);
+  const { user, profile } = useAuth();
 
   /**
-   * Handle form submission
+   * Load user data and prefill form if user is authenticated
    */
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    const loadUserData = () => {
+      try {
+        if (profile) {
+          // Use profile data (same as AccountSettings)
+          const fullName = `${profile.firstName || ''} ${profile.lastName || ''}`.trim();
+          if (fullName) {
+            setName(fullName);
+          }
+          if (profile.email) {
+            setEmail(profile.email);
+          }
+        } else if (user?.email) {
+          // Fallback to auth user email if no profile
+          setEmail(user.email);
+        }
+      } catch (error) {
+        console.error('Error loading user data:', error);
+        // Continue without prefilling - user can enter manually
+      } finally {
+        setIsLoadingUser(false);
+      }
+    };
+
+    loadUserData();
+  }, [user, profile]);
+
+  /**
+   * Handle form submission with real email functionality
+   */
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Clear previous messages
+    setSubmitError(null);
+    setSubmitSuccess(null);
     setIsSubmitting(true);
 
-    // Simulate API call
-    setTimeout(() => {
-      console.log("Support ticket submitted:", {
-        name,
-        email,
-        subject,
-        message,
+    try {
+      // Prepare message data
+      const messageData: SupportMessageData = {
+        name: name.trim(),
+        email: email.trim(),
+        subject: subject.trim(),
+        message: message.trim(),
         category,
-      });
+      };
+
+      // Submit support message via service
+      const response = await SupportService.submitSupportMessage(messageData);
+
+      if (response.success) {
+        // Success - show success message
+        setSubmitSuccess(response.message);
+        setIsSubmitted(true);
+
+        // Reset form after successful submission
+        setName("");
+        setEmail("");
+        setSubject("");
+        setMessage("");
+        setCategory("general");
+
+        // Reset success status after 8 seconds
+        setTimeout(() => {
+          setIsSubmitted(false);
+          setSubmitSuccess(null);
+        }, 8000);
+
+      } else {
+        // Error - show error message
+        setSubmitError(response.error || response.message);
+      }
+
+    } catch (error) {
+      console.error('Form submission error:', error);
+      setSubmitError('An unexpected error occurred. Please try again.');
+    } finally {
       setIsSubmitting(false);
-      setIsSubmitted(true);
-
-      // Reset form after submission
-      setName("");
-      setEmail("");
-      setSubject("");
-      setMessage("");
-      setCategory("general");
-
-      // Reset submission status after 5 seconds
-      setTimeout(() => setIsSubmitted(false), 5000);
-    }, 1500);
+    }
   };
 
   return (
@@ -151,22 +213,27 @@ const ContactSection: React.FC<ContactSectionProps> = ({
           </div>
         </motion.div>
 
-        {/* Map */}
+        {/* Location Info */}
         <motion.div
           variants={itemVariants}
           className="w-full flex justify-center"
         >
-          <div className="w-full h-48 sm:h-64 md:h-80 rounded-lg overflow-hidden border border-gray-200 shadow">
-            <iframe
-              title="Vanguard Cargo Location"
-              src="https://www.google.com/maps?q=5.6037,0.1870&z=15&output=embed"
-              width="100%"
-              height="100%"
-              style={{ border: 0 }}
-              allowFullScreen
-              loading="lazy"
-              referrerPolicy="no-referrer-when-downgrade"
-            ></iframe>
+          <div className="w-full h-48 sm:h-64 md:h-80 rounded-lg border border-gray-200 shadow bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+            <div className="text-center p-6">
+              <div className="bg-red-100 p-4 rounded-full mb-4 inline-block">
+                <MessageSquare size={32} className="text-red-500" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-800 mb-2">Visit Our Office</h3>
+              <p className="text-gray-600 text-sm mb-2">
+                {CONTACT_INFO.ADDRESS.FULL}
+              </p>
+              <button
+                onClick={() => window.open(`https://maps.google.com/?q=5.6037,0.1870`, '_blank')}
+                className="text-red-500 hover:text-red-600 text-sm font-medium underline"
+              >
+                View on Google Maps
+              </button>
+            </div>
           </div>
         </motion.div>
 
@@ -183,30 +250,30 @@ const ContactSection: React.FC<ContactSectionProps> = ({
             <div className="flex flex-col md:flex-row gap-4">
               <div className="flex-1">
                 <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
-                  Name
+                  Name {name && <span className="text-green-600 text-xs">(prefilled)</span>}
                 </label>
                 <input
                   type="text"
                   className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-200 text-xs sm:text-sm"
                   value={name}
-                  placeholder="Enter your name"
+                  placeholder={isLoadingUser ? "Loading your name..." : "Enter your name"}
                   onChange={(e) => setName(e.target.value)}
                   required
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || isLoadingUser}
                 />
               </div>
               <div className="flex-1">
                 <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
-                  Email
+                  Email {email && <span className="text-green-600 text-xs">(prefilled)</span>}
                 </label>
                 <input
                   type="email"
                   className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-200 text-xs sm:text-sm"
-                  placeholder="Enter your email address"
+                  placeholder={isLoadingUser ? "Loading your email..." : "Enter your email address"}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || isLoadingUser}
                 />
               </div>
             </div>
@@ -222,7 +289,7 @@ const ContactSection: React.FC<ContactSectionProps> = ({
                   placeholder="Enter the subject of your message"
                   onChange={(e) => setSubject(e.target.value)}
                   required
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || isLoadingUser}
                 />
               </div>
               <div className="flex-1">
@@ -232,8 +299,8 @@ const ContactSection: React.FC<ContactSectionProps> = ({
                 <select
                   className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-200 text-xs sm:text-sm"
                   value={category}
-                  onChange={(e) => setCategory(e.target.value)}
-                  disabled={isSubmitting}
+                  onChange={(e) => setCategory(e.target.value as SupportMessageData['category'])}
+                  disabled={isSubmitting || isLoadingUser}
                 >
                   <option value="general">General Inquiry</option>
                   <option value="support">Support</option>
@@ -252,24 +319,33 @@ const ContactSection: React.FC<ContactSectionProps> = ({
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 required
-                placeholder="How may we help you?"
-                disabled={isSubmitting}
+                placeholder={isLoadingUser ? "Loading..." : "How may we help you?"}
+                disabled={isSubmitting || isLoadingUser}
               />
             </div>
             <div className="flex justify-end">
               <button
                 type="submit"
                 className="w-full sm:w-1/2 md:w-1/4 min-w-[120px] flex items-center justify-center bg-red-500 text-white font-semibold py-2 px-4 rounded hover:bg-[#1A2B6D] transition-colors disabled:opacity-60 text-xs sm:text-base"
-                disabled={isSubmitting}
+                disabled={isSubmitting || isLoadingUser}
               >
                 <Send className="mr-2" size={18} />
-                {isSubmitting ? "Sending..." : "Send Message"}
+                {isLoadingUser ? "Loading..." : isSubmitting ? "Sending..." : "Send Message"}
               </button>
             </div>
-            {isSubmitted && (
-              <div className="text-red-600 text-xs sm:text-sm mt-2 flex items-center">
-                <CheckCircle className="mr-2 w-4 h-4" />
-                Your message has been sent!
+            {/* Success Message */}
+            {isSubmitted && submitSuccess && (
+              <div className="text-green-600 text-xs sm:text-sm mt-2 flex items-center bg-green-50 p-3 rounded-md border border-green-200">
+                <CheckCircle className="mr-2 w-4 h-4 flex-shrink-0" />
+                <span>{submitSuccess}</span>
+              </div>
+            )}
+            
+            {/* Error Message */}
+            {submitError && (
+              <div className="text-red-600 text-xs sm:text-sm mt-2 flex items-center bg-red-50 p-3 rounded-md border border-red-200">
+                <XCircle className="mr-2 w-4 h-4 flex-shrink-0" />
+                <span>{submitError}</span>
               </div>
             )}
           </form>

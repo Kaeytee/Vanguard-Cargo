@@ -104,9 +104,32 @@
     
     <!-- Sitemap -->
     <link rel="sitemap" type="application/xml" href="/sitemap.xml" />
+    
+    <!-- Google Maps API will be loaded dynamically for security -->
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    
+    <!-- Suppress browser extension console errors -->
+    <script>
+      // Suppress common browser extension errors that we can't control
+      const originalError = console.error;
+      console.error = function(...args) {
+        const message = args.join(' ');
+        // Filter out browser extension errors
+        if (
+          message.includes('spoofer.js') ||
+          message.includes('contentscript.js') ||
+          message.includes('lockdown-install.js') ||
+          message.includes('SES Removing') ||
+          message.includes('Removing intrinsics') ||
+          message.includes('Partitioned cookie')
+        ) {
+          return; // Suppress these errors
+        }
+        originalError.apply(console, args);
+      };
+    </script>
   </body>
 </html>
