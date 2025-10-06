@@ -1,8 +1,7 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import { Eye, EyeOff, Check } from 'lucide-react';
 import 'react-phone-number-input/style.css';
 import PhoneInput, { isValidPhoneNumber } from 'react-phone-number-input';
-import { usePlacesAutocomplete } from '../../hooks/usePlacesAutocomplete';
 import { cn } from '../../lib/utils';
 import registerbg from '../../images/register-bg.jpg';
 import { useNavigate } from 'react-router-dom';
@@ -35,10 +34,6 @@ export default function Register() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [phoneError, setPhoneError] = useState('');
-  const [addressVerified, setAddressVerified] = useState(false);
-  
-  // Refs for address autocomplete
-  const addressRef = useRef<HTMLInputElement>(null);
   const [errors, setErrors] = useState<{
     firstName: string;
     lastName: string;
@@ -155,50 +150,6 @@ export default function Register() {
     }
   };
 
-  // Handle address selection from Mapbox Places Autocomplete
-  const handleAddressSelect = (addressComponents: {
-    address: string;
-    city: string;
-    state: string;
-    zip: string;
-    country: string;
-  }) => {
-    // Update form data with selected address components
-    setFormData((prev) => ({
-      ...prev,
-      address: addressComponents.address,
-      city: addressComponents.city,
-      state: addressComponents.state,
-      zip: addressComponents.zip,
-      country: addressComponents.country,
-    }));
-
-    // Mark address fields as touched
-    setTouched((prev) => ({
-      ...prev,
-      address: true,
-      city: true,
-      state: true,
-      zip: true,
-      country: true,
-    }));
-
-    // Clear address-related errors since we have a verified address
-    setErrors((prev) => ({
-      ...prev,
-      address: '',
-      city: '',
-      state: '',
-      zip: '',
-      country: '',
-    }));
-
-    // Mark address as verified
-    setAddressVerified(true);
-  };
-
-  // Initialize Mapbox Places Autocomplete with debouncing and caching
-  const { predictions, fetchPredictions, clearPredictions, getCoordinates, isLoading: isAddressAPILoading, error: addressAPIError } = usePlacesAutocomplete();
 
   // Email validation helper
   const isValidEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -206,17 +157,23 @@ export default function Register() {
   // Validate single field for real-time validation
   const validateField = (fieldName: string, data: typeof formData): string => {
     switch (fieldName) {
+      case 'firstName':
+        return !data.firstName ? 'First name is required' : '';
+      case 'lastName':
+        return !data.lastName ? 'Last name is required' : '';
+      case 'email':
+        if (!data.email) return 'Email is required';
+        return !isValidEmail(data.email) ? 'Please enter a valid email address' : '';
       case 'address':
         if (!data.address) return 'Address is required';
         if (data.address.length < 5) return 'Please enter a valid address (minimum 5 characters)';
-        // Allow manual addresses - don't require autocomplete verification
         return '';
       case 'city':
         return !data.city ? 'City is required' : '';
       case 'state':
-        return !data.state ? 'State is required' : '';
+        return !data.state ? 'State/Province is required' : '';
       case 'zip':
-        return !data.zip ? 'ZIP code is required' : '';
+        return !data.zip ? 'ZIP/Postal code is required' : '';
       case 'country':
         return !data.country ? 'Country is required' : '';
       case 'password':
@@ -227,8 +184,6 @@ export default function Register() {
       case 'phoneNumber':
         if (!data.phoneNumber) return 'Phone number is required';
         return !isValidPhoneNumber(data.phoneNumber) ? 'Valid phone number is required' : '';
-      case 'country':
-        return !data.country ? 'Country is required' : '';
       case 'agreeToTerms':
         return !data.agreeToTerms ? 'You must agree to the terms of service' : '';
       default:
@@ -261,6 +216,10 @@ export default function Register() {
     newErrors.password = validateField('password', formData);
     newErrors.confirmPassword = validateField('confirmPassword', formData);
     newErrors.phoneNumber = validateField('phoneNumber', formData);
+    newErrors.address = validateField('address', formData);
+    newErrors.city = validateField('city', formData);
+    newErrors.state = validateField('state', formData);
+    newErrors.zip = validateField('zip', formData);
     newErrors.country = validateField('country', formData);
     newErrors.agreeToTerms = validateField('agreeToTerms', formData);
     
@@ -300,6 +259,10 @@ export default function Register() {
         firstName: formData.firstName,
         lastName: formData.lastName,
         phone: formData.phoneNumber,
+        streetAddress: formData.address,
+        city: formData.city,
+        country: formData.country,
+        postalCode: formData.zip,
       });
 
       if (!result.error) {
@@ -369,7 +332,6 @@ export default function Register() {
         setErrors((prev) => ({ ...prev, general: userFriendlyMessage }));
       }
     } catch (err) {
-      console.error('Registration error:', err);
       setErrors(prev => ({ 
         ...prev, 
         general: 'Registration is temporarily unavailable. Please try again in a few minutes.' 
@@ -388,6 +350,11 @@ export default function Register() {
     formData.phoneNumber &&
     isValidPhoneNumber(formData.phoneNumber) &&
     !phoneError &&
+    formData.address &&
+    formData.city &&
+    formData.state &&
+    formData.zip &&
+    formData.country &&
     formData.password &&
     formData.password.length >= 8 &&
     formData.password === formData.confirmPassword &&
@@ -569,90 +536,33 @@ export default function Register() {
                   
                   {/* Address Information Section */}
                   <div className="mt-4 mb-2">
-                    <h3 className="text-md font-semibold text-gray-700">Address Information</h3>
-                    <p className="text-sm text-gray-500 mb-3">This information will be used for shipping documents</p>
+                    <h3 className="text-md font-semibold text-gray-700">Address Information *</h3>
+                    <p className="text-sm text-gray-500 mb-3">All address fields are required for shipping documents</p>
                   </div>
                   
                   <div>
                     <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-1">
-                      Address
+                      Street Address *
                     </label>
-                    <div className="relative">
-                      <input
-                        ref={addressRef}
-                        type="text"
-                        id="address"
-                        name="address"
-                        value={formData.address}
-                        onChange={(e) => {
-                          const value = e.target.value;
-                          handleInputChange(e);
-                          // Fetch predictions as user types
-                          fetchPredictions(value);
-                          // Reset verification if user clears the field
-                          if (value === '' && addressVerified) {
-                            setAddressVerified(false);
-                          }
-                        }}
-                        onBlur={handleBlur}
-                        placeholder="123 Main Street, Accra"
-                        className={cn(
-                          'w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all duration-200 outline-none',
-                          errors.address && touched.address ? 'border-red-300' : 'border-gray-300',
-                          addressVerified ? 'border-green-300 bg-green-50' : ''
-                        )}
-                        aria-invalid={!!errors.address}
-                        aria-describedby="address-error"
-                      />
-                      
-                      {/* Address Suggestions Dropdown */}
-                      {predictions.length > 0 && (
-                        <ul className="absolute z-10 w-full bg-white border border-gray-300 rounded-lg mt-1 max-h-60 overflow-y-auto shadow-lg">
-                          {predictions.map((prediction) => (
-                            <li
-                              key={prediction.place_id}
-                              onClick={() => {
-                                // Set the selected address
-                                setFormData(prev => ({ ...prev, address: prediction.description }));
-                                setAddressVerified(true);
-                                
-                                // Store coordinates for future use (shipping, mapping, etc.)
-                                const coordinates = getCoordinates(prediction);
-                                if (coordinates) {
-                                  console.log('📍 Address coordinates:', coordinates);
-                                  // You can store coordinates in form data or separate state if needed
-                                  // setFormData(prev => ({ ...prev, coordinates }));
-                                }
-                                
-                                // Clear predictions after selection
-                                clearPredictions();
-                              }}
-                              className="px-4 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0"
-                            >
-                              <div className="text-sm font-medium text-gray-900">
-                                {prediction.structured_formatting?.main_text || prediction.description}
-                              </div>
-                              <div className="text-xs text-gray-500">
-                                {prediction.structured_formatting?.secondary_text || ''}
-                              </div>
-                            </li>
-                          ))}
-                        </ul>
+                    <input
+                      type="text"
+                      id="address"
+                      name="address"
+                      value={formData.address}
+                      onChange={handleInputChange}
+                      onBlur={handleBlur}
+                      placeholder="123 Main Street"
+                      className={cn(
+                        'w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all duration-200 outline-none',
+                        errors.address && touched.address ? 'border-red-300' : 'border-gray-300'
                       )}
-                    </div>
+                      aria-invalid={!!errors.address}
+                      aria-describedby="address-error"
+                      required
+                    />
                     {errors.address && touched.address && (
                       <p id="address-error" className="mt-1 text-sm text-red-600">
                         {errors.address}
-                      </p>
-                    )}
-                    {addressVerified && (
-                      <p className="mt-1 text-sm text-green-600">
-                        ✅ Address verified with Mapbox
-                      </p>
-                    )}
-                    {addressAPIError && (
-                      <p className="mt-1 text-sm text-orange-600">
-                        ⚠️ Address suggestions unavailable: {addressAPIError}. You can still enter your address manually.
                       </p>
                     )}
                   </div>
@@ -660,7 +570,7 @@ export default function Register() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-1">
-                        City
+                        City *
                       </label>
                       <input
                         type="text"
@@ -676,6 +586,7 @@ export default function Register() {
                         )}
                         aria-invalid={!!errors.city}
                         aria-describedby="city-error"
+                        required
                       />
                       {errors.city && touched.city && (
                         <p id="city-error" className="mt-1 text-sm text-red-600">
@@ -685,7 +596,7 @@ export default function Register() {
                     </div>
                     <div>
                       <label htmlFor="state" className="block text-sm font-medium text-gray-700 mb-1">
-                        State/Province
+                        State/Province *
                       </label>
                       <input
                         type="text"
@@ -697,10 +608,11 @@ export default function Register() {
                         placeholder="NY"
                         className={cn(
                           'w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all duration-200 outline-none',
-                          errors.state && touched.state ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-red-500 focus:border-red-500'
+                          errors.state && touched.state ? 'border-red-300' : 'border-gray-300'
                         )}
                         aria-invalid={!!errors.state}
                         aria-describedby="state-error"
+                        required
                       />
                       {errors.state && touched.state && (
                         <p id="state-error" className="mt-1 text-sm text-red-600">
@@ -713,7 +625,7 @@ export default function Register() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label htmlFor="zip" className="block text-sm font-medium text-gray-700 mb-1">
-                        Postal/ZIP Code
+                        Postal/ZIP Code *
                       </label>
                       <input
                         type="text"
@@ -729,6 +641,7 @@ export default function Register() {
                         )}
                         aria-invalid={!!errors.zip}
                         aria-describedby="zip-error"
+                        required
                       />
                       {errors.zip && touched.zip && (
                         <p id="zip-error" className="mt-1 text-sm text-red-600">
@@ -754,6 +667,7 @@ export default function Register() {
                         )}
                         aria-invalid={!!errors.country}
                         aria-describedby="country-error"
+                        required
                       />
                       {errors.country && touched.country && (
                         <p id="country-error" className="mt-1 text-sm text-red-600">

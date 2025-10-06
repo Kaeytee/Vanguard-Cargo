@@ -293,17 +293,25 @@ const AppAbout: React.FC = () => {
           variants={itemVariants}
           className="md:w-1/2 w-full flex justify-center"
         >
-          <div className="w-full h-48 sm:h-64 md:h-72 rounded-lg overflow-hidden border border-gray-200 shadow">
-            <iframe
-              title="Vanguard Cargo Location"
-              src="https://www.google.com/maps?q=6.5244,3.3792&z=15&output=embed"
-              width="100%"
-              height="100%"
-              style={{ border: 0 }}
-              allowFullScreen
-              loading="lazy"
-              referrerPolicy="no-referrer-when-downgrade"
-            ></iframe>
+          <div className="w-full h-48 sm:h-64 md:h-72 rounded-lg border border-gray-200 shadow bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+            <div className="text-center p-6">
+              <div className="bg-red-100 p-4 rounded-full mb-4 inline-block">
+                <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-800 mb-2">Visit Our Office</h3>
+              <p className="text-gray-600 text-sm mb-2">
+                Lagos, Nigeria
+              </p>
+              <button
+                onClick={() => window.open(`https://maps.google.com/?q=6.5244,3.3792`, '_blank')}
+                className="text-red-500 hover:text-red-600 text-sm font-medium underline"
+              >
+                View on Google Maps
+              </button>
+            </div>
           </div>
         </motion.div>
       </motion.section>
