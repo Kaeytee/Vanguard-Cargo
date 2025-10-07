@@ -136,4 +136,4 @@ CREATE INDEX IF NOT EXISTS idx_package_shipments_package_id ON package_shipments
 CREATE INDEX IF NOT EXISTS idx_package_shipments_shipment_id ON package_shipments(shipment_id);
 
 -- No warehouse data needed - hardcoded in frontend
--- Users identified by suite_number only (VC-001, VC-002, etc.)
+-- Users identified by suite_number only (any format: VC-001, S001, A123, etc.)

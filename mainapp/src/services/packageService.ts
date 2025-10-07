@@ -19,6 +19,11 @@ export interface DbPackage {
   intake_date: string | null;
   created_at: string;
   updated_at: string | null;
+  // New fields for authentication and tracking
+  delivery_auth_code: string | null; // 6-digit pickup authentication code
+  qr_code_data: string | null; // QR code data for warehouse scanning
+  barcode_data: string | null; // Barcode data for tracking
+  ready_for_pickup: boolean | null; // Flag for pickup readiness
   // No warehouse join needed - hardcoded in frontend
 }
 

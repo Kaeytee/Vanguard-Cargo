@@ -37,6 +37,15 @@ CREATE POLICY "Admins can update all users" ON users
         )
     );
 
+CREATE POLICY "Warehouse staff can search users for package intake" ON users
+    FOR SELECT USING (
+        EXISTS (
+            SELECT 1 FROM users 
+            WHERE id = auth.uid() 
+            AND role IN ('warehouse_admin', 'admin', 'superadmin')
+        )
+    );
+
 -- Addresses table policies
 CREATE POLICY "Users can view own addresses" ON addresses
     FOR SELECT USING (auth.uid() = user_id);

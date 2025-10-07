@@ -3,7 +3,6 @@ import { Copy, MapPin, Info, Check, AlertTriangle } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { motion } from "framer-motion";
 import PackageIntakeWidget from '../../components/PackageIntakeWidget';
-import WhatsAppStatusWidget from '../../components/WhatsAppStatusWidget';
 import { addressService, type USShippingAddress } from '../../services/addressService';
 // Removed unused import
 import shopImage from '../../assets/shop.jpg';
@@ -115,7 +114,16 @@ const popularBrands = [
   const copyAddressToClipboard = () => {
     if (!usAddress || !profile) return;
 
-    const addressText = addressService.formatAddress(usAddress, profile.suite_number);
+    // Create custom formatted address with Vanguard Cargo LLC
+    const addressText = [
+      `Vanguard Cargo LLC (${profile.suite_number})`,
+      '4700 Eisenhower Avenue',
+      'ALX-E2',
+      `${usAddress?.city || 'Alexandria'}, ${usAddress?.state_province || 'VA'} ${usAddress?.postal_code || '22304'}`,
+      usAddress?.country || 'USA'
+    ]
+      .filter(Boolean)
+      .join('\n');
 
     navigator.clipboard.writeText(addressText).then(() => {
       setCopiedStates(prev => ({ ...prev, 'full-address': true }));
@@ -135,35 +143,82 @@ const popularBrands = [
   };
 
   return (
-    <div className="px-4 sm:px-10 transition-colors duration-300">
-      {/* Welcome Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">
-          Hello, {firstName}!
-        </h1>
-{/* Important Instructions */}
-<div className="mt-4 space-y-3">
-                
-                
-                <div className="p-3 sm:p-4 bg-amber-50/80 backdrop-blur-sm rounded-lg border border-amber-200">
-                  <div className="flex items-start gap-2 sm:gap-3">
-                    <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5 text-amber-600 mt-0.5 flex-shrink-0" />
-                    <div className="text-xs sm:text-sm text-amber-800">
-                      <p className="font-semibold mb-1 text-sm sm:text-base">⚠️ MANDATORY: Use Complete Address Details</p>
-                      <p className="mb-2">When checking out online, you MUST include:</p>
-                      <ul className="list-disc list-inside mt-1 space-y-1 pl-2">
-                        <li><strong>Your full name and suite number</strong>in the field</li>
-                        <li><strong>Complete address</strong> exactly as it is</li>
-                        <li><strong>All address lines</strong> - don't skip any part</li>
-                      </ul>
-                      <p className="mt-2 font-medium text-amber-900 bg-amber-100/50 p-2 rounded text-center">
-                        📦 Missing any detail may cause delivery delays or package loss!
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 via-white to-gray-50">
+      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+        {/* Apple-Style Welcome Header */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="mb-12 sm:mb-16 text-center"
+        >
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-semibold text-gray-900 mb-4 tracking-tight">
+            Welcome back, {firstName}
+          </h1>
+          <p className="text-lg sm:text-xl text-gray-600 font-light max-w-2xl mx-auto">
+            Manage your packages and track shipments with ease
+          </p>
+        </motion.div>
+
+        {/* Apple-Style Frosted Glass Alert */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+          className="mb-10 sm:mb-12"
+        >
+          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-amber-50/80 via-white/80 to-orange-50/80 backdrop-blur-xl border border-amber-200/50 shadow-xl shadow-amber-100/50">
+            <div className="absolute inset-0 bg-gradient-to-br from-amber-100/20 to-transparent"></div>
+            <div className="relative p-6 sm:p-8 lg:p-10">
+              <div className="flex items-start gap-4 sm:gap-6">
+                <div className="flex-shrink-0">
+                  <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-amber-400 to-orange-500 rounded-2xl flex items-center justify-center shadow-lg shadow-amber-200">
+                    <AlertTriangle className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
+                  </div>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-3">
+                    Complete Address Required
+                  </h3>
+                  <p className="text-base sm:text-lg text-gray-700 mb-6 font-light leading-relaxed">
+                    To ensure successful delivery, please follow these guidelines when shopping online
+                  </p>
+                  <div className="space-y-4">
+                    <div className="flex items-start gap-3">
+                      <div className="w-6 h-6 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <div className="w-2 h-2 bg-white rounded-full"></div>
+                      </div>
+                      <p className="text-sm sm:text-base text-gray-700 leading-relaxed">
+                        <span className="font-medium text-gray-900">Include your suite number</span> — Always add "Vanguard Cargo LLC" followed by your unique suite number
+                      </p>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <div className="w-6 h-6 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <div className="w-2 h-2 bg-white rounded-full"></div>
+                      </div>
+                      <p className="text-sm sm:text-base text-gray-700 leading-relaxed">
+                        <span className="font-medium text-gray-900">Use complete address</span> — Enter all address fields exactly as shown below
+                      </p>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <div className="w-6 h-6 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <div className="w-2 h-2 bg-white rounded-full"></div>
+                      </div>
+                      <p className="text-sm sm:text-base text-gray-700 leading-relaxed">
+                        <span className="font-medium text-gray-900">Don't skip any fields</span> — Missing information may delay or prevent delivery
                       </p>
                     </div>
                   </div>
+                  <div className="mt-6 p-4 bg-white/60 backdrop-blur-sm rounded-2xl border border-amber-200/50">
+                    <p className="text-sm sm:text-base text-amber-900 font-medium text-center">
+                      Incomplete addresses may result in package rejection or return to sender
+                    </p>
+                  </div>
                 </div>
               </div>
-      </div>
+            </div>
+          </div>
+        </motion.div>
 
       {/* Dashboard Widgets */}
       <div className="grid lg:grid-cols-2 gap-6 mb-8">
@@ -178,216 +233,242 @@ const popularBrands = [
         </div> */}
       </div>
 
-      {/* Next Steps Section */}
-      <div className="bg-transparent backdrop-blur-sm rounded-2xl p-8 mb-8 shadow-sm">
-        <h2 className="text-2xl font-semibold text-gray-900 mb-6 text-center">
-          What's next?
-        </h2>
-        
-        <p className="text-gray-600 text-center mb-8 max-w-3xl mx-auto">
-          Now that you have a Vanguard Cargo address, you can use that address to shop on almost any site. Just use your address during checkout and we'll let you know when your items arrive at the warehouse.
-        </p>
-
-        <div className="text-center mb-8">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">
-            Start shopping and ship to your Vanguard Cargo address!
-          </h3>
-        </div>
-
-        {/* Steps Section */}
-        <div className="grid md:grid-cols-2 gap-8 items-center max-w-4xl mx-auto">
-          {/* Left side - Step illustration placeholder */}
-          <div className="flex flex-col items-center">
-            <div className="bg-transparent backdrop-blur-sm rounded-full w-16 h-16 flex items-center justify-center mb-4 shadow-md">
-              <span className="text-2xl font-bold text-red-600">1</span>
-            </div>
-            <h4 className="text-lg font-semibold text-gray-900 mb-2">Shop online at your favorite stores</h4>
-            <img 
-              src={shopImage} 
-              alt="Shop online illustration" 
-              className="w-64 h-64 object-contain"
-            />
+      {/* Apple-Style How It Works Section */}
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        viewport={{ once: true }}
+        className="relative overflow-hidden rounded-3xl bg-white/80 backdrop-blur-xl border border-gray-200/50 shadow-2xl shadow-gray-200/50 p-8 sm:p-10 lg:p-14 mb-12"
+      >
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-50/30 via-transparent to-purple-50/30"></div>
+        <div className="relative">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-semibold text-gray-900 mb-4 tracking-tight">
+              How It Works
+            </h2>
+            <p className="text-lg sm:text-xl text-gray-600 font-light max-w-3xl mx-auto leading-relaxed">
+              Your personal US shipping address is ready. Shop from any US store and have packages delivered to your Vanguard Cargo address.
+            </p>
           </div>
 
-          {/* Right side - Address section */}
-          <div className="flex flex-col items-center">
-            <div className="bg-white/90 backdrop-blur-sm rounded-full w-16 h-16 flex items-center justify-center mb-4 shadow-md">
-              <span className="text-2xl font-bold text-red-600">2</span>
-            </div>
-            <h4 className="text-lg bg-white font-semibold text-gray-900 mb-4">Use your Vanguard Cargo address at checkout</h4>
-            <div className="p-3 bg-red-50/80 backdrop-blur-sm rounded-lg">
-                  <div className="flex items-start gap-2">
-                    <Info className="w-4 h-4 text-red-600 mt-0.5 flex-shrink-0" />
-                    <p className="text-sm text-red-800">
-                      Click the copy button next to each line to copy individual address fields, or use the button below to copy the complete address.
-                    </p>
+          {/* Steps Section */}
+          <div className="grid md:grid-cols-2 gap-10 lg:gap-16 max-w-6xl mx-auto">
+            {/* Step 1 - Shop Online */}
+            <motion.div 
+              initial={{ opacity: 0, x: -20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              viewport={{ once: true }}
+              className="flex flex-col items-center text-center"
+            >
+              <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-red-500 to-pink-600 rounded-3xl flex items-center justify-center mb-6 shadow-2xl shadow-red-200">
+                <span className="text-3xl sm:text-4xl font-semibold text-white">1</span>
+              </div>
+              <h3 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-3">
+                Shop Your Favorite Stores
+              </h3>
+              <p className="text-base sm:text-lg text-gray-600 font-light mb-6 max-w-sm leading-relaxed">
+                Browse and purchase from thousands of US online retailers
+              </p>
+              <div className="w-full max-w-xs">
+                <img 
+                  src={shopImage} 
+                  alt="Shop online illustration" 
+                  className="w-full h-auto object-contain rounded-2xl shadow-lg"
+                />
+              </div>
+            </motion.div>
+
+            {/* Step 2 - Use Address */}
+            <motion.div 
+              initial={{ opacity: 0, x: 20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+              viewport={{ once: true }}
+              className="flex flex-col items-center text-center"
+            >
+              <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-3xl flex items-center justify-center mb-6 shadow-2xl shadow-blue-200">
+                <span className="text-3xl sm:text-4xl font-semibold text-white">2</span>
+              </div>
+              <h3 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-3">
+                Use Your US Address
+              </h3>
+              <p className="text-base sm:text-lg text-gray-600 font-light mb-6 max-w-sm leading-relaxed">
+                Enter your Vanguard Cargo address during checkout
+              </p>
+              <div className="w-full bg-gradient-to-br from-blue-50/80 to-indigo-50/80 backdrop-blur-sm border border-blue-200/50 rounded-2xl p-4 sm:p-5 mb-6">
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 bg-blue-500 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <Info className="w-4 h-4 text-white" />
+                  </div>
+                  <p className="text-sm sm:text-base text-blue-900 text-left font-light leading-relaxed">
+                    <span className="font-medium">Quick Tip:</span> Use the copy buttons below to easily paste your address
+                  </p>
+                </div>
+              </div>
+              {/* Apple-Style Frosted Glass Address Card */}
+              <div className="w-full relative overflow-hidden rounded-3xl bg-white/60 backdrop-blur-xl border border-gray-200/50 shadow-2xl shadow-gray-200/50 p-5 sm:p-7">
+                <div className="absolute inset-0 bg-gradient-to-br from-gray-50/50 to-transparent"></div>
+                <div className="relative">
+                  <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-200/50">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-pink-600 rounded-2xl flex items-center justify-center shadow-lg shadow-red-200">
+                        <MapPin className="w-5 h-5 text-white" />
+                      </div>
+                      <span className="text-lg sm:text-xl font-semibold text-gray-900">Your US Address</span>
+                    </div>
+                    <button
+                      onClick={copyAddressToClipboard}
+                      className={`flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-medium transition-all shadow-lg ${
+                        copiedStates['full-address']
+                          ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:from-green-600 hover:to-emerald-700 shadow-green-200'
+                          : 'bg-gradient-to-r from-red-500 to-pink-600 text-white hover:from-red-600 hover:to-pink-700 shadow-red-200'
+                      }`}
+                    >
+                      {copiedStates['full-address'] ? (
+                        <>
+                          <Check className="w-4 h-4" />
+                          Copied
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-4 h-4" />
+                          Copy All
+                        </>
+                      )}
+                    </button>
+                  </div>
+              
+                  <div className="space-y-3">
+                    {/* Name */}
+                    <div className="flex items-center justify-between p-4 rounded-2xl bg-gradient-to-br from-gray-50/80 to-white/80 hover:from-gray-100/80 hover:to-white/80 transition-all border border-gray-200/50">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-medium text-gray-500 mb-1">Name</p>
+                        <p className="text-sm sm:text-base font-medium text-gray-900 truncate">
+                          Vanguard Cargo LLC ({profile?.suite_number})
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => copyToClipboard(
+                          `Vanguard Cargo LLC (${profile?.suite_number || ''})`,
+                          'name'
+                        )}
+                        className="ml-3 flex-shrink-0 p-2.5 text-red-600 hover:bg-red-50 rounded-xl transition-colors"
+                        title="Copy name"
+                      >
+                        {copiedStates['name'] ? (
+                          <Check className="w-4 h-4" />
+                        ) : (
+                          <Copy className="w-4 h-4" />
+                        )}
+                      </button>
+                    </div>
+                    
+                    {/* Address Line 1 */}
+                    <div className="flex items-center justify-between p-4 rounded-2xl bg-gradient-to-br from-gray-50/80 to-white/80 hover:from-gray-100/80 hover:to-white/80 transition-all border border-gray-200/50">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-medium text-gray-500 mb-1">Street Address</p>
+                        <p className="text-sm sm:text-base font-medium text-gray-900">4700 Eisenhower Avenue</p>
+                      </div>
+                      <button
+                        onClick={() => copyToClipboard('4700 Eisenhower Avenue', 'address1')}
+                        className="ml-3 flex-shrink-0 p-2.5 text-red-600 hover:bg-red-50 rounded-xl transition-colors"
+                        title="Copy address line 1"
+                      >
+                        {copiedStates['address1'] ? (
+                          <Check className="w-4 h-4" />
+                        ) : (
+                          <Copy className="w-4 h-4" />
+                        )}
+                      </button>
+                    </div>
+                    
+                    {/* Address Line 2 */}
+                    <div className="flex items-center justify-between p-4 rounded-2xl bg-gradient-to-br from-gray-50/80 to-white/80 hover:from-gray-100/80 hover:to-white/80 transition-all border border-gray-200/50">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-medium text-gray-500 mb-1">Apartment/Suite</p>
+                        <p className="text-sm sm:text-base font-medium text-gray-900">ALX-E2</p>
+                      </div>
+                      <button
+                        onClick={() => copyToClipboard('ALX-E2', 'address2')}
+                        className="ml-3 flex-shrink-0 p-2.5 text-red-600 hover:bg-red-50 rounded-xl transition-colors"
+                        title="Copy suite number"
+                      >
+                        {copiedStates['address2'] ? (
+                          <Check className="w-4 h-4" />
+                        ) : (
+                          <Copy className="w-4 h-4" />
+                        )}
+                      </button>
+                    </div>
+                    
+                    {/* City, State, ZIP */}
+                    <div className="flex items-center justify-between p-4 rounded-2xl bg-gradient-to-br from-gray-50/80 to-white/80 hover:from-gray-100/80 hover:to-white/80 transition-all border border-gray-200/50">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-medium text-gray-500 mb-1">City, State ZIP</p>
+                        <p className="text-sm sm:text-base font-medium text-gray-900">
+                          {usAddress?.city || 'Alexandria'}, {usAddress?.state_province || 'VA'} {usAddress?.postal_code || '22304'}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => copyToClipboard(`${usAddress?.city || 'Alexandria'}, {usAddress?.state_province || 'VA'} ${usAddress?.postal_code || '22304'}`, 'city')}
+                        className="ml-3 flex-shrink-0 p-2.5 text-red-600 hover:bg-red-50 rounded-xl transition-colors"
+                        title="Copy city, state, zip"
+                      >
+                        {copiedStates['city'] ? (
+                          <Check className="w-4 h-4" />
+                        ) : (
+                          <Copy className="w-4 h-4" />
+                        )}
+                      </button>
+                    </div>
+                    
+                    {/* Country */}
+                    <div className="flex items-center justify-between p-4 rounded-2xl bg-gradient-to-br from-gray-50/80 to-white/80 hover:from-gray-100/80 hover:to-white/80 transition-all border border-gray-200/50">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-medium text-gray-500 mb-1">Country</p>
+                        <p className="text-sm sm:text-base font-medium text-gray-900">{usAddress?.country || 'USA'}</p>
+                      </div>
+                      <button
+                        onClick={() => copyToClipboard(usAddress?.country || 'USA', 'country')}
+                        className="ml-3 flex-shrink-0 p-2.5 text-red-600 hover:bg-red-50 rounded-xl transition-colors"
+                        title="Copy country"
+                      >
+                        {copiedStates['country'] ? (
+                          <Check className="w-4 h-4" />
+                        ) : (
+                          <Copy className="w-4 h-4" />
+                        )}
+                      </button>
+                    </div>
                   </div>
                 </div>
-            {/* Professional Address Card */}
-            <div className="w-full bg-white/80 backdrop-blur-sm rounded-xl border border-gray-200 shadow-sm p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <MapPin className="w-5 h-5 text-red-600" />
-                  <span className="font-semibold text-gray-900">Your US Address</span>
-                </div>
-                <button
-                  onClick={copyAddressToClipboard}
-                  className="flex items-center gap-2 text-red-600 hover:text-red-700 text-sm font-medium transition-colors"
-                >
-                  {copiedStates['full-address'] ? (
-                    <>
-                      <Check className="w-4 h-4" />
-                      Copied!
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="w-4 h-4" />
-                      Copy
-                    </>
-                  )}
-                </button>
               </div>
-              
-              <div className="space-y-2 text-gray-800">
-                {/* Name */}
-                <div className="flex items-center justify-between p-2 rounded border border-gray-100 hover:bg-gray-50">
-                  <span className="font-semibold">
-                    {(profile?.firstName || profile?.lastName
-                      ? `${profile?.firstName ?? ''} ${profile?.lastName ?? ''}`.trim()
-                      : user?.email) } ({profile?.suite_number})
-                  </span>
-                  <button
-                    onClick={() => copyToClipboard(
-                      `${(profile?.firstName || profile?.lastName)
-                        ? `${profile?.firstName ?? ''} ${profile?.lastName ?? ''}`.trim()
-                        : user?.email || ''} (${profile?.suite_number || ''})`,
-                      'name'
-                    )}
-                    className="text-red-600 hover:text-red-700 p-1"
-                    title="Copy name"
-                  >
-                    {copiedStates['name'] ? (
-                      <Check className="w-3 h-3" />
-                    ) : (
-                      <Copy className="w-3 h-3" />
-                    )}
-                  </button>
-                </div>
-                
-                {/* Address Line 1 */}
-                <div className="flex items-center justify-between p-2 rounded border border-gray-100 hover:bg-gray-50">
-                  <span>4700 Eisenhower Avenue</span>
-                  <button
-                    onClick={() => copyToClipboard('4700 Eisenhower Avenue', 'address1')}
-                    className="text-red-600 hover:text-red-700 p-1"
-                    title="Copy address line 1"
-                  >
-                    {copiedStates['address1'] ? (
-                      <Check className="w-3 h-3" />
-                    ) : (
-                      <Copy className="w-3 h-3" />
-                    )}
-                  </button>
-                </div>
-                
-                {/* Address Line 2 */}
-                <div className="flex items-center justify-between p-2 rounded border border-gray-100 hover:bg-gray-50">
-                  <span>ALX-E2</span>
-                  <button
-                    onClick={() => copyToClipboard('ALX-E2', 'address2')}
-                    className="text-red-600 hover:text-red-700 p-1"
-                    title="Copy suite number"
-                  >
-                    {copiedStates['address2'] ? (
-                      <Check className="w-3 h-3" />
-                    ) : (
-                      <Copy className="w-3 h-3" />
-                    )}
-                  </button>
-                </div>
-                
-                {/* City, State, ZIP */}
-                <div className="flex items-center justify-between p-2 rounded border border-gray-100 hover:bg-gray-50">
-                  <span>{usAddress?.city || 'Alexandria'}, {usAddress?.state_province || 'VA'} {usAddress?.postal_code || '22304'}</span>
-                  <button
-                    onClick={() => copyToClipboard(`${usAddress?.city || 'Alexandria'}, ${usAddress?.state_province || 'VA'} ${usAddress?.postal_code || '22304'}`, 'city')}
-                    className="text-red-600 hover:text-red-700 p-1"
-                    title="Copy city, state, zip"
-                  >
-                    {copiedStates['city'] ? (
-                      <Check className="w-3 h-3" />
-                    ) : (
-                      <Copy className="w-3 h-3" />
-                    )}
-                  </button>
-                </div>
-                
-                {/* Country */}
-                <div className="flex items-center justify-between p-2 rounded border border-gray-100 hover:bg-gray-50">
-                  <span className="font-medium">{usAddress?.country || 'USA'}</span>
-                  <button
-                    onClick={() => copyToClipboard(usAddress?.country || 'USA', 'country')}
-                    className="text-red-600 hover:text-red-700 p-1"
-                    title="Copy country"
-                  >
-                    {copiedStates['country'] ? (
-                      <Check className="w-3 h-3" />
-                    ) : (
-                      <Copy className="w-3 h-3" />
-                    )}
-                  </button>
-                </div>
-              </div>
-
-              
-            </div>
+            </motion.div>
           </div>
         </div>
+      </motion.div>
 
-        {/* Copy Address Button */}
-        <div className="text-center mt-8">
-          <button
-            onClick={copyAddressToClipboard}
-            className={`px-8 py-3 rounded-lg font-medium transition-all duration-300 inline-flex items-center gap-2 ${
-              copiedStates['full-address'] 
-                ? 'bg-green-600 hover:bg-green-700 text-white' 
-                : 'bg-red-600 hover:bg-red-700 text-white'
-            }`}
-          >
-            {copiedStates['full-address'] ? (
-              <>
-                <Check className="w-4 h-4" />
-                ADDRESS COPIED!
-              </>
-            ) : (
-              <>
-                <Copy className="w-4 h-4" />
-                COPY MY ADDRESS
-              </>
-            )}
-          </button>
-        </div>
-      </div>
-
-          {/* Popular Brands & Shops Section */}
-          <section className="py-16 bg-white/60 backdrop-blur-sm">
-            <div className="container mx-auto px-4">
-              <div className="text-center mb-12">
+          {/* Apple-Style Popular Brands Section */}
+          <section className="py-16 sm:py-20 bg-gradient-to-b from-white via-gray-50 to-white">
+            <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="text-center mb-12 sm:mb-16">
                 <motion.h2
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.6 }}
                   viewport={{ once: true }}
-                  className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4"
+                  className="text-3xl sm:text-4xl lg:text-5xl font-semibold text-gray-900 mb-4 tracking-tight"
                 >
-                  Shop From Your <span className="text-red-600">Favorite Brands</span>
+                  Shop From Your <span className="bg-gradient-to-r from-red-500 to-pink-600 bg-clip-text text-transparent">Favorite Brands</span>
                 </motion.h2>
                 <motion.p
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.6, delay: 0.1 }}
                   viewport={{ once: true }}
-                  className="text-xl text-gray-600 max-w-3xl mx-auto"
+                  className="text-lg sm:text-xl text-gray-600 font-light max-w-3xl mx-auto leading-relaxed"
                 >
                   Access thousands of US stores and brands. Use your Vanguard address at checkout and we'll handle the rest.
                 </motion.p>
@@ -486,21 +567,22 @@ const popularBrands = [
             </div>
           </section>
 
-      {/* Commented out original dashboard cards - keep for later reference */}
-      {/*
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl h-full mx-auto">
-        {dashboardCards.map((card) => (
-          <a key={card.title} href={card.href} style={{ textDecoration: 'none' }}>
-            <DashboardCard
-              title={card.title}
-              description={card.description}
-              imageSrc={card.imageSrc}
-              iconComponent={card.iconComponent}
-            />
-          </a>
-        ))}
+        {/* Commented out original dashboard cards - keep for later reference */}
+        {/*
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl h-full mx-auto">
+          {dashboardCards.map((card) => (
+            <a key={card.title} href={card.href} style={{ textDecoration: 'none' }}>
+              <DashboardCard
+                title={card.title}
+                description={card.description}
+                imageSrc={card.imageSrc}
+                iconComponent={card.iconComponent}
+              />
+            </a>
+          ))}
+        </div>
+        */}
       </div>
-      */}
     </div>
   );
 };

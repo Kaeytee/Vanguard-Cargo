@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Eye, EyeOff, Check } from 'lucide-react';
 import 'react-phone-number-input/style.css';
 import PhoneInput, { isValidPhoneNumber } from 'react-phone-number-input';
@@ -8,9 +8,27 @@ import { useNavigate } from 'react-router-dom';
 import DeliveryImage from '../../images/delivery-man.png';
 import { useAuth } from '../../hooks/useAuth';
 import { RegisterSuccessStep } from './RegisterSuccessStep';
+// Import Google reCAPTCHA component
+import ReCAPTCHA from 'react-google-recaptcha';
+// Import reCAPTCHA configuration
+import { recaptchaConfig } from '../../config/recaptcha';
 
 /**
- * Register component - Displays the Register/Signup page with animations
+ * Extend Window interface to include grecaptcha property
+ * This fixes TypeScript errors when accessing window.grecaptcha
+ */
+declare global {
+  interface Window {
+    grecaptcha?: {
+      ready: (callback: () => void) => void;
+      execute: (siteKey: string, options: { action: string }) => Promise<string>;
+      render: (container: string | HTMLElement, parameters: object) => number;
+    };
+  }
+}
+
+/**
+ * Register component - Displays the Register/Signup page with animations and reCAPTCHA protection
  * @returns {JSX.Element} The Register page component
  */
 export default function Register() {
@@ -100,6 +118,87 @@ export default function Register() {
   const navigate = useNavigate();
   const { signUp } = useAuth();
 
+  // reCAPTCHA state
+  const [captchaValue, setCaptchaValue] = useState<string | null>(null);
+  const [recaptchaError, setRecaptchaError] = useState(false);
+  const recaptchaRef = useRef<ReCAPTCHA>(null);
+
+  /**
+   * Check if reCAPTCHA script is loaded and available
+   * This helps detect issues with script loading in production
+   */
+  useEffect(() => {
+    // Check if reCAPTCHA is enabled in config
+    if (!recaptchaConfig.enabled || recaptchaConfig.siteKey === 'disabled') {
+      return;
+    }
+
+    // Only inject if not already present
+    if (!document.querySelector('script[src*="recaptcha"]')) {
+      // Create script element WITHOUT the problematic callback
+      const script = document.createElement('script');
+      script.src = `https://www.google.com/recaptcha/api.js`;
+      script.async = true;
+      script.defer = true;
+      
+      // Add onload handler to detect successful script loading
+      script.onload = () => {
+        console.log('✅ reCAPTCHA script loaded successfully');
+        // Give a shorter delay for grecaptcha to initialize
+        setTimeout(() => {
+          if (window.grecaptcha) {
+            console.log('✅ reCAPTCHA object available, waiting for ready state...');
+            window.grecaptcha.ready(() => {
+              console.log('✅ reCAPTCHA is ready and initialized');
+              setRecaptchaError(false);
+            });
+          } else {
+            console.log('⚠️ reCAPTCHA object not available yet, but proceeding anyway');
+            // Still set loading to false so the component can try to render
+            setRecaptchaError(false);
+          }
+        }, 800); // Reduced delay
+      };
+      
+      // Add error handler
+      script.onerror = () => {
+        console.error('❌ Failed to load reCAPTCHA script');
+        setRecaptchaError(true);
+      };
+      
+      // Append to document
+      document.head.appendChild(script);
+      console.log('📝 reCAPTCHA script injected (without callback)');
+    }
+  }, []);
+
+  /**
+   * Handle reCAPTCHA change
+   * @param {string | null} value - The reCAPTCHA token value
+   */
+  const handleCaptchaChange = (value: string | null) => {
+    setCaptchaValue(value);
+    setRecaptchaError(false);
+    if (value) {
+      setErrors(prev => ({ ...prev, general: '' }));
+    }
+  };
+
+  /**
+   * Handle reCAPTCHA expiration
+   */
+  const handleCaptchaExpired = () => {
+    setCaptchaValue(null);
+    setErrors(prev => ({ ...prev, general: 'reCAPTCHA has expired. Please verify again.' }));
+  };
+
+  /**
+   * Handle reCAPTCHA error (when it fails to load)
+   */
+  const handleCaptchaError = () => {
+    setRecaptchaError(true);
+    setErrors(prev => ({ ...prev, general: 'reCAPTCHA failed to load. Please check your internet connection and try again.' }));
+  };
 
   // Handle form input changes with real-time validation
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -231,6 +330,12 @@ export default function Register() {
     // Prevent default form submission behavior
     e.preventDefault();
     
+    // Validate reCAPTCHA (only if reCAPTCHA is enabled, loaded without errors, and we're not in a fallback state)
+    if (recaptchaConfig.enabled && recaptchaConfig.siteKey !== 'disabled' && !recaptchaError && !captchaValue) {
+      setErrors(prev => ({ ...prev, general: 'Please verify that you are not a robot.' }));
+      return;
+    }
+    
     // Validate form
     const newErrors = validate();
     setErrors(newErrors);
@@ -358,7 +463,8 @@ export default function Register() {
     formData.password &&
     formData.password.length >= 8 &&
     formData.password === formData.confirmPassword &&
-    formData.agreeToTerms;
+    formData.agreeToTerms &&
+    (!recaptchaConfig.enabled || recaptchaError || captchaValue);
 
   const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
     const { name } = e.target;
@@ -796,6 +902,23 @@ export default function Register() {
                       <p className="ml-8 text-sm text-red-600">You must agree to the terms and conditions</p>
                     )}
                   </div>
+
+                  {/* Google reCAPTCHA */}
+                  {recaptchaConfig.enabled && recaptchaConfig.siteKey && (
+                    <div className="recaptcha-container">
+                      <ReCAPTCHA
+                        ref={recaptchaRef}
+                        sitekey={recaptchaConfig.siteKey}
+                        theme={recaptchaConfig.theme}
+                        size={recaptchaConfig.size}
+                        onChange={handleCaptchaChange}
+                        onExpired={handleCaptchaExpired}
+                        onErrored={handleCaptchaError}
+                        className="mt-2 mb-2"
+                      />
+                    </div>
+                  )}
+
                   <button
                     type="submit"
                     disabled={!isFormValid}

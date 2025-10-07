@@ -1,22 +1,10 @@
-# =====================================================
-# SUPABASE SUPERADMIN USER CREATION SCRIPT
-# =====================================================
-# SECURITY WARNING: This file contains API endpoints that require
-# your actual Supabase service role key. Never commit real keys to git!
-# 
-# SETUP INSTRUCTIONS:
-# 1. Get your service role key from Supabase Dashboard > Settings > API
-# 2. Replace YOUR_SUPABASE_SERVICE_ROLE_KEY with your actual key
-# 3. Replace YOUR_SUPABASE_PROJECT_URL with your project URL
-# 4. Run this script in a secure environment only
-# =====================================================
-
 # Step 1: Create auth user
-# IMPORTANT: Replace placeholders with your actual Supabase credentials
-curl -X POST "YOUR_SUPABASE_PROJECT_URL/auth/v1/admin/users" \
-  -H "Authorization: Bearer YOUR_SUPABASE_SERVICE_ROLE_KEY" \
+# IMPORTANT: Replace YOUR_SERVICE_ROLE_KEY with your actual service role key from Supabase Dashboard > Settings > API
+# SECURITY: Never commit real service keys to version control!
+curl -X POST "https://YOUR_SUPABASE_URL.supabase.co/auth/v1/admin/users" \
+  -H "Authorization: Bearer YOUR_SERVICE_ROLE_KEY" \
   -H "Content-Type: application/json" \
-  -H "apikey: YOUR_SUPABASE_SERVICE_ROLE_KEY" \
+  -H "apikey: YOUR_SERVICE_ROLE_KEY" \
   -d '{
     "email": "admin@vanguardcargo.co",
     "password": "VanguardAdmin2024!",
@@ -27,16 +15,14 @@ curl -X POST "YOUR_SUPABASE_PROJECT_URL/auth/v1/admin/users" \
     }
   }'
 
-
 # Step 2: Create profile (use the ID returned from step 1)
-# IMPORTANT: Replace USER_ID_FROM_STEP_1 with the actual user ID returned above
-curl -X POST "YOUR_SUPABASE_PROJECT_URL/rest/v1/users" \
-  -H "Authorization: Bearer YOUR_SUPABASE_SERVICE_ROLE_KEY" \
+curl -X POST "https://YOUR_SUPABASE_URL.supabase.co/rest/v1/users" \
+  -H "Authorization: Bearer YOUR_SERVICE_ROLE_KEY" \
   -H "Content-Type: application/json" \
-  -H "apikey: YOUR_SUPABASE_SERVICE_ROLE_KEY" \
+  -H "apikey: YOUR_SERVICE_ROLE_KEY" \
   -H "Prefer: return=representation" \
   -d '{
-    "id": "USER_ID_FROM_STEP_1",
+    "id": "03425a26-2c0d-48da-a3ca-141f0dac0e2d",
     "email": "admin@vanguardcargo.co",
     "first_name": "Admin",
     "last_name": "User",
@@ -44,13 +30,3 @@ curl -X POST "YOUR_SUPABASE_PROJECT_URL/rest/v1/users" \
     "status": "active",
     "email_verified": true
   }'
-
-# =====================================================
-# SECURITY REMINDERS:
-# =====================================================
-# 1. Never commit this file with real credentials to version control
-# 2. Use environment variables in production environments
-# 3. Rotate service keys regularly
-# 4. Monitor API usage for unauthorized access
-# 5. Delete this file after use or store securely
-# =====================================================

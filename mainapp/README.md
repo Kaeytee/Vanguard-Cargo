@@ -168,20 +168,33 @@ POST /api/auth/reset-password
 ### 4. Dashboard & Account Status Integration
 
 **Frontend Components:**
-- `Dashboard` - Main dashboard with status-aware content
-- `AccountStatusBanner` - Status notifications and actions
-- `QuickActions` - Status-based action buttons
+- `Dashboard` - Professional, responsive main dashboard with clean design
+- `PackageIntakeWidget` - Real-time package status display
+- `BrandSlider` - Animated logo carousel for popular US brands
 
-**Status-Based Dashboard Variants:**
+**Dashboard Features:**
+- ✅ **Professional Design** - Clean white backgrounds, strategic red accents, no unnecessary gradients
+- ✅ **Fully Responsive** - Optimized for mobile, tablet, and desktop (max-width: 7xl with proper padding)
+- ✅ **Address Management** - Professional address card with individual field copying
+- ✅ **Smart Alerts** - Important address usage guidelines with professional styling
+- ✅ **Brand Showcase** - Dual display (grid for mobile, animated marquee for desktop)
+- ✅ **Copy Functionality** - One-click copy for individual address fields or complete address
+- ✅ **Visual Hierarchy** - Consistent typography and spacing throughout
+
+**Dashboard Sections:**
+1. **Welcome Header** - Personalized greeting with user's first name
+2. **Address Usage Alert** - Professional warning about complete address requirements
+3. **Package Intake Widget** - Live package status and management
+4. **How It Works** - Two-step guide with shop illustration
+5. **Address Card** - Clean, copyable US shipping address display
+6. **Brand Slider** - Popular US stores with animated logo carousel
+
+**Responsive Breakpoints:**
 ```typescript
-// Dashboard content based on account status
-const DashboardContent = {
-  active: <ActiveDashboard />,
-  suspended: <SuspendedDashboard />,
-  pending_verification: <PendingVerificationDashboard />,
-  restricted: <RestrictedDashboard />,
-  closed: <ClosedAccountDashboard />
-};
+// Mobile-first responsive design
+- Mobile: Full-width, single column, grid layout for brands
+- Tablet (md): 2-column grids, larger text, improved spacing
+- Desktop (lg+): Max-width container, animated brand marquee, optimized layouts
 ```
 
 ### 5. Package Request Submission Flow
@@ -221,17 +234,179 @@ POST /api/shipments/request
 
 **Frontend Components:**
 - `ShipmentHistory` - Complete shipment history with filtering
-- `TrackingDetails` - Real-time tracking information
-- `TrackingTimeline` - Visual tracking progress
+- `TrackingPage` - Apple-style tracking interface with frosted glass design
+- `TrackingTimeline` - Professional timeline with gradient status cards
+
+**Apple-Style Tracking Page Features:**
+- 🍎 **Frosted Glass Design** - Backdrop-blur effects with subtle gradients throughout
+- 🔍 **Hero Search Section** - Large, elegant search with pill-shaped input and gradient button
+- 📊 **Circular Progress Ring** - Apple Watch-style progress indicator with SVG gradients
+- 🎨 **Gradient Status Cards** - Color-coded gradients (green for completed, blue for current, gray for pending)
+- ⏱️ **Professional Timeline** - Large gradient icon badges (56px rounded squares)
+- 📱 **Fully Responsive** - Mobile-first design with smooth animations
+- ✨ **Smooth Animations** - Framer Motion fade-ins and slide-ins throughout
+
+**Visual Design Elements:**
+```typescript
+// Frosted glass cards with backdrop blur
+- Background: bg-white/60 backdrop-blur-xl
+- Borders: border border-gray-200/50
+- Shadows: shadow-2xl shadow-gray-200/50
+- Border radius: rounded-3xl (24px)
+
+// Gradient buttons and badges
+- Search button: bg-gradient-to-r from-blue-500 to-indigo-600
+- Status icons: bg-gradient-to-br from-green-500 to-emerald-600
+- Progress ring: Linear gradient from blue to purple
+
+// Typography
+- Headers: text-4xl to text-6xl font-semibold
+- Body text: font-light for elegance
+- Tracking number: font-mono for clarity
+```
 
 **Backend Integration:**
 ```typescript
 // Get shipment history
 GET /api/shipments/history?page=1&limit=20&status=all&dateRange=30days
 
-// Real-time tracking
-GET /api/shipments/track/:trackingNumber
+// Real-time tracking via TrackingService
+const result = await TrackingService.trackByNumber(trackingId, userId);
+// Returns professional tracking data with status codes and customer messages
+
+// WebSocket support (future)
 WebSocket: /ws/tracking/:trackingNumber
+```
+
+### 6.1. Package Delivery Codes & Warehouse Pickup
+
+**Overview:**
+The delivery codes system provides customers with unique 6-digit codes for picking up packages that have arrived at the warehouse. Each package receives its own verification code that customers must present to warehouse staff during pickup.
+
+**Frontend Components:**
+- `PackageIntake` - Displays packages with delivery codes in dedicated "Ready for Pickup" section
+- `DeliveryCodeCard` - Individual card showing package details and delivery code
+- `DeliveryCodeService` - Service layer for managing delivery code operations
+
+**Key Features:**
+- 📦 **Unique 6-Digit Codes** - Each package gets a unique verification code
+- 🔐 **Secure Pickup** - Codes must be verified by warehouse staff before package release
+- 📋 **One-Click Copy** - Copy codes to clipboard with single click
+- ⏰ **Timestamp Tracking** - Shows code generation time and optional expiration
+- 📱 **Responsive Design** - Professional card-based layout with visual hierarchy
+- 🔄 **Real-time Updates** - Codes load automatically when packages arrive at warehouse
+
+**Backend Integration:**
+```typescript
+// Fetch customer delivery codes via Supabase RPC function
+const { data, error } = await supabase.rpc('get_customer_delivery_codes', {
+  p_user_id: currentUser.id
+});
+
+// Response format
+interface DeliveryCode {
+  package_id: string;              // Package identifier (e.g., "PKG-123456")
+  tracking_number: string;         // Package tracking number
+  delivery_code: string;           // 6-digit verification code (e.g., "847293")
+  shipment_tracking: string;       // Parent shipment tracking number
+  status: string;                  // Always "arrived" for ready-to-pickup packages
+  generated_at: string;            // Timestamp when code was generated
+  expires_at: string | null;       // Optional expiration (null = no expiration)
+  description: string;             // Package description
+}
+```
+
+**Service Layer Implementation:**
+```typescript
+// DeliveryCodeService methods
+class DeliveryCodeService {
+  // Get all delivery codes for logged-in customer
+  async getCustomerDeliveryCodes(userId: string): Promise<DeliveryCodeResponse>;
+  
+  // Get delivery code for specific package
+  async getPackageDeliveryCode(userId: string, packageId: string): Promise<DeliveryCodeResponse>;
+  
+  // Validate code expiration
+  isCodeValid(deliveryCode: DeliveryCode): boolean;
+  
+  // Format code for display (XXX-XXX)
+  formatCode(code: string): string;
+  
+  // Get count of packages ready for pickup
+  async getReadyForPickupCount(userId: string): Promise<number>;
+}
+```
+
+**User Experience Flow:**
+1. **Package Arrival** - Package arrives at warehouse and status changes to "arrived"
+2. **Code Generation** - System auto-generates unique 6-digit delivery code
+3. **Customer Notification** - Customer sees package in "Ready for Pickup" section
+4. **Code Display** - Delivery code prominently displayed in green card with copy button
+5. **Warehouse Pickup** - Customer visits warehouse and provides code to staff
+6. **Verification** - Staff verifies code and releases package to customer
+
+**UI/UX Highlights:**
+- **Visual Hierarchy** - Green gradient cards distinguish ready packages from incoming packages
+- **Prominent Code Display** - Large, monospace font for easy reading (text-3xl font-mono)
+- **Copy Functionality** - One-click copy with visual feedback ("Copied!" tooltip)
+- **Warning Banner** - Yellow alert reminding customers to show code to staff
+- **Package Details** - Shows package ID, tracking number, description, and shipment info
+- **Timestamp Info** - Displays code generation time and expiration (if applicable)
+- **Mobile Responsive** - Grid layout adapts: 1 column (mobile), 2 columns (tablet), 3 columns (desktop)
+
+**Security & Validation:**
+- ✅ **User Authentication** - Only authenticated users can fetch their delivery codes
+- ✅ **User ID Validation** - RPC function validates user ID before returning codes
+- ✅ **Code Uniqueness** - Each package has unique 6-digit code
+- ✅ **Error Handling** - Comprehensive error handling with user-friendly messages
+- ✅ **Expiration Checking** - Optional code expiration validation
+
+**Database Requirements:**
+- Supabase RPC function: `get_customer_delivery_codes(p_user_id UUID)`
+- Returns packages with status "arrived" and associated delivery codes
+- Filters by authenticated user's ID for security
+
+**Component Location:**
+- Service: `/src/services/deliveryCodeService.ts`
+- Component: `/src/app/packageIntake/packageIntake.tsx` (integrated)
+- Interface: Displays at top of Package Intake page when codes exist
+
+**Example Usage:**
+```typescript
+// In Package Intake component
+import { deliveryCodeService, type DeliveryCode } from '../../services/deliveryCodeService';
+
+// Fetch delivery codes on component mount
+useEffect(() => {
+  const loadDeliveryCodes = async () => {
+    if (!user?.id) return;
+    
+    const response = await deliveryCodeService.getCustomerDeliveryCodes(user.id);
+    
+    if (response.success && response.data) {
+      setDeliveryCodes(response.data);
+      console.log('📦 Loaded delivery codes:', response.data.length);
+    }
+  };
+  
+  loadDeliveryCodes();
+}, [user?.id]);
+
+// Display delivery codes
+{deliveryCodes.length > 0 && (
+  <div className="mb-8">
+    <h2>📦 Packages Ready for Pickup</h2>
+    <p>{deliveryCodes.length} packages waiting at warehouse</p>
+    
+    {deliveryCodes.map((code) => (
+      <DeliveryCodeCard 
+        key={code.package_id}
+        deliveryCode={code}
+        onCopyCode={handleCopyCode}
+      />
+    ))}
+  </div>
+)}
 ```
 
 ### 7. Account Settings & Preferences

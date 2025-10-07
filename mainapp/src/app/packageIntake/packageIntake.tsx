@@ -8,7 +8,10 @@ import {
   Edit3,
   DollarSign,
   X,
-  Eye
+  Eye,
+  Copy,
+  Lock,
+  PackageCheck
 } from "lucide-react";
 import { motion } from "framer-motion";
 import SEO from "../../components/SEO";
@@ -19,6 +22,7 @@ import { supabase } from "../../lib/supabase";
 import { formatDate, formatTime } from "../../utils/dateUtils";
 import { usePackageRealtime } from "../../hooks/useRealtime";
 import { notificationService } from "../../services/notificationService";
+import { deliveryCodeService, type DeliveryCode } from "../../services/deliveryCodeService";
 
 /**
  * Package Intake - Professional package management interface
@@ -75,6 +79,11 @@ export default function PackageIntake() {
   const [actionInProgress, setActionInProgress] = useState<string | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingPackage, setEditingPackage] = useState<IncomingPackage | null>(null);
+  
+  // Delivery codes state
+  const [deliveryCodes, setDeliveryCodes] = useState<DeliveryCode[]>([]);
+  const [loadingCodes, setLoadingCodes] = useState(false);
+  const [copiedCode, setCopiedCode] = useState<string | null>(null);
 
   // Transform database package to UI package format
   const transformPackageData = useCallback((pkg: any): IncomingPackage => ({
@@ -99,7 +108,7 @@ export default function PackageIntake() {
     storeLogoUrl: undefined,
   }), []);
 
-  // Load packages on component mount
+  // Load packages and delivery codes on component mount
   useEffect(() => {
     const loadPackages = async () => {
       if (!user?.id) return;
@@ -127,6 +136,31 @@ export default function PackageIntake() {
 
     loadPackages();
   }, [user?.id, transformPackageData]);
+
+  // Load delivery codes for packages ready for pickup
+  useEffect(() => {
+    const loadDeliveryCodes = async () => {
+      if (!user?.id) return;
+
+      try {
+        setLoadingCodes(true);
+        const response = await deliveryCodeService.getCustomerDeliveryCodes(user.id);
+        
+        if (response.success && response.data) {
+          setDeliveryCodes(response.data);
+          console.log('📦 Loaded delivery codes:', response.data.length);
+        } else {
+          console.error('Failed to load delivery codes:', response.error);
+        }
+      } catch (err) {
+        console.error('Error loading delivery codes:', err);
+      } finally {
+        setLoadingCodes(false);
+      }
+    };
+
+    loadDeliveryCodes();
+  }, [user?.id]);
 
   // Real-time subscription for package updates using the custom hook
   const { isConnected } = usePackageRealtime({
@@ -250,6 +284,16 @@ export default function PackageIntake() {
     ));
     setShowEditModal(false);
     setEditingPackage(null);
+  }, []);
+
+  // Copy delivery code to clipboard
+  const handleCopyCode = useCallback((code: string) => {
+    navigator.clipboard.writeText(code).then(() => {
+      setCopiedCode(code);
+      setTimeout(() => setCopiedCode(null), 2000);
+    }).catch((err) => {
+      console.error('Failed to copy code:', err);
+    });
   }, []);
 
   // Get status badge styling
@@ -376,6 +420,57 @@ export default function PackageIntake() {
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Delivery Codes Section - Ready for Pickup */}
+        {loadingCodes ? (
+          /* Loading State for Delivery Codes */
+          <div className="mb-8">
+            <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg p-6">
+              <div className="flex items-center justify-center py-8">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto mb-2"></div>
+                  <p className="text-sm text-gray-600">Checking for packages ready for pickup...</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : deliveryCodes.length > 0 ? (
+          /* Delivery Codes Display */
+          <div className="mb-8">
+            <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg p-6">
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center space-x-3">
+                  <div className="bg-green-600 p-2 rounded-lg">
+                    <PackageCheck className="h-6 w-6 text-white" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-gray-900">📦 Packages Ready for Pickup</h2>
+                    <p className="text-sm text-gray-600 mt-1">
+                      {deliveryCodes.length} {deliveryCodes.length === 1 ? 'package' : 'packages'} waiting for you at the warehouse
+                    </p>
+                  </div>
+                </div>
+                <div className="hidden md:block bg-green-600 text-white px-4 py-2 rounded-lg text-center">
+                  <div className="text-2xl font-bold">{deliveryCodes.length}</div>
+                  <div className="text-xs">Ready</div>
+                </div>
+              </div>
+
+              {/* Delivery Codes Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {deliveryCodes.map((deliveryCode) => (
+                  <DeliveryCodeCard
+                    key={deliveryCode.package_id}
+                    deliveryCode={deliveryCode}
+                    onCopyCode={handleCopyCode}
+                    isCopied={copiedCode === deliveryCode.delivery_code}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+        ) : null}
+
+        {/* Regular Packages Section */}
         {displayedPackages.length === 0 ? (
           /* Empty State */
           <div className="text-center bg-white/80 backdrop-blur-sm rounded-lg py-12">
@@ -714,4 +809,116 @@ const PhotoModal: React.FC<PhotoModalProps> = ({ isOpen, onClose, photos, packag
 };
 
 // Removed ConsolidationModal component - simplified interface
+
+// Delivery Code Card Component
+interface DeliveryCodeCardProps {
+  deliveryCode: DeliveryCode;
+  onCopyCode: (code: string) => void;
+  isCopied: boolean;
+}
+
+const DeliveryCodeCard: React.FC<DeliveryCodeCardProps> = ({
+  deliveryCode,
+  onCopyCode,
+  isCopied
+}) => {
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      className="bg-white rounded-lg shadow-md border-2 border-green-200 p-5 hover:shadow-lg transition-all"
+    >
+      {/* Package Information */}
+      <div className="mb-4 pb-4 border-b border-gray-200">
+        <div className="flex items-start justify-between mb-2">
+          <div className="flex-1">
+            <h3 className="text-sm font-semibold text-gray-900 mb-1">
+              {deliveryCode.package_id}
+            </h3>
+            <p className="text-xs text-gray-500">
+              Tracking: {deliveryCode.tracking_number}
+            </p>
+          </div>
+          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+            {deliveryCode.status}
+          </span>
+        </div>
+        
+        {deliveryCode.description && (
+          <p className="text-xs text-gray-600 mt-2 line-clamp-2">
+            {deliveryCode.description}
+          </p>
+        )}
+        
+        {deliveryCode.shipment_tracking && (
+          <p className="text-xs text-gray-500 mt-2">
+            Shipment: {deliveryCode.shipment_tracking}
+          </p>
+        )}
+      </div>
+
+      {/* Delivery Code Display */}
+      <div className="mb-4">
+        <div className="flex items-center space-x-2 mb-2">
+          <Lock className="h-4 w-4 text-green-600" />
+          <span className="text-xs font-semibold text-gray-700 uppercase tracking-wide">
+            Your Delivery Code
+          </span>
+        </div>
+        
+        <div className="relative">
+          <div className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-lg p-4 text-center">
+            <div className="text-3xl font-bold text-white tracking-wider font-mono">
+              {deliveryCode.delivery_code}
+            </div>
+          </div>
+          
+          {/* Copy Button */}
+          <button
+            onClick={() => onCopyCode(deliveryCode.delivery_code)}
+            className="absolute top-2 right-2 bg-white/20 hover:bg-white/30 text-white p-2 rounded transition-colors"
+            title="Copy code"
+          >
+            <Copy className="h-4 w-4" />
+          </button>
+          
+          {/* Copied Indicator */}
+          {isCopied && (
+            <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs px-3 py-1 rounded shadow-lg">
+              Copied!
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Warning Message */}
+      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+        <div className="flex items-start space-x-2">
+          <AlertCircle className="h-4 w-4 text-yellow-600 flex-shrink-0 mt-0.5" />
+          <p className="text-xs text-yellow-800">
+            <span className="font-semibold">Important:</span> Show this code to warehouse staff for package pickup
+          </p>
+        </div>
+      </div>
+
+      {/* Generated Date */}
+      <div className="mt-4 pt-3 border-t border-gray-100">
+        <div className="flex items-center justify-between text-xs text-gray-500">
+          <div className="flex items-center space-x-1">
+            <Clock className="h-3 w-3" />
+            <span>Generated:</span>
+          </div>
+          <span>{formatDate(deliveryCode.generated_at)} at {formatTime(deliveryCode.generated_at)}</span>
+        </div>
+        
+        {deliveryCode.expires_at && (
+          <div className="flex items-center justify-between text-xs text-red-600 mt-1">
+            <span>Expires:</span>
+            <span>{formatDate(deliveryCode.expires_at)}</span>
+          </div>
+        )}
+      </div>
+    </motion.div>
+  );
+};
 
