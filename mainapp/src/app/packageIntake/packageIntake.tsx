@@ -16,6 +16,9 @@ import { PackageEditModal } from "../../components/PackageEditModal";
 import { packageService, type PackageWithDetails } from "../../services/packageService";
 import { useAuth } from "../../hooks/useAuth";
 import { supabase } from "../../lib/supabase";
+import { formatDate, formatTime } from "../../utils/dateUtils";
+import { usePackageRealtime } from "../../hooks/useRealtime";
+import { notificationService } from "../../services/notificationService";
 
 /**
  * Package Intake - Professional package management interface
@@ -73,6 +76,29 @@ export default function PackageIntake() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingPackage, setEditingPackage] = useState<IncomingPackage | null>(null);
 
+  // Transform database package to UI package format
+  const transformPackageData = useCallback((pkg: any): IncomingPackage => ({
+    // Copy all base package fields
+    ...pkg,
+    // Map database status to component status
+    status: (pkg.status as IncomingPackage['status']) || 'received',
+    // Add UI-specific fields with proper date handling
+    arrivalTime: formatTime(pkg.intake_date || pkg.created_at),
+    estimatedWeight: pkg.weight_lbs ? `${pkg.weight_lbs.toFixed(2)} lbs` : 'Unknown',
+    storeName: pkg.store_name || pkg.sender_name || 'Unknown Store',
+    dimensions: pkg.length_in && pkg.width_in && pkg.height_in ? {
+      length: pkg.length_in,
+      width: pkg.width_in,
+      height: pkg.height_in
+    } : undefined,
+    value: pkg.declared_value || 0,
+    priority: 'standard' as const,
+    fragile: false, // Default value
+    originAddress: 'Unknown', // Default value
+    packagePhotos: [], // Default value
+    storeLogoUrl: undefined,
+  }), []);
+
   // Load packages on component mount
   useEffect(() => {
     const loadPackages = async () => {
@@ -87,28 +113,7 @@ export default function PackageIntake() {
           console.error("Error loading packages:", response.error);
         } else {
           // Transform Supabase data to match component interface
-          const transformedPackages: IncomingPackage[] = response.data.map(pkg => ({
-            // Copy all base package fields
-            ...pkg,
-            // Map database status to component status
-            status: (pkg.status as IncomingPackage['status']) || 'received',
-            // Add UI-specific fields
-            arrivalTime: pkg.created_at ? new Date(pkg.created_at).toLocaleTimeString() : '',
-            estimatedWeight: pkg.weight_lbs ? `${pkg.weight_lbs.toFixed(2)} lbs` : 'Unknown',
-            storeName: pkg.store_name || pkg.sender_name || 'Unknown Store',
-            dimensions: pkg.length_in && pkg.width_in && pkg.height_in ? {
-              length: pkg.length_in,
-              width: pkg.width_in,
-              height: pkg.height_in
-            } : undefined,
-            value: pkg.declared_value || 0,
-            priority: 'standard' as const,
-            fragile: false, // Default value
-            originAddress: 'Unknown', // Default value
-            packagePhotos: [], // Default value
-            storeLogoUrl: undefined,
-          }));
-          
+          const transformedPackages: IncomingPackage[] = response.data.map(transformPackageData);
           setPackages(transformedPackages);
           setError(null);
         }
@@ -121,7 +126,33 @@ export default function PackageIntake() {
     };
 
     loadPackages();
-  }, [user?.id]);
+  }, [user?.id, transformPackageData]);
+
+  // Real-time subscription for package updates using the custom hook
+  const { isConnected } = usePackageRealtime({
+    onInsert: useCallback((newPackageData: any) => {
+      const newPackage = transformPackageData(newPackageData);
+      setPackages(prev => [newPackage, ...prev]);
+      console.log('New package added via real-time:', newPackage.package_id);
+    }, [transformPackageData]),
+    
+    onUpdate: useCallback((updatedPackageData: any) => {
+      const updatedPackage = transformPackageData(updatedPackageData);
+      setPackages(prev => 
+        prev.map(pkg => 
+          pkg.id === updatedPackage.id ? updatedPackage : pkg
+        )
+      );
+      console.log('Package updated via real-time:', updatedPackage.package_id);
+    }, [transformPackageData]),
+    
+    onDelete: useCallback((deletedPackageData: any) => {
+      setPackages(prev => 
+        prev.filter(pkg => pkg.id !== deletedPackageData.id)
+      );
+      console.log('Package deleted via real-time:', deletedPackageData.package_id);
+    }, [])
+  });
 
   // Show all packages without filtering - sorted by arrival date (newest first)
   const displayedPackages = useMemo(() => {
@@ -139,14 +170,30 @@ export default function PackageIntake() {
   const approveShipment = useCallback(async (packageId: string) => {
     setActionInProgress(packageId);
     try {
+      // Get current package details before updating for notification
+      const { data: currentPackage, error: fetchError } = await supabase
+        .from('packages')
+        .select('user_id, status, store_name, tracking_number, package_id, description')
+        .eq('id', packageId)
+        .single();
+
+      if (fetchError || !currentPackage) {
+        console.error("Error fetching package details:", fetchError);
+        setError("Failed to fetch package details. Please try again.");
+        return;
+      }
+
+      const oldStatus = currentPackage.status;
+      const newStatus = 'received';
+
       // Direct database update without complex validation
       // Change status from 'pending' to 'received' when package is physically scanned
       const now = new Date().toISOString();
       const { error } = await supabase
         .from('packages')
         .update({
-          status: 'received',
-          received_at: now,
+          status: newStatus,
+          intake_date: now,
           updated_at: now,
         })
         .eq('id', packageId)
@@ -158,15 +205,29 @@ export default function PackageIntake() {
         setError("Failed to process package. Please try again.");
         return;
       }
+
+      // Send notification to user about status change
+      try {
+        await notificationService.createPackageStatusNotification(
+          currentPackage.user_id,
+          currentPackage.package_id || packageId,
+          {
+            storeName: currentPackage.store_name,
+            trackingNumber: currentPackage.tracking_number,
+            description: currentPackage.description
+          },
+          oldStatus,
+          newStatus
+        );
+        console.log(`📧 Notification sent to user ${currentPackage.user_id} for package status change: ${oldStatus} → ${newStatus}`);
+      } catch (notificationError) {
+        console.error("Error sending notification:", notificationError);
+        // Don't fail the entire operation if notification fails
+      }
       
-      // Update local state with the new status
-      setPackages(prev => prev.map(pkg => 
-        pkg.id === packageId 
-          ? { ...pkg, status: 'received' as const }
-          : pkg
-      ));
-      
-      console.log(`Package ${packageId} status updated to received`);
+      // Real-time subscription will automatically update the UI
+      // No need to manually update local state - real-time will handle it
+      console.log(`Package ${packageId} status updated to ${newStatus} - real-time will sync UI`);
     } catch (err) {
       console.error("Error processing package:", err);
       setError("Failed to process package. Please try again.");
@@ -240,14 +301,7 @@ export default function PackageIntake() {
     }
   };
 
-  // Format date for display
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
-    });
-  };
+  // Date formatting is now handled by imported utility functions
 
   if (loading) {
     return (
@@ -297,11 +351,19 @@ export default function PackageIntake() {
                 </p>
               </div>
               
-              {/* Package Count */}
+              {/* Package Count and Real-time Status */}
               <div className="hidden md:flex items-center space-x-6">
                 <div className="text-center">
                   <div className="text-2xl font-bold text-red-600">{packageCount}</div>
                   <div className="text-xs text-gray-500">Total Packages</div>
+                </div>
+                
+                {/* Real-time Connection Status */}
+                <div className="flex items-center space-x-2">
+                  <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-gray-400'}`}></div>
+                  <span className="text-xs text-gray-500">
+                    {isConnected ? 'Live Updates' : 'Offline'}
+                  </span>
                 </div>
               </div>
             </div>
@@ -337,7 +399,6 @@ export default function PackageIntake() {
                 isActionInProgress={actionInProgress === pkg.id}
                 getStatusBadge={getStatusBadge}
                 getPriorityBadge={getPriorityBadge}
-                formatDate={formatDate}
               />
             ))}
           </div>
@@ -370,7 +431,6 @@ interface PackageCardProps {
   isActionInProgress: boolean;
   getStatusBadge: (status: IncomingPackage['status']) => string;
   getPriorityBadge: (priority: IncomingPackage['priority']) => string;
-  formatDate: (date: string) => string;
 }
 
 const PackageCard: React.FC<PackageCardProps> = ({
@@ -381,8 +441,7 @@ const PackageCard: React.FC<PackageCardProps> = ({
   onEditDetails,
   isActionInProgress,
   getStatusBadge,
-  getPriorityBadge,
-  formatDate
+  getPriorityBadge
 }) => {
   const [showPhotos, setShowPhotos] = useState(false);
 
@@ -423,7 +482,7 @@ const PackageCard: React.FC<PackageCardProps> = ({
               )}
               <div>
                 <h3 className="text-sm font-medium text-gray-900">{pkg.storeName}</h3>
-                <p className="text-xs text-gray-500">{pkg.tracking_number}</p>
+                <p className="text-xs text-gray-500">Package ID: {pkg.package_id}</p>
               </div>
             </div>
           </div>
@@ -475,7 +534,7 @@ const PackageCard: React.FC<PackageCardProps> = ({
             <div className="grid grid-cols-2 gap-2 text-xs text-gray-500">
               <div className="flex items-center">
                 <Calendar className="w-3 h-3 mr-1" />
-                {formatDate(pkg.arrivalTime || pkg.created_at)}
+                {formatDate(pkg.intake_date || pkg.created_at)}
               </div>
               <div className="flex items-center">
                 <Clock className="w-3 h-3 mr-1" />
@@ -557,7 +616,7 @@ const PackageCard: React.FC<PackageCardProps> = ({
         isOpen={showPhotos}
         onClose={() => setShowPhotos(false)}
         photos={pkg.packagePhotos || []}
-        packageId={pkg.id}
+        packageId={pkg.package_id}
       />
     </motion.div>
   );
@@ -586,7 +645,7 @@ const PhotoModal: React.FC<PhotoModalProps> = ({ isOpen, onClose, photos, packag
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-75">
       <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-hidden">
         <div className="flex items-center justify-between p-4 border-b border-gray-200">
-          <h3 className="text-lg font-medium text-gray-900">Package Photos - {packageId}</h3>
+          <h3 className="text-lg font-medium text-gray-900">Package Photos - Package ID: {packageId}</h3>
           <button
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600 transition-colors"

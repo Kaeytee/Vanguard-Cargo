@@ -1,5 +1,6 @@
 import { supabase } from '../lib/supabase';
 import { PackageStatus, PackageStatusUtils, type PackageStatusInfo } from '../types';
+import { emailNotificationService } from './emailNotificationService';
 
 // Define interface to match the actual 'packages' table schema
 export interface DbPackage {
@@ -312,9 +313,31 @@ class PackageService {
         // TODO: Implement audit logging to database
       }
 
-      // Send notification if status change affects customer
+      // Send email notification for status change
+      try {
+        const emailResult = await emailNotificationService.sendPackageStatusEmail({
+          packageId: packageId,
+          trackingNumber: data.tracking_number,
+          storeName: data.store_name || data.vendor_name || 'Unknown Store',
+          oldStatus: currentPackage.status,
+          newStatus: newStatus,
+          description: data.description || undefined,
+          userId: currentPackage.user_id
+        });
+
+        if (!emailResult.success) {
+          console.error(`Failed to send email notification for package ${packageId}:`, emailResult.error);
+          // Don't fail the status update if email fails
+        } else {
+          console.log(`Email notification sent successfully for package ${packageId}, messageId: ${emailResult.messageId}`);
+        }
+      } catch (emailError) {
+        console.error(`Error sending email notification for package ${packageId}:`, emailError);
+        // Don't fail the status update if email fails
+      }
+
+      // Send in-app notification if status change affects customer
       if (PackageStatusUtils.requiresCustomerAction(newStatus as any)) {
-        // TODO: Trigger customer notification
         console.log(`Customer notification required for package ${packageId} - status: ${newStatus}`);
       }
 

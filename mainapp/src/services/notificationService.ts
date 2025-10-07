@@ -382,6 +382,143 @@ class NotificationService {
   ): Promise<{ data: NotificationSettings | null; error: string | null; success: boolean }> {
     return await this.updateSettings(userId, { [settingName]: value });
   }
+
+  // === NOTIFICATION CREATION METHODS ===
+
+  /**
+   * Create a new notification for a user
+   * @param userId - The user ID to send the notification to
+   * @param title - The notification title
+   * @param message - The notification message
+   * @param type - The notification type ('email', 'sms', 'in_app', 'push')
+   * @returns Promise with the created notification or error
+   */
+  async createNotification(
+    userId: string,
+    title: string,
+    message: string,
+    type: string = 'in_app'
+  ): Promise<{ data: Notification | null; error: Error | null }> {
+    try {
+      const { data, error } = await supabase
+        .from('notifications')
+        .insert({
+          user_id: userId,
+          title,
+          message,
+          type,
+          read_status: false,
+          created_at: new Date().toISOString()
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Create notification error:', error);
+        return { data: null, error };
+      }
+
+      // Transform the data to match our interface
+      const notification: Notification = {
+        ...data,
+        is_read: data.read_status,
+        category: 'system', // Default category
+        priority: 'normal' // Default priority
+      };
+
+      console.log('✅ Notification created:', notification.title);
+      return { data: notification, error: null };
+    } catch (err) {
+      console.error('Create notification error:', err);
+      return { data: null, error: err as Error };
+    }
+  }
+
+  /**
+   * Create a package status update notification
+   * @param userId - The user ID to send the notification to
+   * @param packageId - The package ID that was updated
+   * @param packageDetails - Package details for the notification
+   * @param oldStatus - The previous status
+   * @param newStatus - The new status
+   * @returns Promise with the created notification or error
+   */
+  async createPackageStatusNotification(
+    userId: string,
+    packageId: string,
+    packageDetails: {
+      storeName?: string;
+      trackingNumber?: string;
+      description?: string;
+    },
+    oldStatus: string,
+    newStatus: string
+  ): Promise<{ data: Notification | null; error: Error | null }> {
+    try {
+      // Generate user-friendly status messages
+      const statusMessages = {
+        pending: 'is awaiting processing',
+        received: 'has been received at our warehouse',
+        processing: 'is being processed for shipment',
+        shipped: 'has been shipped and is on its way',
+        delivered: 'has been delivered successfully',
+        on_hold: 'has been placed on hold'
+      };
+
+      const title = `Package Status Update`;
+      const storeName = packageDetails.storeName || 'Unknown Store';
+      const trackingNumber = packageDetails.trackingNumber || packageId;
+      const statusMessage = statusMessages[newStatus as keyof typeof statusMessages] || `status changed to ${newStatus}`;
+      
+      const message = `Your package from ${storeName} (${trackingNumber}) ${statusMessage}.`;
+
+      return await this.createNotification(userId, title, message, 'in_app');
+    } catch (err) {
+      console.error('Create package status notification error:', err);
+      return { data: null, error: err as Error };
+    }
+  }
+
+  /**
+   * Create a shipment notification
+   * @param userId - The user ID to send the notification to
+   * @param shipmentId - The shipment ID
+   * @param shipmentDetails - Shipment details for the notification
+   * @param eventType - The type of shipment event
+   * @returns Promise with the created notification or error
+   */
+  async createShipmentNotification(
+    userId: string,
+    shipmentId: string,
+    shipmentDetails: {
+      recipientName?: string;
+      destinationAddress?: string;
+      trackingNumber?: string;
+    },
+    eventType: 'created' | 'shipped' | 'in_transit' | 'delivered' | 'delayed'
+  ): Promise<{ data: Notification | null; error: Error | null }> {
+    try {
+      const eventMessages = {
+        created: 'has been created and is being prepared',
+        shipped: 'has been shipped and is on its way',
+        in_transit: 'is currently in transit',
+        delivered: 'has been delivered successfully',
+        delayed: 'has been delayed - we apologize for the inconvenience'
+      };
+
+      const title = `Shipment ${eventType === 'created' ? 'Created' : eventType === 'shipped' ? 'Shipped' : eventType === 'delivered' ? 'Delivered' : 'Update'}`;
+      const recipientName = shipmentDetails.recipientName || 'recipient';
+      const trackingNumber = shipmentDetails.trackingNumber || shipmentId;
+      const eventMessage = eventMessages[eventType];
+      
+      const message = `Your shipment to ${recipientName} (${trackingNumber}) ${eventMessage}.`;
+
+      return await this.createNotification(userId, title, message, 'in_app');
+    } catch (err) {
+      console.error('Create shipment notification error:', err);
+      return { data: null, error: err as Error };
+    }
+  }
 }
 
 export const notificationService = new NotificationService();

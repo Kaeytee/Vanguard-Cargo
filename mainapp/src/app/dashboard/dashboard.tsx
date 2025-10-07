@@ -152,8 +152,8 @@ const popularBrands = [
                       <p className="font-semibold mb-1 text-sm sm:text-base">⚠️ MANDATORY: Use Complete Address Details</p>
                       <p className="mb-2">When checking out online, you MUST include:</p>
                       <ul className="list-disc list-inside mt-1 space-y-1 pl-2">
-                        <li><strong>Your full name and suite number</strong> in the recipient field</li>
-                        <li><strong>Complete address</strong> exactly as shown above</li>
+                        <li><strong>Your full name and suite number</strong>in the field</li>
+                        <li><strong>Complete address</strong> exactly as it is</li>
                         <li><strong>All address lines</strong> - don't skip any part</li>
                       </ul>
                       <p className="mt-2 font-medium text-amber-900 bg-amber-100/50 p-2 rounded text-center">
