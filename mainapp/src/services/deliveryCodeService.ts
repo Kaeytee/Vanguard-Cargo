@@ -17,33 +17,30 @@ import { supabase } from '../lib/supabase';
  */
 
 /**
- * Interface representing a delivery code record
+ * Interface representing a delivery code record from packages table
  * @interface DeliveryCode
  */
 export interface DeliveryCode {
-  /** Unique package identifier */
+  /** Unique package identifier (e.g., 'PKG-001') */
   package_id: string;
   
   /** Package tracking number */
   tracking_number: string;
   
-  /** 6-digit delivery code for pickup verification */
+  /** 6-digit delivery code for pickup verification (from packages.delivery_auth_code) */
   delivery_code: string;
   
-  /** Shipment tracking number this package belongs to */
-  shipment_tracking: string;
-  
-  /** Package status (always 'arrived' for ready-to-pickup packages) */
+  /** Package status (should be 'arrived' for packages with codes) */
   status: string;
   
-  /** Timestamp when the code was generated */
-  generated_at: string;
-  
-  /** Code expiration timestamp (null if doesn't expire) */
-  expires_at: string | null;
-  
   /** Package description */
-  description: string;
+  description: string | null;
+  
+  /** Store name */
+  store_name?: string | null;
+  
+  /** Package created timestamp */
+  created_at?: string;
 }
 
 /**
@@ -72,8 +69,8 @@ class DeliveryCodeService {
   /**
    * Fetch delivery codes for the logged-in customer
    * 
-   * Calls the Supabase RPC function 'get_customer_delivery_codes' to retrieve
-   * all packages with delivery codes that are ready for pickup by the customer.
+   * Queries the packages table directly for packages with delivery_auth_code.
+   * Uses RLS to ensure users only see their own packages.
    * 
    * @param {string} userId - The authenticated user's ID
    * @returns {Promise<DeliveryCodeResponse>} Response containing delivery codes or error
@@ -94,14 +91,19 @@ class DeliveryCodeService {
         };
       }
 
-      // Call Supabase RPC function to fetch delivery codes
-      const { data, error } = await supabase.rpc('get_customer_delivery_codes', {
-        p_user_id: userId,
-      });
+      // Query packages table directly for packages with delivery codes
+      // RLS policy ensures users only see their own packages
+      const { data, error } = await supabase
+        .from('packages')
+        .select('package_id, tracking_number, delivery_auth_code, status, description, store_name, created_at')
+        .eq('user_id', userId)
+        .eq('status', 'arrived')
+        .not('delivery_auth_code', 'is', null)
+        .order('created_at', { ascending: false });
 
       // Handle Supabase errors
       if (error) {
-        console.error('Failed to fetch delivery codes:', error);
+        console.error('❌ Failed to fetch delivery codes:', error);
         return {
           success: false,
           error: 'Failed to fetch delivery codes. Please try again.',
@@ -109,22 +111,27 @@ class DeliveryCodeService {
         };
       }
 
-      // Handle empty results
-      if (!data || data.length === 0) {
-        return {
-          success: true,
-          data: [],
-        };
-      }
+      // Transform data to match DeliveryCode interface
+      const deliveryCodes: DeliveryCode[] = (data || []).map((pkg: any) => ({
+        package_id: pkg.package_id,
+        tracking_number: pkg.tracking_number,
+        delivery_code: pkg.delivery_auth_code,
+        status: pkg.status,
+        description: pkg.description,
+        store_name: pkg.store_name,
+        created_at: pkg.created_at,
+      }));
+
+      console.log(`✅ Found ${deliveryCodes.length} packages with delivery codes`);
 
       // Return successful response with delivery codes
       return {
         success: true,
-        data: data as DeliveryCode[],
+        data: deliveryCodes,
       };
     } catch (err) {
       // Handle unexpected errors
-      console.error('Unexpected error fetching delivery codes:', err);
+      console.error('❌ Unexpected error fetching delivery codes:', err);
       return {
         success: false,
         error: 'An unexpected error occurred while fetching delivery codes.',
@@ -188,25 +195,20 @@ class DeliveryCodeService {
   }
 
   /**
-   * Check if a delivery code is valid and not expired
+   * Check if a delivery code is valid
+   * 
+   * Currently delivery codes don't expire, so this always returns true
+   * if the code exists. Future enhancement could add expiration logic.
    * 
    * @param {DeliveryCode} deliveryCode - The delivery code to validate
-   * @returns {boolean} True if code is valid and not expired
+   * @returns {boolean} True if code is valid
    * 
    * @example
    * const isValid = deliveryCodeService.isCodeValid(code);
    */
   isCodeValid(deliveryCode: DeliveryCode): boolean {
-    // If no expiration date, code is always valid
-    if (!deliveryCode.expires_at) {
-      return true;
-    }
-
-    // Check if code has expired
-    const expirationDate = new Date(deliveryCode.expires_at);
-    const now = new Date();
-
-    return now < expirationDate;
+    // Check if delivery code exists and is not empty
+    return !!deliveryCode.delivery_code && deliveryCode.delivery_code.length === 6;
   }
 
   /**

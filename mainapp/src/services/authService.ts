@@ -223,22 +223,35 @@ class AuthService {
     }
   }
 
+  /**
+   * Create user profile using secure RPC function (bypasses RLS)
+   * This method is used as a fallback for users created before the RPC was added
+   * @param userId - User ID from auth.users
+   * @param email - User email
+   * @param metadata - User metadata from auth.users.user_metadata
+   * @returns Object with error or null on success
+   */
   async createUserProfile(userId: string, email: string, metadata: any): Promise<{ error: string | null }> {
     try {
-      const { error } = await supabase
-        .from('users')
-        .upsert({
-          id: userId,
-          email: email,
-          first_name: metadata.first_name || 'User',
-          last_name: metadata.last_name || 'Name',
-          phone_number: metadata.phone_number,
-          status: 'active',
-          email_verified: true
-        });
+      // Use the secure RPC function that bypasses RLS policies
+      const { data: profileResult, error: rpcError } = await supabase.rpc('create_user_profile_secure', {
+        user_id: userId,
+        email: email,
+        first_name: metadata.first_name || metadata.firstName || 'User',
+        last_name: metadata.last_name || metadata.lastName || 'Name',
+        phone_number: metadata.phone_number || metadata.phone || null,
+        street_address: metadata.street_address || metadata.streetAddress || null,
+        city: metadata.city || null,
+        country: metadata.country || null,
+        postal_code: metadata.postal_code || metadata.postalCode || null
+      });
 
-      if (error) {
-        return { error: error.message };
+      if (rpcError) {
+        return { error: rpcError.message };
+      }
+
+      if (!profileResult?.success) {
+        return { error: profileResult?.error || 'Failed to create user profile' };
       }
 
       return { error: null };
@@ -247,7 +260,7 @@ class AuthService {
     }
   }
 
-  async updateUserProfile(userId: string, updates: Partial<AuthUser>): Promise<{ error: AuthError | null }> {
+  async updateUserProfile(userId: string, updates: Partial<AuthUser>): Promise<{ error: AuthError | null; success?: boolean }> {
     try {
       const dbUpdates: Record<string, any> = {};
       
@@ -259,19 +272,31 @@ class AuthService {
       if (updates.country) dbUpdates.country = updates.country;
       if (updates.postalCode) dbUpdates.postal_code = updates.postalCode;
       if (updates.avatarUrl) dbUpdates.avatar_url = updates.avatarUrl;
+      if (updates.profileImage !== undefined) dbUpdates.avatar_url = updates.profileImage;
 
       const { error } = await supabase
         .from('users')
         .update(dbUpdates)
         .eq('id', userId);
 
-      return { error };
+      if (error) {
+        return { 
+          error: { 
+            message: error.message,
+            name: 'ProfileUpdateError'
+          } as AuthError,
+          success: false
+        };
+      }
+
+      return { error: null, success: true };
     } catch (err) {
       return { 
         error: { 
           message: 'Profile update failed',
           name: 'ProfileUpdateError'
-        } as AuthError 
+        } as AuthError,
+        success: false
       };
     }
   }
@@ -318,6 +343,44 @@ class AuthService {
       return { error: null };
     } catch (err) {
       return { error: 'Failed to resend verification email' };
+    }
+  }
+
+  // Alias for resendVerificationEmail
+  async resendEmailVerification(email: string): Promise<{ error: string | null }> {
+    return this.resendVerificationEmail(email);
+  }
+
+  async changePassword({ currentPassword, newPassword }: { currentPassword: string; newPassword: string }): Promise<{ error: string | null; success?: boolean }> {
+    try {
+      // First verify current password by attempting to sign in
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user?.email) {
+        return { error: 'No authenticated user found', success: false };
+      }
+
+      // Attempt to sign in with current password to verify it
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: user.email,
+        password: currentPassword,
+      });
+
+      if (signInError) {
+        return { error: 'Current password is incorrect', success: false };
+      }
+
+      // Update to new password
+      const { error: updateError } = await supabase.auth.updateUser({
+        password: newPassword,
+      });
+
+      if (updateError) {
+        return { error: updateError.message, success: false };
+      }
+
+      return { error: null, success: true };
+    } catch (err) {
+      return { error: 'Failed to change password', success: false };
     }
   }
 

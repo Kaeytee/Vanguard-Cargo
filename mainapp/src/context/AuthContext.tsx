@@ -98,7 +98,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     initializeAuth();
 
     // Listen to auth changes
-    const { data: { subscription } } = authService.onAuthStateChange(async (event, session) => {
+    const { data: { subscription } } = authService.onAuthStateChange(async (_event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
       

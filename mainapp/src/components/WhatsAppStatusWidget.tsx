@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Check, AlertCircle, Settings } from 'lucide-react';
-import { motion } from 'framer-motion';
+// import { motion } from 'framer-motion';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../hooks/useAuth';
 import WhatsAppVerificationModal from './WhatsAppVerificationModal';

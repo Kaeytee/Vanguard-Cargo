@@ -204,7 +204,7 @@ export class EmailNotificationService {
    */
   public async testEmailService(): Promise<{ success: boolean; error?: string }> {
     try {
-      const { data, error } = await supabase.functions.invoke(
+      const { error } = await supabase.functions.invoke(
         'send-package-status-email',
         {
           body: {

@@ -140,22 +140,38 @@ export default function PackageIntake() {
   // Load delivery codes for packages ready for pickup
   useEffect(() => {
     const loadDeliveryCodes = async () => {
-      if (!user?.id) return;
+      if (!user?.id) {
+        console.log('⚠️ No user ID found, skipping delivery codes load');
+        return;
+      }
+
+      console.log('🔄 Starting to load delivery codes for user:', user.id);
 
       try {
         setLoadingCodes(true);
         const response = await deliveryCodeService.getCustomerDeliveryCodes(user.id);
         
+        console.log('📊 Delivery codes response:', {
+          success: response.success,
+          dataLength: response.data?.length || 0,
+          error: response.error,
+          details: response.details
+        });
+        
         if (response.success && response.data) {
           setDeliveryCodes(response.data);
-          console.log('📦 Loaded delivery codes:', response.data.length);
+          console.log('✅ Successfully loaded delivery codes:', response.data.length);
+          if (response.data.length > 0) {
+            console.log('📦 First delivery code:', response.data[0]);
+          }
         } else {
-          console.error('Failed to load delivery codes:', response.error);
+          console.error('❌ Failed to load delivery codes:', response.error, response.details);
         }
       } catch (err) {
-        console.error('Error loading delivery codes:', err);
+        console.error('❌ Unexpected error loading delivery codes:', err);
       } finally {
         setLoadingCodes(false);
+        console.log('✓ Finished loading delivery codes');
       }
     };
 

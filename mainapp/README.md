@@ -958,6 +958,127 @@ const { data: addressData, error: addressError } = await supabase
 
 This change prevents potential database errors and ensures that a consistent address is fetched for the user.
 
+### Database Security Fixes (October 2025)
+
+Fixed critical security issues in Supabase Row Level Security (RLS) policies that were causing infinite recursion errors and blocking all user operations.
+
+**Issues Fixed:**
+1. **Infinite Recursion in RLS Policies** - Users table policies were querying the same table, creating infinite loops
+2. **Missing RLS Enablement** - Several public tables had policies but RLS was not enabled
+3. **Function Security Warnings** - 45+ database functions had mutable search_path warnings
+
+**Changes Applied:**
+- ✅ Enabled RLS on `users`, `email_notification_queue`, and `email_notification_log` tables
+- ✅ Replaced recursive policies with simple `auth.uid()` checks
+- ✅ Set `search_path = ''` on all database functions for security
+- ✅ Updated `authService.createUserProfile()` to use secure RPC function instead of direct table access
+
+**Frontend Code Updates:**
+```typescript
+// OLD: Direct table access (caused RLS recursion)
+async createUserProfile(userId, email, metadata) {
+  await supabase.from('users').upsert({ ... });
+}
+
+// NEW: Secure RPC function (bypasses RLS with SECURITY DEFINER)
+async createUserProfile(userId, email, metadata) {
+  await supabase.rpc('create_user_profile_secure', { ... });
+}
+```
+
+**Results:**
+- ✅ Dashboard loads successfully
+- ✅ User profiles accessible
+- ✅ Package data queries work
+- ✅ All 500 errors resolved
+- ✅ No more infinite recursion errors
+
+For detailed technical documentation of these fixes, see [DATABASE_SECURITY_FIXES.md](./DATABASE_SECURITY_FIXES.md).
+
+### Delivery Codes RLS Fix (October 8, 2025)
+
+Fixed Row Level Security (RLS) policies on delivery/package codes tables to allow customers to view their own pickup codes.
+
+**Problem:**
+- Delivery codes were being created successfully in the database
+- RPC function `get_customer_delivery_codes()` returned `success: true` but with 0 data
+- Users could not see their packages ready for pickup
+- This was caused by missing or incorrect RLS policies on the codes table
+
+**Root Cause:**
+The `package_codes` or `delivery_codes` table had RLS enabled but lacked policies allowing authenticated users to SELECT their own codes. Even though codes were inserted successfully, the RPC function couldn't retrieve them because it ran under the user's permissions.
+
+**Solution Applied:**
+
+1. **Enabled RLS** on both `package_codes` and `delivery_codes` tables (whichever exists)
+2. **Created user SELECT policy** - Allows users to view codes for packages they own:
+   ```sql
+   CREATE POLICY "users_select_own_codes"
+   ON public.package_codes
+   FOR SELECT TO authenticated
+   USING (
+     user_id = auth.uid() 
+     OR package_id IN (
+       SELECT id FROM packages WHERE user_id = auth.uid()
+     )
+   );
+   ```
+3. **Service role full access** - Allows admin operations via service role
+4. **Set SECURITY DEFINER** on `get_customer_delivery_codes()` function - Allows it to bypass RLS
+5. **Granted proper permissions** to authenticated role
+
+**How to Apply:**
+```bash
+# Option 1: Run the fix script in Supabase SQL Editor
+# Copy contents of fix_delivery_codes_rls.sql and execute
+
+# Option 2: Diagnose first, then fix
+# Run diagnose_delivery_codes.sql to identify exact issue
+# Then run fix_delivery_codes_rls.sql
+```
+
+**Verification:**
+After applying the fix, delivery codes should appear in the "Ready for Pickup" section of the Package Intake page:
+- ✅ Green cards displaying 6-digit codes
+- ✅ Copy button functional
+- ✅ Real-time updates when new packages arrive
+- ✅ No console errors about failed queries
+
+**Files Created:**
+- `fix_delivery_codes_rls.sql` - Comprehensive fix script with verification queries
+- `diagnose_delivery_codes.sql` - Diagnostic script to identify root cause
+
+**Expected Console Output (After Fix):**
+```
+📊 Real-time status [packages-xxx]: SUBSCRIBED
+✅ Found 3 packages with delivery codes
+📊 Delivery codes response: { success: true, dataLength: 3 }
+✅ Successfully loaded delivery codes: 3
+📦 First delivery code: { package_id: "...", delivery_code: "847293", ... }
+```
+
+**Root Cause Discovered:**
+The application had TWO conflicting delivery code systems:
+1. **System 1** (Working): `packages.delivery_auth_code` column - had 24 codes ✅
+2. **System 2** (Empty): `delivery_codes` table - was empty and unused ❌
+
+The frontend was querying the wrong system (empty `delivery_codes` table via RPC) instead of the `packages.delivery_auth_code` column that actually contained the codes.
+
+**Solution Applied:**
+- Updated `deliveryCodeService.ts` to query `packages` table directly
+- Removed RPC function dependency
+- Maps `delivery_auth_code` to `delivery_code` in the response
+- Uses RLS policies on `packages` table (already working)
+- Simple, direct query: `SELECT ... FROM packages WHERE user_id = ? AND status = 'arrived' AND delivery_auth_code IS NOT NULL`
+
+**Common Issues & Solutions:**
+| Issue | Cause | Solution |
+|-------|-------|----------|
+| Still getting 0 codes | Table has different name | Run diagnostic script to find actual table name |
+| Permission denied error | Missing GRANT statements | Ensure authenticated role has SELECT permission |
+| Function not found | RPC function doesn't exist | Check Supabase Functions panel and create if needed |
+| Codes show for wrong user | RLS policy incorrect | Verify policy uses `auth.uid()` correctly |
+
 ---
 
 **Note**: This README provides the complete frontend implementation guide for the Vanguard Cargo client application. For detailed backend integration information, refer to the [clientapp.md](./clientapp.md) documentation.

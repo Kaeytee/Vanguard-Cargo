@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react'
 
 /**
  * Vite Configuration
- * Enhanced to properly handle environment variables in production builds
+ * Enhanced to properly handle environment variables and source maps
  * @author Senior Software Engineer
  */
 export default defineConfig(({ mode }) => {
@@ -16,8 +16,21 @@ export default defineConfig(({ mode }) => {
       devSourcemap: true,
     },
     build: {
-      sourcemap: true,
+      sourcemap: mode === 'development' ? 'inline' : true,
       cssMinify: true,
+      rollupOptions: {
+        output: {
+          // Suppress source map warnings for third-party libraries
+          sourcemapExcludeSources: false,
+        }
+      }
+    },
+    // Server configuration
+    server: {
+      // Suppress source map warnings in development
+      hmr: {
+        overlay: true
+      }
     },
     // Define environment variables that should be replaced at build time
     define: {

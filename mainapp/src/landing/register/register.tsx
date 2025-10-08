@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Eye, EyeOff, Check } from 'lucide-react';
 import 'react-phone-number-input/style.css';
-import PhoneInput, { isValidPhoneNumber } from 'react-phone-number-input';
+import PhoneInput, { isValidPhoneNumber, parsePhoneNumber } from 'react-phone-number-input';
 import { cn } from '../../lib/utils';
 import registerbg from '../../images/register-bg.jpg';
 import { useNavigate } from 'react-router-dom';
@@ -227,13 +227,64 @@ export default function Register() {
     }));
   };
 
-  // Handle phone number change with professional validation
+  // Handle phone number change with professional validation and auto-detect country
   const handlePhoneChange = (value?: string) => {
     // Update the phone number in form data
     setFormData((prev) => ({ ...prev, phoneNumber: value || '' }));
     
     // Mark phone field as touched
     setTouched((prev) => ({ ...prev, phoneNumber: true }));
+    
+    // Auto-detect and set country based on phone number
+    if (value) {
+      try {
+        const phoneNumber = parsePhoneNumber(value);
+        if (phoneNumber && phoneNumber.country) {
+          // Get the country name from country code
+          const countryNames: Record<string, string> = {
+            'GH': 'Ghana',
+            'NG': 'Nigeria',
+            'US': 'United States',
+            'CA': 'Canada',
+            'GB': 'United Kingdom',
+            'DE': 'Germany',
+            'FR': 'France',
+            'IT': 'Italy',
+            'ES': 'Spain',
+            'NL': 'Netherlands',
+            'BE': 'Belgium',
+            'CH': 'Switzerland',
+            'AT': 'Austria',
+            'DK': 'Denmark',
+            'SE': 'Sweden',
+            'NO': 'Norway',
+            'FI': 'Finland',
+            'PT': 'Portugal',
+            'IE': 'Ireland',
+            'PL': 'Poland',
+            'CZ': 'Czech Republic',
+            'IN': 'India',
+            'CN': 'China',
+            'JP': 'Japan',
+            'KR': 'South Korea',
+            'AU': 'Australia',
+            'NZ': 'New Zealand',
+            'ZA': 'South Africa',
+            'BR': 'Brazil',
+            'MX': 'Mexico',
+            'AR': 'Argentina',
+            'CL': 'Chile',
+          };
+          
+          const countryName = countryNames[phoneNumber.country] || phoneNumber.country;
+          setFormData((prev) => ({ ...prev, country: countryName }));
+          setErrors((prev) => ({ ...prev, country: '' }));
+        }
+      } catch (error) {
+        // If parsing fails, just continue with validation
+        console.log('Could not parse phone number for country detection');
+      }
+    }
     
     // Professional validation using isValidPhoneNumber
     if (value && !isValidPhoneNumber(value)) {
@@ -757,24 +808,26 @@ export default function Register() {
                     </div>
                     <div>
                       <label htmlFor="country" className="block text-sm font-medium text-gray-700 mb-1">
-                        Country *
+                        Country * 
                       </label>
                       <input
                         type="text"
                         id="country"
                         name="country"
                         value={formData.country}
-                        onChange={handleInputChange}
-                        onBlur={handleBlur}
-                        placeholder="United States"
+                        readOnly
+                        placeholder="Enter phone number to auto-fill"
                         className={cn(
-                          'w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all duration-200 outline-none',
+                          'w-full px-4 py-3 border rounded-lg transition-all duration-200 outline-none bg-gray-50 cursor-not-allowed',
                           errors.country && touched.country ? 'border-red-300' : 'border-gray-300'
                         )}
                         aria-invalid={!!errors.country}
-                        aria-describedby="country-error"
+                        aria-describedby="country-help"
                         required
                       />
+                      <p id="country-help" className="mt-1 text-xs text-gray-500">
+                        Country is automatically detected from your phone number
+                      </p>
                       {errors.country && touched.country && (
                         <p id="country-error" className="mt-1 text-sm text-red-600">
                           {errors.country}

@@ -74,8 +74,7 @@ function SecuritySettings() {
       
       const response = await authService.changePassword({
         currentPassword: passwords.currentPassword,
-        newPassword: passwords.newPassword,
-        confirmPassword: passwords.confirmPassword
+        newPassword: passwords.newPassword
       });
       
       if (response.success) {

@@ -89,13 +89,13 @@ export default function EmailVerification() {
       const result = await authService.resendEmailVerification(user.email);
       
       if (!result.error) {
-        setMessage(result.message || 'Verification email sent! Please check your inbox and spam folder.');
+        setMessage('Verification email sent! Please check your inbox and spam folder.');
       } else {
         console.error('Resend failed:', result.error);
-        setMessage(result.message || result.error.message || 'Failed to resend email. Please try again later.');
+        setMessage(result.error || 'Failed to resend email. Please try again later.');
         
         // If user is already verified, redirect them
-        if (result.error.message?.includes('already confirmed')) {
+        if (result.error?.includes('already confirmed')) {
           setTimeout(() => {
             navigate('/app');
           }, 3000);

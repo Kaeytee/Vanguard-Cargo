@@ -1,5 +1,5 @@
 import { Package as PackageIcon, MapPin, ChevronRight } from 'lucide-react';
-import { Package } from '../services/packageService';
+import type { Package } from '../services/packageService';
 
 /**
  * ArrivedPackageBanner Component - Highlight packages ready for pickup
@@ -110,7 +110,7 @@ const ArrivedPackageBanner = ({
       <div className="absolute bottom-0 right-0 w-20 h-20 bg-white/10 rounded-tl-full"></div>
 
       {/* Custom animations - Add to your global CSS or Tailwind config */}
-      <style jsx>{`
+      <style>{`
         @keyframes gradient-x {
           0%, 100% {
             background-position: 0% 50%;

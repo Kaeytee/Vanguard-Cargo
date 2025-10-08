@@ -150,7 +150,7 @@ const AccountSettingsContent = ({ t }: { t: (key: TranslationKey) => string }) =
           setFormData((prev) => (prev ? { ...prev, profileImage: '', avatarUrl: '' } : prev));
           
           // Update in database
-          await authService.updateProfile(user.id, { profileImage: '' });
+          await authService.updateUserProfile(user.id, { profileImage: '' });
           await refreshProfile();
           
           alert('Profile picture deleted successfully!');
@@ -293,7 +293,7 @@ const AccountSettingsContent = ({ t }: { t: (key: TranslationKey) => string }) =
         profileImage: profileImageUrl, // Use the potentially new URL
       };
 
-      const response = await authService.updateProfile(user.id, updateData);
+      const response = await authService.updateUserProfile(user.id, updateData);
       
       if (response.success && !response.error) {
         // Refresh user profile to get updated data

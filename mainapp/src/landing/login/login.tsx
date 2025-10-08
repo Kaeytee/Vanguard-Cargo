@@ -68,7 +68,7 @@ export default function Login() {
 			if (result.error) {
 				return {
 					success: false,
-					message: result.error.message || 'Failed to resend verification email'
+					message: result.error || 'Failed to resend verification email'
 				};
 			} else {
 				return {
@@ -102,7 +102,7 @@ export default function Login() {
 			const result = await authService.resendEmailVerification(email);
 			
 			if (result.error) {
-				setError(result.error.message || 'Failed to resend verification email');
+				setError(result.error || 'Failed to resend verification email');
 			} else {
 				setResendMessage('Verification email sent! Please check your inbox and spam folder.');
 				setShowResendVerification(false);

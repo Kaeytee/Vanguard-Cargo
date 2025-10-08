@@ -67,7 +67,7 @@ const WhatsAppVerificationModal: React.FC<WhatsAppVerificationModalProps> = ({
   isOpen,
   onClose,
   onVerify,
-  isVerified,
+  // isVerified,
   currentNumber
 }) => {
   // Get user from auth context

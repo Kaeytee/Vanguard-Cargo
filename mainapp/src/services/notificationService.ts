@@ -451,7 +451,7 @@ class NotificationService {
       trackingNumber?: string;
       description?: string;
     },
-    oldStatus: string,
+    _oldStatus: string,
     newStatus: string
   ): Promise<{ data: Notification | null; error: Error | null }> {
     try {

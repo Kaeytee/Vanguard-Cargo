@@ -10,7 +10,7 @@
  * @version 1.0.0
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { packageService, type Package } from '../services/packageService';
 import { receiptService } from '../services/receiptService';
@@ -211,7 +211,7 @@ export const ReceiptViewExample = ({ packageId }: { packageId: string }) => {
 
   const handleViewReceipt = async () => {
     setLoading(true);
-    const { data, error } = await receiptService.getPackageReceipt(packageId);
+    const { data } = await receiptService.getPackageReceipt(packageId);
     
     if (data) {
       setReceipt(data);
