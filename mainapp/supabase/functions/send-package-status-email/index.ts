@@ -214,7 +214,10 @@ serve(async (req) => {
         'Authorization': `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: 'Vanguard Cargo <noreply@vanguardcargo.co>',
+        // IMPORTANT: Change this to your verified domain once set up in Resend
+        // For now, using Resend's test domain for immediate functionality
+        from: 'Vanguard Cargo <onboarding@resend.dev>',
+        // Production: from: 'Vanguard Cargo <noreply@vanguardcargo.co>',
         to: [emailData.userEmail],
         subject: subject,
         html: template,

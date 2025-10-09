@@ -649,18 +649,6 @@ const UserAvatar = ({ user }: { user: UserProfile }) => {
 ```
 
 The default avatar system follows these principles:
-
-1. **Reliability**: Uses local SVG asset instead of external services
-2. **Consistency**: Same default avatar appears across all components
-3. **Performance**: Lightweight SVG optimized for fast loading
-4. **Error Handling**: Graceful fallback if user's custom image fails to load
-5. **Accessibility**: Proper alt text and semantic HTML
-
-## 📊 State Management
-
-### Context Providers
-
-```typescript
 // Auth Context
 interface AuthContextType {
   user: User | null;
@@ -1078,6 +1066,56 @@ The frontend was querying the wrong system (empty `delivery_codes` table via RPC
 | Permission denied error | Missing GRANT statements | Ensure authenticated role has SELECT permission |
 | Function not found | RPC function doesn't exist | Check Supabase Functions panel and create if needed |
 | Codes show for wrong user | RLS policy incorrect | Verify policy uses `auth.uid()` correctly |
+
+---
+
+### 📧 Email Notifications Fix (October 8, 2025)
+
+**Problem:** Email notifications for package status updates not working.
+
+**Root Causes:**
+1. **Email domain not verified** with Resend
+2. **RESEND_API_KEY not configured** in Supabase
+3. **email_notifications_log table missing**
+4. **Edge function not deployed**
+
+**Solution Applied:**
+1. **Temporary Fix:** Updated edge function to use Resend test domain (`onboarding@resend.dev`)
+2. **Created SQL script:** `create_email_log_table.sql` to set up email logging
+3. **Created debugging guide:** `DEBUG_EMAIL_SERVICE.md` with comprehensive troubleshooting
+
+**Quick Fix Steps:**
+```bash
+# 1. Create email log table
+# Run create_email_log_table.sql in Supabase SQL Editor
+
+# 2. Set up Resend API Key
+# Go to Supabase Dashboard → Edge Functions → Secrets
+# Add: RESEND_API_KEY = your-api-key-from-resend
+
+# 3. Deploy the edge function
+npx supabase functions deploy send-package-status-email
+
+# 4. Test by updating a package status
+```
+
+**Production Setup:**
+1. Verify custom domain (`vanguardcargo.co`) in Resend
+2. Update edge function line 219 to use custom domain:
+   ```typescript
+   from: 'Vanguard Cargo <noreply@vanguardcargo.co>',
+   ```
+3. Redeploy edge function
+
+**Files Created/Modified:**
+- ✅ `supabase/functions/send-package-status-email/index.ts` - Updated to use test domain
+- ✅ `create_email_log_table.sql` - Creates email logging table
+- ✅ `DEBUG_EMAIL_SERVICE.md` - Complete debugging guide
+
+**Expected Flow:**
+- Package status updated → Email sent via Resend → Log saved to database → User receives email
+
+**Documentation:** See `DEBUG_EMAIL_SERVICE.md` for detailed troubleshooting.
 
 ---
 
