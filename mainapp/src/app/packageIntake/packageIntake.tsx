@@ -6,12 +6,13 @@ import {
   Clock,
   AlertCircle,
   Edit3,
-  DollarSign,
   X,
   Eye,
   Copy,
   Lock,
-  PackageCheck
+  PackageCheck,
+  Box,
+  CircleDot
 } from "lucide-react";
 import { motion } from "framer-motion";
 import SEO from "../../components/SEO";
@@ -111,7 +112,10 @@ export default function PackageIntake() {
   // Load packages and delivery codes on component mount
   useEffect(() => {
     const loadPackages = async () => {
-      if (!user?.id) return;
+      if (!user?.id) {
+        setLoading(false);
+        return;
+      }
 
       try {
         setLoading(true);
@@ -135,7 +139,7 @@ export default function PackageIntake() {
     };
 
     loadPackages();
-  }, [user?.id, transformPackageData]);
+  }, [user?.id]);
 
   // Load delivery codes for packages ready for pickup
   useEffect(() => {
@@ -365,10 +369,10 @@ export default function PackageIntake() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-transparent flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading your packages...</p>
+          <div className="animate-spin rounded-full h-16 w-16 border-4 border-gray-200 border-t-red-600 mx-auto mb-4"></div>
+          <p className="text-sm font-medium text-gray-600">Loading packages...</p>
         </div>
       </div>
     );
@@ -376,158 +380,183 @@ export default function PackageIntake() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-transparent flex items-center justify-center">
-        <div className="text-center">
-          <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">Unable to load packages</h3>
-          <p className="text-gray-600 mb-4">{error}</p>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="text-center max-w-md w-full bg-white rounded-2xl shadow-sm border border-gray-200 p-8"
+        >
+          <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4">
+            <AlertCircle className="h-8 w-8 text-red-600" />
+          </div>
+          <h3 className="text-xl font-semibold text-gray-900 mb-2">Unable to load packages</h3>
+          <p className="text-sm text-gray-600 mb-6">{error}</p>
           <button
             onClick={() => window.location.reload()}
-            className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors"
+            className="w-full bg-red-600 text-white px-6 py-3 rounded-xl font-medium hover:bg-red-700 transition-all duration-200 shadow-sm hover:shadow-md"
           >
             Try Again
           </button>
-        </div>
+        </motion.div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-transparent">
+    <div className="min-h-screen bg-gray-50">
       <SEO 
         title="Package Intake - Vanguard Cargo"
         description="Review and manage your incoming packages at our warehouse. Quick actions for shipment approval, consolidation, and more."
       />
 
-      {/* Header Section */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="py-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">Package Intake</h1>
-                <p className="mt-1 text-sm text-gray-500">
-                  Review and manage packages that have arrived at our warehouse
-                </p>
-              </div>
-              
-              {/* Package Count and Real-time Status */}
-              <div className="hidden md:flex items-center space-x-6">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-red-600">{packageCount}</div>
-                  <div className="text-xs text-gray-500">Total Packages</div>
-                </div>
-                
-                {/* Real-time Connection Status */}
-                <div className="flex items-center space-x-2">
-                  <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-gray-400'}`}></div>
-                  <span className="text-xs text-gray-500">
-                    {isConnected ? 'Live Updates' : 'Offline'}
-                  </span>
-                </div>
-              </div>
-            </div>
+      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+        {/* Apple-Style Header */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="text-center mb-12"
+        >
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-semibold text-gray-900 mb-4 tracking-tight">
+            Package Intake
+          </h1>
+          <p className="text-lg sm:text-xl text-gray-600 font-light max-w-2xl mx-auto leading-relaxed">
+            Review and manage packages that have arrived at our warehouse
+          </p>
+        </motion.div>
 
-            {/* Simplified header - no filters */}
+        {/* Stats Section */}
+        <div className="flex items-center justify-center gap-4 mb-8">
+          {/* Package Count */}
+          <div className="text-center px-5 py-3 bg-gradient-to-br from-red-50/80 to-rose-50/80 backdrop-blur-sm rounded-2xl border border-red-200/50 shadow-sm">
+            <div className="text-2xl font-bold text-red-600">{packageCount}</div>
+            <div className="text-xs text-gray-600 font-semibold">Packages</div>
+          </div>
+          
+          {/* Real-time Status */}
+          <div className="flex items-center gap-2 px-5 py-3 bg-gradient-to-br from-gray-50/80 to-white/80 backdrop-blur-sm rounded-2xl border border-red-200/50 shadow-sm">
+            <div className={`w-2.5 h-2.5 rounded-full shadow-sm ${isConnected ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`}></div>
+            <span className="text-xs font-semibold text-gray-700">
+              {isConnected ? 'Live' : 'Offline'}
+            </span>
           </div>
         </div>
-      </div>
-      {/* Removed controls bar - no filtering or sorting needed */}
-
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Delivery Codes Section - Ready for Pickup */}
         {loadingCodes ? (
           /* Loading State for Delivery Codes */
-          <div className="mb-8">
-            <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg p-6">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-8"
+          >
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
               <div className="flex items-center justify-center py-8">
                 <div className="text-center">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto mb-2"></div>
-                  <p className="text-sm text-gray-600">Checking for packages ready for pickup...</p>
+                  <div className="animate-spin rounded-full h-10 w-10 border-4 border-gray-200 border-t-green-600 mx-auto mb-3"></div>
+                  <p className="text-sm font-medium text-gray-600">Checking for ready packages...</p>
                 </div>
               </div>
             </div>
-          </div>
+          </motion.div>
         ) : deliveryCodes.length > 0 ? (
           /* Delivery Codes Display */
-          <div className="mb-8">
-            <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg p-6">
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center space-x-3">
-                  <div className="bg-green-600 p-2 rounded-lg">
-                    <PackageCheck className="h-6 w-6 text-white" />
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-8"
+          >
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+              {/* Header */}
+              <div className="bg-green-50 border-b border-green-100 px-6 py-5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-green-600 rounded-xl flex items-center justify-center shadow-sm">
+                      <PackageCheck className="h-6 w-6 text-white" />
+                    </div>
+                    <div>
+                      <h2 className="text-xl font-semibold text-gray-900">Ready for Pickup</h2>
+                      <p className="text-sm text-gray-600 mt-0.5">
+                        {deliveryCodes.length} {deliveryCodes.length === 1 ? 'package' : 'packages'} at warehouse
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <h2 className="text-xl font-bold text-gray-900">📦 Packages Ready for Pickup</h2>
-                    <p className="text-sm text-gray-600 mt-1">
-                      {deliveryCodes.length} {deliveryCodes.length === 1 ? 'package' : 'packages'} waiting for you at the warehouse
-                    </p>
+                  <div className="hidden sm:flex items-center justify-center w-16 h-16 bg-green-600 rounded-xl shadow-sm">
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-white">{deliveryCodes.length}</div>
+                      <div className="text-xs text-green-100 font-medium">Ready</div>
+                    </div>
                   </div>
-                </div>
-                <div className="hidden md:block bg-green-600 text-white px-4 py-2 rounded-lg text-center">
-                  <div className="text-2xl font-bold">{deliveryCodes.length}</div>
-                  <div className="text-xs">Ready</div>
                 </div>
               </div>
 
               {/* Delivery Codes Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {deliveryCodes.map((deliveryCode) => (
-                  <DeliveryCodeCard
-                    key={deliveryCode.package_id}
-                    deliveryCode={deliveryCode}
-                    onCopyCode={handleCopyCode}
-                    isCopied={copiedCode === deliveryCode.delivery_code}
-                  />
-                ))}
+              <div className="p-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {deliveryCodes.map((deliveryCode) => (
+                    <DeliveryCodeCard
+                      key={deliveryCode.package_id}
+                      deliveryCode={deliveryCode}
+                      onCopyCode={handleCopyCode}
+                      isCopied={copiedCode === deliveryCode.delivery_code}
+                    />
+                  ))}
+                </div>
               </div>
             </div>
-          </div>
+          </motion.div>
         ) : null}
 
         {/* Regular Packages Section */}
         {displayedPackages.length === 0 ? (
-          /* Empty State */
-          <div className="text-center bg-white/80 backdrop-blur-sm rounded-lg py-12">
-            <Package className="mx-auto h-12 w-12 text-gray-400" />
-            <h3 className="mt-2 text-sm font-medium text-gray-900">No packages found</h3>
-            <p className="mt-1 text-sm text-gray-500">
-              No packages have arrived at our warehouse yet.
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="text-center bg-white rounded-2xl shadow-sm border border-gray-200 py-16 px-6"
+          >
+            <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Package className="h-10 w-10 text-gray-400" />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">No packages found</h3>
+            <p className="text-sm text-gray-500 max-w-md mx-auto">
+              No packages have arrived at our warehouse yet. Check back soon or contact support for assistance.
             </p>
-          </div>
+          </motion.div>
         ) : (
           /* Package Grid */
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {displayedPackages.map((pkg) => (
-              <PackageCard
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {displayedPackages.map((pkg, index) => (
+              <motion.div
                 key={pkg.id}
-                package={pkg}
-                isSelected={false}
-                onToggleSelection={() => {}}
-                onApproveShipment={() => approveShipment(pkg.id)}
-                onEditDetails={() => handleEditPackage(pkg)}
-                isActionInProgress={actionInProgress === pkg.id}
-                getStatusBadge={getStatusBadge}
-                getPriorityBadge={getPriorityBadge}
-              />
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.05 }}
+              >
+                <PackageCard
+                  package={pkg}
+                  isSelected={false}
+                  onToggleSelection={() => {}}
+                  onApproveShipment={() => approveShipment(pkg.id)}
+                  onEditDetails={() => handleEditPackage(pkg)}
+                  isActionInProgress={actionInProgress === pkg.id}
+                  getStatusBadge={getStatusBadge}
+                  getPriorityBadge={getPriorityBadge}
+                />
+              </motion.div>
             ))}
           </div>
         )}
+
+        {/* Package Edit Modal */}
+        <PackageEditModal
+          isOpen={showEditModal}
+          onClose={() => {
+            setShowEditModal(false);
+            setEditingPackage(null);
+          }}
+          package={editingPackage}
+          onSave={handleSavePackage}
+        />
       </div>
-
-      {/* Removed consolidation modal */}
-
-      {/* Package Edit Modal */}
-      <PackageEditModal
-        isOpen={showEditModal}
-        onClose={() => {
-          setShowEditModal(false);
-          setEditingPackage(null);
-        }}
-        package={editingPackage}
-        onSave={handleSavePackage}
-      />
     </div>
   );
 }
@@ -557,123 +586,121 @@ const PackageCard: React.FC<PackageCardProps> = ({
   const [showPhotos, setShowPhotos] = useState(false);
 
   return (
-    <motion.div
-      layout
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className={`bg-white rounded-lg shadow-sm border-2 transition-all duration-200 ${
+    <div
+      className={`group relative overflow-hidden rounded-3xl bg-white/60 backdrop-blur-xl border shadow-2xl shadow-red-100/30 transition-all duration-300 hover:shadow-3xl hover:shadow-red-200/40 ${
         isSelected 
-          ? 'border-red-500 shadow-md' 
-          : 'border-gray-200 hover:border-gray-300 hover:shadow-md'
+          ? 'border-red-500 ring-2 ring-red-100' 
+          : 'border-red-200/50 hover:border-red-300/60'
       }`}
     >
-      {/* Package Header */}
-      <div className="p-4 border-b border-gray-200">
-        <div className="flex items-start justify-between">
-          <div className="flex items-center space-x-3">
-            {/* Selection checkbox */}
-            <input
-              type="checkbox"
-              checked={isSelected}
-              onChange={onToggleSelection}
-              className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded"
-            />
-            
+      <div className="absolute inset-0 bg-gradient-to-br from-red-50/20 via-transparent to-rose-50/20"></div>
+      
+      {/* Package Header - Tracking Style */}
+      <div className="relative p-5 border-b border-red-100/50 bg-gradient-to-br from-red-50/40 to-white/40">
+        <div className="flex items-start justify-between mb-3">
+          <div className="flex items-center gap-3 flex-1">
             {/* Store info */}
-            <div className="flex items-center space-x-2">
-              {pkg.storeLogoUrl && (
-                <img
-                  src={pkg.storeLogoUrl}
-                  alt={pkg.storeName}
-                  className="w-8 h-8 rounded object-contain"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src = '/images/store-placeholder.png';
-                  }}
-                />
-              )}
-              <div>
-                <h3 className="text-sm font-medium text-gray-900">{pkg.storeName}</h3>
-                <p className="text-xs text-gray-500">Package ID: {pkg.package_id}</p>
+            <div className="flex items-center gap-3 flex-1">
+              <div className="w-12 h-12 bg-gradient-to-br from-red-50 to-white rounded-2xl border border-red-200/50 flex items-center justify-center flex-shrink-0 shadow-sm">
+                {pkg.storeLogoUrl ? (
+                  <img
+                    src={pkg.storeLogoUrl}
+                    alt={pkg.storeName}
+                    className="w-7 h-7 object-contain"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.display = 'none';
+                    }}
+                  />
+                ) : (
+                  <Box className="w-6 h-6 text-red-600" />
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="text-sm font-semibold text-gray-900 truncate">{pkg.storeName}</h3>
+                <p className="text-xs text-gray-600 font-mono font-medium">{pkg.package_id}</p>
               </div>
             </div>
           </div>
+        </div>
 
-          {/* Status and priority badges */}
-          <div className="flex flex-col items-end space-y-1">
-            <span className={getStatusBadge(pkg.status)}>
-              {pkg.status.replace('_', ' ')}
-            </span>
-            <span className={getPriorityBadge(pkg.priority)}>
-              {pkg.priority}
-            </span>
-          </div>
+        {/* Status badge - Tracking Style */}
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="px-4 py-1.5 rounded-full text-xs font-semibold shadow-md bg-gradient-to-r from-red-500 to-rose-600 text-white">
+            {pkg.status.replace('_', ' ').toUpperCase()}
+          </span>
         </div>
       </div>
 
       {/* Package Details */}
-      <div className="p-4">
-        <div className="space-y-3">
+      <div className="relative p-5">
+        <div className="space-y-4">
           {/* Package photo */}
           {pkg.packagePhotos && pkg.packagePhotos.length > 0 && (
-            <div className="relative">
+            <div className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-gray-50/80 to-white/80 border border-red-200/50">
               <img
                 src={pkg.packagePhotos?.[0] || ''}
                 alt="Package"
-                className="w-full h-32 object-cover rounded-md cursor-pointer"
+                className="w-full h-40 object-cover cursor-pointer transition-transform duration-300 hover:scale-105"
                 onClick={() => setShowPhotos(true)}
                 onError={(e) => {
                   (e.target as HTMLImageElement).src = '/images/package-placeholder.png';
                 }}
               />
               {pkg.packagePhotos && pkg.packagePhotos.length > 1 && (
-                <div className="absolute top-2 right-2 bg-black bg-opacity-75 text-white text-xs px-2 py-1 rounded">
-                  +{(pkg.packagePhotos?.length || 1) - 1} more
+                <div className="absolute top-3 right-3 bg-red-600/90 backdrop-blur-sm text-white text-xs px-2.5 py-1 rounded-lg font-semibold shadow-lg">
+                  +{(pkg.packagePhotos?.length || 1) - 1}
                 </div>
               )}
               <button
                 onClick={() => setShowPhotos(true)}
-                className="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-10 transition-all duration-200 rounded-md flex items-center justify-center"
+                className="absolute inset-0 bg-black/0 hover:bg-black/10 transition-colors duration-200 flex items-center justify-center group"
               >
-                <Eye className="w-6 h-6 text-white opacity-0 hover:opacity-100 transition-opacity" />
+                <Eye className="w-7 h-7 text-white opacity-0 group-hover:opacity-100 transition-opacity drop-shadow-lg" />
               </button>
             </div>
           )}
 
-          {/* Package info */}
-          <div>
-            <h4 className="text-sm font-medium text-gray-900 mb-1">{pkg.description}</h4>
-            <div className="grid grid-cols-2 gap-2 text-xs text-gray-500">
-              <div className="flex items-center">
-                <Calendar className="w-3 h-3 mr-1" />
-                {formatDate(pkg.intake_date || pkg.created_at)}
+          {/* Package info boxes - Tracking Style */}
+          <div className="p-4 bg-gradient-to-br from-red-50/60 to-rose-50/60 backdrop-blur-sm rounded-2xl border border-red-200/50 shadow-sm">
+            <p className="text-xs font-medium text-gray-500 mb-3">Package Description</p>
+            <h4 className="text-sm font-semibold text-gray-900 line-clamp-2">{pkg.description || 'No description'}</h4>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="p-3 bg-gradient-to-br from-gray-50/80 to-white/80 backdrop-blur-sm rounded-2xl border border-red-200/50">
+              <p className="text-xs font-medium text-gray-500 mb-1">Arrival Date</p>
+              <div className="flex items-center gap-2">
+                <Calendar className="w-4 h-4 text-red-600" />
+                <span className="text-xs font-semibold text-gray-900">{formatDate(pkg.intake_date || pkg.created_at)}</span>
               </div>
-              <div className="flex items-center">
-                <Clock className="w-3 h-3 mr-1" />
-                {pkg.arrivalTime}
+            </div>
+            <div className="p-3 bg-gradient-to-br from-gray-50/80 to-white/80 backdrop-blur-sm rounded-2xl border border-red-200/50">
+              <p className="text-xs font-medium text-gray-500 mb-1">Time</p>
+              <div className="flex items-center gap-2">
+                <Clock className="w-4 h-4 text-red-600" />
+                <span className="text-xs font-semibold text-gray-900">{pkg.arrivalTime}</span>
               </div>
-              <div className="flex items-center">
-                <Package className="w-3 h-3 mr-1" />
-                {pkg.estimatedWeight}
-              </div>
-              {pkg.value && (
-                <div className="flex items-center">
-                  <DollarSign className="w-3 h-3 mr-1" />
-                  ${pkg.value}
-                </div>
-              )}
+            </div>
+          </div>
+
+          <div className="p-3 bg-gradient-to-br from-gray-50/80 to-white/80 backdrop-blur-sm rounded-2xl border border-red-200/50">
+            <p className="text-xs font-medium text-gray-500 mb-1">Weight</p>
+            <div className="flex items-center gap-2">
+              <Package className="w-4 h-4 text-red-600" />
+              <span className="text-xs font-semibold text-gray-900">{pkg.estimatedWeight}</span>
             </div>
           </div>
 
           {/* Special indicators */}
           {(pkg.fragile || pkg.requiresInspection) && (
-            <div className="flex space-x-2">
+            <div className="flex gap-2">
               {pkg.fragile && (
-                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                <span className="inline-flex items-center px-3 py-1 rounded-lg text-xs font-semibold bg-yellow-50 text-yellow-700 border border-yellow-200">
                   Fragile
                 </span>
               )}
               {pkg.requiresInspection && (
-                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                <span className="inline-flex items-center px-3 py-1 rounded-lg text-xs font-semibold bg-orange-50 text-orange-700 border border-orange-200">
                   Inspection Required
                 </span>
               )}
@@ -682,25 +709,26 @@ const PackageCard: React.FC<PackageCardProps> = ({
 
           {/* Notes */}
           {pkg.notes && (
-            <div className="bg-gray-50 rounded-md p-2">
-              <p className="text-xs text-gray-600">{pkg.notes}</p>
+            <div className="p-3 bg-gradient-to-br from-red-50/40 to-rose-50/40 backdrop-blur-sm rounded-2xl border border-red-200/50">
+              <p className="text-xs font-medium text-gray-500 mb-1">Notes</p>
+              <p className="text-xs text-gray-700 leading-relaxed">{pkg.notes}</p>
             </div>
           )}
         </div>
       </div>
 
-      {/* Action Buttons */}
-      <div className="px-4 pb-4">
+      {/* Action Buttons - Tracking Style */}
+      <div className="relative p-5 pt-0 space-y-3">
         <button
           onClick={onApproveShipment}
           disabled={isActionInProgress || pkg.status !== 'pending'}
-          className="w-full flex items-center justify-center px-3 py-2 border border-transparent text-xs font-medium rounded-md text-white bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="w-full flex items-center justify-center gap-2 px-6 py-4 text-sm font-semibold rounded-2xl text-white bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg shadow-red-200 hover:shadow-xl hover:shadow-red-300 disabled:hover:shadow-lg"
         >
           {isActionInProgress ? (
-            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            <div className="w-5 h-5 border-3 border-white/30 border-t-white rounded-full animate-spin" />
           ) : (
             <>
-              <CheckCircle className="w-3 h-3 mr-1" />
+              <CheckCircle className="w-5 h-5" />
               {pkg.status === 'pending' ? 'Scan & Receive' : 
                pkg.status === 'received' ? 'Received' :
                pkg.status === 'processing' ? 'Processing' : 
@@ -715,9 +743,9 @@ const PackageCard: React.FC<PackageCardProps> = ({
         
         <button
           onClick={onEditDetails}
-          className="w-full mt-2 flex items-center justify-center px-3 py-2 border border-gray-300 text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors"
+          className="w-full flex items-center justify-center gap-2 px-6 py-4 text-sm font-semibold rounded-2xl text-gray-700 bg-gradient-to-br from-gray-50/80 to-white/80 backdrop-blur-sm hover:from-gray-100/80 hover:to-gray-50/80 border border-red-200/50 transition-all duration-200 shadow-sm"
         >
-          <Edit3 className="w-3 h-3 mr-1" />
+          <Edit3 className="w-4 h-4" />
           Edit Details
         </button>
       </div>
@@ -729,7 +757,7 @@ const PackageCard: React.FC<PackageCardProps> = ({
         photos={pkg.packagePhotos || []}
         packageId={pkg.package_id}
       />
-    </motion.div>
+    </div>
   );
 };
 
@@ -839,52 +867,44 @@ const DeliveryCodeCard: React.FC<DeliveryCodeCardProps> = ({
   isCopied
 }) => {
   return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      className="bg-white rounded-lg shadow-md border-2 border-green-200 p-5 hover:shadow-lg transition-all"
-    >
+    <div className="group bg-white rounded-2xl shadow-sm border border-green-200 overflow-hidden hover:shadow-md transition-all duration-300 hover:border-green-300">
       {/* Package Information */}
-      <div className="mb-4 pb-4 border-b border-gray-200">
+      <div className="bg-green-50 px-5 py-4 border-b border-green-100">
         <div className="flex items-start justify-between mb-2">
-          <div className="flex-1">
-            <h3 className="text-sm font-semibold text-gray-900 mb-1">
+          <div className="flex-1 min-w-0">
+            <h3 className="text-sm font-semibold text-gray-900 mb-1 truncate">
               {deliveryCode.package_id}
             </h3>
-            <p className="text-xs text-gray-500">
-              Tracking: {deliveryCode.tracking_number}
+            <p className="text-xs text-gray-600 font-medium truncate">
+              {deliveryCode.tracking_number}
             </p>
           </div>
-          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+          <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-green-600 text-white shadow-sm ml-2">
             {deliveryCode.status}
           </span>
         </div>
         
         {deliveryCode.description && (
-          <p className="text-xs text-gray-600 mt-2 line-clamp-2">
+          <p className="text-xs text-gray-700 mt-2 line-clamp-2">
             {deliveryCode.description}
-          </p>
-        )}
-        
-        {deliveryCode.shipment_tracking && (
-          <p className="text-xs text-gray-500 mt-2">
-            Shipment: {deliveryCode.shipment_tracking}
           </p>
         )}
       </div>
 
       {/* Delivery Code Display */}
-      <div className="mb-4">
-        <div className="flex items-center space-x-2 mb-2">
-          <Lock className="h-4 w-4 text-green-600" />
+      <div className="p-5">
+        <div className="flex items-center gap-2 mb-3">
+          <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+            <Lock className="h-4 w-4 text-green-600" />
+          </div>
           <span className="text-xs font-semibold text-gray-700 uppercase tracking-wide">
-            Your Delivery Code
+            Delivery Code
           </span>
         </div>
         
         <div className="relative">
-          <div className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-lg p-4 text-center">
-            <div className="text-3xl font-bold text-white tracking-wider font-mono">
+          <div className="bg-red-600 rounded-xl p-5 text-center shadow-sm">
+            <div className="text-4xl font-bold text-white tracking-widest font-mono">
               {deliveryCode.delivery_code}
             </div>
           </div>
@@ -892,49 +912,40 @@ const DeliveryCodeCard: React.FC<DeliveryCodeCardProps> = ({
           {/* Copy Button */}
           <button
             onClick={() => onCopyCode(deliveryCode.delivery_code)}
-            className="absolute top-2 right-2 bg-white/20 hover:bg-white/30 text-white p-2 rounded transition-colors"
-            title="Copy code"
+            className="absolute top-3 right-3 bg-white/90 hover:bg-white text-red-600 p-2 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md"
+            title={isCopied ? "Copied!" : "Copy code"}
           >
-            <Copy className="h-4 w-4" />
+            {isCopied ? (
+              <CheckCircle className="h-4 w-4" />
+            ) : (
+              <Copy className="h-4 w-4" />
+            )}
           </button>
-          
-          {/* Copied Indicator */}
-          {isCopied && (
-            <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs px-3 py-1 rounded shadow-lg">
-              Copied!
-            </div>
-          )}
         </div>
       </div>
 
       {/* Warning Message */}
-      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-        <div className="flex items-start space-x-2">
-          <AlertCircle className="h-4 w-4 text-yellow-600 flex-shrink-0 mt-0.5" />
-          <p className="text-xs text-yellow-800">
-            <span className="font-semibold">Important:</span> Show this code to warehouse staff for package pickup
-          </p>
+      <div className="px-5 pb-5">
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-3">
+          <div className="flex items-start gap-2">
+            <AlertCircle className="h-4 w-4 text-amber-600 flex-shrink-0 mt-0.5" />
+            <p className="text-xs text-amber-900 leading-relaxed">
+              <span className="font-semibold">Important:</span> Present this code at the warehouse for pickup
+            </p>
+          </div>
         </div>
       </div>
 
-      {/* Generated Date */}
-      <div className="mt-4 pt-3 border-t border-gray-100">
-        <div className="flex items-center justify-between text-xs text-gray-500">
-          <div className="flex items-center space-x-1">
-            <Clock className="h-3 w-3" />
-            <span>Generated:</span>
+      {/* Store Info if available */}
+      {deliveryCode.store_name && (
+        <div className="px-5 pb-5">
+          <div className="flex items-center gap-2 text-xs text-gray-600">
+            <CircleDot className="h-3 w-3 text-gray-400" />
+            <span className="font-medium">{deliveryCode.store_name}</span>
           </div>
-          <span>{formatDate(deliveryCode.generated_at)} at {formatTime(deliveryCode.generated_at)}</span>
         </div>
-        
-        {deliveryCode.expires_at && (
-          <div className="flex items-center justify-between text-xs text-red-600 mt-1">
-            <span>Expires:</span>
-            <span>{formatDate(deliveryCode.expires_at)}</span>
-          </div>
-        )}
-      </div>
-    </motion.div>
+      )}
+    </div>
   );
 };
 

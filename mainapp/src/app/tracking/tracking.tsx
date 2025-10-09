@@ -82,13 +82,13 @@ const SearchForm: React.FC<{
             <button
               onClick={handleSearch}
               disabled={loading}
-              className="px-8 py-4 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-2xl hover:from-blue-600 hover:to-indigo-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2 shadow-lg shadow-blue-200 font-medium"
+              className="px-8 py-4 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-2xl hover:from-red-600 hover:to-red-700 focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2 shadow-lg shadow-red-200 font-medium"
             >
               {loading ? (
                 <RefreshCw className="w-5 h-5 animate-spin" />
               ) : (
                 <Search className="w-5 h-5" />
-              )}
+              )}  
               {loading ? 'Searching...' : 'Track'}
             </button>
           </div>
@@ -97,7 +97,7 @@ const SearchForm: React.FC<{
         {searchHistory.length > 0 && (
           <div className="mt-6">
             <label className="block text-sm font-medium text-gray-600 mb-3">Recent Searches</label>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex overflow-x-auto gap-2 pb-2 scrollbar-hide">
               {searchHistory.map((item, index) => (
                 <motion.button
                   key={index}
@@ -105,7 +105,7 @@ const SearchForm: React.FC<{
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: index * 0.05 }}
                   onClick={() => setTrackingNumber(item)}
-                  className="px-4 py-2 text-sm bg-gradient-to-br from-gray-50 to-white backdrop-blur-sm text-gray-700 rounded-full hover:from-gray-100 hover:to-gray-50 transition-all border border-gray-200/50 shadow-sm font-medium"
+                  className="px-4 py-2 text-sm bg-gradient-to-br from-gray-50 to-white backdrop-blur-sm text-gray-700 rounded-full hover:from-gray-100 hover:to-gray-50 transition-all border border-gray-200/50 shadow-sm font-medium whitespace-nowrap flex-shrink-0"
                 >
                   {item}
                 </motion.button>
