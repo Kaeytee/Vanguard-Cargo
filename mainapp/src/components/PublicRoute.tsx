@@ -29,7 +29,7 @@ const PublicRoute: React.FC<PublicRouteProps> = ({
   const isLoading = useAppSelector(selectIsLoading);
   const profile = useAppSelector(selectProfile);
 
-  console.log('🔓 PublicRoute check:', { isAuthenticated, isLoading, hasProfile: !!profile });
+  // // console.log('🔓 PublicRoute check:', { isAuthenticated, isLoading, hasProfile: !!profile });
 
   // Get current path to determine if we should show loading screen
   const currentPath = window.location.pathname;
