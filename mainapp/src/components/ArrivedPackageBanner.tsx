@@ -80,7 +80,7 @@ const ArrivedPackageBanner = ({
                 {/* Warehouse info */}
                 <div className="flex items-center gap-2 mt-2 text-green-100 text-xs">
                   <MapPin className="w-3 h-3" aria-hidden="true" />
-                  <span>ALX-E2 Warehouse: 4700 Eisenhower Ave, Alexandria, VA</span>
+                  <span>ALX-E2 Warehouse: 4700 Eisenhower Ave,  VA</span>
                 </div>
               </div>
             </div>

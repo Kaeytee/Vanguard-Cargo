@@ -282,25 +282,25 @@ const popularBrands = [
           </div>
 
           {/* Steps Section */}
-          <div className="grid md:grid-cols-2 gap-10 lg:gap-16 max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 sm:gap-10 lg:gap-16 max-w-6xl mx-auto px-4 sm:px-0">
             {/* Step 1 - Shop Online */}
             <motion.div 
               initial={{ opacity: 0, x: -20 }}
               whileInView={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6, delay: 0.2 }}
               viewport={{ once: true }}
-              className="flex flex-col items-center text-center"
+              className="flex flex-col items-center text-center w-full"
             >
-              <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-red-500 to-pink-600 rounded-3xl flex items-center justify-center mb-6 shadow-2xl shadow-red-200">
-                <span className="text-3xl sm:text-4xl font-semibold text-white">1</span>
+              <div className="w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 bg-gradient-to-br from-red-500 to-pink-600 rounded-3xl flex items-center justify-center mb-4 sm:mb-6 shadow-2xl shadow-red-200">
+                <span className="text-2xl sm:text-3xl md:text-4xl font-semibold text-white">1</span>
               </div>
-              <h3 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-3">
+              <h3 className="text-lg sm:text-xl md:text-2xl font-semibold text-gray-900 mb-2 sm:mb-3 px-4">
                 Shop Your Favorite Stores
               </h3>
-              <p className="text-base sm:text-lg text-gray-600 font-light mb-6 max-w-sm leading-relaxed">
+              <p className="text-sm sm:text-base md:text-lg text-gray-600 font-light mb-4 sm:mb-6 max-w-sm leading-relaxed px-4">
                 Browse and purchase from thousands of US online retailers
               </p>
-              <div className="w-full max-w-xs">
+              <div className="w-full max-w-[280px] sm:max-w-xs px-4">
                 <img 
                   src={shopImage} 
                   alt="Shop online illustration" 
@@ -315,37 +315,37 @@ const popularBrands = [
               whileInView={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6, delay: 0.4 }}
               viewport={{ once: true }}
-              className="flex flex-col items-center text-center"
+              className="flex flex-col items-center text-center w-full"
             >
-              <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-3xl flex items-center justify-center mb-6 shadow-2xl shadow-blue-200">
-                <span className="text-3xl sm:text-4xl font-semibold text-white">2</span>
+              <div className="w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-3xl flex items-center justify-center mb-4 sm:mb-6 shadow-2xl shadow-blue-200">
+                <span className="text-2xl sm:text-3xl md:text-4xl font-semibold text-white">2</span>
               </div>
-              <h3 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-3">
+              <h3 className="text-lg sm:text-xl md:text-2xl font-semibold text-gray-900 mb-2 sm:mb-3 px-4">
                 Use Your US Address
               </h3>
-              <p className="text-base sm:text-lg text-gray-600 font-light mb-6 max-w-sm leading-relaxed">
+              <p className="text-sm sm:text-base md:text-lg text-gray-600 font-light mb-4 sm:mb-6 max-w-sm leading-relaxed px-4">
                 Enter your Vanguard Cargo address during checkout
               </p>
-              <div className="w-full bg-gradient-to-br from-blue-50/80 to-indigo-50/80 backdrop-blur-sm border border-blue-200/50 rounded-2xl p-4 sm:p-5 mb-6">
-                <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 bg-blue-500 rounded-xl flex items-center justify-center flex-shrink-0">
-                    <Info className="w-4 h-4 text-white" />
+              <div className="w-full max-w-full sm:max-w-md mx-auto bg-gradient-to-br from-blue-50/80 to-indigo-50/80 backdrop-blur-sm border border-blue-200/50 rounded-2xl p-3 sm:p-4 md:p-5 mb-4 sm:mb-6">
+                <div className="flex items-start gap-2 sm:gap-3">
+                  <div className="w-7 h-7 sm:w-8 sm:h-8 bg-blue-500 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <Info className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
                   </div>
-                  <p className="text-sm sm:text-base text-blue-900 text-left font-light leading-relaxed">
+                  <p className="text-xs sm:text-sm md:text-base text-blue-900 text-left font-light leading-relaxed">
                     <span className="font-medium">Quick Tip:</span> Use the copy buttons below to easily paste your address
                   </p>
                 </div>
               </div>
               {/* Apple-Style Frosted Glass Address Card */}
-              <div className="w-full relative overflow-hidden rounded-3xl bg-white/60 backdrop-blur-xl border border-gray-200/50 shadow-2xl shadow-gray-200/50 p-5 sm:p-7">
+              <div className="w-full max-w-full sm:max-w-md mx-auto relative overflow-hidden rounded-2xl sm:rounded-3xl bg-white/60 backdrop-blur-xl border border-gray-200/50 shadow-2xl shadow-gray-200/50 p-4 sm:p-5 md:p-7">
                 <div className="absolute inset-0 bg-gradient-to-br from-gray-50/50 to-transparent"></div>
                 <div className="relative">
-                  <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-200/50">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-pink-600 rounded-2xl flex items-center justify-center shadow-lg shadow-red-200">
-                        <MapPin className="w-5 h-5 text-white" />
+                  <div className="flex items-center justify-between mb-4 sm:mb-6 pb-3 sm:pb-4 border-b border-gray-200/50">
+                    <div className="flex items-center gap-2 sm:gap-3">
+                      <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-red-500 to-pink-600 rounded-2xl flex items-center justify-center shadow-lg shadow-red-200">
+                        <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                       </div>
-                      <span className="text-lg sm:text-xl font-semibold text-gray-900">Your US Address</span>
+                      <span className="text-base sm:text-lg md:text-xl font-semibold text-gray-900">Your US Address</span>
                     </div>
                     <button
                       disabled
@@ -357,12 +357,12 @@ const popularBrands = [
                     </button>
                   </div>
               
-                  <div className="space-y-3">
+                  <div className="space-y-2 sm:space-y-3">
                     {/* Name */}
-                    <div className="flex items-center justify-between p-4 rounded-2xl bg-gradient-to-br from-gray-50/80 to-white/80 hover:from-gray-100/80 hover:to-white/80 transition-all border border-gray-200/50">
-                      <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-gradient-to-br from-gray-50/80 to-white/80 hover:from-gray-100/80 hover:to-white/80 transition-all border border-gray-200/50">
+                      <div className="flex-1 min-w-0 pr-2">
                         <p className="text-xs font-medium text-gray-500 mb-1">Name</p>
-                        <p className="text-sm sm:text-base font-medium text-gray-900 truncate">
+                        <p className="text-xs sm:text-sm md:text-base font-medium text-gray-900 truncate">
                           Vanguard Cargo LLC ({profile?.suite_number})
                         </p>
                       </div>
@@ -371,91 +371,91 @@ const popularBrands = [
                           `Vanguard Cargo LLC (${profile?.suite_number || ''})`,
                           'name'
                         )}
-                        className="ml-3 flex-shrink-0 p-2.5 text-red-600 hover:bg-red-50 rounded-xl transition-colors"
+                        className="ml-2 sm:ml-3 flex-shrink-0 p-2 sm:p-2.5 text-red-600 hover:bg-red-50 rounded-lg sm:rounded-xl transition-colors"
                         title="Copy name"
                       >
                         {copiedStates['name'] ? (
-                          <Check className="w-4 h-4" />
+                          <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                         ) : (
-                          <Copy className="w-4 h-4" />
+                          <Copy className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                         )}
                       </button>
                     </div>
                     
                     {/* Address Line 1 */}
-                    <div className="flex items-center justify-between p-4 rounded-2xl bg-gradient-to-br from-gray-50/80 to-white/80 hover:from-gray-100/80 hover:to-white/80 transition-all border border-gray-200/50">
-                      <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-gradient-to-br from-gray-50/80 to-white/80 hover:from-gray-100/80 hover:to-white/80 transition-all border border-gray-200/50">
+                      <div className="flex-1 min-w-0 pr-2">
                         <p className="text-xs font-medium text-gray-500 mb-1">Street Address</p>
-                        <p className="text-sm sm:text-base font-medium text-gray-900">4700 Eisenhower Avenue</p>
+                        <p className="text-xs sm:text-sm md:text-base font-medium text-gray-900">4700 Eisenhower Avenue</p>
                       </div>
                       <button
                         onClick={() => copyToClipboard('4700 Eisenhower Avenue', 'address1')}
-                        className="ml-3 flex-shrink-0 p-2.5 text-red-600 hover:bg-red-50 rounded-xl transition-colors"
+                        className="ml-2 sm:ml-3 flex-shrink-0 p-2 sm:p-2.5 text-red-600 hover:bg-red-50 rounded-lg sm:rounded-xl transition-colors"
                         title="Copy address line 1"
                       >
                         {copiedStates['address1'] ? (
-                          <Check className="w-4 h-4" />
+                          <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                         ) : (
-                          <Copy className="w-4 h-4" />
+                          <Copy className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                         )}
                       </button>
                     </div>
                     
                     {/* Address Line 2 */}
-                    <div className="flex items-center justify-between p-4 rounded-2xl bg-gradient-to-br from-gray-50/80 to-white/80 hover:from-gray-100/80 hover:to-white/80 transition-all border border-gray-200/50">
-                      <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-gradient-to-br from-gray-50/80 to-white/80 hover:from-gray-100/80 hover:to-white/80 transition-all border border-gray-200/50">
+                      <div className="flex-1 min-w-0 pr-2">
                         <p className="text-xs font-medium text-gray-500 mb-1">Apartment/Suite</p>
-                        <p className="text-sm sm:text-base font-medium text-gray-900">ALX-E2</p>
+                        <p className="text-xs sm:text-sm md:text-base font-medium text-gray-900">ALX-E2</p>
                       </div>
                       <button
                         onClick={() => copyToClipboard('ALX-E2', 'address2')}
-                        className="ml-3 flex-shrink-0 p-2.5 text-red-600 hover:bg-red-50 rounded-xl transition-colors"
+                        className="ml-2 sm:ml-3 flex-shrink-0 p-2 sm:p-2.5 text-red-600 hover:bg-red-50 rounded-lg sm:rounded-xl transition-colors"
                         title="Copy suite number"
                       >
                         {copiedStates['address2'] ? (
-                          <Check className="w-4 h-4" />
+                          <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                         ) : (
-                          <Copy className="w-4 h-4" />
+                          <Copy className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                         )}
                       </button>
                     </div>
                     
                     {/* City, State, ZIP */}
-                    <div className="flex items-center justify-between p-4 rounded-2xl bg-gradient-to-br from-gray-50/80 to-white/80 hover:from-gray-100/80 hover:to-white/80 transition-all border border-gray-200/50">
-                      <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-gradient-to-br from-gray-50/80 to-white/80 hover:from-gray-100/80 hover:to-white/80 transition-all border border-gray-200/50">
+                      <div className="flex-1 min-w-0 pr-2">
                         <p className="text-xs font-medium text-gray-500 mb-1">City, State ZIP</p>
-                        <p className="text-sm sm:text-base font-medium text-gray-900">
+                        <p className="text-xs sm:text-sm md:text-base font-medium text-gray-900">
                           {usAddress?.city || 'Alexandria'}, {usAddress?.state_province || 'VA'} {usAddress?.postal_code || '22304'}
                         </p>
                       </div>
                       <button
                         onClick={() => copyToClipboard(`${usAddress?.city || 'Alexandria'}, ${usAddress?.state_province || 'VA'} ${usAddress?.postal_code || '22304'}`, 'city')}
-                        className="ml-3 flex-shrink-0 p-2.5 text-red-600 hover:bg-red-50 rounded-xl transition-colors"
+                        className="ml-2 sm:ml-3 flex-shrink-0 p-2 sm:p-2.5 text-red-600 hover:bg-red-50 rounded-lg sm:rounded-xl transition-colors"
                         title="Copy city, state, zip"
                       >
                         {copiedStates['city'] ? (
-                          <Check className="w-4 h-4" />
+                          <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                         ) : (
-                          <Copy className="w-4 h-4" />
+                          <Copy className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                         )}
                       </button>
                     </div>
                     
                     {/* Country */}
-                    <div className="flex items-center justify-between p-4 rounded-2xl bg-gradient-to-br from-gray-50/80 to-white/80 hover:from-gray-100/80 hover:to-white/80 transition-all border border-gray-200/50">
-                      <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-gradient-to-br from-gray-50/80 to-white/80 hover:from-gray-100/80 hover:to-white/80 transition-all border border-gray-200/50">
+                      <div className="flex-1 min-w-0 pr-2">
                         <p className="text-xs font-medium text-gray-500 mb-1">Country</p>
-                        <p className="text-sm sm:text-base font-medium text-gray-900">{usAddress?.country || 'USA'}</p>
+                        <p className="text-xs sm:text-sm md:text-base font-medium text-gray-900">{usAddress?.country || 'USA'}</p>
                       </div>
                       <button
                         onClick={() => copyToClipboard(usAddress?.country || 'USA', 'country')}
-                        className="ml-3 flex-shrink-0 p-2.5 text-red-600 hover:bg-red-50 rounded-xl transition-colors"
+                        className="ml-2 sm:ml-3 flex-shrink-0 p-2 sm:p-2.5 text-red-600 hover:bg-red-50 rounded-lg sm:rounded-xl transition-colors"
                         title="Copy country"
                       >
                         {copiedStates['country'] ? (
-                          <Check className="w-4 h-4" />
+                          <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                         ) : (
-                          <Copy className="w-4 h-4" />
+                          <Copy className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                         )}
                       </button>
                     </div>

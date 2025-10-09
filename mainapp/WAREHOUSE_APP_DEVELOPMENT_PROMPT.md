@@ -11,7 +11,7 @@ I need to develop a **Warehouse Management Application** for Vanguard Cargo Logi
 - **Package Intake System**: Users can submit packages for processing
 - **Real-time Dashboard**: Package tracking with status updates
 - **Profile Management**: Avatar uploads, contact information, preferences
-- **Fixed Warehouse Address Display**: ALX-E2 (4700 Eisenhower Avenue, Alexandria, VA 22304, USA)
+- **Fixed Warehouse Address Display**: ALX-E2 (4700 Eisenhower Avenue,  VA 22304, USA)
 - **Suite Number System**: Auto-generated unique identifiers (VC-001, VC-002, etc.)
 - **Notification System**: Email, SMS, WhatsApp, push notifications
 - **Role-based Access**: Designed for 'client' role users
