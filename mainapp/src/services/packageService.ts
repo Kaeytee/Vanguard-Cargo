@@ -1,5 +1,6 @@
 import { supabase } from '../lib/supabase';
 import { PackageStatus, PackageStatusUtils, type PackageStatusInfo } from '../types';
+import { emailNotificationService } from './emailNotificationService';
 
 // Define interface to match the actual 'packages' table schema
 export interface DbPackage {
@@ -18,6 +19,11 @@ export interface DbPackage {
   intake_date: string | null;
   created_at: string;
   updated_at: string | null;
+  // New fields for authentication and tracking
+  delivery_auth_code: string | null; // 6-digit pickup authentication code
+  qr_code_data: string | null; // QR code data for warehouse scanning
+  barcode_data: string | null; // Barcode data for tracking
+  ready_for_pickup: boolean | null; // Flag for pickup readiness
   // No warehouse join needed - hardcoded in frontend
 }
 
@@ -312,9 +318,31 @@ class PackageService {
         // TODO: Implement audit logging to database
       }
 
-      // Send notification if status change affects customer
+      // Send email notification for status change
+      try {
+        const emailResult = await emailNotificationService.sendPackageStatusEmail({
+          packageId: packageId,
+          trackingNumber: data.tracking_number,
+          storeName: data.store_name || data.vendor_name || 'Unknown Store',
+          oldStatus: currentPackage.status,
+          newStatus: newStatus,
+          description: data.description || undefined,
+          userId: currentPackage.user_id
+        });
+
+        if (!emailResult.success) {
+          console.error(`Failed to send email notification for package ${packageId}:`, emailResult.error);
+          // Don't fail the status update if email fails
+        } else {
+          console.log(`Email notification sent successfully for package ${packageId}, messageId: ${emailResult.messageId}`);
+        }
+      } catch (emailError) {
+        console.error(`Error sending email notification for package ${packageId}:`, emailError);
+        // Don't fail the status update if email fails
+      }
+
+      // Send in-app notification if status change affects customer
       if (PackageStatusUtils.requiresCustomerAction(newStatus as any)) {
-        // TODO: Trigger customer notification
         console.log(`Customer notification required for package ${packageId} - status: ${newStatus}`);
       }
 
@@ -565,7 +593,6 @@ class PackageService {
         .range(offset, offset + limit - 1);
 
       if (error) {
-        console.error('Supabase error:', error);
         return { data: [], error };
       }
 
@@ -576,7 +603,6 @@ class PackageService {
 
       return { data: packagesWithDetails, error: null, count: count || 0 };
     } catch (err) {
-      console.error('Get incoming packages error:', err);
       return { data: [], error: err as Error };
     }
   }

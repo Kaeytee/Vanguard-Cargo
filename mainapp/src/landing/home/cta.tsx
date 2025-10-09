@@ -109,7 +109,7 @@ export default function CTA() {
 								<div className="text-gray-800 text-sm space-y-1">
 									<div className="font-semibold">John Doe (TTL-12345)</div>
 									<div>2891 NE 2nd Ave</div>
-									<div>Miami, FL 33137</div>
+									<div>Alexandria, VA 22304</div>
 									<div>United States</div>
 								</div>
 								<div className="mt-4 pt-4 border-t border-gray-200">

@@ -24,10 +24,12 @@ import AppAbout from "./app/about/Appabout";
 import AppSupport from "./app/support/Appsupport";
 import NotificationsPage from "./app/notification/notification";
 import PackageIntake from "./app/packageIntake/packageIntake";
-import ProtectedRoutes from "./components/protectedRoutes";
+import { ReduxAuthGuard } from "./components/ReduxAuthGuard";
 import AppLayout from "./components/AppLayout";
 import SmartNotFound from "./components/SmartNotFound";
 import AppNotFoundWithLayout from "./app/layouts/AppNotFoundWithLayout";
+import TermsOfService from "./pages/TermsOfService";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
 import { featureFlags } from "./config/featureFlags";
 
 // Create a client for React Query
@@ -99,6 +101,26 @@ export default function App() {
           </>
         }
       />
+      <Route
+        path="/terms-of-service"
+        element={
+          <>
+            <Navbar />
+            <TermsOfService />
+            <Footer />
+          </>
+        }
+      />
+      <Route
+        path="/privacy-policy"
+        element={
+          <>
+            <Navbar />
+            <PrivacyPolicy />
+            <Footer />
+          </>
+        }
+      />
       {/* Authentication Routes - Protected from authenticated users */}
       <Route path="/auth" element={<Navigate to="/login" replace />} />
       <Route
@@ -158,7 +180,7 @@ export default function App() {
       <Route
         path="/app/*"
         element={
-          <ProtectedRoutes>
+          <ReduxAuthGuard>
             <AppLayout>
               <Routes>
                 <Route index element={<Dashboard />} />
@@ -174,7 +196,7 @@ export default function App() {
                 <Route path="*" element={<AppNotFoundWithLayout />} />
               </Routes>
             </AppLayout>
-          </ProtectedRoutes>
+          </ReduxAuthGuard>
         }
       />
 

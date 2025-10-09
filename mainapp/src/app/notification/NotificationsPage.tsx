@@ -3,6 +3,8 @@ import { Bell, CheckCircle, AlertCircle, Info, Trash2, Eye } from 'lucide-react'
 import { useTranslation } from '../../lib/translations';
 import { notificationService, type Notification } from '../../services/notificationService';
 import { useAuth } from '../../hooks/useAuth';
+import { useNotificationRealtime } from '../../hooks/useRealtime';
+import { useNotificationToast } from '../../hooks/useNotificationToast';
 
 /**
  * NotificationsPage - Comprehensive notifications management page
@@ -22,6 +24,7 @@ import { useAuth } from '../../hooks/useAuth';
 const NotificationsPage = () => {
   const { t } = useTranslation();
   const { user } = useAuth();
+  const { showNotification, showSuccess, showError } = useNotificationToast();
   
   // State management
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -76,6 +79,62 @@ const NotificationsPage = () => {
   useEffect(() => {
     loadNotifications();
   }, [loadNotifications]);
+
+  // Real-time subscription for notification updates
+  const { isConnected } = useNotificationRealtime({
+    onInsert: useCallback((newNotificationData: any) => {
+      // Transform the data to match our interface
+      const newNotification: Notification = {
+        ...newNotificationData,
+        is_read: newNotificationData.read_status,
+        category: 'system', // Default category since it's not in new schema
+        priority: 'normal' // Default priority since it's not in new schema
+      };
+      
+      // Add new notification to the beginning of the list
+      setNotifications(prev => [newNotification, ...prev]);
+      setTotalNotifications(prev => prev + 1);
+      
+      // Show toast notification
+      showNotification({
+        id: newNotification.id,
+        title: newNotification.title,
+        message: newNotification.message || 'You have a new notification',
+        category: newNotification.category as any,
+        priority: newNotification.priority as any,
+        created_at: newNotification.created_at
+      });
+      
+      console.log('✨ New notification received via real-time:', newNotification.title);
+    }, [showNotification]),
+    
+    onUpdate: useCallback((updatedNotificationData: any) => {
+      // Transform the data to match our interface
+      const updatedNotification: Notification = {
+        ...updatedNotificationData,
+        is_read: updatedNotificationData.read_status,
+        category: 'system', // Default category since it's not in new schema
+        priority: 'normal' // Default priority since it's not in new schema
+      };
+      
+      // Update existing notification
+      setNotifications(prev => 
+        prev.map(n => 
+          n.id === updatedNotification.id ? updatedNotification : n
+        )
+      );
+      console.log('Notification updated via real-time:', updatedNotification.title);
+    }, []),
+    
+    onDelete: useCallback((deletedNotificationData: any) => {
+      // Remove notification from list
+      setNotifications(prev => 
+        prev.filter(n => n.id !== deletedNotificationData.id)
+      );
+      setTotalNotifications(prev => Math.max(0, prev - 1));
+      console.log('Notification deleted via real-time:', deletedNotificationData.id);
+    }, [])
+  });
 
   /**
    * Get notification icon based on type
@@ -215,6 +274,50 @@ const NotificationsPage = () => {
   };
 
   /**
+   * Mark all notifications as read for the current user
+   */
+  const handleMarkAllAsRead = async () => {
+    if (!user?.id) return;
+
+    try {
+      setBulkActionLoading(true);
+      
+      // Call the service to mark all notifications as read
+      const result = await notificationService.markAllAsRead(user.id);
+      
+      if (result.error) {
+        console.error('Error marking all notifications as read:', result.error);
+        showError('Failed to mark all notifications as read');
+        return;
+      }
+
+      // Optimistic update - mark all current notifications as read
+      setNotifications(prev => 
+        prev.map(n => ({ ...n, is_read: true }))
+      );
+
+      // Clear selected notifications
+      setSelectedNotifications([]);
+
+      // Show success message with count
+      const count = result.count || 0;
+      if (count > 0) {
+        showSuccess(`Marked ${count} notification${count === 1 ? '' : 's'} as read`);
+      } else {
+        showSuccess('All notifications are already read');
+      }
+      console.log(`✅ Marked ${count} notifications as read`);
+    } catch (error) {
+      console.error('Error marking all notifications as read:', error);
+      showError('An error occurred while marking notifications as read');
+      // Reload notifications on error to sync with server state
+      await loadNotifications();
+    } finally {
+      setBulkActionLoading(false);
+    }
+  };
+
+  /**
    * Toggle notification selection
    */
   const toggleNotificationSelection = (notificationId: string) => {
@@ -251,8 +354,16 @@ const NotificationsPage = () => {
           <div className="flex items-center gap-3 mb-2">
             <Bell className="w-8 h-8 text-red-600" />
             <h1 className="text-3xl font-bold text-gray-900">
-              {t('notifications')} ({totalNotifications})
+              {t('notifications')} ({totalNotifications > 10 ? '10+' : totalNotifications})
             </h1>
+            
+            {/* Real-time Connection Status */}
+            <div className="flex items-center space-x-2 ml-4">
+              <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-gray-400'}`}></div>
+              <span className="text-xs text-gray-500">
+                {isConnected ? 'Live Updates' : 'Offline'}
+              </span>
+            </div>
           </div>
           <p className="text-gray-600">
             Stay updated with your shipments and account activities
@@ -293,32 +404,46 @@ const NotificationsPage = () => {
               </select>
             </div>
 
-            {/* Bulk Actions */}
-            {selectedNotifications.length > 0 && (
-              <div className="flex gap-2">
+            {/* Bulk Actions and Mark All as Read */}
+            <div className="flex gap-2">
+              {/* Mark All as Read Button */}
+              {notifications.some(n => !n.is_read) && (
                 <button
-                  onClick={() => handleBulkAction('markRead')}
+                  onClick={handleMarkAllAsRead}
                   disabled={bulkActionLoading}
-                  className="px-3 py-2 bg-green-600 text-white text-sm rounded-md hover:bg-green-700 disabled:opacity-50 transition-colors"
+                  className="px-3 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 disabled:opacity-50 transition-colors"
                 >
-                  Mark Read
+                  Mark All as Read
                 </button>
-                <button
-                  onClick={() => handleBulkAction('markUnread')}
-                  disabled={bulkActionLoading}
-                  className="px-3 py-2 bg-red-600 text-white text-sm rounded-md hover:bg-blue-700 disabled:opacity-50 transition-colors"
-                >
-                  Mark Unread
-                </button>
-                <button
-                  onClick={() => handleBulkAction('delete')}
-                  disabled={bulkActionLoading}
-                  className="px-3 py-2 bg-red-600 text-white text-sm rounded-md hover:bg-red-700 disabled:opacity-50 transition-colors"
-                >
-                  Delete
-                </button>
-              </div>
-            )}
+              )}
+              
+              {/* Bulk Actions for Selected */}
+              {selectedNotifications.length > 0 && (
+                <>
+                  <button
+                    onClick={() => handleBulkAction('markRead')}
+                    disabled={bulkActionLoading}
+                    className="px-3 py-2 bg-green-600 text-white text-sm rounded-md hover:bg-green-700 disabled:opacity-50 transition-colors"
+                  >
+                    Mark Read
+                  </button>
+                  <button
+                    onClick={() => handleBulkAction('markUnread')}
+                    disabled={bulkActionLoading}
+                    className="px-3 py-2 bg-red-600 text-white text-sm rounded-md hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                  >
+                    Mark Unread
+                  </button>
+                  <button
+                    onClick={() => handleBulkAction('delete')}
+                    disabled={bulkActionLoading}
+                    className="px-3 py-2 bg-red-600 text-white text-sm rounded-md hover:bg-red-700 disabled:opacity-50 transition-colors"
+                  >
+                    Delete
+                  </button>
+                </>
+              )}
+            </div>
           </div>
 
           {/* Select All */}

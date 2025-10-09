@@ -1,17 +1,34 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Eye, EyeOff, Check } from 'lucide-react';
-import PhoneInput, { isValidPhoneNumber } from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
-import { parsePhoneNumber } from 'libphonenumber-js';
+import PhoneInput, { isValidPhoneNumber, parsePhoneNumber } from 'react-phone-number-input';
 import { cn } from '../../lib/utils';
 import registerbg from '../../images/register-bg.jpg';
 import { useNavigate } from 'react-router-dom';
 import DeliveryImage from '../../images/delivery-man.png';
 import { useAuth } from '../../hooks/useAuth';
 import { RegisterSuccessStep } from './RegisterSuccessStep';
+// Import Google reCAPTCHA component
+import ReCAPTCHA from 'react-google-recaptcha';
+// Import reCAPTCHA configuration
+import { recaptchaConfig } from '../../config/recaptcha';
 
 /**
- * Register component - Displays the Register/Signup page with animations
+ * Extend Window interface to include grecaptcha property
+ * This fixes TypeScript errors when accessing window.grecaptcha
+ */
+declare global {
+  interface Window {
+    grecaptcha?: {
+      ready: (callback: () => void) => void;
+      execute: (siteKey: string, options: { action: string }) => Promise<string>;
+      render: (container: string | HTMLElement, parameters: object) => number;
+    };
+  }
+}
+
+/**
+ * Register component - Displays the Register/Signup page with animations and reCAPTCHA protection
  * @returns {JSX.Element} The Register page component
  */
 export default function Register() {
@@ -29,7 +46,6 @@ export default function Register() {
     password: '',
     confirmPassword: '',
     agreeToTerms: false,
-    agreeToMarketing: false,
   });
 
   // UI state and validation
@@ -102,6 +118,87 @@ export default function Register() {
   const navigate = useNavigate();
   const { signUp } = useAuth();
 
+  // reCAPTCHA state
+  const [captchaValue, setCaptchaValue] = useState<string | null>(null);
+  const [recaptchaError, setRecaptchaError] = useState(false);
+  const recaptchaRef = useRef<ReCAPTCHA>(null);
+
+  /**
+   * Check if reCAPTCHA script is loaded and available
+   * This helps detect issues with script loading in production
+   */
+  useEffect(() => {
+    // Check if reCAPTCHA is enabled in config
+    if (!recaptchaConfig.enabled || recaptchaConfig.siteKey === 'disabled') {
+      return;
+    }
+
+    // Only inject if not already present
+    if (!document.querySelector('script[src*="recaptcha"]')) {
+      // Create script element WITHOUT the problematic callback
+      const script = document.createElement('script');
+      script.src = `https://www.google.com/recaptcha/api.js`;
+      script.async = true;
+      script.defer = true;
+      
+      // Add onload handler to detect successful script loading
+      script.onload = () => {
+        console.log('✅ reCAPTCHA script loaded successfully');
+        // Give a shorter delay for grecaptcha to initialize
+        setTimeout(() => {
+          if (window.grecaptcha) {
+            console.log('✅ reCAPTCHA object available, waiting for ready state...');
+            window.grecaptcha.ready(() => {
+              console.log('✅ reCAPTCHA is ready and initialized');
+              setRecaptchaError(false);
+            });
+          } else {
+            console.log('⚠️ reCAPTCHA object not available yet, but proceeding anyway');
+            // Still set loading to false so the component can try to render
+            setRecaptchaError(false);
+          }
+        }, 800); // Reduced delay
+      };
+      
+      // Add error handler
+      script.onerror = () => {
+        console.error('❌ Failed to load reCAPTCHA script');
+        setRecaptchaError(true);
+      };
+      
+      // Append to document
+      document.head.appendChild(script);
+      console.log('📝 reCAPTCHA script injected (without callback)');
+    }
+  }, []);
+
+  /**
+   * Handle reCAPTCHA change
+   * @param {string | null} value - The reCAPTCHA token value
+   */
+  const handleCaptchaChange = (value: string | null) => {
+    setCaptchaValue(value);
+    setRecaptchaError(false);
+    if (value) {
+      setErrors(prev => ({ ...prev, general: '' }));
+    }
+  };
+
+  /**
+   * Handle reCAPTCHA expiration
+   */
+  const handleCaptchaExpired = () => {
+    setCaptchaValue(null);
+    setErrors(prev => ({ ...prev, general: 'reCAPTCHA has expired. Please verify again.' }));
+  };
+
+  /**
+   * Handle reCAPTCHA error (when it fails to load)
+   */
+  const handleCaptchaError = () => {
+    setRecaptchaError(true);
+    setErrors(prev => ({ ...prev, general: 'reCAPTCHA failed to load. Please check your internet connection and try again.' }));
+  };
 
   // Handle form input changes with real-time validation
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -130,15 +227,66 @@ export default function Register() {
     }));
   };
 
-  // Handle phone number change with real-time validation
+  // Handle phone number change with professional validation and auto-detect country
   const handlePhoneChange = (value?: string) => {
-    // First update the phone number in the form data
+    // Update the phone number in form data
     setFormData((prev) => ({ ...prev, phoneNumber: value || '' }));
     
     // Mark phone field as touched
     setTouched((prev) => ({ ...prev, phoneNumber: true }));
     
-    // Real-time validation for phone number
+    // Auto-detect and set country based on phone number
+    if (value) {
+      try {
+        const phoneNumber = parsePhoneNumber(value);
+        if (phoneNumber && phoneNumber.country) {
+          // Get the country name from country code
+          const countryNames: Record<string, string> = {
+            'GH': 'Ghana',
+            'NG': 'Nigeria',
+            'US': 'United States',
+            'CA': 'Canada',
+            'GB': 'United Kingdom',
+            'DE': 'Germany',
+            'FR': 'France',
+            'IT': 'Italy',
+            'ES': 'Spain',
+            'NL': 'Netherlands',
+            'BE': 'Belgium',
+            'CH': 'Switzerland',
+            'AT': 'Austria',
+            'DK': 'Denmark',
+            'SE': 'Sweden',
+            'NO': 'Norway',
+            'FI': 'Finland',
+            'PT': 'Portugal',
+            'IE': 'Ireland',
+            'PL': 'Poland',
+            'CZ': 'Czech Republic',
+            'IN': 'India',
+            'CN': 'China',
+            'JP': 'Japan',
+            'KR': 'South Korea',
+            'AU': 'Australia',
+            'NZ': 'New Zealand',
+            'ZA': 'South Africa',
+            'BR': 'Brazil',
+            'MX': 'Mexico',
+            'AR': 'Argentina',
+            'CL': 'Chile',
+          };
+          
+          const countryName = countryNames[phoneNumber.country] || phoneNumber.country;
+          setFormData((prev) => ({ ...prev, country: countryName }));
+          setErrors((prev) => ({ ...prev, country: '' }));
+        }
+      } catch (error) {
+        // If parsing fails, just continue with validation
+        console.log('Could not parse phone number for country detection');
+      }
+    }
+    
+    // Professional validation using isValidPhoneNumber
     if (value && !isValidPhoneNumber(value)) {
       setPhoneError('Please enter a valid phone number');
       setErrors((prev) => ({ ...prev, phoneNumber: 'Please enter a valid phone number' }));
@@ -146,44 +294,12 @@ export default function Register() {
       setPhoneError('Phone number is required');
       setErrors((prev) => ({ ...prev, phoneNumber: 'Phone number is required' }));
     } else {
-      // Clear any phone error
+      // Clear any phone error - number is valid
       setPhoneError('');
       setErrors((prev) => ({ ...prev, phoneNumber: '' }));
     }
-    
-    // Auto-set country based on phone number using libphonenumber-js
-    if (value && isValidPhoneNumber(value)) {
-      try {
-        // Parse the phone number to get country information
-        const phoneNumberData = parsePhoneNumber(value);
-        
-        if (phoneNumberData && phoneNumberData.country) {
-          // Get the country name from the country code
-          const countryName = new Intl.DisplayNames(['en'], { type: 'region' }).of(phoneNumberData.country);
-          
-          if (countryName) {
-            // Update the country field with the detected country name
-            // Use a separate state update to ensure it renders properly
-            setTimeout(() => {
-              setFormData((prev) => {
-                const updated = { ...prev, country: countryName };
-                return updated;
-              });
-              
-              // Mark the country field as touched to trigger validation
-              setTouched((prev) => ({ ...prev, country: true }));
-              
-              // Clear any country field error since we've set it automatically
-              setErrors((prev) => ({ ...prev, country: '' }));
-            }, 0);
-          }
-        }
-      } catch (error) {
-        // If there's an error parsing the phone number, don't update the country
-        console.log('Error detecting country from phone number:', error);
-      }
-    }
   };
+
 
   // Email validation helper
   const isValidEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -198,8 +314,19 @@ export default function Register() {
       case 'email':
         if (!data.email) return 'Email is required';
         return !isValidEmail(data.email) ? 'Please enter a valid email address' : '';
+      case 'address':
+        if (!data.address) return 'Address is required';
+        if (data.address.length < 5) return 'Please enter a valid address (minimum 5 characters)';
+        return '';
+      case 'city':
+        return !data.city ? 'City is required' : '';
+      case 'state':
+        return !data.state ? 'State/Province is required' : '';
+      case 'zip':
+        return !data.zip ? 'ZIP/Postal code is required' : '';
+      case 'country':
+        return !data.country ? 'Country is required' : '';
       case 'password':
-        if (!data.password) return 'Password is required';
         return data.password.length < 8 ? 'Password must be at least 8 characters' : '';
       case 'confirmPassword':
         if (!data.confirmPassword) return 'Please confirm your password';
@@ -207,8 +334,6 @@ export default function Register() {
       case 'phoneNumber':
         if (!data.phoneNumber) return 'Phone number is required';
         return !isValidPhoneNumber(data.phoneNumber) ? 'Valid phone number is required' : '';
-      case 'country':
-        return !data.country ? 'Country is required' : '';
       case 'agreeToTerms':
         return !data.agreeToTerms ? 'You must agree to the terms of service' : '';
       default:
@@ -241,6 +366,10 @@ export default function Register() {
     newErrors.password = validateField('password', formData);
     newErrors.confirmPassword = validateField('confirmPassword', formData);
     newErrors.phoneNumber = validateField('phoneNumber', formData);
+    newErrors.address = validateField('address', formData);
+    newErrors.city = validateField('city', formData);
+    newErrors.state = validateField('state', formData);
+    newErrors.zip = validateField('zip', formData);
     newErrors.country = validateField('country', formData);
     newErrors.agreeToTerms = validateField('agreeToTerms', formData);
     
@@ -251,6 +380,12 @@ export default function Register() {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     // Prevent default form submission behavior
     e.preventDefault();
+    
+    // Validate reCAPTCHA (only if reCAPTCHA is enabled, loaded without errors, and we're not in a fallback state)
+    if (recaptchaConfig.enabled && recaptchaConfig.siteKey !== 'disabled' && !recaptchaError && !captchaValue) {
+      setErrors(prev => ({ ...prev, general: 'Please verify that you are not a robot.' }));
+      return;
+    }
     
     // Validate form
     const newErrors = validate();
@@ -280,6 +415,10 @@ export default function Register() {
         firstName: formData.firstName,
         lastName: formData.lastName,
         phone: formData.phoneNumber,
+        streetAddress: formData.address,
+        city: formData.city,
+        country: formData.country,
+        postalCode: formData.zip,
       });
 
       if (!result.error) {
@@ -306,7 +445,6 @@ export default function Register() {
           password: '',
           confirmPassword: '',
           agreeToTerms: false,
-          agreeToMarketing: false,
         });
         setTouched({
           firstName: false,
@@ -350,7 +488,6 @@ export default function Register() {
         setErrors((prev) => ({ ...prev, general: userFriendlyMessage }));
       }
     } catch (err) {
-      console.error('Registration error:', err);
       setErrors(prev => ({ 
         ...prev, 
         general: 'Registration is temporarily unavailable. Please try again in a few minutes.' 
@@ -369,10 +506,16 @@ export default function Register() {
     formData.phoneNumber &&
     isValidPhoneNumber(formData.phoneNumber) &&
     !phoneError &&
+    formData.address &&
+    formData.city &&
+    formData.state &&
+    formData.zip &&
+    formData.country &&
     formData.password &&
     formData.password.length >= 8 &&
     formData.password === formData.confirmPassword &&
-    formData.agreeToTerms;
+    formData.agreeToTerms &&
+    (!recaptchaConfig.enabled || recaptchaError || captchaValue);
 
   const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
     const { name } = e.target;
@@ -522,20 +665,25 @@ export default function Register() {
                     <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700 mb-1">
                       Phone Number *
                     </label>
-                    <PhoneInput
-                      id="phoneNumber"
-                      name="phoneNumber"
-                      value={formData.phoneNumber}
-                      onChange={handlePhoneChange}
-                      placeholder="Enter phone number"
-                      className={cn(
-                        'w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all duration-200 outline-none',
-                        phoneError ? 'border-red-300' : 'border-gray-300'
-                      )}
-                      data-testid="phone-input"
-                      aria-invalid={!!phoneError}
-                      aria-describedby="phoneNumber-error"
-                    />
+
+                    <div className="relative">
+                      <PhoneInput
+                        id="phoneNumber"
+                        international
+                        defaultCountry="GH"
+                        value={formData.phoneNumber}
+                        onChange={(value) => {
+                          handlePhoneChange(value);
+                        }}
+                        className={cn(
+                          'w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all duration-200 outline-none',
+                          phoneError ? 'border-red-300' : 'border-gray-300'
+                        )}
+                        aria-invalid={!!phoneError}
+                        aria-describedby="phoneNumber-error"
+                      />
+                    </div>
+
                     {phoneError && (
                       <p id="phoneNumber-error" className="mt-1 text-sm text-red-600">
                         {phoneError}
@@ -545,13 +693,13 @@ export default function Register() {
                   
                   {/* Address Information Section */}
                   <div className="mt-4 mb-2">
-                    <h3 className="text-md font-semibold text-gray-700">Address Information</h3>
-                    <p className="text-sm text-gray-500 mb-3">This information will be used for shipping documents</p>
+                    <h3 className="text-md font-semibold text-gray-700">Address Information *</h3>
+                    <p className="text-sm text-gray-500 mb-3">All address fields are required for shipping documents</p>
                   </div>
                   
                   <div>
                     <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-1">
-                      Address
+                      Street Address *
                     </label>
                     <input
                       type="text"
@@ -560,13 +708,14 @@ export default function Register() {
                       value={formData.address}
                       onChange={handleInputChange}
                       onBlur={handleBlur}
-                      placeholder="123 Main St"
+                      placeholder="123 Main Street"
                       className={cn(
                         'w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all duration-200 outline-none',
                         errors.address && touched.address ? 'border-red-300' : 'border-gray-300'
                       )}
                       aria-invalid={!!errors.address}
                       aria-describedby="address-error"
+                      required
                     />
                     {errors.address && touched.address && (
                       <p id="address-error" className="mt-1 text-sm text-red-600">
@@ -578,7 +727,7 @@ export default function Register() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-1">
-                        City
+                        City *
                       </label>
                       <input
                         type="text"
@@ -594,6 +743,7 @@ export default function Register() {
                         )}
                         aria-invalid={!!errors.city}
                         aria-describedby="city-error"
+                        required
                       />
                       {errors.city && touched.city && (
                         <p id="city-error" className="mt-1 text-sm text-red-600">
@@ -603,7 +753,7 @@ export default function Register() {
                     </div>
                     <div>
                       <label htmlFor="state" className="block text-sm font-medium text-gray-700 mb-1">
-                        State/Province
+                        State/Province *
                       </label>
                       <input
                         type="text"
@@ -615,10 +765,11 @@ export default function Register() {
                         placeholder="NY"
                         className={cn(
                           'w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all duration-200 outline-none',
-                          errors.state && touched.state ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-red-500 focus:border-red-500'
+                          errors.state && touched.state ? 'border-red-300' : 'border-gray-300'
                         )}
                         aria-invalid={!!errors.state}
                         aria-describedby="state-error"
+                        required
                       />
                       {errors.state && touched.state && (
                         <p id="state-error" className="mt-1 text-sm text-red-600">
@@ -631,7 +782,7 @@ export default function Register() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label htmlFor="zip" className="block text-sm font-medium text-gray-700 mb-1">
-                        Postal/ZIP Code
+                        Postal/ZIP Code *
                       </label>
                       <input
                         type="text"
@@ -647,6 +798,7 @@ export default function Register() {
                         )}
                         aria-invalid={!!errors.zip}
                         aria-describedby="zip-error"
+                        required
                       />
                       {errors.zip && touched.zip && (
                         <p id="zip-error" className="mt-1 text-sm text-red-600">
@@ -656,23 +808,26 @@ export default function Register() {
                     </div>
                     <div>
                       <label htmlFor="country" className="block text-sm font-medium text-gray-700 mb-1">
-                        Country *
+                        Country * 
                       </label>
                       <input
                         type="text"
                         id="country"
                         name="country"
                         value={formData.country}
-                        onChange={handleInputChange}
-                        onBlur={handleBlur}
-                        placeholder="United States"
+                        readOnly
+                        placeholder="Enter phone number to auto-fill"
                         className={cn(
-                          'w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all duration-200 outline-none',
+                          'w-full px-4 py-3 border rounded-lg transition-all duration-200 outline-none bg-gray-50 cursor-not-allowed',
                           errors.country && touched.country ? 'border-red-300' : 'border-gray-300'
                         )}
                         aria-invalid={!!errors.country}
-                        aria-describedby="country-error"
+                        aria-describedby="country-help"
+                        required
                       />
+                      <p id="country-help" className="mt-1 text-xs text-gray-500">
+                        Country is automatically detected from your phone number
+                      </p>
                       {errors.country && touched.country && (
                         <p id="country-error" className="mt-1 text-sm text-red-600">
                           {errors.country}
@@ -778,42 +933,45 @@ export default function Register() {
                       <span className="text-sm text-gray-700">
                         I agree to the{' '}
                         <a 
-                          href="#" 
-                          className="text-red-500 hover:text-red-600 font-medium"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            // TODO: Open terms of service modal or navigate to terms page
-                          }}
+                          href="/terms-of-service" 
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-red-500 hover:text-red-600 font-medium underline"
                         >
-                          terms of service
+                          Terms of Service
+                        </a>
+                        {' '}and{' '}
+                        <a 
+                          href="/privacy-policy" 
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-red-500 hover:text-red-600 font-medium underline"
+                        >
+                          Privacy Policy
                         </a>
                       </span>
                     </label>
                     {errors.agreeToTerms && touched.agreeToTerms && (
                       <p className="ml-8 text-sm text-red-600">You must agree to the terms and conditions</p>
                     )}
-                    <label className="flex items-start space-x-3 cursor-pointer">
-                      <div className="relative">
-                        <input
-                          type="checkbox"
-                          name="agreeToMarketing"
-                          checked={formData.agreeToMarketing}
-                          onChange={handleInputChange}
-                          className="sr-only"
-                          aria-label="I agree to receive marketing communications"
-                        />
-                        <div
-                          className={cn(
-                            'w-5 h-5 border-2 rounded flex items-center justify-center transition-colors duration-200 p-2',
-                            formData.agreeToMarketing ? 'bg-red-500 border-red-500' : 'border-gray-300'
-                          )}
-                        >
-                          {formData.agreeToMarketing && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
-                        </div>
-                      </div>
-                      <span className="text-sm text-gray-700 pb-4">I agree to receive marketing communications</span>
-                    </label>
                   </div>
+
+                  {/* Google reCAPTCHA */}
+                  {recaptchaConfig.enabled && recaptchaConfig.siteKey && (
+                    <div className="recaptcha-container">
+                      <ReCAPTCHA
+                        ref={recaptchaRef}
+                        sitekey={recaptchaConfig.siteKey}
+                        theme={recaptchaConfig.theme}
+                        size={recaptchaConfig.size}
+                        onChange={handleCaptchaChange}
+                        onExpired={handleCaptchaExpired}
+                        onErrored={handleCaptchaError}
+                        className="mt-2 mb-2"
+                      />
+                    </div>
+                  )}
+
                   <button
                     type="submit"
                     disabled={!isFormValid}

@@ -40,7 +40,7 @@ export default function ResendVerification() {
       const result = await authService.resendEmailVerification(email);
       
       if (result.error) {
-        setError(result.error.message || 'Failed to send verification email');
+        setError(result.error || 'Failed to send verification email');
       } else {
         setSuccess(true);
         setMessage('Verification email sent successfully! Please check your inbox and spam folder.');

@@ -2,21 +2,40 @@
 
 A comprehensive cargo management platform built with React, TypeScript, and Vite, featuring complete customer account management, shipment tracking, and cross-border warehouse integration.
 
+## ⚡ Recent Updates
+
+### Redux Toolkit Migration (2025-10-09)
+Successfully migrated authentication system from Context API to Redux Toolkit for better state management:
+
+- ✅ **Redux Store Setup** - Centralized state management with 4 slices (auth, packages, notifications, ui)
+- ✅ **RTK Query Integration** - Automatic caching with 5-minute expiry
+- ✅ **Redux Persist** - Session persistence across page refreshes
+- ✅ **Auth Protection** - ReduxAuthGuard for route protection
+- ✅ **Consistent Data** - All components (Sidebar, Navbar, Settings) use same Redux source
+- ✅ **Profile Pictures** - Fixed avatar loading with proper Supabase storage URL handling
+- ✅ **Loading States** - Professional loading feedback throughout
+- ✅ **Account Status Security** - Database-driven access control with real-time enforcement
+- ✅ **Pre-Login Status Check** - Beautiful UI warnings before authentication attempts
+
+**Documentation:** See `REDUX_SETUP.md`, `REDUX_QUICK_REFERENCE.md`, `ACCOUNT_STATUS_SECURITY.md`, `PRE_LOGIN_STATUS_CHECK.md` and related docs in project root.
+
 ## 🚀 Quick Start
 
 ```bash
-# Install dependencies
-npm install
+# Install dependencies (using pnpm)
+pnpm install
 
 # Start development server
-npm run dev
+pnpm dev
 
 # Build for production
-npm run build
+pnpm build
 
 # Run tests
-npm run test
+pnpm test
 ```
+
+**Note**: This project uses **pnpm** as the package manager for better performance and disk space efficiency.
 
 ## 📋 Overview
 
@@ -44,9 +63,19 @@ mainapp/
 │   │   ├── ui/           # Base UI components
 │   │   ├── settings/     # Settings components
 │   │   └── support/      # Support components
-│   ├── context/          # React contexts
+│   ├── context/          # React contexts (legacy - migrating to Redux)
 │   │   ├── AuthProvider.tsx    # Authentication context
 │   │   └── ThemeProvider.tsx   # Theme management
+│   ├── store/            # Redux state management
+│   │   ├── store.ts      # Redux store configuration
+│   │   ├── hooks.ts      # Typed Redux hooks
+│   │   ├── api/          # RTK Query API with caching
+│   │   └── slices/       # Redux slices
+│   │       ├── authSlice.ts        # Authentication state
+│   │       ├── packagesSlice.ts    # Package management
+│   │       ├── notificationsSlice.ts # Notifications
+│   │       └── uiSlice.ts          # UI state
+│   ├── services/         # API services
 │   ├── hooks/            # Custom hooks
 │   ├── landing/          # Landing page components
 │   │   ├── home/         # Home page
@@ -57,6 +86,38 @@ mainapp/
 │   └── images/           # Image assets
 └── docs/                 # Documentation
 ```
+
+## 🔧 State Management & Caching
+
+This application uses **Redux Toolkit** with **RTK Query** for state management and automatic caching:
+
+### Features
+- ✅ **Centralized State** - Single source of truth for all app state
+- ✅ **Automatic Caching** - 5-minute cache for API responses with RTK Query
+- ✅ **State Persistence** - Auth state persisted to localStorage
+- ✅ **Type Safety** - Full TypeScript support throughout
+- ✅ **Optimistic Updates** - Instant UI updates with automatic rollback on errors
+- ✅ **Real-time Polling** - Optional polling for real-time data updates
+- ✅ **Redux DevTools** - Time-travel debugging in development
+
+### Quick Reference
+```typescript
+// Fetch packages with automatic caching
+const { data, isLoading } = useGetPackagesQuery(userId);
+
+// Update package status
+const [updateStatus] = useUpdatePackageStatusMutation();
+await updateStatus({ packageId, status: 'processing' }).unwrap();
+
+// Access Redux state
+const user = useAppSelector(state => state.auth.user);
+const packages = useAppSelector(selectPackages);
+```
+
+📚 **Documentation:**
+- [Redux Setup Guide](./REDUX_SETUP.md) - Complete implementation guide
+- [Quick Reference](./REDUX_QUICK_REFERENCE.md) - Common operations cheat sheet
+- [Redis Caching](./REDIS_CACHING.md) - Server-side caching with Upstash Redis
 
 ## 🔐 Authentication & Account Management
 
@@ -168,20 +229,33 @@ POST /api/auth/reset-password
 ### 4. Dashboard & Account Status Integration
 
 **Frontend Components:**
-- `Dashboard` - Main dashboard with status-aware content
-- `AccountStatusBanner` - Status notifications and actions
-- `QuickActions` - Status-based action buttons
+- `Dashboard` - Professional, responsive main dashboard with clean design
+- `PackageIntakeWidget` - Real-time package status display
+- `BrandSlider` - Animated logo carousel for popular US brands
 
-**Status-Based Dashboard Variants:**
+**Dashboard Features:**
+- ✅ **Professional Design** - Clean white backgrounds, strategic red accents, no unnecessary gradients
+- ✅ **Fully Responsive** - Optimized for mobile, tablet, and desktop (max-width: 7xl with proper padding)
+- ✅ **Address Management** - Professional address card with individual field copying
+- ✅ **Smart Alerts** - Important address usage guidelines with professional styling
+- ✅ **Brand Showcase** - Dual display (grid for mobile, animated marquee for desktop)
+- ✅ **Copy Functionality** - One-click copy for individual address fields or complete address
+- ✅ **Visual Hierarchy** - Consistent typography and spacing throughout
+
+**Dashboard Sections:**
+1. **Welcome Header** - Personalized greeting with user's first name
+2. **Address Usage Alert** - Professional warning about complete address requirements
+3. **Package Intake Widget** - Live package status and management
+4. **How It Works** - Two-step guide with shop illustration
+5. **Address Card** - Clean, copyable US shipping address display
+6. **Brand Slider** - Popular US stores with animated logo carousel
+
+**Responsive Breakpoints:**
 ```typescript
-// Dashboard content based on account status
-const DashboardContent = {
-  active: <ActiveDashboard />,
-  suspended: <SuspendedDashboard />,
-  pending_verification: <PendingVerificationDashboard />,
-  restricted: <RestrictedDashboard />,
-  closed: <ClosedAccountDashboard />
-};
+// Mobile-first responsive design
+- Mobile: Full-width, single column, grid layout for brands
+- Tablet (md): 2-column grids, larger text, improved spacing
+- Desktop (lg+): Max-width container, animated brand marquee, optimized layouts
 ```
 
 ### 5. Package Request Submission Flow
@@ -221,17 +295,179 @@ POST /api/shipments/request
 
 **Frontend Components:**
 - `ShipmentHistory` - Complete shipment history with filtering
-- `TrackingDetails` - Real-time tracking information
-- `TrackingTimeline` - Visual tracking progress
+- `TrackingPage` - Apple-style tracking interface with frosted glass design
+- `TrackingTimeline` - Professional timeline with gradient status cards
+
+**Apple-Style Tracking Page Features:**
+- 🍎 **Frosted Glass Design** - Backdrop-blur effects with subtle gradients throughout
+- 🔍 **Hero Search Section** - Large, elegant search with pill-shaped input and gradient button
+- 📊 **Circular Progress Ring** - Apple Watch-style progress indicator with SVG gradients
+- 🎨 **Gradient Status Cards** - Color-coded gradients (green for completed, blue for current, gray for pending)
+- ⏱️ **Professional Timeline** - Large gradient icon badges (56px rounded squares)
+- 📱 **Fully Responsive** - Mobile-first design with smooth animations
+- ✨ **Smooth Animations** - Framer Motion fade-ins and slide-ins throughout
+
+**Visual Design Elements:**
+```typescript
+// Frosted glass cards with backdrop blur
+- Background: bg-white/60 backdrop-blur-xl
+- Borders: border border-gray-200/50
+- Shadows: shadow-2xl shadow-gray-200/50
+- Border radius: rounded-3xl (24px)
+
+// Gradient buttons and badges
+- Search button: bg-gradient-to-r from-blue-500 to-indigo-600
+- Status icons: bg-gradient-to-br from-green-500 to-emerald-600
+- Progress ring: Linear gradient from blue to purple
+
+// Typography
+- Headers: text-4xl to text-6xl font-semibold
+- Body text: font-light for elegance
+- Tracking number: font-mono for clarity
+```
 
 **Backend Integration:**
 ```typescript
 // Get shipment history
 GET /api/shipments/history?page=1&limit=20&status=all&dateRange=30days
 
-// Real-time tracking
-GET /api/shipments/track/:trackingNumber
+// Real-time tracking via TrackingService
+const result = await TrackingService.trackByNumber(trackingId, userId);
+// Returns professional tracking data with status codes and customer messages
+
+// WebSocket support (future)
 WebSocket: /ws/tracking/:trackingNumber
+```
+
+### 6.1. Package Delivery Codes & Warehouse Pickup
+
+**Overview:**
+The delivery codes system provides customers with unique 6-digit codes for picking up packages that have arrived at the warehouse. Each package receives its own verification code that customers must present to warehouse staff during pickup.
+
+**Frontend Components:**
+- `PackageIntake` - Displays packages with delivery codes in dedicated "Ready for Pickup" section
+- `DeliveryCodeCard` - Individual card showing package details and delivery code
+- `DeliveryCodeService` - Service layer for managing delivery code operations
+
+**Key Features:**
+- 📦 **Unique 6-Digit Codes** - Each package gets a unique verification code
+- 🔐 **Secure Pickup** - Codes must be verified by warehouse staff before package release
+- 📋 **One-Click Copy** - Copy codes to clipboard with single click
+- ⏰ **Timestamp Tracking** - Shows code generation time and optional expiration
+- 📱 **Responsive Design** - Professional card-based layout with visual hierarchy
+- 🔄 **Real-time Updates** - Codes load automatically when packages arrive at warehouse
+
+**Backend Integration:**
+```typescript
+// Fetch customer delivery codes via Supabase RPC function
+const { data, error } = await supabase.rpc('get_customer_delivery_codes', {
+  p_user_id: currentUser.id
+});
+
+// Response format
+interface DeliveryCode {
+  package_id: string;              // Package identifier (e.g., "PKG-123456")
+  tracking_number: string;         // Package tracking number
+  delivery_code: string;           // 6-digit verification code (e.g., "847293")
+  shipment_tracking: string;       // Parent shipment tracking number
+  status: string;                  // Always "arrived" for ready-to-pickup packages
+  generated_at: string;            // Timestamp when code was generated
+  expires_at: string | null;       // Optional expiration (null = no expiration)
+  description: string;             // Package description
+}
+```
+
+**Service Layer Implementation:**
+```typescript
+// DeliveryCodeService methods
+class DeliveryCodeService {
+  // Get all delivery codes for logged-in customer
+  async getCustomerDeliveryCodes(userId: string): Promise<DeliveryCodeResponse>;
+  
+  // Get delivery code for specific package
+  async getPackageDeliveryCode(userId: string, packageId: string): Promise<DeliveryCodeResponse>;
+  
+  // Validate code expiration
+  isCodeValid(deliveryCode: DeliveryCode): boolean;
+  
+  // Format code for display (XXX-XXX)
+  formatCode(code: string): string;
+  
+  // Get count of packages ready for pickup
+  async getReadyForPickupCount(userId: string): Promise<number>;
+}
+```
+
+**User Experience Flow:**
+1. **Package Arrival** - Package arrives at warehouse and status changes to "arrived"
+2. **Code Generation** - System auto-generates unique 6-digit delivery code
+3. **Customer Notification** - Customer sees package in "Ready for Pickup" section
+4. **Code Display** - Delivery code prominently displayed in green card with copy button
+5. **Warehouse Pickup** - Customer visits warehouse and provides code to staff
+6. **Verification** - Staff verifies code and releases package to customer
+
+**UI/UX Highlights:**
+- **Visual Hierarchy** - Green gradient cards distinguish ready packages from incoming packages
+- **Prominent Code Display** - Large, monospace font for easy reading (text-3xl font-mono)
+- **Copy Functionality** - One-click copy with visual feedback ("Copied!" tooltip)
+- **Warning Banner** - Yellow alert reminding customers to show code to staff
+- **Package Details** - Shows package ID, tracking number, description, and shipment info
+- **Timestamp Info** - Displays code generation time and expiration (if applicable)
+- **Mobile Responsive** - Grid layout adapts: 1 column (mobile), 2 columns (tablet), 3 columns (desktop)
+
+**Security & Validation:**
+- ✅ **User Authentication** - Only authenticated users can fetch their delivery codes
+- ✅ **User ID Validation** - RPC function validates user ID before returning codes
+- ✅ **Code Uniqueness** - Each package has unique 6-digit code
+- ✅ **Error Handling** - Comprehensive error handling with user-friendly messages
+- ✅ **Expiration Checking** - Optional code expiration validation
+
+**Database Requirements:**
+- Supabase RPC function: `get_customer_delivery_codes(p_user_id UUID)`
+- Returns packages with status "arrived" and associated delivery codes
+- Filters by authenticated user's ID for security
+
+**Component Location:**
+- Service: `/src/services/deliveryCodeService.ts`
+- Component: `/src/app/packageIntake/packageIntake.tsx` (integrated)
+- Interface: Displays at top of Package Intake page when codes exist
+
+**Example Usage:**
+```typescript
+// In Package Intake component
+import { deliveryCodeService, type DeliveryCode } from '../../services/deliveryCodeService';
+
+// Fetch delivery codes on component mount
+useEffect(() => {
+  const loadDeliveryCodes = async () => {
+    if (!user?.id) return;
+    
+    const response = await deliveryCodeService.getCustomerDeliveryCodes(user.id);
+    
+    if (response.success && response.data) {
+      setDeliveryCodes(response.data);
+      console.log('📦 Loaded delivery codes:', response.data.length);
+    }
+  };
+  
+  loadDeliveryCodes();
+}, [user?.id]);
+
+// Display delivery codes
+{deliveryCodes.length > 0 && (
+  <div className="mb-8">
+    <h2>📦 Packages Ready for Pickup</h2>
+    <p>{deliveryCodes.length} packages waiting at warehouse</p>
+    
+    {deliveryCodes.map((code) => (
+      <DeliveryCodeCard 
+        key={code.package_id}
+        deliveryCode={code}
+        onCopyCode={handleCopyCode}
+      />
+    ))}
+  </div>
+)}
 ```
 
 ### 7. Account Settings & Preferences
@@ -474,18 +710,6 @@ const UserAvatar = ({ user }: { user: UserProfile }) => {
 ```
 
 The default avatar system follows these principles:
-
-1. **Reliability**: Uses local SVG asset instead of external services
-2. **Consistency**: Same default avatar appears across all components
-3. **Performance**: Lightweight SVG optimized for fast loading
-4. **Error Handling**: Graceful fallback if user's custom image fails to load
-5. **Accessibility**: Proper alt text and semantic HTML
-
-## 📊 State Management
-
-### Context Providers
-
-```typescript
 // Auth Context
 interface AuthContextType {
   user: User | null;
@@ -782,6 +1006,177 @@ const { data: addressData, error: addressError } = await supabase
 ```
 
 This change prevents potential database errors and ensures that a consistent address is fetched for the user.
+
+### Database Security Fixes (October 2025)
+
+Fixed critical security issues in Supabase Row Level Security (RLS) policies that were causing infinite recursion errors and blocking all user operations.
+
+**Issues Fixed:**
+1. **Infinite Recursion in RLS Policies** - Users table policies were querying the same table, creating infinite loops
+2. **Missing RLS Enablement** - Several public tables had policies but RLS was not enabled
+3. **Function Security Warnings** - 45+ database functions had mutable search_path warnings
+
+**Changes Applied:**
+- ✅ Enabled RLS on `users`, `email_notification_queue`, and `email_notification_log` tables
+- ✅ Replaced recursive policies with simple `auth.uid()` checks
+- ✅ Set `search_path = ''` on all database functions for security
+- ✅ Updated `authService.createUserProfile()` to use secure RPC function instead of direct table access
+
+**Frontend Code Updates:**
+```typescript
+// OLD: Direct table access (caused RLS recursion)
+async createUserProfile(userId, email, metadata) {
+  await supabase.from('users').upsert({ ... });
+}
+
+// NEW: Secure RPC function (bypasses RLS with SECURITY DEFINER)
+async createUserProfile(userId, email, metadata) {
+  await supabase.rpc('create_user_profile_secure', { ... });
+}
+```
+
+**Results:**
+- ✅ Dashboard loads successfully
+- ✅ User profiles accessible
+- ✅ Package data queries work
+- ✅ All 500 errors resolved
+- ✅ No more infinite recursion errors
+
+For detailed technical documentation of these fixes, see [DATABASE_SECURITY_FIXES.md](./DATABASE_SECURITY_FIXES.md).
+
+### Delivery Codes RLS Fix (October 8, 2025)
+
+Fixed Row Level Security (RLS) policies on delivery/package codes tables to allow customers to view their own pickup codes.
+
+**Problem:**
+- Delivery codes were being created successfully in the database
+- RPC function `get_customer_delivery_codes()` returned `success: true` but with 0 data
+- Users could not see their packages ready for pickup
+- This was caused by missing or incorrect RLS policies on the codes table
+
+**Root Cause:**
+The `package_codes` or `delivery_codes` table had RLS enabled but lacked policies allowing authenticated users to SELECT their own codes. Even though codes were inserted successfully, the RPC function couldn't retrieve them because it ran under the user's permissions.
+
+**Solution Applied:**
+
+1. **Enabled RLS** on both `package_codes` and `delivery_codes` tables (whichever exists)
+2. **Created user SELECT policy** - Allows users to view codes for packages they own:
+   ```sql
+   CREATE POLICY "users_select_own_codes"
+   ON public.package_codes
+   FOR SELECT TO authenticated
+   USING (
+     user_id = auth.uid() 
+     OR package_id IN (
+       SELECT id FROM packages WHERE user_id = auth.uid()
+     )
+   );
+   ```
+3. **Service role full access** - Allows admin operations via service role
+4. **Set SECURITY DEFINER** on `get_customer_delivery_codes()` function - Allows it to bypass RLS
+5. **Granted proper permissions** to authenticated role
+
+**How to Apply:**
+```bash
+# Option 1: Run the fix script in Supabase SQL Editor
+# Copy contents of fix_delivery_codes_rls.sql and execute
+
+# Option 2: Diagnose first, then fix
+# Run diagnose_delivery_codes.sql to identify exact issue
+# Then run fix_delivery_codes_rls.sql
+```
+
+**Verification:**
+After applying the fix, delivery codes should appear in the "Ready for Pickup" section of the Package Intake page:
+- ✅ Green cards displaying 6-digit codes
+- ✅ Copy button functional
+- ✅ Real-time updates when new packages arrive
+- ✅ No console errors about failed queries
+
+**Files Created:**
+- `fix_delivery_codes_rls.sql` - Comprehensive fix script with verification queries
+- `diagnose_delivery_codes.sql` - Diagnostic script to identify root cause
+
+**Expected Console Output (After Fix):**
+```
+📊 Real-time status [packages-xxx]: SUBSCRIBED
+✅ Found 3 packages with delivery codes
+📊 Delivery codes response: { success: true, dataLength: 3 }
+✅ Successfully loaded delivery codes: 3
+📦 First delivery code: { package_id: "...", delivery_code: "847293", ... }
+```
+
+**Root Cause Discovered:**
+The application had TWO conflicting delivery code systems:
+1. **System 1** (Working): `packages.delivery_auth_code` column - had 24 codes ✅
+2. **System 2** (Empty): `delivery_codes` table - was empty and unused ❌
+
+The frontend was querying the wrong system (empty `delivery_codes` table via RPC) instead of the `packages.delivery_auth_code` column that actually contained the codes.
+
+**Solution Applied:**
+- Updated `deliveryCodeService.ts` to query `packages` table directly
+- Removed RPC function dependency
+- Maps `delivery_auth_code` to `delivery_code` in the response
+- Uses RLS policies on `packages` table (already working)
+- Simple, direct query: `SELECT ... FROM packages WHERE user_id = ? AND status = 'arrived' AND delivery_auth_code IS NOT NULL`
+
+**Common Issues & Solutions:**
+| Issue | Cause | Solution |
+|-------|-------|----------|
+| Still getting 0 codes | Table has different name | Run diagnostic script to find actual table name |
+| Permission denied error | Missing GRANT statements | Ensure authenticated role has SELECT permission |
+| Function not found | RPC function doesn't exist | Check Supabase Functions panel and create if needed |
+| Codes show for wrong user | RLS policy incorrect | Verify policy uses `auth.uid()` correctly |
+
+---
+
+### 📧 Email Notifications Fix (October 8, 2025)
+
+**Problem:** Email notifications for package status updates not working.
+
+**Root Causes:**
+1. **Email domain not verified** with Resend
+2. **RESEND_API_KEY not configured** in Supabase
+3. **email_notifications_log table missing**
+4. **Edge function not deployed**
+
+**Solution Applied:**
+1. **Temporary Fix:** Updated edge function to use Resend test domain (`onboarding@resend.dev`)
+2. **Created SQL script:** `create_email_log_table.sql` to set up email logging
+3. **Created debugging guide:** `DEBUG_EMAIL_SERVICE.md` with comprehensive troubleshooting
+
+**Quick Fix Steps:**
+```bash
+# 1. Create email log table
+# Run create_email_log_table.sql in Supabase SQL Editor
+
+# 2. Set up Resend API Key
+# Go to Supabase Dashboard → Edge Functions → Secrets
+# Add: RESEND_API_KEY = your-api-key-from-resend
+
+# 3. Deploy the edge function
+npx supabase functions deploy send-package-status-email
+
+# 4. Test by updating a package status
+```
+
+**Production Setup:**
+1. Verify custom domain (`vanguardcargo.co`) in Resend
+2. Update edge function line 219 to use custom domain:
+   ```typescript
+   from: 'Vanguard Cargo <noreply@vanguardcargo.co>',
+   ```
+3. Redeploy edge function
+
+**Files Created/Modified:**
+- ✅ `supabase/functions/send-package-status-email/index.ts` - Updated to use test domain
+- ✅ `create_email_log_table.sql` - Creates email logging table
+- ✅ `DEBUG_EMAIL_SERVICE.md` - Complete debugging guide
+
+**Expected Flow:**
+- Package status updated → Email sent via Resend → Log saved to database → User receives email
+
+**Documentation:** See `DEBUG_EMAIL_SERVICE.md` for detailed troubleshooting.
 
 ---
 

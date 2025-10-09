@@ -1,7 +1,9 @@
 import { useState, useRef, useEffect } from "react";
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../../hooks/useAuth';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import { loginUser, selectIsLoading } from '@/store/slices/authSlice';
+import { authService } from '@/services/authService';
 import DeliveryImage from '../../images/deliveryparcel.jpg';
 import LoginBg from '../../images/register-bg.jpg';
 // Import Google reCAPTCHA component
@@ -10,6 +12,8 @@ import ReCAPTCHA from 'react-google-recaptcha';
 import { recaptchaConfig } from '../../config/recaptcha';
 // Import email verification banner component
 import { EmailVerificationBanner } from '../../components/ui/EmailVerificationBanner';
+// Import account status warning modal
+import AccountStatusWarning from '../../components/ui/AccountStatusWarning';
 
 /**
  * Extend Window interface to include grecaptcha property
@@ -32,6 +36,12 @@ declare global {
  * @author Senior Software Engineer
  */
 export default function Login() {
+	// Redux hooks
+	const dispatch = useAppDispatch();
+	const isLoading = useAppSelector(selectIsLoading);
+	const navigate = useNavigate();
+	const location = useLocation();
+	
 	// Form state variables
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
@@ -50,10 +60,17 @@ export default function Login() {
 	const [captchaValue, setCaptchaValue] = useState<string | null>(null);
 	const [recaptchaError, setRecaptchaError] = useState(false);
 	const recaptchaRef = useRef<ReCAPTCHA>(null);
-	
-	const { signIn } = useAuth();
-	const navigate = useNavigate();
-	const location = useLocation();
+
+	// Account status warning modal state
+	const [showStatusWarning, setShowStatusWarning] = useState(false);
+	const [accountStatusInfo, setAccountStatusInfo] = useState<{
+		status: string;
+		message: string;
+		firstName?: string;
+	} | null>(null);
+
+	// Local loading state for pre-check
+	const [isCheckingStatus, setIsCheckingStatus] = useState(false);
 
 	/**
 	 * Handle resending email verification from banner
@@ -68,7 +85,7 @@ export default function Login() {
 			if (result.error) {
 				return {
 					success: false,
-					message: result.error.message || 'Failed to resend verification email'
+					message: result.error || 'Failed to resend verification email'
 				};
 			} else {
 				return {
@@ -102,7 +119,7 @@ export default function Login() {
 			const result = await authService.resendEmailVerification(email);
 			
 			if (result.error) {
-				setError(result.error.message || 'Failed to resend verification email');
+				setError(result.error || 'Failed to resend verification email');
 			} else {
 				setResendMessage('Verification email sent! Please check your inbox and spam folder.');
 				setShowResendVerification(false);
@@ -210,7 +227,7 @@ export default function Login() {
 	};
 
 	/**
-	 * Handle login form submission using Supabase
+	 * Handle login form submission using Redux
 	 */
 	const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
@@ -222,61 +239,127 @@ export default function Login() {
 			return;
 		}
 
-		// Removed setIsLoading(true) to prevent blue loading screen during login
-
 		try {
-			// Use Supabase AuthContext signIn function
-			const result = await signIn(email, password);
+			// Show loading state for pre-check
+			setIsCheckingStatus(true);
 			
-			if (result.error) {
-				const errorMessage = typeof result.error === 'object' && result.error !== null && 'message' in result.error
-					? (result.error as { message: string }).message
-					: result.error?.toString?.() ?? String(result.error);
-				const lowerErrorMessage = errorMessage.toLowerCase();
-				console.log('Login error details:', result.error); // Debug log
+			// STEP 1: Check account status BEFORE attempting authentication
+			console.log('🔍 Pre-login: Checking account status for', email);
+			const statusCheck = await authService.checkAccountStatus(email);
+			
+			// Debug: Log the full status check result
+			console.log('📊 Pre-login status check result:', {
+				status: statusCheck.status,
+				canLogin: statusCheck.canLogin,
+				hasMessage: !!statusCheck.message,
+				firstName: statusCheck.firstName
+			});
+			
+			if (!statusCheck.canLogin && statusCheck.message) {
+				// Account is not active - show warning modal instead of attempting login
+				console.log('🚫 Pre-login: Account not active -', statusCheck.status);
 				
-				// Check for specific error types
-				if (lowerErrorMessage.includes('email not confirmed') || 
-				    lowerErrorMessage.includes('not verified') || 
-				    lowerErrorMessage.includes('confirm your email') ||
-					lowerErrorMessage.includes('verify your email') ||
-					lowerErrorMessage.includes('emailnotverifiederror') ||
-					(typeof result.error === 'object' && result.error !== null && 'name' in result.error && (result.error as { name?: string }).name === 'EmailNotVerifiedError')) {
-					// Show email verification banner instead of regular error
-					setShowEmailVerificationBanner(true);
-					setVerificationEmail(email);
-					setError("Your email address is not verified. Please check your email and click the verification link.");
-					setShowResendVerification(true);
-				} else if (lowerErrorMessage.includes('invalid_credentials') || 
-				          lowerErrorMessage.includes('invalid login') ||
-				          lowerErrorMessage.includes('wrong password') ||
-				          lowerErrorMessage.includes('invalid password')) {
-					setError("Invalid email or password. Please check your credentials and try again.");
-					setShowResendVerification(false);
-					setShowEmailVerificationBanner(false);
-				} else if (lowerErrorMessage.includes('too_many_requests') || 
-				          lowerErrorMessage.includes('rate limit')) {
-					setError("Too many login attempts. Please wait a few minutes before trying again.");
-					setShowResendVerification(false);
-					setShowEmailVerificationBanner(false);
-				} else {
-					// Show user-friendly error message
-					setError(errorMessage || 'Login failed. Please try again.');
-					setShowResendVerification(false);
-					setShowEmailVerificationBanner(false);
-				}
-			} else {
-				// Clear any existing errors and navigate to dashboard
-				setError("");
+				// Stop loading
+				setIsCheckingStatus(false);
+				
+				// Prevent form submission
+				e.preventDefault();
+				e.stopPropagation();
+				
+				setAccountStatusInfo({
+					status: statusCheck.status || 'unknown',
+					message: statusCheck.message,
+					firstName: statusCheck.firstName
+				});
+				setShowStatusWarning(true);
+				return; // Stop here - don't attempt login
+			}
+			
+			console.log('✅ Pre-login: Account is active - proceeding with authentication');
+
+			// STEP 2: Proceed with normal login since account is active
+			const result = await dispatch(loginUser({ email, password })).unwrap();
+			
+			// Login successful - Redux will handle state updates
+			console.log('✅ Login successful!', result);
+			
+			// Clear errors
+			setError("");
+			setShowResendVerification(false);
+			setShowEmailVerificationBanner(false);
+			
+			// CRITICAL: Wait a moment for Redux Persist to save the state
+			// This prevents a race condition where navigation happens before persist completes
+			await new Promise(resolve => setTimeout(resolve, 100));
+			
+			// Navigate to the attempted page or dashboard
+			const from = (location.state as { from?: string })?.from || '/app/dashboard';
+			navigate(from, { replace: true });
+			
+		} catch (err: any) {
+			// Stop loading state
+			setIsCheckingStatus(false);
+			
+			// Handle login errors
+			const errorMessage = err?.message || String(err);
+			const lowerErrorMessage = errorMessage.toLowerCase();
+			
+			console.error('❌ Login error:', errorMessage);
+			
+			// FALLBACK: Check if error is about account status (in case pre-check failed)
+			if (lowerErrorMessage.includes('inactive') || 
+			    lowerErrorMessage.includes('suspended') || 
+			    lowerErrorMessage.includes('reported') ||
+			    lowerErrorMessage.includes('under review')) {
+				console.warn('⚠️ Account status error caught in fallback - showing modal');
+				
+				// Determine status from error message
+				let status = 'inactive';
+				if (lowerErrorMessage.includes('suspended')) status = 'suspended';
+				else if (lowerErrorMessage.includes('reported') || lowerErrorMessage.includes('under review')) status = 'reported';
+				
+				// Show the modal as fallback
+				setAccountStatusInfo({
+					status: status,
+					message: errorMessage,
+					firstName: undefined // We don't have first name in this fallback
+				});
+				setShowStatusWarning(true);
+				return; // Don't show generic error
+			}
+			
+			// Check for specific error types
+			if (lowerErrorMessage.includes('email not confirmed') || 
+			    lowerErrorMessage.includes('not verified') || 
+			    lowerErrorMessage.includes('confirm your email') ||
+				lowerErrorMessage.includes('verify your email')) {
+				// Show email verification banner
+				setShowEmailVerificationBanner(true);
+				setVerificationEmail(email);
+				setError("Your email address is not verified. Please check your email and click the verification link.");
+				setShowResendVerification(true);
+			} else if (lowerErrorMessage.includes('invalid_credentials') || 
+			          lowerErrorMessage.includes('invalid login') ||
+			          lowerErrorMessage.includes('invalid') ||
+			          lowerErrorMessage.includes('wrong password')) {
+				setError("Invalid email or password. Please check your credentials and try again.");
 				setShowResendVerification(false);
 				setShowEmailVerificationBanner(false);
-				navigate('/app');
+			} else if (lowerErrorMessage.includes('too_many_requests') || 
+			          lowerErrorMessage.includes('rate limit')) {
+				setError("Too many login attempts. Please wait a few minutes before trying again.");
+				setShowResendVerification(false);
+				setShowEmailVerificationBanner(false);
+			} else if (lowerErrorMessage.includes('profile not found')) {
+				setError("Account profile not found. Please contact support.");
+				setShowResendVerification(false);
+				setShowEmailVerificationBanner(false);
+			} else {
+				// Show user-friendly error message
+				setError(errorMessage || 'Login failed. Please try again.');
+				setShowResendVerification(false);
+				setShowEmailVerificationBanner(false);
 			}
-		} catch (err) {
-			setError(err instanceof Error ? err.message : 'Login failed. Please try again.');
-			setShowResendVerification(false);
-		} finally {
-			// Removed setIsLoading(false) to prevent loading state changes
 		}
 	};
 
@@ -284,6 +367,9 @@ export default function Login() {
 	const isFormValid = email && password && (
 		!recaptchaConfig.enabled || recaptchaError || captchaValue
 	);
+
+	// Combined loading state (checking status OR authenticating)
+	const isSubmitting = isCheckingStatus || isLoading;
 
 	return (
 		<div className="min-h-screen bg-gradient-to-br from-red-50 to-red-100 flex items-center justify-center p-4" style={{ backgroundImage: `url(${LoginBg})`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
@@ -435,14 +521,23 @@ export default function Login() {
 								{/* Submit Button */}
 								<button
 									type="submit"
-									disabled={!isFormValid}
-									className={`w-full font-semibold px-6 py-3 rounded-lg transition-all duration-200 flex items-center justify-center ${
-										isFormValid
+									disabled={!isFormValid || isSubmitting}
+									className={`w-full font-semibold px-6 py-3 rounded-lg transition-all duration-200 flex items-center justify-center gap-2 ${
+										isFormValid && !isSubmitting
 											? "bg-red-500 hover:bg-red-600 text-white transform hover:scale-105 hover:shadow-lg"
 											: "bg-gray-300 text-gray-500 cursor-not-allowed"
 									}`}
 								>
-									Sign In
+									{isSubmitting ? (
+										<>
+											<Loader2 className="w-5 h-5 animate-spin" />
+											<span>
+												{isCheckingStatus ? 'Checking account...' : 'Signing in...'}
+											</span>
+										</>
+									) : (
+										"Sign In"
+									)}
 								</button>
 
 								{/* Register Link */}
@@ -465,6 +560,19 @@ export default function Login() {
 					</div>
 				</div>
 			</div>
+
+			{/* Account Status Warning Modal */}
+			{showStatusWarning && accountStatusInfo && (
+				<AccountStatusWarning
+					status={accountStatusInfo.status}
+					message={accountStatusInfo.message}
+					firstName={accountStatusInfo.firstName}
+					onClose={() => {
+						setShowStatusWarning(false);
+						setAccountStatusInfo(null);
+					}}
+				/>
+			)}
 		</div>
 	);
 }

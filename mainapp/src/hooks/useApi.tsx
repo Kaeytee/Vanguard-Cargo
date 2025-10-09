@@ -1,6 +1,6 @@
 // Custom hook for API calls with loading states and error handling
 import { useState, useCallback } from 'react';
-import type { ApiResponse } from '../services/api';
+import type { ApiResponse } from '../types/api';
 
 export interface UseApiState<T> {
   data: T | null;

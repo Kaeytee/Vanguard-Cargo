@@ -53,7 +53,6 @@ export class PackageNotificationService {
   private initializeRealtimeNotifications() {
     // Note: Real-time subscription will be set up when user logs in
     // This is handled in the setupRealtimeForUser method
-    console.log('Package notification service initialized - real-time will be enabled on user login');
   }
 
   /**
@@ -90,8 +89,6 @@ export class PackageNotificationService {
         this.handleIncomingNotification(packageNotification);
       }
     );
-
-    console.log(`Real-time notifications set up for user: ${userId}`);
   }
 
 
@@ -131,20 +128,16 @@ export class PackageNotificationService {
    */
   private async enhanceNotificationWithPackageData(notification: PackageNotification) {
     try {
-      console.log('🔍 Enhancing notification:', notification.id, 'packageId:', notification.packageId);
       
       // Try to find the package by notification ID or message content
-      const { data: packages, error } = await supabase
+      const { data: packages, error: _error } = await supabase
         .from('packages')
         .select('id, package_id, tracking_number, store_name, description')
         .or(`id.eq.${notification.packageId},package_id.eq.${notification.packageId}`)
         .limit(1);
 
-      console.log('📦 Package query result:', { packages, error });
-
       if (packages && packages.length > 0) {
         const pkg = packages[0];
-        console.log('✅ Found package data:', pkg);
         
         // Update notification with real package data using SAME LOGIC as shipment history
         // Priority: package_id first, then tracking_number, then id as fallback
@@ -153,15 +146,8 @@ export class PackageNotificationService {
         notification.packageDetails.storeName = pkg.store_name || 'Store';
         notification.packageDetails.description = pkg.description || notification.message;
         notification.actionUrl = `/app/shipment-history`;
-        
-        console.log('🔗 Updated actionUrl to shipment history page:', notification.actionUrl);
-        console.log('📦 Tracking ID priority: package_id =', pkg.package_id, ', tracking_number =', pkg.tracking_number, ', id =', pkg.id);
-        console.log('✅ Final tracking ID:', trackingId);
-      } else {
-        console.log('❌ No package found for notification:', notification.packageId);
       }
     } catch (error) {
-      console.error('Error enhancing notification with package data:', error);
       // Keep default values if enhancement fails
     }
   }
@@ -170,8 +156,6 @@ export class PackageNotificationService {
    * Show professional in-app toast notification
    */
   private showInAppNotification(notification: PackageNotification) {
-    console.log('📦 Package Notification:', notification);
-
     // Show professional toast notification
     this.showToastNotification(notification);
 
@@ -441,7 +425,6 @@ export class PackageNotificationService {
       
     } catch (error) {
       // Fallback to simple beep
-      console.log('Web Audio not supported, using fallback');
     }
   }
 
@@ -493,7 +476,7 @@ export class PackageNotificationService {
             }
           }
         } catch (sessionError) {
-          console.error('Error parsing user session:', sessionError);
+          // Error parsing session
         }
       }
       
@@ -506,7 +489,6 @@ export class PackageNotificationService {
         this.notifications = [];
       }
     } catch (error) {
-      console.error('Error loading notifications:', error);
       // Final fallback to localStorage
       try {
         const stored = localStorage.getItem('package_notifications');
@@ -529,7 +511,7 @@ export class PackageNotificationService {
     try {
       localStorage.setItem('package_notifications', JSON.stringify(this.notifications));
     } catch (error) {
-      console.error('Error storing notifications:', error);
+      // Error storing notifications
     }
   }
 
@@ -541,7 +523,7 @@ export class PackageNotificationService {
     try {
       localStorage.removeItem('package_notifications');
     } catch (error) {
-      console.error('Error clearing notifications:', error);
+      // Error clearing notifications
     }
     this.notifyListeners();
   }
@@ -582,7 +564,6 @@ export class PackageNotificationService {
           read: false
         };
 
-        console.log('🧪 Created test notification:', testNotification);
         this.handleIncomingNotification(testNotification);
       }
     } catch (error) {
@@ -621,14 +602,12 @@ export class PackageNotificationService {
         this.storeNotifications();
         this.notifyListeners();
       } else if (backendResponse.error) {
-        console.error('Error fetching notifications from backend:', backendResponse.error);
         // For new users or if there's an error, ensure we start with empty notifications
         this.notifications = [];
         this.storeNotifications();
         this.notifyListeners();
       }
     } catch (error) {
-      console.error('Error refreshing notifications:', error);
       // For new users, start with empty notifications
       this.notifications = [];
       this.storeNotifications();
@@ -647,7 +626,6 @@ export class PackageNotificationService {
     );
     
     if (hasMockData) {
-      console.log('Clearing mock notifications for production use');
       this.clearAllNotifications();
     }
   }
@@ -660,7 +638,7 @@ export class PackageNotificationService {
       try {
         listener([...this.notifications]);
       } catch (error) {
-        console.error('Error notifying listener:', error);
+        // Error notifying listener
       }
     });
   }

@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supabase Connection Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #dc2626;
+        }
+        .input-group {
+            margin: 15px 0;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        button {
+            background: #dc2626;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #b91c1c;
+        }
+        #results {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            display: none;
+        }
+        .success {
+            background: #d1fae5;
+            border: 1px solid #10b981;
+            color: #065f46;
+        }
+        .error {
+            background: #fee2e2;
+            border: 1px solid #ef4444;
+            color: #991b1b;
+        }
+        .info {
+            background: #dbeafe;
+            border: 1px solid #3b82f6;
+            color: #1e40af;
+        }
+        pre {
+            background: #f9fafb;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Supabase Connection Test</h1>
+        <p>Test your Supabase connection and credentials</p>
+
+        <div class="input-group">
+            <label for="supabaseUrl">Supabase URL:</label>
+            <input 
+                type="text" 
+                id="supabaseUrl" 
+                placeholder="https://rsxxjcsmcrcxdmyuytzc.supabase.co"
+                value="https://rsxxjcsmcrcxdmyuytzc.supabase.co"
+            >
+        </div>
+
+        <div class="input-group">
+            <label for="anonKey">Anon Key:</label>
+            <input 
+                type="password" 
+                id="anonKey" 
+                placeholder="eyJhbGc..."
+            >
+        </div>
+
+        <button onclick="testConnection()">🔍 Test Connection</button>
+        <button onclick="testAuth()">🔐 Test Auth Endpoint</button>
+        <button onclick="clearResults()">🗑️ Clear Results</button>
+
+        <div id="results"></div>
+    </div>
+
+    <script>
+        function showResult(message, type = 'info') {
+            const results = document.getElementById('results');
+            results.style.display = 'block';
+            results.className = type;
+            results.innerHTML = message;
+        }
+
+        function clearResults() {
+            const results = document.getElementById('results');
+            results.style.display = 'none';
+            results.innerHTML = '';
+        }
+
+        async function testConnection() {
+            const url = document.getElementById('supabaseUrl').value.trim();
+            const key = document.getElementById('anonKey').value.trim();
+
+            if (!url || !key) {
+                showResult('❌ Please fill in both URL and Anon Key', 'error');
+                return;
+            }
+
+            showResult('⏳ Testing connection...', 'info');
+
+            try {
+                const response = await fetch(`${url}/rest/v1/`, {
+                    headers: {
+                        'apikey': key,
+                        'Authorization': `Bearer ${key}`
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    showResult(`
+                        <strong>✅ Connection Successful!</strong><br><br>
+                        <strong>Status:</strong> ${response.status} ${response.statusText}<br>
+                        <strong>URL:</strong> ${url}<br>
+                        <strong>Key Length:</strong> ${key.length} characters<br><br>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `, 'success');
+                } else {
+                    showResult(`
+                        <strong>❌ Connection Failed</strong><br><br>
+                        <strong>Status:</strong> ${response.status} ${response.statusText}<br>
+                        <strong>Error:</strong> Invalid credentials or URL<br><br>
+                        <strong>Troubleshooting:</strong><br>
+                        1. Check your Supabase URL is correct<br>
+                        2. Verify your anon key from Supabase dashboard<br>
+                        3. Make sure project is not paused
+                    `, 'error');
+                }
+            } catch (error) {
+                showResult(`
+                    <strong>❌ Network Error</strong><br><br>
+                    <strong>Error:</strong> ${error.message}<br><br>
+                    <strong>This usually means:</strong><br>
+                    1. CORS is not configured in Supabase<br>
+                    2. Network/firewall blocking request<br>
+                    3. Invalid Supabase URL<br><br>
+                    <strong>Fix:</strong><br>
+                    Go to Supabase Dashboard → Settings → API → CORS<br>
+                    Add: http://localhost:5173
+                `, 'error');
+            }
+        }
+
+        async function testAuth() {
+            const url = document.getElementById('supabaseUrl').value.trim();
+            const key = document.getElementById('anonKey').value.trim();
+
+            if (!url || !key) {
+                showResult('❌ Please fill in both URL and Anon Key', 'error');
+                return;
+            }
+
+            showResult('⏳ Testing auth endpoint...', 'info');
+
+            try {
+                const response = await fetch(`${url}/auth/v1/`, {
+                    headers: {
+                        'apikey': key,
+                        'Authorization': `Bearer ${key}`
+                    }
+                });
+
+                if (response.ok || response.status === 401) {
+                    showResult(`
+                        <strong>✅ Auth Endpoint Accessible!</strong><br><br>
+                        <strong>Status:</strong> ${response.status} ${response.statusText}<br>
+                        <strong>Auth URL:</strong> ${url}/auth/v1/<br><br>
+                        <strong>Your Supabase setup looks good!</strong><br>
+                        You can now use these credentials in your .env file:<br><br>
+                        <pre>
+VITE_SUPABASE_URL=${url}
+VITE_SUPABASE_ANON_KEY=${key.substring(0, 30)}...
+                        </pre>
+                    `, 'success');
+                } else {
+                    showResult(`
+                        <strong>⚠️ Auth Endpoint Issue</strong><br><br>
+                        <strong>Status:</strong> ${response.status} ${response.statusText}<br>
+                        <strong>Check:</strong><br>
+                        1. Is Authentication enabled in Supabase?<br>
+                        2. Are there any auth policies blocking?<br>
+                        3. Is the project active?
+                    `, 'error');
+                }
+            } catch (error) {
+                showResult(`
+                    <strong>❌ Cannot Reach Auth Endpoint</strong><br><br>
+                    <strong>Error:</strong> ${error.message}<br><br>
+                    <strong>CORS Error Solution:</strong><br>
+                    1. Open Supabase Dashboard<br>
+                    2. Go to Settings → API<br>
+                    3. Scroll to "CORS"<br>
+                    4. Add these origins:<br>
+                       • http://localhost:5173<br>
+                       • http://localhost:3000<br>
+                    5. Click Save<br>
+                    6. Wait 1 minute and try again
+                `, 'error');
+            }
+        }
+
+        // Auto-fill from clipboard if available
+        window.addEventListener('load', () => {
+            const savedUrl = localStorage.getItem('supabaseUrl');
+            if (savedUrl) {
+                document.getElementById('supabaseUrl').value = savedUrl;
+            }
+        });
+
+        // Save URL to localStorage
+        document.getElementById('supabaseUrl').addEventListener('change', (e) => {
+            localStorage.setItem('supabaseUrl', e.target.value);
+        });
+    </script>
+</body>
+</html>

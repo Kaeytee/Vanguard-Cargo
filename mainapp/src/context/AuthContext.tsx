@@ -16,6 +16,10 @@ export interface AuthContextType {
     firstName: string;
     lastName: string;
     phone?: string;
+    streetAddress?: string;
+    city?: string;
+    country?: string;
+    postalCode?: string;
   }) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
@@ -94,7 +98,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     initializeAuth();
 
     // Listen to auth changes
-    const { data: { subscription } } = authService.onAuthStateChange(async (session) => {
+    const { data: { subscription } } = authService.onAuthStateChange(async (_event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
       
@@ -150,15 +154,19 @@ export function AuthProvider({ children }: AuthProviderProps) {
     firstName: string;
     lastName: string;
     phone?: string;
+    streetAddress?: string;
+    city?: string;
+    country?: string;
+    postalCode?: string;
   }): Promise<{ error: string | null }> => {
     try {
       // Removed setLoading(true) to prevent blue loading screen during registration
       const { error } = await authService.signUp({
         ...data,
-        streetAddress: '', // Will be filled in later during profile setup
-        city: '',
-        country: '',
-        postalCode: ''
+        streetAddress: data.streetAddress || '',
+        city: data.city || '',
+        country: data.country || '',
+        postalCode: data.postalCode || ''
       });
       
       if (error) {
@@ -167,7 +175,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
       
       return { error: null };
     } catch (error) {
-      console.error('Sign up error:', error);
       return { error: 'An unexpected error occurred' };
     } finally {
       // Removed setLoading(false) to prevent loading state changes

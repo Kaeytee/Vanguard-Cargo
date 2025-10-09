@@ -91,3 +91,5 @@ package-lock.json
 .netlify
 .firebase/
 firebase-debug.log*
+pnpm-lock.yaml
+.pnpm-store/

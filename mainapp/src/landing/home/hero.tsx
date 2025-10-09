@@ -172,10 +172,10 @@ const popularBrands = [
                   <Rocket className="w-5 h-5" />
                 </Link>
                 <Link
-                  to="/services"
+                  to="/login"
                   className="bg-transparent border-2 border-red-600 text-red-600 hover:bg-red-600 hover:text-white px-8 py-4 rounded-lg font-bold text-lg transition-all duration-300"
                 >
-                  See How It Works
+                  Login to Your Account
                 </Link>
               </div>
 
@@ -247,7 +247,7 @@ const popularBrands = [
                 <div className="text-sm leading-relaxed">
                   <div className="font-semibold">John Doe (TTL-12345)</div>
                   <div>2891 NE 2nd Ave</div>
-                  <div>Miami, FL 33137, USA</div>
+                  <div>Alexandria, VA 22304, USA</div>
                 </div>
                 <div className="mt-4 pt-3 border-t border-white/20">
                   <div className="flex items-center text-sm">

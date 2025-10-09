@@ -101,7 +101,7 @@ export default function PackageIntakeWidget() {
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between">
                 <p className="text-sm font-medium text-gray-900 truncate">
-                  {notification.packageDetails.storeName}
+                  {notification.title}
                 </p>
                 <span className="text-xs text-gray-500 flex items-center">
                   <Clock className="w-3 h-3 mr-1" />
@@ -109,7 +109,7 @@ export default function PackageIntakeWidget() {
                 </span>
               </div>
               <p className="text-xs text-gray-600 truncate">
-                {notification.packageDetails.description}
+                {notification.message}
               </p>
             </div>
           </motion.div>

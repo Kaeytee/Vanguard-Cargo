@@ -19,7 +19,7 @@ async function testAccountSettingsUpdate() {
 
   try {
     // This should work with the new enhanced updateProfile method
-    const result = await authService.updateProfile(testUserId, updateData);
+    const result = await authService.updateUserProfile(testUserId, updateData);
     console.log('✅ AccountSettings updateProfile method signature is correct:', result);
     return true;
   } catch (error) {

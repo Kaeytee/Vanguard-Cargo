@@ -1,15 +1,27 @@
 import { useState } from 'react';
-import { FaShieldAlt } from 'react-icons/fa';
+import { Shield, CheckCircle2, AlertCircle } from 'lucide-react';
 import { authService } from '../../services/authService';
 import { useAuth } from '../../hooks/useAuth';
 
+/**
+ * SecuritySettings Component
+ * 
+ * Professional security settings page with password management
+ * Features: Password change, strength indicator, reset options, security tips
+ * 
+ * @author Senior Software Engineer
+ */
 function SecuritySettings() {
   const { user } = useAuth();
+  
+  // Password state
   const [passwords, setPasswords] = useState({
     currentPassword: '',
     newPassword: '',
     confirmPassword: ''
   });
+  
+  // UI state
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -51,7 +63,7 @@ function SecuritySettings() {
       return;
     }
 
-    // Basic validation (the authService will also validate)
+    // Basic validation
     if (!passwords.currentPassword) {
       setError('Current password is required');
       return;
@@ -66,19 +78,35 @@ function SecuritySettings() {
       setError('Please confirm your new password');
       return;
     }
+
+    // Check if passwords match
+    if (passwords.newPassword !== passwords.confirmPassword) {
+      setError('New passwords do not match');
+      return;
+    }
+
+    // Check password strength
+    if (passwords.newPassword.length < 8) {
+      setError('Password must be at least 8 characters long');
+      return;
+    }
     
     try {
       setLoading(true);
       setError(null);
       setSuccessMessage(null);
       
+      console.log('🔒 Attempting to change password...');
+      
       const response = await authService.changePassword({
         currentPassword: passwords.currentPassword,
-        newPassword: passwords.newPassword,
-        confirmPassword: passwords.confirmPassword
+        newPassword: passwords.newPassword
       });
       
+      console.log('🔒 Password change response:', response);
+      
       if (response.success) {
+        console.log('✅ Password changed successfully!');
         setSuccessMessage('Password changed successfully!');
         // Clear form
         setPasswords({
@@ -86,16 +114,18 @@ function SecuritySettings() {
           newPassword: '',
           confirmPassword: ''
         });
-        // Auto-clear success message after 3 seconds
-        setTimeout(() => setSuccessMessage(null), 3000);
+        // Auto-clear success message after 5 seconds
+        setTimeout(() => setSuccessMessage(null), 5000);
       } else {
+        console.error('❌ Password change failed:', response.error);
         setError(response.error || 'Failed to change password');
       }
     } catch (err) {
+      console.error('❌ Password change exception:', err);
       setError('Failed to change password. Please try again.');
-      console.error('Password change error:', err);
     } finally {
       setLoading(false);
+      console.log('🔒 Password change process complete');
     }
   };
 
@@ -126,24 +156,41 @@ function SecuritySettings() {
   };
 
   return (
-    <div className="max-w-3xl mx-auto">
-      <div className="flex items-center text-xl font-semibold mb-2 text-red-900">
-        <FaShieldAlt className="text-2xl mr-3 text-red-600" />
-        <h2>Security Settings</h2>
+    <div className="w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+      {/* Header */}
+      <div className="mb-6 sm:mb-8">
+        <div className="flex items-center gap-3 mb-2">
+          <div className="p-2 bg-red-100 rounded-lg">
+            <Shield className="w-6 h-6 sm:w-7 sm:h-7 text-red-600" />
+          </div>
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Security Settings</h1>
+          </div>
+        </div>
+        <p className="text-sm sm:text-base text-gray-600 ml-14">
+          Manage your account security and password settings
+        </p>
       </div>
-      <p className="text-gray-600 mb-6">Manage your account security and password settings</p>
       
-      {/* Error State */}
+      {/* Error Alert */}
       {error && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-          <p className="text-red-800 text-sm">{error}</p>
+        <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-500 rounded-r-lg flex items-start gap-3 animate-[slideDown_0.3s_ease-out]">
+          <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm font-medium text-red-900">Error</p>
+            <p className="text-sm text-red-700 mt-1">{error}</p>
+          </div>
         </div>
       )}
 
-      {/* Success State */}
+      {/* Success Alert */}
       {successMessage && (
-        <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-          <p className="text-green-800 text-sm">{successMessage}</p>
+        <div className="mb-6 p-4 bg-green-50 border-l-4 border-green-500 rounded-r-lg flex items-start gap-3 animate-[slideDown_0.3s_ease-out]">
+          <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm font-medium text-green-900">Success</p>
+            <p className="text-sm text-green-700 mt-1">{successMessage}</p>
+          </div>
         </div>
       )}
       
@@ -287,7 +334,7 @@ function SecuritySettings() {
       {/* Security Tips */}
       <div className="mt-8 p-4 bg-red-50 border border-red-200 rounded-lg">
         <h3 className="font-semibold text-red-900 mb-2 flex items-center">
-          <FaShieldAlt className="mr-2 text-red-600" />
+          <Shield className="w-5 h-5 mr-2 text-red-600" />
           Security Tips
         </h3>
         <ul className="text-sm text-red-800 space-y-2">

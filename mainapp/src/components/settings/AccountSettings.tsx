@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef, useCallback, Suspense } from 'react
 import { Camera, Upload, Trash2 } from 'lucide-react';
 import { useTranslation, type TranslationKey } from '../../lib/translations';
 import { authService, type AuthUser } from '../../services/authService';
-import { useAuth } from '../../hooks/useAuth';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import { selectUser, selectProfile, updateUserProfile } from '@/store/slices/authSlice';
 import { fileUploadService } from '../../services/fileUploadService';
 import ErrorBoundary from '../ErrorBoundary';
 
@@ -50,7 +51,11 @@ const AccountSettingsContent = ({ t }: { t: (key: TranslationKey) => string }) =
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
-  const { user, profile, refreshProfile } = useAuth();
+  
+  // Get user data from Redux (same source as Sidebar and Navbar)
+  const dispatch = useAppDispatch();
+  const user = useAppSelector(selectUser);
+  const profile = useAppSelector(selectProfile);
 
   const loadUserProfile = useCallback(async () => {
     try {
@@ -58,11 +63,14 @@ const AccountSettingsContent = ({ t }: { t: (key: TranslationKey) => string }) =
       setFormErrors({});
       
       if (profile) {
-        // Use the current profile from Supabase auth context
+        // Use the current profile from Redux (same as Sidebar/Navbar)
         setFormData(profile);
       } else if (user) {
-        // If no profile, try to refresh it
-        await refreshProfile();
+        // If no profile, try to load it
+        const userProfile = await authService.getUserProfile(user.id);
+        if (userProfile) {
+          setFormData(userProfile);
+        }
       }
     } catch (err) {
       setFormErrors({ general: t('errorLoadingProfile') });
@@ -70,7 +78,7 @@ const AccountSettingsContent = ({ t }: { t: (key: TranslationKey) => string }) =
     } finally {
       setLoading(false);
     }
-  }, [t, profile, user, refreshProfile]);
+  }, [t, profile, user]);
 
   useEffect(() => {
     loadUserProfile();
@@ -149,9 +157,8 @@ const AccountSettingsContent = ({ t }: { t: (key: TranslationKey) => string }) =
           // Update local state
           setFormData((prev) => (prev ? { ...prev, profileImage: '', avatarUrl: '' } : prev));
           
-          // Update in database
-          await authService.updateProfile(user.id, { profileImage: '' });
-          await refreshProfile();
+          // Update in database and Redux
+          await dispatch(updateUserProfile({ avatarUrl: '', profileImage: '' })).unwrap();
           
           alert('Profile picture deleted successfully!');
         } else {
@@ -293,11 +300,26 @@ const AccountSettingsContent = ({ t }: { t: (key: TranslationKey) => string }) =
         profileImage: profileImageUrl, // Use the potentially new URL
       };
 
-      const response = await authService.updateProfile(user.id, updateData);
+      const response = await authService.updateUserProfile(user.id, updateData);
       
       if (response.success && !response.error) {
-        // Refresh user profile to get updated data
-        await refreshProfile();
+        // Prepare Redux update with proper field names
+        const reduxUpdateData = {
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          email: formData.email,
+          phone: formData.phone,
+          streetAddress: formData.streetAddress,
+          city: formData.city,
+          country: formData.country,
+          postalCode: formData.postalCode,
+          avatarUrl: profileImageUrl,     // Redux uses avatarUrl
+          profileImage: profileImageUrl,  // Also update profileImage for consistency
+        };
+        
+        // Update Redux with new profile data (same as Sidebar/Navbar)
+        await dispatch(updateUserProfile(reduxUpdateData)).unwrap();
+        
         // The formData will be updated through the useEffect that watches for profile changes
         alert(t('profileUpdated'));
         setFormErrors({});

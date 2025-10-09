@@ -28,12 +28,12 @@ export const RegisterSuccessStep: React.FC<RegisterSuccessStepProps> = ({
   onGoToLogin 
 }) => {
   // State for countdown timer
-  const [countdown, setCountdown] = useState<number>(5);
+  const [countdown, setCountdown] = useState<number>(10);
   const [isRedirecting, setIsRedirecting] = useState<boolean>(false);
 
   /**
    * Effect hook to handle automatic redirect countdown
-   * Redirects user to login page after 5 seconds
+   * Redirects user to login page after 10 seconds
    */
   useEffect(() => {
     // Start countdown timer
