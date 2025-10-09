@@ -41,7 +41,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate }) => {
   const { t } = useTranslation();
 
   // DEBUG: Log user state
-  console.log('👤 Sidebar - User State:', { user: !!user, profile: !!profile });
+  // console.log('👤 Sidebar - User State:', { user: !!user, profile: !!profile });
 
   // Safety check: If no user data, show loading
   if (!user) {

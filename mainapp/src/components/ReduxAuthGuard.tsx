@@ -39,13 +39,13 @@ export const ReduxAuthGuard: React.FC<ReduxAuthGuardProps> = ({ children }) => {
   const isAuthenticated = useAppSelector(selectIsAuthenticated);
   const isInitialized = useAppSelector(selectIsInitialized);
 
-  // DEBUG: Log auth state
+  // DEBUG: Log auth state (commented out for production)
   useEffect(() => {
-    console.log('🔐 ReduxAuthGuard State:', {
-      isAuthenticated,
-      isInitialized,
-      path: location.pathname
-    });
+    // console.log('🔐 ReduxAuthGuard State:', {
+    //   isAuthenticated,
+    //   isInitialized,
+    //   path: location.pathname
+    // });
   }, [isAuthenticated, isInitialized, location.pathname]);
 
   /**
@@ -55,7 +55,7 @@ export const ReduxAuthGuard: React.FC<ReduxAuthGuardProps> = ({ children }) => {
   useEffect(() => {
     // Only initialize if not already done
     if (!isInitialized) {
-      console.log('🔄 Initializing auth...');
+      // console.log('🔄 Initializing auth...');
       dispatch(initializeAuth());
     }
   }, [dispatch, isInitialized]);
@@ -73,7 +73,7 @@ export const ReduxAuthGuard: React.FC<ReduxAuthGuardProps> = ({ children }) => {
     // If not authenticated after initialization, redirect to login
     // DON'T dispatch logout here - it causes infinite loop
     if (!isAuthenticated) {
-      console.log('🚫 Not authenticated, redirecting to login');
+      // console.log('🚫 Not authenticated, redirecting to login');
       
       // Redirect to login with return URL
       navigate('/login', {

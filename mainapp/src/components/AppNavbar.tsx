@@ -37,7 +37,7 @@ const AppNavbar: React.FC<AppNavbarProps> = ({
   const userDropdownRef = useRef<HTMLDivElement>(null);
 
   // DEBUG: Log user state
-  console.log('🔝 AppNavbar - User State:', { user: !!user, profile: !!profile });
+  // console.log('🔝 AppNavbar - User State:', { user: !!user, profile: !!profile });
 
   // Safety check: If no user data, show loading
   if (!user) {

@@ -17,6 +17,17 @@ const Dashboard: React.FC = () => {
   // Extract first name from profile or user email
   const firstName = profile?.firstName || user?.email?.split('@')[0] || 'User';
 
+  // Debug: Log profile and user on mount
+  useEffect(() => {
+    console.log('👤 Dashboard - User & Profile:', {
+      hasUser: !!user,
+      hasProfile: !!profile,
+      userId: user?.id,
+      profileSuiteNumber: profile?.suite_number,
+      profile
+    });
+  }, [user, profile]);
+
   // Fetch user data on component mount
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -24,12 +35,17 @@ const Dashboard: React.FC = () => {
 
       try {
         // Fetch user's US shipping address
+        console.log('📍 Fetching US address for user:', user.id);
         const addressResult = await addressService.getUserAddress(user.id);
+        
         if (!addressResult.error && addressResult.data) {
+          console.log('✅ US Address fetched:', addressResult.data);
           setUsAddress(addressResult.data);
+        } else {
+          console.error('❌ Failed to fetch address:', addressResult.error);
         }
       } catch (error) {
-        console.error('Error fetching dashboard data:', error);
+        console.error('❌ Error fetching dashboard data:', error);
       }
     };
 
@@ -111,35 +127,48 @@ const popularBrands = [
   }
 ];
 
-  const copyAddressToClipboard = () => {
-    if (!usAddress || !profile) return;
+  // Copy All functionality disabled - use individual copy buttons instead
+  
+  const copyToClipboard = async (text: string, key: string) => {
+    console.log(`📋 Attempting to copy ${key}:`, text);
+    
+    try {
+      // Check if clipboard API is available
+      if (!navigator.clipboard) {
+        throw new Error('Clipboard API not available');
+      }
 
-    // Create custom formatted address with Vanguard Cargo LLC
-    const addressText = [
-      `Vanguard Cargo LLC (${profile.suite_number})`,
-      '4700 Eisenhower Avenue',
-      'ALX-E2',
-      `${usAddress?.city || 'Alexandria'}, ${usAddress?.state_province || 'VA'} ${usAddress?.postal_code || '22304'}`,
-      usAddress?.country || 'USA'
-    ]
-      .filter(Boolean)
-      .join('\n');
-
-    navigator.clipboard.writeText(addressText).then(() => {
-      setCopiedStates(prev => ({ ...prev, 'full-address': true }));
-      setTimeout(() => {
-        setCopiedStates(prev => ({ ...prev, 'full-address': false }));
-      }, 2000);
-    });
-  };
-
-  const copyToClipboard = (text: string, key: string) => {
-    navigator.clipboard.writeText(text).then(() => {
+      await navigator.clipboard.writeText(text);
+      console.log(`✅ ${key} copied successfully`);
+      
       setCopiedStates(prev => ({ ...prev, [key]: true }));
       setTimeout(() => {
         setCopiedStates(prev => ({ ...prev, [key]: false }));
       }, 2000);
-    });
+    } catch (err) {
+      console.error(`❌ Failed to copy ${key}:`, err);
+      
+      // Fallback: try using execCommand
+      try {
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-999999px';
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        
+        console.log(`✅ ${key} copied using fallback method`);
+        setCopiedStates(prev => ({ ...prev, [key]: true }));
+        setTimeout(() => {
+          setCopiedStates(prev => ({ ...prev, [key]: false }));
+        }, 2000);
+      } catch (fallbackErr) {
+        console.error(`❌ Fallback copy also failed for ${key}:`, fallbackErr);
+        alert('Failed to copy. Please try again or copy manually.');
+      }
+    }
   };
 
   return (
@@ -319,24 +348,12 @@ const popularBrands = [
                       <span className="text-lg sm:text-xl font-semibold text-gray-900">Your US Address</span>
                     </div>
                     <button
-                      onClick={copyAddressToClipboard}
-                      className={`flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-medium transition-all shadow-lg ${
-                        copiedStates['full-address']
-                          ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:from-green-600 hover:to-emerald-700 shadow-green-200'
-                          : 'bg-gradient-to-r from-red-500 to-pink-600 text-white hover:from-red-600 hover:to-pink-700 shadow-red-200'
-                      }`}
+                      disabled
+                      className="flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-medium transition-all shadow-lg opacity-0 pointer-events-none invisible"
+                      style={{ display: 'none' }}
                     >
-                      {copiedStates['full-address'] ? (
-                        <>
-                          <Check className="w-4 h-4" />
-                          Copied
-                        </>
-                      ) : (
-                        <>
-                          <Copy className="w-4 h-4" />
-                          Copy All
-                        </>
-                      )}
+                      <Copy className="w-4 h-4" />
+                      Copy All
                     </button>
                   </div>
               
@@ -412,7 +429,7 @@ const popularBrands = [
                         </p>
                       </div>
                       <button
-                        onClick={() => copyToClipboard(`${usAddress?.city || 'Alexandria'}, {usAddress?.state_province || 'VA'} ${usAddress?.postal_code || '22304'}`, 'city')}
+                        onClick={() => copyToClipboard(`${usAddress?.city || 'Alexandria'}, ${usAddress?.state_province || 'VA'} ${usAddress?.postal_code || '22304'}`, 'city')}
                         className="ml-3 flex-shrink-0 p-2.5 text-red-600 hover:bg-red-50 rounded-xl transition-colors"
                         title="Copy city, state, zip"
                       >

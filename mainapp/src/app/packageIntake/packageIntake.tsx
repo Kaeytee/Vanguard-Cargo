@@ -184,7 +184,7 @@ export default function PackageIntake() {
       const nextPage = currentPage + 1;
       const offset = currentPage * PAGE_SIZE;
 
-      console.log(`📦 Loading more packages (Page ${nextPage})...`);
+      // console.log(`📦 Loading more packages (Page ${nextPage})...`);
 
       const response = await packageService.getIncomingPackages(user.id, PAGE_SIZE, offset);
 
