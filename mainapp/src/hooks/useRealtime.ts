@@ -65,21 +65,21 @@ export function useRealtime(options: UseRealtimeOptions) {
           break;
       }
     } catch (error) {
-      console.error(`❌ Error handling real-time change [${table}]:`, error);
+      // Error handling real-time change
     }
-  }, [table, onChange, onInsert, onUpdate, onDelete]);
+  }, [table, onInsert, onUpdate, onDelete, onChange]);
 
   // Set up subscription
   useEffect(() => {
-    if (!user?.id || !enabled) return;
+    if (!user?.id || !enabled) {
+      return;
+    }
 
-    const subscriptionId = `${table}-${user.id}`;
+    const channelName = `${table}-${user.id}`;
     
-    console.log(`🔄 Setting up real-time subscription for ${table}`);
-
     // Subscribe using the centralized service
     realtimeService.subscribe(
-      subscriptionId,
+      channelName,
       {
         table,
         userId: user.id,
@@ -90,14 +90,12 @@ export function useRealtime(options: UseRealtimeOptions) {
 
     // Cleanup on unmount
     return () => {
-      console.log(`🔌 Cleaning up real-time subscription for ${table}`);
-      realtimeService.unsubscribe(subscriptionId);
+      realtimeService.unsubscribe(channelName);
     };
   }, [user?.id, table, enabled, handleRealtimeChange]);
 
   return {
     isConnected: user?.id && enabled && realtimeService.isSubscribed(`${table}-${user.id}`),
-    subscriptionId: user?.id ? `${table}-${user.id}` : null,
     connectionHealth: realtimeService.getConnectionHealth()
   };
 }

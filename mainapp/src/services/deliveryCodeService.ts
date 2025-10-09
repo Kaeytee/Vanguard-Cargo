@@ -122,8 +122,6 @@ class DeliveryCodeService {
         created_at: pkg.created_at,
       }));
 
-      console.log(`✅ Found ${deliveryCodes.length} packages with delivery codes`);
-
       // Return successful response with delivery codes
       return {
         success: true,
@@ -131,7 +129,6 @@ class DeliveryCodeService {
       };
     } catch (err) {
       // Handle unexpected errors
-      console.error('❌ Unexpected error fetching delivery codes:', err);
       return {
         success: false,
         error: 'An unexpected error occurred while fetching delivery codes.',

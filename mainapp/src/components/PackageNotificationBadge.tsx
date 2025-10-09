@@ -164,10 +164,6 @@ export default function PackageNotificationBadge() {
                                 {notification.message}
                               </p>
                               <div className="flex items-center mt-2 text-xs text-gray-500">
-                                <span>{notification.packageDetails.storeName}</span>
-                                <span className="mx-1">•</span>
-                                <span>{notification.packageDetails.trackingNumber.substring(0, 10)}...</span>
-                                <span className="mx-1">•</span>
                                 <span>{formatTimeAgo(notification.timestamp)}</span>
                               </div>
                             </div>

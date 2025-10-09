@@ -22,8 +22,9 @@ export type RealtimeCallback = (payload: RealtimePayload) => void | Promise<void
 class RealtimeService {
   private subscriptions: Map<string, RealtimeChannel> = new Map();
   private reconnectAttempts: Map<string, number> = new Map();
-  private maxReconnectAttempts = 5;
-  private reconnectDelay = 1000;
+  // Reserved for future use when implementing reconnection logic
+  // private maxReconnectAttempts = 5;
+  // private reconnectDelay = 1000;
 
   async subscribe(
     subscriptionId: string,
@@ -31,15 +32,10 @@ class RealtimeService {
     callback: RealtimeCallback
   ): Promise<boolean> {
     try {
-      await this.unsubscribe(subscriptionId);
-      console.log(`🔄 Setting up real-time subscription: ${subscriptionId}`);
+      const table = `${options.table}_${options.filter || ''}`;
+      const filter = options.userId ? `user_id=eq.${options.userId}` : '';
 
-      let filter = options.filter || '';
-      if (options.userId && !filter) {
-        filter = `user_id=eq.${options.userId}`;
-      }
-
-      const channel = supabase.channel(`${subscriptionId}-${Date.now()}`);
+      const channel = supabase.channel(table);
 
       channel.on(
         'postgres_changes' as any,
@@ -50,7 +46,6 @@ class RealtimeService {
           ...(filter && { filter })
         },
         async (payload: any) => {
-          console.log(`📡 Real-time change [${subscriptionId}]:`, payload.eventType);
           try {
             await callback({
               eventType: payload.eventType,
@@ -60,13 +55,12 @@ class RealtimeService {
               schema: payload.schema
             });
           } catch (error) {
-            console.error(`❌ Error in callback [${subscriptionId}]:`, error);
+            // Error in callback
           }
         }
       );
 
       channel.subscribe((status) => {
-        console.log(`📊 Real-time status [${subscriptionId}]:`, status);
         if (status === 'SUBSCRIBED') {
           this.reconnectAttempts.set(subscriptionId, 0);
         }
@@ -75,7 +69,6 @@ class RealtimeService {
       this.subscriptions.set(subscriptionId, channel);
       return true;
     } catch (error) {
-      console.error(`❌ Failed subscription [${subscriptionId}]:`, error);
       return false;
     }
   }

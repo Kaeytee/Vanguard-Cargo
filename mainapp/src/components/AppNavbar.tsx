@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { Settings, LogOut, Menu, X } from "lucide-react";
-import { useAuth } from "../hooks/useAuth";
+import { useAppSelector } from "@/store/hooks";
+import { selectUser, selectProfile } from "@/store/slices/authSlice";
 import { useLogout } from "../hooks/useLogout";
 import PackageNotificationBadge from "./PackageNotificationBadge";
-// Import default avatar for user profile
-import defaultAvatar from "../assets/default-avatar.svg";
+import { getAvatarUrl } from "../utils/imageUtils";
 
 interface AppNavbarProps {
   onToggleSidebar?: () => void;
@@ -25,8 +25,9 @@ const AppNavbar: React.FC<AppNavbarProps> = ({
   onToggleSidebar,
   isSidebarOpen,
 }) => {
-  // Get user data and logout function from auth context
-  const { user, profile } = useAuth();
+  // Get user data from Redux (protected by ReduxAuthGuard - always authenticated here)
+  const user = useAppSelector(selectUser);
+  const profile = useAppSelector(selectProfile);
   const { confirmLogout } = useLogout();
 
   // State for user dropdown visibility
@@ -35,12 +36,26 @@ const AppNavbar: React.FC<AppNavbarProps> = ({
   // Refs for click outside detection
   const userDropdownRef = useRef<HTMLDivElement>(null);
 
-  // Fallback user data if auth context user is null
+  // DEBUG: Log user state
+  console.log('🔝 AppNavbar - User State:', { user: !!user, profile: !!profile });
+
+  // Safety check: If no user data, show loading
+  if (!user) {
+    return (
+      <div className="flex justify-between items-center px-4 py-3 bg-white shadow-md h-16">
+        <div className="flex items-center gap-3">
+          <span className="text-gray-600">Loading...</span>
+        </div>
+      </div>
+    );
+  }
+
+  // User data (guaranteed to exist due to ReduxAuthGuard)
   const userData = {
     id: user?.id || "",
-    name: profile ? `${profile.firstName} ${profile.lastName}` : "Guest User",
-    email: user?.email || "guest@example.com",
-    image: profile?.avatarUrl || "",
+    name: profile ? `${profile.firstName} ${profile.lastName}` : "User",
+    email: user?.email || "",
+    image: getAvatarUrl(profile?.avatarUrl || profile?.profileImage),
   };
 
   /**
@@ -103,14 +118,9 @@ const AppNavbar: React.FC<AppNavbarProps> = ({
             >
               <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full overflow-hidden ring-2 ring-gray-200">
                 <img
-                  src={userData.image || defaultAvatar}
+                  src={userData.image}
                   alt="User"
                   className="w-full h-full object-cover"
-                  onError={(e) => {
-                    // Fallback to our local default avatar if the user image fails to load
-                    const target = e.target as HTMLImageElement;
-                    target.src = defaultAvatar;
-                  }}
                 />
               </div>
               <span className="hidden sm:block text-sm font-medium text-gray-800 max-w-24 truncate">
@@ -123,14 +133,9 @@ const AppNavbar: React.FC<AppNavbarProps> = ({
                 <div className="flex items-center gap-3 p-4 border-b border-gray-200">
                   <div className="w-12 h-12 rounded-full overflow-hidden ring-2 ring-gray-200">
                     <img
-                      src={userData.image || defaultAvatar}
+                      src={userData.image}
                       alt="User"
                       className="w-full h-full object-cover"
-                      onError={(e) => {
-                        // Fallback to our local default avatar if the user image fails to load
-                        const target = e.target as HTMLImageElement;
-                        target.src = defaultAvatar;
-                      }}
                     />
                   </div>
                   <div className="flex-1 min-w-0">

@@ -4,20 +4,19 @@ import {
   BarChart3,
   Clock,
   Settings,
-  Headphones,
-  // Info,
   LogOut,
   Search,
   Package,
+  Headphones,
 } from "lucide-react";
-import { useAuth } from "../hooks/useAuth";
-import { useLogout } from "../hooks/useLogout";
+import { useAppSelector } from "@/store/hooks";
+import { selectUser, selectProfile } from "@/store/slices/authSlice";
+import useLogout from "../hooks/useLogout";
 import { useTranslation } from "../lib/translations";
-// Import default avatar for user profile
-import defaultAvatar from "../assets/default-avatar.svg";
+import { getAvatarUrl } from "../utils/imageUtils";
 
 /**
- * Props interface for the Sidebar component
+{{ ... }}
  */
 interface SidebarProps {
   onNavigate?: () => void;
@@ -35,16 +34,32 @@ interface SidebarProps {
  * @returns {JSX.Element} The Sidebar component
  */
 const Sidebar: React.FC<SidebarProps> = ({ onNavigate }) => {
-  // Get user data and logout function from auth context
-  const { user, profile } = useAuth();
+  // Get user data from Redux (protected by ReduxAuthGuard - always authenticated here)
+  const user = useAppSelector(selectUser);
+  const profile = useAppSelector(selectProfile);
   const { confirmLogout } = useLogout();
   const { t } = useTranslation();
 
-  // Fallback user data if auth context user is null
+  // DEBUG: Log user state
+  console.log('👤 Sidebar - User State:', { user: !!user, profile: !!profile });
+
+  // Safety check: If no user data, show loading
+  if (!user) {
+    return (
+      <div className="w-64 bg-red-600 text-white flex items-center justify-center h-full">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+          <p className="mt-2 text-sm">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // User data (guaranteed to exist due to ReduxAuthGuard)
   const userData = {
-    name: profile ? `${profile.firstName} ${profile.lastName}` : "Guest User",
-    email: user?.email || "guest@example.com",
-    image: profile?.avatarUrl || defaultAvatar,
+    name: profile ? `${profile.firstName} ${profile.lastName}` : "User",
+    email: user?.email || "",
+    image: getAvatarUrl(profile?.avatarUrl || profile?.profileImage),
   };
   /**
    * Navigation menu items configuration
@@ -78,14 +93,9 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate }) => {
       <div className="flex flex-col items-center p-6 border-red-500/20">
         <div className="w-16 h-16 rounded-full overflow-hidden mb-3 ring-2 ring-white/20 transition-transform duration-200 hover:scale-105">
           <img
-            src={userData.image || defaultAvatar}
+            src={userData.image}
             alt="User Avatar"
             className="w-full h-full object-cover"
-            onError={(e) => {
-              // Fallback to our local default avatar if the user image fails to load
-              const target = e.target as HTMLImageElement;
-              target.src = defaultAvatar;
-            }}
           />
         </div>
         <div className="text-center">

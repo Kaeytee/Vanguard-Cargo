@@ -169,48 +169,48 @@ const popularBrands = [
         >
           <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-amber-50/80 via-white/80 to-orange-50/80 backdrop-blur-xl border border-amber-200/50 shadow-xl shadow-amber-100/50">
             <div className="absolute inset-0 bg-gradient-to-br from-amber-100/20 to-transparent"></div>
-            <div className="relative p-6 sm:p-8 lg:p-10">
-              <div className="flex items-start gap-4 sm:gap-6">
+            <div className="relative p-4 sm:p-8 lg:p-10">
+              <div className="flex items-start gap-3 sm:gap-6">
                 <div className="flex-shrink-0">
-                  <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-amber-400 to-orange-500 rounded-2xl flex items-center justify-center shadow-lg shadow-amber-200">
-                    <AlertTriangle className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
+                  <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-lg shadow-amber-200">
+                    <AlertTriangle className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
                   </div>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-3">
+                  <h3 className="text-base sm:text-2xl font-semibold text-gray-900 mb-2 sm:mb-3">
                     Complete Address Required
                   </h3>
-                  <p className="text-base sm:text-lg text-gray-700 mb-6 font-light leading-relaxed">
+                  <p className="text-sm sm:text-lg text-gray-600 mb-4 sm:mb-6 font-light leading-relaxed">
                     To ensure successful delivery, please follow these guidelines when shopping online
                   </p>
-                  <div className="space-y-4">
-                    <div className="flex items-start gap-3">
-                      <div className="w-6 h-6 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <div className="w-2 h-2 bg-white rounded-full"></div>
+                  <div className="space-y-3 sm:space-y-4">
+                    <div className="flex items-start gap-2 sm:gap-3">
+                      <div className="w-5 h-5 sm:w-6 sm:h-6 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-white rounded-full"></div>
                       </div>
-                      <p className="text-sm sm:text-base text-gray-700 leading-relaxed">
-                        <span className="font-medium text-gray-900">Include your suite number</span> — Always add "Vanguard Cargo LLC" followed by your unique suite number
+                      <p className="text-xs sm:text-base text-gray-700 leading-relaxed">
+                        <span className="font-semibold text-gray-900">Include your suite number</span> — Always add "Vanguard Cargo LLC" followed by your unique suite number
                       </p>
                     </div>
-                    <div className="flex items-start gap-3">
-                      <div className="w-6 h-6 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <div className="w-2 h-2 bg-white rounded-full"></div>
+                    <div className="flex items-start gap-2 sm:gap-3">
+                      <div className="w-5 h-5 sm:w-6 sm:h-6 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-white rounded-full"></div>
                       </div>
-                      <p className="text-sm sm:text-base text-gray-700 leading-relaxed">
-                        <span className="font-medium text-gray-900">Use complete address</span> — Enter all address fields exactly as shown below
+                      <p className="text-xs sm:text-base text-gray-700 leading-relaxed">
+                        <span className="font-semibold text-gray-900">Use complete address</span> — Enter all address fields exactly as shown below
                       </p>
                     </div>
-                    <div className="flex items-start gap-3">
-                      <div className="w-6 h-6 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <div className="w-2 h-2 bg-white rounded-full"></div>
+                    <div className="flex items-start gap-2 sm:gap-3">
+                      <div className="w-5 h-5 sm:w-6 sm:h-6 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-white rounded-full"></div>
                       </div>
-                      <p className="text-sm sm:text-base text-gray-700 leading-relaxed">
-                        <span className="font-medium text-gray-900">Don't skip any fields</span> — Missing information may delay or prevent delivery
+                      <p className="text-xs sm:text-base text-gray-700 leading-relaxed">
+                        <span className="font-semibold text-gray-900">Don't skip any fields</span> — Missing information may delay or prevent delivery
                       </p>
                     </div>
                   </div>
-                  <div className="mt-6 p-4 bg-white/60 backdrop-blur-sm rounded-2xl border border-amber-200/50">
-                    <p className="text-sm sm:text-base text-amber-900 font-medium text-center">
+                  <div className="mt-4 sm:mt-6 p-3 sm:p-4 bg-white/60 backdrop-blur-sm rounded-xl sm:rounded-2xl border border-amber-200/50">
+                    <p className="text-xs sm:text-base text-amber-900 font-semibold text-center leading-relaxed">
                       Incomplete addresses may result in package rejection or return to sender
                     </p>
                   </div>

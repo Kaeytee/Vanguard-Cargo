@@ -4,6 +4,7 @@ import { useTranslation } from '../../lib/translations';
 import { notificationService, type Notification } from '../../services/notificationService';
 import { useAuth } from '../../hooks/useAuth';
 import { useNotificationRealtime } from '../../hooks/useRealtime';
+import { useNotificationToast } from '../../hooks/useNotificationToast';
 
 /**
  * NotificationsPage - Comprehensive notifications management page
@@ -23,6 +24,7 @@ import { useNotificationRealtime } from '../../hooks/useRealtime';
 const NotificationsPage = () => {
   const { t } = useTranslation();
   const { user } = useAuth();
+  const { showNotification, showSuccess, showError } = useNotificationToast();
   
   // State management
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -92,8 +94,19 @@ const NotificationsPage = () => {
       // Add new notification to the beginning of the list
       setNotifications(prev => [newNotification, ...prev]);
       setTotalNotifications(prev => prev + 1);
-      console.log('New notification received via real-time:', newNotification.title);
-    }, []),
+      
+      // Show toast notification
+      showNotification({
+        id: newNotification.id,
+        title: newNotification.title,
+        message: newNotification.message || 'You have a new notification',
+        category: newNotification.category as any,
+        priority: newNotification.priority as any,
+        created_at: newNotification.created_at
+      });
+      
+      console.log('✨ New notification received via real-time:', newNotification.title);
+    }, [showNotification]),
     
     onUpdate: useCallback((updatedNotificationData: any) => {
       // Transform the data to match our interface
@@ -274,6 +287,7 @@ const NotificationsPage = () => {
       
       if (result.error) {
         console.error('Error marking all notifications as read:', result.error);
+        showError('Failed to mark all notifications as read');
         return;
       }
 
@@ -285,9 +299,17 @@ const NotificationsPage = () => {
       // Clear selected notifications
       setSelectedNotifications([]);
 
-      console.log('✅ All notifications marked as read');
+      // Show success message with count
+      const count = result.count || 0;
+      if (count > 0) {
+        showSuccess(`Marked ${count} notification${count === 1 ? '' : 's'} as read`);
+      } else {
+        showSuccess('All notifications are already read');
+      }
+      console.log(`✅ Marked ${count} notifications as read`);
     } catch (error) {
       console.error('Error marking all notifications as read:', error);
+      showError('An error occurred while marking notifications as read');
       // Reload notifications on error to sync with server state
       await loadNotifications();
     } finally {

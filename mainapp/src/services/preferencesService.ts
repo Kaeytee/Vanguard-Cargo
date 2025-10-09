@@ -39,7 +39,7 @@ class PreferencesService {
   async getUserPreferences(userId: string): Promise<{ data: UserPreferences | null; error: Error | null }> {
     try {
       const { data, error } = await supabase
-        .from('user_profiles')
+        .from('users')
         .select(`
           id,
           preferred_language,
@@ -120,7 +120,7 @@ class PreferencesService {
       }
 
       const { data, error } = await supabase
-        .from('user_profiles')
+        .from('users')
         .update(dbUpdates)
         .eq('id', userId)
         .select(`

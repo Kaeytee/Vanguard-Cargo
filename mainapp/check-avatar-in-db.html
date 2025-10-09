@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Check Avatar in Database</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 900px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #dc2626;
+        }
+        button {
+            background: #dc2626;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #b91c1c;
+        }
+        #results {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            display: none;
+        }
+        .success {
+            background: #d1fae5;
+            border: 1px solid #10b981;
+            color: #065f46;
+        }
+        .error {
+            background: #fee2e2;
+            border: 1px solid #ef4444;
+            color: #991b1b;
+        }
+        .info {
+            background: #dbeafe;
+            border: 1px solid #3b82f6;
+            color: #1e40af;
+        }
+        pre {
+            background: #f9fafb;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+        .avatar-preview {
+            max-width: 200px;
+            max-height: 200px;
+            margin: 10px 0;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Check Avatar in Database</h1>
+        <p>Check if your profile picture is in the database and storage</p>
+
+        <div>
+            <h3>Your User ID:</h3>
+            <input type="text" id="userId" value="228624ae-1c23-4557-9984-cca1c0bb86f7" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+        </div>
+
+        <button onclick="checkDatabase()">🗄️ Check Database</button>
+        <button onclick="checkStorage()">📦 Check Storage</button>
+        <button onclick="listAllFiles()">📁 List All Storage Files</button>
+        <button onclick="clearResults()">🗑️ Clear</button>
+
+        <div id="results"></div>
+    </div>
+
+    <script>
+        // Initialize Supabase (using your project details)
+        const SUPABASE_URL = 'https://rsxxjcsmcrcxdmyuytzc.supabase.co';
+        const SUPABASE_ANON_KEY = prompt('Enter your Supabase ANON KEY (from .env file):');
+        
+        if (!SUPABASE_ANON_KEY) {
+            alert('Anon key is required!');
+        }
+
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        function showResult(message, type = 'info') {
+            const results = document.getElementById('results');
+            results.style.display = 'block';
+            results.className = type;
+            results.innerHTML = message;
+        }
+
+        function clearResults() {
+            const results = document.getElementById('results');
+            results.style.display = 'none';
+            results.innerHTML = '';
+        }
+
+        async function checkDatabase() {
+            const userId = document.getElementById('userId').value.trim();
+            if (!userId) {
+                showResult('❌ Please enter a user ID', 'error');
+                return;
+            }
+
+            showResult('⏳ Checking database...', 'info');
+
+            try {
+                const { data, error } = await supabase
+                    .from('users')
+                    .select('id, email, first_name, last_name, avatar_url')
+                    .eq('id', userId)
+                    .single();
+
+                if (error) {
+                    showResult(\`
+                        <strong>❌ Database Error</strong><br><br>
+                        <strong>Error:</strong> \${error.message}<br><br>
+                        <strong>Possible causes:</strong><br>
+                        1. User ID not found<br>
+                        2. No access to users table<br>
+                        3. RLS policy blocking read
+                    \`, 'error');
+                    return;
+                }
+
+                if (!data) {
+                    showResult('❌ User not found in database', 'error');
+                    return;
+                }
+
+                const hasAvatar = data.avatar_url && data.avatar_url.trim() !== '';
+
+                showResult(\`
+                    <strong>✅ User Found in Database!</strong><br><br>
+                    <strong>User ID:</strong> \${data.id}<br>
+                    <strong>Name:</strong> \${data.first_name} \${data.last_name}<br>
+                    <strong>Email:</strong> \${data.email}<br><br>
+                    <strong>Avatar URL:</strong> <code>\${data.avatar_url || '(empty)'}</code><br><br>
+                    \${hasAvatar ? 
+                        \`<strong>✅ Avatar field has value!</strong><br>
+                         <button onclick="previewAvatar('\${data.avatar_url}')">Preview Avatar</button>\` : 
+                        \`<strong>⚠️ Avatar field is EMPTY!</strong><br>
+                         This means you haven't uploaded a profile picture yet.<br>
+                         Go to Settings → Account to upload one.\`
+                    }
+                    <br><br>
+                    <strong>Full Data:</strong>
+                    <pre>\${JSON.stringify(data, null, 2)}</pre>
+                \`, hasAvatar ? 'success' : 'info');
+            } catch (err) {
+                showResult(\`
+                    <strong>❌ Error</strong><br><br>
+                    \${err.message}
+                \`, 'error');
+            }
+        }
+
+        async function previewAvatar(avatarPath) {
+            if (!avatarPath) return;
+
+            // If it's already a full URL
+            if (avatarPath.startsWith('http')) {
+                showResult(\`
+                    <strong>🖼️ Avatar Preview</strong><br><br>
+                    <strong>URL:</strong> \${avatarPath}<br><br>
+                    <img src="\${avatarPath}" class="avatar-preview" onerror="this.onerror=null; this.src=''; this.alt='❌ Failed to load';" />
+                \`, 'success');
+                return;
+            }
+
+            // Construct Supabase storage URL
+            const { data } = supabase.storage.from('avatars').getPublicUrl(avatarPath);
+            const publicUrl = data?.publicUrl;
+
+            showResult(\`
+                <strong>🖼️ Avatar Preview</strong><br><br>
+                <strong>Storage Path:</strong> \${avatarPath}<br>
+                <strong>Public URL:</strong> \${publicUrl}<br><br>
+                <img src="\${publicUrl}" class="avatar-preview" onerror="this.onerror=null; this.src=''; this.alt='❌ Failed to load';" />
+                <br><br>
+                <em>If image fails to load, check storage bucket permissions.</em>
+            \`, 'success');
+        }
+
+        async function checkStorage() {
+            const userId = document.getElementById('userId').value.trim();
+            if (!userId) {
+                showResult('❌ Please enter a user ID', 'error');
+                return;
+            }
+
+            showResult('⏳ Checking storage bucket...', 'info');
+
+            try {
+                // List files in avatars bucket for this user
+                const { data, error } = await supabase.storage
+                    .from('avatars')
+                    .list('', {
+                        limit: 100,
+                        offset: 0,
+                    });
+
+                if (error) {
+                    showResult(\`
+                        <strong>❌ Storage Error</strong><br><br>
+                        <strong>Error:</strong> \${error.message}<br><br>
+                        <strong>Possible causes:</strong><br>
+                        1. 'avatars' bucket doesn't exist<br>
+                        2. No access to storage bucket<br>
+                        3. RLS policy blocking read
+                    \`, 'error');
+                    return;
+                }
+
+                // Find files for this user
+                const userFiles = data.filter(file => file.name.includes(userId));
+
+                showResult(\`
+                    <strong>📦 Storage Bucket Check</strong><br><br>
+                    <strong>Total files in avatars bucket:</strong> \${data.length}<br>
+                    <strong>Files for your user ID:</strong> \${userFiles.length}<br><br>
+                    \${userFiles.length > 0 ? 
+                        \`<strong>✅ Files found:</strong><br>
+                         \${userFiles.map(f => \`
+                            <div style="margin: 10px 0; padding: 10px; background: #f9fafb; border-radius: 5px;">
+                                <strong>Name:</strong> \${f.name}<br>
+                                <strong>Size:</strong> \${(f.metadata?.size / 1024).toFixed(2)} KB<br>
+                                <strong>Created:</strong> \${f.created_at}<br>
+                                <button onclick="previewAvatar('\${f.name}')">Preview</button>
+                            </div>
+                         \`).join('')}\` :
+                        \`<strong>⚠️ No files found for your user!</strong><br>
+                         This means you haven't uploaded a profile picture yet.\`
+                    }
+                \`, userFiles.length > 0 ? 'success' : 'info');
+            } catch (err) {
+                showResult(\`
+                    <strong>❌ Error</strong><br><br>
+                    \${err.message}
+                \`, 'error');
+            }
+        }
+
+        async function listAllFiles() {
+            showResult('⏳ Listing all files...', 'info');
+
+            try {
+                const { data, error } = await supabase.storage
+                    .from('avatars')
+                    .list('', {
+                        limit: 100,
+                        offset: 0,
+                        sortBy: { column: 'created_at', order: 'desc' }
+                    });
+
+                if (error) {
+                    showResult(\`
+                        <strong>❌ Error</strong><br><br>
+                        \${error.message}
+                    \`, 'error');
+                    return;
+                }
+
+                showResult(\`
+                    <strong>📁 All Files in Avatars Bucket</strong><br><br>
+                    <strong>Total:</strong> \${data.length} files<br><br>
+                    \${data.map(f => \`
+                        <div style="margin: 10px 0; padding: 10px; background: #f9fafb; border-radius: 5px;">
+                            <strong>\${f.name}</strong><br>
+                            Size: \${(f.metadata?.size / 1024).toFixed(2)} KB | 
+                            Created: \${new Date(f.created_at).toLocaleString()}<br>
+                            <button onclick="previewAvatar('\${f.name}')">Preview</button>
+                        </div>
+                    \`).join('') || '<em>No files found</em>'}
+                \`, 'info');
+            } catch (err) {
+                showResult(\`
+                    <strong>❌ Error</strong><br><br>
+                    \${err.message}
+                \`, 'error');
+            }
+        }
+    </script>
+</body>
+</html>

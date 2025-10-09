@@ -120,17 +120,79 @@ class AuthService {
 
   async signIn(data: SignInData): Promise<{ user: User | null; error: AuthError | null }> {
     try {
+      // Attempt sign in with password
       const { data: authData, error } = await supabase.auth.signInWithPassword({
         email: data.email,
         password: data.password,
       });
 
+      // Handle failed login
       if (error || !authData.user) {
+        // Log failed login attempt
+        try {
+          await supabase.rpc('log_auth_event', {
+            p_event_type: 'login_failed',
+            p_user_id: null,
+            p_user_email: data.email,
+            p_user_role: 'client',
+            p_session_id: null,
+            p_ip_address: null,
+            p_user_agent: navigator.userAgent,
+            p_status: 'failure',
+            p_details: null,
+            p_error_message: error?.message || 'Login failed'
+          });
+        } catch (logError) {
+          // Silently fail if logging fails - don't block user experience
+        }
+
         return { user: null, error };
+      }
+
+      // Log successful login
+      try {
+        await supabase.rpc('log_auth_event', {
+          p_event_type: 'login_success',
+          p_user_id: authData.user.id,
+          p_user_email: data.email,
+          p_user_role: 'client',
+          p_session_id: authData.session?.access_token?.substring(0, 20),
+          p_ip_address: null,
+          p_user_agent: navigator.userAgent,
+          p_status: 'success',
+          p_details: null,
+          p_error_message: null
+        });
+
+        // Update user's last login timestamp
+        await supabase.rpc('update_user_last_login', {
+          p_user_id: authData.user.id,
+          p_ip_address: null
+        });
+      } catch (logError) {
+        // Silently fail if logging fails - don't block user experience
       }
 
       return { user: authData.user, error: null };
     } catch (err) {
+      // Log unexpected error
+      try {
+        await supabase.rpc('log_auth_event', {
+          p_event_type: 'login_failed',
+          p_user_id: null,
+          p_user_email: data.email,
+          p_user_role: 'client',
+          p_session_id: null,
+          p_ip_address: null,
+          p_user_agent: navigator.userAgent,
+          p_status: 'failure',
+          p_details: null,
+          p_error_message: 'Unexpected error during login'
+        });
+      } catch (logError) {
+        // Silently fail if logging fails
+      }
+
       return { 
         user: null, 
         error: { 
@@ -143,7 +205,32 @@ class AuthService {
 
   async signOut(): Promise<{ error: AuthError | null }> {
     try {
+      // Get current user before signing out for logging
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      // Sign out
       const { error } = await supabase.auth.signOut();
+      
+      // Log logout event
+      if (user) {
+        try {
+          await supabase.rpc('log_auth_event', {
+            p_event_type: 'logout',
+            p_user_id: user.id,
+            p_user_email: user.email,
+            p_user_role: 'client',
+            p_session_id: null,
+            p_ip_address: null,
+            p_user_agent: navigator.userAgent,
+            p_status: 'success',
+            p_details: null,
+            p_error_message: null
+          });
+        } catch (logError) {
+          // Silently fail if logging fails
+        }
+      }
+      
       return { error };
     } catch (err) {
       return { 
@@ -386,6 +473,95 @@ class AuthService {
 
   onAuthStateChange(callback: (event: string, session: Session | null) => void) {
     return supabase.auth.onAuthStateChange(callback);
+  }
+
+  /**
+   * Check account status by email BEFORE attempting login
+   * This provides user-friendly feedback without authenticating
+   * 
+   * @param {string} email - User email to check
+   * @returns {Promise<{ status: string; canLogin: boolean; message?: string }>}
+   */
+  async checkAccountStatus(email: string): Promise<{ 
+    status: string | null; 
+    canLogin: boolean; 
+    message?: string;
+    firstName?: string;
+  }> {
+    try {
+      // Query users table by email (this is a public read operation)
+      const { data: userData, error } = await supabase
+        .from('users')
+        .select('status, first_name, email')
+        .eq('email', email.toLowerCase())
+        .maybeSingle();
+
+      // If there's an error querying, silently allow to proceed
+      // This handles network errors, RLS issues, etc.
+      if (error) {
+        // Only log in development
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('Pre-login status check failed (non-critical):', error.message);
+        }
+        return { 
+          status: null, 
+          canLogin: true  // Let auth handle it
+        };
+      }
+
+      // If no user found, allow to proceed (will fail at auth step with proper error)
+      if (!userData) {
+        return { 
+          status: null, 
+          canLogin: true  // Let auth handle invalid email
+        };
+      }
+
+      const accountStatus = userData.status?.toLowerCase();
+      const firstName = userData.first_name;
+
+      // Check if account is active
+      if (accountStatus === 'active') {
+        return { 
+          status: accountStatus, 
+          canLogin: true,
+          firstName 
+        };
+      }
+
+      // Account is not active - provide specific message
+      let message = '';
+      switch (accountStatus) {
+        case 'inactive':
+          message = `Hi${firstName ? ' ' + firstName : ''}, your account is currently inactive. Please contact support@vanguardcargo.co to reactivate your account.`;
+          break;
+        case 'suspended':
+          message = `Hi${firstName ? ' ' + firstName : ''}, your account has been suspended. Please contact support@vanguardcargo.co for assistance.`;
+          break;
+        case 'reported':
+          message = `Hi${firstName ? ' ' + firstName : ''}, your account is currently under review. Please contact support@vanguardcargo.co for more information.`;
+          break;
+        case 'pending_verification':
+          message = `Hi${firstName ? ' ' + firstName : ''}, please verify your email address before logging in. Check your inbox for the verification link.`;
+          break;
+        default:
+          message = `Hi${firstName ? ' ' + firstName : ''}, your account status does not allow login at this time. Please contact support@vanguardcargo.co for assistance.`;
+      }
+
+      return { 
+        status: accountStatus, 
+        canLogin: false, 
+        message,
+        firstName 
+      };
+    } catch (err) {
+      console.error('Error checking account status:', err);
+      // On error, allow to proceed (will fail at auth with proper error)
+      return { 
+        status: null, 
+        canLogin: true 
+      };
+    }
   }
 }
 

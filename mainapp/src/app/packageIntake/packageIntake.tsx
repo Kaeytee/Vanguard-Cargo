@@ -86,6 +86,13 @@ export default function PackageIntake() {
   const [loadingCodes, setLoadingCodes] = useState(false);
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
 
+  // Pagination state for performance optimization
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const PAGE_SIZE = 15; // Load 15 packages at a time (lightweight - ~1-2MB)
+
   // Transform database package to UI package format
   const transformPackageData = useCallback((pkg: any): IncomingPackage => ({
     // Copy all base package fields
@@ -109,8 +116,10 @@ export default function PackageIntake() {
     storeLogoUrl: undefined,
   }), []);
 
-  // Load packages and delivery codes on component mount
+  // Load initial packages with pagination (optimized for fast loading)
   useEffect(() => {
+    let isMounted = true;
+    
     const loadPackages = async () => {
       if (!user?.id) {
         setLoading(false);
@@ -119,63 +128,107 @@ export default function PackageIntake() {
 
       try {
         setLoading(true);
-        const response = await packageService.getIncomingPackages(user.id);
+        
+        // Add timeout to prevent infinite loading
+        const timeoutId = setTimeout(() => {
+          if (isMounted) {
+            setLoading(false);
+            setError("Loading is taking longer than expected. Please refresh the page.");
+          }
+        }, 10000); // 10 second timeout
+
+        // Load ONLY first page (15 packages) for fast initial load
+        const offset = 0;
+        const response = await packageService.getIncomingPackages(user.id, PAGE_SIZE, offset);
+        
+        clearTimeout(timeoutId);
+        
+        if (!isMounted) return;
         
         if (response.error) {
           setError("Failed to load packages. Please try again.");
-          console.error("Error loading packages:", response.error);
         } else {
           // Transform Supabase data to match component interface
           const transformedPackages: IncomingPackage[] = response.data.map(transformPackageData);
           setPackages(transformedPackages);
+          setTotalCount(response.count || 0);
+          setHasMore(transformedPackages.length >= PAGE_SIZE);
           setError(null);
+          
+          console.log(`✅ Loaded ${transformedPackages.length} packages (Page 1 of ${Math.ceil((response.count || 0) / PAGE_SIZE)})`);
         }
       } catch (err) {
-        setError("Failed to load packages. Please try again.");
-        console.error("Error loading packages:", err);
+        if (isMounted) {
+          setError("Failed to load packages. Please try again.");
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
     loadPackages();
-  }, [user?.id]);
+    
+    return () => {
+      isMounted = false;
+    };
+  }, [user?.id, transformPackageData, PAGE_SIZE]);
+
+  // Load more packages (lazy loading)
+  const loadMorePackages = useCallback(async () => {
+    if (!user?.id || loadingMore || !hasMore) return;
+
+    try {
+      setLoadingMore(true);
+      const nextPage = currentPage + 1;
+      const offset = currentPage * PAGE_SIZE;
+
+      console.log(`📦 Loading more packages (Page ${nextPage})...`);
+
+      const response = await packageService.getIncomingPackages(user.id, PAGE_SIZE, offset);
+
+      if (response.error) {
+        console.error('Error loading more packages:', response.error);
+        return;
+      }
+
+      const transformedPackages: IncomingPackage[] = response.data.map(transformPackageData);
+      
+      if (transformedPackages.length > 0) {
+        setPackages(prev => [...prev, ...transformedPackages]);
+        setCurrentPage(nextPage);
+        setHasMore(transformedPackages.length >= PAGE_SIZE);
+        console.log(`✅ Loaded ${transformedPackages.length} more packages (Total: ${packages.length + transformedPackages.length})`);
+      } else {
+        setHasMore(false);
+        console.log('📭 No more packages to load');
+      }
+    } catch (err) {
+      console.error('Failed to load more packages:', err);
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [user?.id, currentPage, PAGE_SIZE, hasMore, loadingMore, transformPackageData, packages.length]);
 
   // Load delivery codes for packages ready for pickup
   useEffect(() => {
     const loadDeliveryCodes = async () => {
       if (!user?.id) {
-        console.log('⚠️ No user ID found, skipping delivery codes load');
         return;
       }
-
-      console.log('🔄 Starting to load delivery codes for user:', user.id);
 
       try {
         setLoadingCodes(true);
         const response = await deliveryCodeService.getCustomerDeliveryCodes(user.id);
         
-        console.log('📊 Delivery codes response:', {
-          success: response.success,
-          dataLength: response.data?.length || 0,
-          error: response.error,
-          details: response.details
-        });
-        
         if (response.success && response.data) {
           setDeliveryCodes(response.data);
-          console.log('✅ Successfully loaded delivery codes:', response.data.length);
-          if (response.data.length > 0) {
-            console.log('📦 First delivery code:', response.data[0]);
-          }
-        } else {
-          console.error('❌ Failed to load delivery codes:', response.error, response.details);
         }
       } catch (err) {
-        console.error('❌ Unexpected error loading delivery codes:', err);
+        // Error handled silently
       } finally {
         setLoadingCodes(false);
-        console.log('✓ Finished loading delivery codes');
       }
     };
 
@@ -187,7 +240,6 @@ export default function PackageIntake() {
     onInsert: useCallback((newPackageData: any) => {
       const newPackage = transformPackageData(newPackageData);
       setPackages(prev => [newPackage, ...prev]);
-      console.log('New package added via real-time:', newPackage.package_id);
     }, [transformPackageData]),
     
     onUpdate: useCallback((updatedPackageData: any) => {
@@ -197,14 +249,12 @@ export default function PackageIntake() {
           pkg.id === updatedPackage.id ? updatedPackage : pkg
         )
       );
-      console.log('Package updated via real-time:', updatedPackage.package_id);
     }, [transformPackageData]),
     
     onDelete: useCallback((deletedPackageData: any) => {
       setPackages(prev => 
         prev.filter(pkg => pkg.id !== deletedPackageData.id)
       );
-      console.log('Package deleted via real-time:', deletedPackageData.package_id);
     }, [])
   });
 
@@ -232,7 +282,6 @@ export default function PackageIntake() {
         .single();
 
       if (fetchError || !currentPackage) {
-        console.error("Error fetching package details:", fetchError);
         setError("Failed to fetch package details. Please try again.");
         return;
       }
@@ -255,7 +304,6 @@ export default function PackageIntake() {
         .single();
       
       if (error) {
-        console.error("Error updating package status:", error);
         setError("Failed to process package. Please try again.");
         return;
       }
@@ -273,17 +321,13 @@ export default function PackageIntake() {
           oldStatus,
           newStatus
         );
-        console.log(`📧 Notification sent to user ${currentPackage.user_id} for package status change: ${oldStatus} → ${newStatus}`);
       } catch (notificationError) {
-        console.error("Error sending notification:", notificationError);
         // Don't fail the entire operation if notification fails
       }
       
       // Real-time subscription will automatically update the UI
       // No need to manually update local state - real-time will handle it
-      console.log(`Package ${packageId} status updated to ${newStatus} - real-time will sync UI`);
     } catch (err) {
-      console.error("Error processing package:", err);
       setError("Failed to process package. Please try again.");
     } finally {
       setActionInProgress(null);
@@ -311,43 +355,10 @@ export default function PackageIntake() {
     navigator.clipboard.writeText(code).then(() => {
       setCopiedCode(code);
       setTimeout(() => setCopiedCode(null), 2000);
-    }).catch((err) => {
-      console.error('Failed to copy code:', err);
+    }).catch(() => {
+      // Failed to copy
     });
   }, []);
-
-  // Get status badge styling
-  const getStatusBadge = (status: IncomingPackage['status']) => {
-    const baseClasses = "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium";
-    
-    switch (status) {
-      case 'pending':
-        return `${baseClasses} bg-yellow-100 text-yellow-800`;
-      case 'received':
-        return `${baseClasses} bg-blue-100 text-blue-800`;
-      case 'processing':
-        return `${baseClasses} bg-orange-100 text-orange-800`;
-      case 'shipped':
-        return `${baseClasses} bg-purple-100 text-purple-800`;
-      case 'delivered':
-        return `${baseClasses} bg-green-100 text-green-800`;
-      // Legacy statuses for compatibility
-      case 'arrived':
-        return `${baseClasses} bg-blue-100 text-blue-800`;
-      case 'ready_for_review':
-        return `${baseClasses} bg-yellow-100 text-yellow-800`;
-      case 'pending_action':
-        return `${baseClasses} bg-orange-100 text-orange-800`;
-      case 'approved':
-        return `${baseClasses} bg-green-100 text-green-800`;
-      case 'consolidated':
-        return `${baseClasses} bg-purple-100 text-purple-800`;
-      case 'on_hold':
-        return `${baseClasses} bg-gray-100 text-gray-800`;
-      default:
-        return `${baseClasses} bg-gray-100 text-gray-800`;
-    }
-  };
 
   // Get priority badge styling
   const getPriorityBadge = (priority: IncomingPackage['priority']) => {
@@ -538,11 +549,58 @@ export default function PackageIntake() {
                   onApproveShipment={() => approveShipment(pkg.id)}
                   onEditDetails={() => handleEditPackage(pkg)}
                   isActionInProgress={actionInProgress === pkg.id}
-                  getStatusBadge={getStatusBadge}
                   getPriorityBadge={getPriorityBadge}
                 />
               </motion.div>
             ))}
+          </div>
+        )}
+
+        {/* Load More Button & Pagination Info */}
+        {packages.length > 0 && (
+          <div className="mt-8 space-y-4">
+            {/* Stats Info */}
+            <div className="text-center text-sm text-gray-600">
+              <p>
+                Showing <span className="font-semibold text-gray-900">{packages.length}</span> of{' '}
+                <span className="font-semibold text-gray-900">{totalCount}</span> packages
+                {totalCount > 0 && (
+                  <span className="ml-2 text-xs text-gray-500">
+                    ({Math.ceil((packages.length / totalCount) * 100)}% loaded)
+                  </span>
+                )}
+              </p>
+            </div>
+
+            {/* Load More Button */}
+            {hasMore && (
+              <div className="flex justify-center">
+                <button
+                  onClick={loadMorePackages}
+                  disabled={loadingMore}
+                  className="px-6 py-3 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center gap-2 shadow-md hover:shadow-lg"
+                >
+                  {loadingMore ? (
+                    <>
+                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      <span>Loading more packages...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Package className="w-5 h-5" />
+                      <span>Load More Packages ({totalCount - packages.length} remaining)</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
+
+            {/* All Loaded Message */}
+            {!hasMore && packages.length < totalCount && (
+              <div className="text-center text-sm text-gray-500">
+                <p>✅ All packages loaded</p>
+              </div>
+            )}
           </div>
         )}
 
@@ -569,19 +627,17 @@ interface PackageCardProps {
   onApproveShipment: () => void;
   onEditDetails: () => void;
   isActionInProgress: boolean;
-  getStatusBadge: (status: IncomingPackage['status']) => string;
   getPriorityBadge: (priority: IncomingPackage['priority']) => string;
 }
 
 const PackageCard: React.FC<PackageCardProps> = ({
   package: pkg,
   isSelected,
-  onToggleSelection,
+  onToggleSelection: _onToggleSelection,
   onApproveShipment,
   onEditDetails,
   isActionInProgress,
-  getStatusBadge,
-  getPriorityBadge
+  getPriorityBadge: _getPriorityBadge
 }) => {
   const [showPhotos, setShowPhotos] = useState(false);
 

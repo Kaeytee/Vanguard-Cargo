@@ -2,21 +2,40 @@
 
 A comprehensive cargo management platform built with React, TypeScript, and Vite, featuring complete customer account management, shipment tracking, and cross-border warehouse integration.
 
+## ⚡ Recent Updates
+
+### Redux Toolkit Migration (2025-10-09)
+Successfully migrated authentication system from Context API to Redux Toolkit for better state management:
+
+- ✅ **Redux Store Setup** - Centralized state management with 4 slices (auth, packages, notifications, ui)
+- ✅ **RTK Query Integration** - Automatic caching with 5-minute expiry
+- ✅ **Redux Persist** - Session persistence across page refreshes
+- ✅ **Auth Protection** - ReduxAuthGuard for route protection
+- ✅ **Consistent Data** - All components (Sidebar, Navbar, Settings) use same Redux source
+- ✅ **Profile Pictures** - Fixed avatar loading with proper Supabase storage URL handling
+- ✅ **Loading States** - Professional loading feedback throughout
+- ✅ **Account Status Security** - Database-driven access control with real-time enforcement
+- ✅ **Pre-Login Status Check** - Beautiful UI warnings before authentication attempts
+
+**Documentation:** See `REDUX_SETUP.md`, `REDUX_QUICK_REFERENCE.md`, `ACCOUNT_STATUS_SECURITY.md`, `PRE_LOGIN_STATUS_CHECK.md` and related docs in project root.
+
 ## 🚀 Quick Start
 
 ```bash
-# Install dependencies
-npm install
+# Install dependencies (using pnpm)
+pnpm install
 
 # Start development server
-npm run dev
+pnpm dev
 
 # Build for production
-npm run build
+pnpm build
 
 # Run tests
-npm run test
+pnpm test
 ```
+
+**Note**: This project uses **pnpm** as the package manager for better performance and disk space efficiency.
 
 ## 📋 Overview
 
@@ -44,9 +63,19 @@ mainapp/
 │   │   ├── ui/           # Base UI components
 │   │   ├── settings/     # Settings components
 │   │   └── support/      # Support components
-│   ├── context/          # React contexts
+│   ├── context/          # React contexts (legacy - migrating to Redux)
 │   │   ├── AuthProvider.tsx    # Authentication context
 │   │   └── ThemeProvider.tsx   # Theme management
+│   ├── store/            # Redux state management
+│   │   ├── store.ts      # Redux store configuration
+│   │   ├── hooks.ts      # Typed Redux hooks
+│   │   ├── api/          # RTK Query API with caching
+│   │   └── slices/       # Redux slices
+│   │       ├── authSlice.ts        # Authentication state
+│   │       ├── packagesSlice.ts    # Package management
+│   │       ├── notificationsSlice.ts # Notifications
+│   │       └── uiSlice.ts          # UI state
+│   ├── services/         # API services
 │   ├── hooks/            # Custom hooks
 │   ├── landing/          # Landing page components
 │   │   ├── home/         # Home page
@@ -57,6 +86,38 @@ mainapp/
 │   └── images/           # Image assets
 └── docs/                 # Documentation
 ```
+
+## 🔧 State Management & Caching
+
+This application uses **Redux Toolkit** with **RTK Query** for state management and automatic caching:
+
+### Features
+- ✅ **Centralized State** - Single source of truth for all app state
+- ✅ **Automatic Caching** - 5-minute cache for API responses with RTK Query
+- ✅ **State Persistence** - Auth state persisted to localStorage
+- ✅ **Type Safety** - Full TypeScript support throughout
+- ✅ **Optimistic Updates** - Instant UI updates with automatic rollback on errors
+- ✅ **Real-time Polling** - Optional polling for real-time data updates
+- ✅ **Redux DevTools** - Time-travel debugging in development
+
+### Quick Reference
+```typescript
+// Fetch packages with automatic caching
+const { data, isLoading } = useGetPackagesQuery(userId);
+
+// Update package status
+const [updateStatus] = useUpdatePackageStatusMutation();
+await updateStatus({ packageId, status: 'processing' }).unwrap();
+
+// Access Redux state
+const user = useAppSelector(state => state.auth.user);
+const packages = useAppSelector(selectPackages);
+```
+
+📚 **Documentation:**
+- [Redux Setup Guide](./REDUX_SETUP.md) - Complete implementation guide
+- [Quick Reference](./REDUX_QUICK_REFERENCE.md) - Common operations cheat sheet
+- [Redis Caching](./REDIS_CACHING.md) - Server-side caching with Upstash Redis
 
 ## 🔐 Authentication & Account Management
 

@@ -1,11 +1,15 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
+import { Provider } from 'react-redux';
+import { PersistGate } from 'redux-persist/integration/react';
 import { SpeedInsights } from '@vercel/speed-insights/react';
+import { Toaster } from 'react-hot-toast';
 import ScrollToTop from './components/ScrollToTop'; // Import ScrollToTop for UX improvement
 import { ThemeProvider } from './context/ThemeProvider';
 import { PreferencesProvider } from './context/PreferencesProvider';
 import { AuthProvider } from './context/AuthContext';
+import { store, persistor } from './store/store';
 import { clearMockData } from './utils/clearMockData';
 import './index.css';
 import App from './App.tsx';
@@ -13,20 +17,66 @@ import App from './App.tsx';
 // Clear mock data on app startup for production experience
 clearMockData();
 
+/**
+ * Application Root with Providers
+ * 
+ * Provider Hierarchy:
+ * 1. StrictMode - React development checks
+ * 2. Redux Provider - Global state management
+ * 3. PersistGate - Redux persistence (localStorage)
+ * 4. BrowserRouter - Routing
+ * 5. ThemeProvider - Theme management (migrating to Redux)
+ * 6. AuthProvider - Authentication (migrating to Redux)
+ * 7. PreferencesProvider - User preferences (migrating to Redux)
+ * 
+ * Note: Context providers are kept for backward compatibility during migration
+ * They will be removed once all components are migrated to Redux
+ */
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <BrowserRouter>
-      {/* ScrollToTop ensures every route change starts at the top of the page */}
-      <ScrollToTop />
-      <ThemeProvider>
-        <AuthProvider>
-          <PreferencesProvider>
-            <App />
-            {/* SpeedInsights component for Vercel performance monitoring */}
-            <SpeedInsights />
-          </PreferencesProvider>
-        </AuthProvider>
-      </ThemeProvider>
-    </BrowserRouter>
+    <Provider store={store}>
+      <PersistGate loading={null} persistor={persistor}>
+        <BrowserRouter>
+          {/* ScrollToTop ensures every route change starts at the top of the page */}
+          <ScrollToTop />
+          <ThemeProvider>
+            <AuthProvider>
+              <PreferencesProvider>
+                <App />
+                {/* SpeedInsights component for Vercel performance monitoring */}
+                <SpeedInsights />
+                {/* Toast Notifications */}
+                <Toaster
+                  position="top-right"
+                  toastOptions={{
+                    duration: 5000,
+                    style: {
+                      background: '#ffffff',
+                      color: '#1f2937',
+                      boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+                      border: '1px solid #e5e7eb',
+                      borderRadius: '0.75rem',
+                      padding: '16px',
+                    },
+                    success: {
+                      iconTheme: {
+                        primary: '#10b981',
+                        secondary: '#ffffff',
+                      },
+                    },
+                    error: {
+                      iconTheme: {
+                        primary: '#ef4444',
+                        secondary: '#ffffff',
+                      },
+                    },
+                  }}
+                />
+              </PreferencesProvider>
+            </AuthProvider>
+          </ThemeProvider>
+        </BrowserRouter>
+      </PersistGate>
+    </Provider>
   </StrictMode>,
 )

@@ -24,7 +24,7 @@ import AppAbout from "./app/about/Appabout";
 import AppSupport from "./app/support/Appsupport";
 import NotificationsPage from "./app/notification/notification";
 import PackageIntake from "./app/packageIntake/packageIntake";
-import ProtectedRoutes from "./components/protectedRoutes";
+import { ReduxAuthGuard } from "./components/ReduxAuthGuard";
 import AppLayout from "./components/AppLayout";
 import SmartNotFound from "./components/SmartNotFound";
 import AppNotFoundWithLayout from "./app/layouts/AppNotFoundWithLayout";
@@ -180,7 +180,7 @@ export default function App() {
       <Route
         path="/app/*"
         element={
-          <ProtectedRoutes>
+          <ReduxAuthGuard>
             <AppLayout>
               <Routes>
                 <Route index element={<Dashboard />} />
@@ -196,7 +196,7 @@ export default function App() {
                 <Route path="*" element={<AppNotFoundWithLayout />} />
               </Routes>
             </AppLayout>
-          </ProtectedRoutes>
+          </ReduxAuthGuard>
         }
       />
 

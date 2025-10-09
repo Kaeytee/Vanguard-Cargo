@@ -131,17 +131,24 @@ class NotificationService {
   }
 
   // Mark all notifications as read for a user
-  async markAllAsRead(userId: string): Promise<{ error: Error | null }> {
+  async markAllAsRead(userId: string): Promise<{ error: Error | null; count?: number }> {
     try {
-      const { error } = await supabase
-        .from('notifications')
-        .update({ read_status: true })
-        .eq('user_id', userId)
-        .eq('read_status', false);
+      // Use database function for reliable marking
+      const { data, error } = await supabase
+        .rpc('mark_all_notifications_read', { p_user_id: userId });
 
-      return { error };
+      if (error) {
+        console.error('Mark all notifications as read error:', error);
+        return { error };
+      }
+
+      // Return the count of updated notifications
+      const count = data?.[0]?.updated_count || 0;
+      console.log(`✅ Marked ${count} notifications as read for user ${userId}`);
+      
+      return { error: null, count };
     } catch (err) {
-      console.error('Mark all notifications as read error:', err);
+      console.error('Mark all notifications as read exception:', err);
       return { error: err as Error };
     }
   }

@@ -20,7 +20,6 @@ export function clearMockData() {
     keysToCheck.forEach(key => {
       if (localStorage.getItem(key)) {
         localStorage.removeItem(key);
-        console.log(`Cleared mock data: ${key}`);
       }
     });
     
@@ -28,14 +27,10 @@ export function clearMockData() {
     keysToCheck.forEach(key => {
       if (sessionStorage.getItem(key)) {
         sessionStorage.removeItem(key);
-        console.log(`Cleared session mock data: ${key}`);
       }
     });
-    
-    console.log('Mock data cleanup completed');
-    
   } catch (error) {
-    console.error('Error clearing mock data:', error);
+    // Error clearing mock data
   }
 }
 

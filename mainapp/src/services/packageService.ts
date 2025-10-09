@@ -593,7 +593,6 @@ class PackageService {
         .range(offset, offset + limit - 1);
 
       if (error) {
-        console.error('Supabase error:', error);
         return { data: [], error };
       }
 
@@ -604,7 +603,6 @@ class PackageService {
 
       return { data: packagesWithDetails, error: null, count: count || 0 };
     } catch (err) {
-      console.error('Get incoming packages error:', err);
       return { data: [], error: err as Error };
     }
   }
