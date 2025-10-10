@@ -48,8 +48,21 @@ export default defineConfig(({ mode }) => {
         
         // Workbox Configuration for caching strategies
         workbox: {
-          // Cache all static assets during build
-          globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2,ttf,otf}'],
+          // Cache all static assets during build (excluding large images)
+          globPatterns: ['**/*.{js,css,html,ico,woff,woff2,ttf,otf}'],
+          
+          // Exclude large images from precache (they'll be cached at runtime)
+          globIgnores: [
+            '**/settings.png',
+            '**/submit-girl.png', 
+            '**/track.png',
+            '**/Screenshot*.png',
+            '**/ICONS.png',
+            '**/LEGACY.png'
+          ],
+          
+          // Increase cache limit for remaining assets
+          maximumFileSizeToCacheInBytes: 3 * 1024 * 1024, // 3MB limit
           
           // Runtime caching strategies
           runtimeCaching: [
