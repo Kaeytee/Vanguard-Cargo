@@ -475,15 +475,24 @@ const authSlice = createSlice({
         state.isLoading = true;
       })
       .addCase(logoutUser.fulfilled, (state) => {
+        // Clear all auth state on successful logout
         state.isLoading = false;
         state.user = null;
         state.profile = null;
         state.isAuthenticated = false;
+        state.isInitialized = false;
         state.error = null;
+        console.log('✅ Logout fulfilled - Auth state cleared');
       })
       .addCase(logoutUser.rejected, (state, action) => {
+        // Clear auth state even on logout failure (critical!)
         state.isLoading = false;
+        state.user = null;
+        state.profile = null;
+        state.isAuthenticated = false;
+        state.isInitialized = false;
         state.error = action.payload as string;
+        console.warn('⚠️ Logout rejected but state cleared anyway');
       });
 
     // Update profile

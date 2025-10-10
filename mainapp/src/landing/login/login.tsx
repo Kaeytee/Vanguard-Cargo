@@ -239,45 +239,13 @@ export default function Login() {
 			return;
 		}
 
-		try {
-			// Show loading state for pre-check
-			setIsCheckingStatus(true);
-			
-			// STEP 1: Check account status BEFORE attempting authentication
-			console.log('🔍 Pre-login: Checking account status for', email);
-			const statusCheck = await authService.checkAccountStatus(email);
-			
-			// Debug: Log the full status check result
-			console.log('📊 Pre-login status check result:', {
-				status: statusCheck.status,
-				canLogin: statusCheck.canLogin,
-				hasMessage: !!statusCheck.message,
-				firstName: statusCheck.firstName
-			});
-			
-			if (!statusCheck.canLogin && statusCheck.message) {
-				// Account is not active - show warning modal instead of attempting login
-				console.log('🚫 Pre-login: Account not active -', statusCheck.status);
-				
-				// Stop loading
-				setIsCheckingStatus(false);
-				
-				// Prevent form submission
-				e.preventDefault();
-				e.stopPropagation();
-				
-				setAccountStatusInfo({
-					status: statusCheck.status || 'unknown',
-					message: statusCheck.message,
-					firstName: statusCheck.firstName
-				});
-				setShowStatusWarning(true);
-				return; // Stop here - don't attempt login
-			}
-			
-			console.log('✅ Pre-login: Account is active - proceeding with authentication');
+		// Start account status check in parallel (non-blocking)
+		const statusCheckPromise = authService.checkAccountStatus(email);
 
-			// STEP 2: Proceed with normal login since account is active
+		try {
+			setIsCheckingStatus(true);
+
+			// Login immediately (don't wait for status check)
 			const result = await dispatch(loginUser({ email, password })).unwrap();
 			
 			// Login successful - Redux will handle state updates
@@ -287,12 +255,9 @@ export default function Login() {
 			setError("");
 			setShowResendVerification(false);
 			setShowEmailVerificationBanner(false);
+			setIsCheckingStatus(false);
 			
-			// CRITICAL: Wait a moment for Redux Persist to save the state
-			// This prevents a race condition where navigation happens before persist completes
-			await new Promise(resolve => setTimeout(resolve, 100));
-			
-			// Navigate to the attempted page or dashboard
+			// Navigate immediately (Redux Persist handles state save automatically)
 			const from = (location.state as { from?: string })?.from || '/app/dashboard';
 			navigate(from, { replace: true });
 			
@@ -306,26 +271,41 @@ export default function Login() {
 			
 			console.error('❌ Login error:', errorMessage);
 			
-			// FALLBACK: Check if error is about account status (in case pre-check failed)
+			// Check if error is about account status
 			if (lowerErrorMessage.includes('inactive') || 
 			    lowerErrorMessage.includes('suspended') || 
 			    lowerErrorMessage.includes('reported') ||
 			    lowerErrorMessage.includes('under review')) {
-				console.warn('⚠️ Account status error caught in fallback - showing modal');
 				
-				// Determine status from error message
+				// Get account status info from the pre-check (if available)
+				try {
+					const statusCheck = await statusCheckPromise;
+					if (statusCheck && !statusCheck.canLogin) {
+						setAccountStatusInfo({
+							status: statusCheck.status || 'inactive',
+							message: statusCheck.message || errorMessage,
+							firstName: statusCheck.firstName
+						});
+						setShowStatusWarning(true);
+						return;
+					}
+				} catch {
+					// Fallback if status check failed
+				}
+				
+				// Fallback: Determine status from error message
 				let status = 'inactive';
 				if (lowerErrorMessage.includes('suspended')) status = 'suspended';
 				else if (lowerErrorMessage.includes('reported') || lowerErrorMessage.includes('under review')) status = 'reported';
 				
-				// Show the modal as fallback
+				// Show modal
 				setAccountStatusInfo({
 					status: status,
 					message: errorMessage,
-					firstName: undefined // We don't have first name in this fallback
+					firstName: undefined
 				});
 				setShowStatusWarning(true);
-				return; // Don't show generic error
+				return;
 			}
 			
 			// Check for specific error types

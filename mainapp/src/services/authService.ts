@@ -128,57 +128,8 @@ class AuthService {
 
       // Handle failed login
       if (error || !authData.user) {
-        // Log failed login attempt
-        try {
-          await supabase.rpc('log_auth_event', {
-            p_event_type: 'login_failed',
-            p_user_id: null,
-            p_user_email: data.email,
-            p_user_role: 'client',
-            p_session_id: null,
-            p_ip_address: null,
-            p_user_agent: navigator.userAgent,
-            p_status: 'failure',
-            p_details: null,
-            p_error_message: error?.message || 'Login failed'
-          });
-        } catch (logError) {
-          // Silently fail if logging fails - don't block user experience
-        }
-
-        return { user: null, error };
-      }
-
-      // Log successful login
-      try {
-        await supabase.rpc('log_auth_event', {
-          p_event_type: 'login_success',
-          p_user_id: authData.user.id,
-          p_user_email: data.email,
-          p_user_role: 'client',
-          p_session_id: authData.session?.access_token?.substring(0, 20),
-          p_ip_address: null,
-          p_user_agent: navigator.userAgent,
-          p_status: 'success',
-          p_details: null,
-          p_error_message: null
-        });
-
-        // Update user's last login timestamp
-        await supabase.rpc('update_user_last_login', {
-          p_user_id: authData.user.id,
-          p_ip_address: null
-        });
-      } catch (logError) {
-        // Silently fail if logging fails - don't block user experience
-      }
-
-      return { user: authData.user, error: null };
-    } catch (err) {
-      // Log unexpected error
-      try {
-        await supabase.rpc('log_auth_event', {
-          p_event_type: 'login_failed',
+        // Log failed login attempt in background (non-blocking)
+        this.logAuthEventAsync('login_failed', {
           p_user_id: null,
           p_user_email: data.email,
           p_user_role: 'client',
@@ -187,11 +138,42 @@ class AuthService {
           p_user_agent: navigator.userAgent,
           p_status: 'failure',
           p_details: null,
-          p_error_message: 'Unexpected error during login'
+          p_error_message: error?.message || 'Login failed'
         });
-      } catch (logError) {
-        // Silently fail if logging fails
+
+        return { user: null, error };
       }
+
+      // Log successful login in background (non-blocking)
+      this.logAuthEventAsync('login_success', {
+        p_user_id: authData.user.id,
+        p_user_email: data.email,
+        p_user_role: 'client',
+        p_session_id: authData.session?.access_token?.substring(0, 20),
+        p_ip_address: null,
+        p_user_agent: navigator.userAgent,
+        p_status: 'success',
+        p_details: null,
+        p_error_message: null
+      });
+
+      // Update user's last login timestamp in background (non-blocking)
+      this.updateLastLoginAsync(authData.user.id);
+
+      return { user: authData.user, error: null };
+    } catch (err) {
+      // Log unexpected error in background (non-blocking)
+      this.logAuthEventAsync('login_failed', {
+        p_user_id: null,
+        p_user_email: data.email,
+        p_user_role: 'client',
+        p_session_id: null,
+        p_ip_address: null,
+        p_user_agent: navigator.userAgent,
+        p_status: 'failure',
+        p_details: null,
+        p_error_message: 'Unexpected error during login'
+      });
 
       return { 
         user: null, 
@@ -208,27 +190,22 @@ class AuthService {
       // Get current user before signing out for logging
       const { data: { user } } = await supabase.auth.getUser();
       
-      // Sign out
+      // Sign out immediately (don't wait for logging)
       const { error } = await supabase.auth.signOut();
       
-      // Log logout event
+      // Log logout event in background (non-blocking)
       if (user) {
-        try {
-          await supabase.rpc('log_auth_event', {
-            p_event_type: 'logout',
-            p_user_id: user.id,
-            p_user_email: user.email,
-            p_user_role: 'client',
-            p_session_id: null,
-            p_ip_address: null,
-            p_user_agent: navigator.userAgent,
-            p_status: 'success',
-            p_details: null,
-            p_error_message: null
-          });
-        } catch (logError) {
-          // Silently fail if logging fails
-        }
+        this.logAuthEventAsync('logout', {
+          p_user_id: user.id,
+          p_user_email: user.email,
+          p_user_role: 'client',
+          p_session_id: null,
+          p_ip_address: null,
+          p_user_agent: navigator.userAgent,
+          p_status: 'success',
+          p_details: null,
+          p_error_message: null
+        });
       }
       
       return { error };
@@ -473,6 +450,55 @@ class AuthService {
 
   onAuthStateChange(callback: (event: string, session: Session | null) => void) {
     return supabase.auth.onAuthStateChange(callback);
+  }
+
+  /**
+   * Log authentication event asynchronously (non-blocking)
+   * Fires and forgets - does not block user experience
+   * 
+   * @param eventType - Type of auth event
+   * @param params - Event parameters
+   * @private
+   */
+  private logAuthEventAsync(eventType: string, params: any): void {
+    // Fire and forget - use async IIFE for proper error handling
+    (async () => {
+      try {
+        await supabase.rpc('log_auth_event', {
+          p_event_type: eventType,
+          ...params
+        });
+      } catch (error) {
+        // Only log errors in development
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('[AuthService] Background logging failed:', error);
+        }
+      }
+    })();
+  }
+
+  /**
+   * Update user's last login timestamp asynchronously (non-blocking)
+   * Fires and forgets - does not block user experience
+   * 
+   * @param userId - User ID
+   * @private
+   */
+  private updateLastLoginAsync(userId: string): void {
+    // Fire and forget - use async IIFE for proper error handling
+    (async () => {
+      try {
+        await supabase.rpc('update_user_last_login', {
+          p_user_id: userId,
+          p_ip_address: null
+        });
+      } catch (error) {
+        // Only log errors in development
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('[AuthService] Background last login update failed:', error);
+        }
+      }
+    })();
   }
 
   /**

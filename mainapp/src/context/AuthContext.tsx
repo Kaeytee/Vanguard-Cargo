@@ -87,6 +87,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
           setSession(currentSession);
           setUser(currentSession.user);
           await loadProfile(currentSession.user);
+          
+          // Setup notifications in background (non-blocking)
+          const notificationService = PackageNotificationService.getInstance();
+          notificationService.refreshNotificationsForUser(currentSession.user.id);
+          notificationService.setupRealtimeForUser(currentSession.user.id);
         }
       } catch (error) {
         console.error('Error initializing auth:', error);
@@ -103,11 +108,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setUser(session?.user ?? null);
       
       if (session?.user) {
+        // Load profile first (blocking)
         await loadProfile(session.user);
         
-        // Refresh notifications and setup real-time for the authenticated user
+        // Setup notifications in background (non-blocking)
         const notificationService = PackageNotificationService.getInstance();
-        await notificationService.refreshNotificationsForUser(session.user.id);
+        notificationService.refreshNotificationsForUser(session.user.id);
         notificationService.setupRealtimeForUser(session.user.id);
       } else {
         setProfile(null);
@@ -121,21 +127,20 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const signIn = async (email: string, password: string): Promise<{ error: string | null }> => {
     try {
-      // Removed setLoading(true) to prevent blue loading screen during login
+      // Authenticate user
       const { error, user: authUser } = await authService.signIn({ email, password });
       
       if (error) {
         return { error: error.message };
       }
       
-      // Clear mock data for real users on successful login
-      const { clearMockData } = await import('../utils/clearMockData');
-      clearMockData();
+      // Clear mock data in background (non-blocking)
+      import('../utils/clearMockData').then(({ clearMockData }) => clearMockData());
       
-      // Refresh notifications and setup real-time for the logged in user
+      // Setup notifications in background (non-blocking)
       if (authUser?.id) {
         const notificationService = PackageNotificationService.getInstance();
-        await notificationService.refreshNotificationsForUser(authUser.id);
+        notificationService.refreshNotificationsForUser(authUser.id);
         notificationService.setupRealtimeForUser(authUser.id);
       }
       
@@ -143,8 +148,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
     } catch (error) {
       console.error('Sign in error:', error);
       return { error: 'An unexpected error occurred' };
-    } finally {
-      // Removed setLoading(false) to prevent loading state changes
     }
   };
 
@@ -183,17 +186,24 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const signOut = async (): Promise<void> => {
     try {
-      setLoading(true);
-      
-      // Disconnect real-time notifications
+      // Disconnect real-time notifications (fast operation)
       const notificationService = PackageNotificationService.getInstance();
       notificationService.disconnect();
       
+      // Sign out immediately
       await authService.signOut();
+      
+      // Force clear local state immediately
+      setUser(null);
+      setProfile(null);
+      setSession(null);
     } catch (error) {
       console.error('Sign out error:', error);
-    } finally {
-      setLoading(false);
+      
+      // Force clear state even on error
+      setUser(null);
+      setProfile(null);
+      setSession(null);
     }
   };
 
