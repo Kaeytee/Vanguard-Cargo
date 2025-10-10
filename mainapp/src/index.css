@@ -59,6 +59,20 @@
 	animation: fadeIn 0.8s ease-out forwards;
 }
 
+/* Shimmer animation for lazy loading placeholders */
+@keyframes shimmer {
+	0% {
+		background-position: -200% 0;
+	}
+	100% {
+		background-position: 200% 0;
+	}
+}
+
+.animate-shimmer {
+	animation: shimmer 1.5s infinite;
+}
+
 /* Animation for image cache notification */
 @keyframes fade-in {
 	from {
