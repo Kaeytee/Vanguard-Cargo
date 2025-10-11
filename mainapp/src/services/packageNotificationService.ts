@@ -8,6 +8,7 @@
 import { notificationService } from './notificationService';
 import { supabase } from '../lib/supabase';
 import type { RealtimeChannel } from '@supabase/supabase-js';
+import { StorageManager } from '../utils/storageManager';
 
 export interface PackageNotification {
   id: string;
@@ -103,12 +104,12 @@ export class PackageNotificationService {
     // Add to notifications array
     this.notifications.unshift(notification);
     
-    // Keep only last 50 notifications
+    // Keep only last 50 notifications (prevent memory bloat)
     if (this.notifications.length > 50) {
       this.notifications = this.notifications.slice(0, 50);
     }
 
-    // Store in localStorage
+    // Store in localStorage using safe method
     this.storeNotifications();
 
     // Notify all listeners
@@ -506,12 +507,26 @@ export class PackageNotificationService {
 
   /**
    * Store notifications in localStorage
+   * Uses StorageManager for safe storage with quota management
    */
   private storeNotifications() {
     try {
-      localStorage.setItem('package_notifications', JSON.stringify(this.notifications));
+      const success = StorageManager.safeSetItem(
+        'package_notifications',
+        JSON.stringify(this.notifications)
+      );
+      
+      if (!success) {
+        console.warn('⚠️ Failed to store notifications - storage quota exceeded');
+        // Keep only 20 most recent and try again
+        this.notifications = this.notifications.slice(0, 20);
+        StorageManager.safeSetItem(
+          'package_notifications',
+          JSON.stringify(this.notifications)
+        );
+      }
     } catch (error) {
-      // Error storing notifications
+      console.error('Error storing notifications:', error);
     }
   }
 
@@ -723,6 +738,48 @@ export class PackageNotificationService {
     if (this.realtimeChannel) {
       notificationService.unsubscribeFromNotifications(this.realtimeChannel);
       this.realtimeChannel = null;
+    }
+  }
+
+  /**
+   * Complete cleanup - Clear all data and reset service
+   * CRITICAL: Called on logout to prevent data leakage
+   */
+  public clearAllData() {
+    // Clear notifications array
+    this.notifications = [];
+    
+    // Clear all listeners
+    this.listeners = [];
+    
+    // Disconnect real-time
+    this.disconnect();
+    
+    // Clear localStorage
+    try {
+      localStorage.removeItem('package_notifications');
+    } catch (error) {
+      console.error('Error clearing notification storage:', error);
+    }
+    
+    console.log('✅ PackageNotificationService: All data cleared');
+  }
+
+  /**
+   * Reset singleton instance completely
+   * CRITICAL: Called on logout to ensure fresh state for next user
+   * 
+   * @static
+   */
+  public static resetInstance(): void {
+    if (PackageNotificationService.instance) {
+      // Clear all data first
+      PackageNotificationService.instance.clearAllData();
+      
+      // Destroy the instance
+      PackageNotificationService.instance = null as any;
+      
+      console.log('✅ PackageNotificationService: Instance reset');
     }
   }
 }

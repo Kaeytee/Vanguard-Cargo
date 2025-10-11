@@ -59,6 +59,20 @@
 	animation: fadeIn 0.8s ease-out forwards;
 }
 
+/* Shimmer animation for lazy loading placeholders */
+@keyframes shimmer {
+	0% {
+		background-position: -200% 0;
+	}
+	100% {
+		background-position: 200% 0;
+	}
+}
+
+.animate-shimmer {
+	animation: shimmer 1.5s infinite;
+}
+
 /* Animation for image cache notification */
 @keyframes fade-in {
 	from {
@@ -194,4 +208,35 @@ body {
 .animate-marquee-left:hover,
 .animate-marquee-right:hover {
 	animation-play-state: paused;
+}
+
+/* Toast notification animations */
+@keyframes enter {
+	from {
+		transform: translateX(100%);
+		opacity: 0;
+	}
+	to {
+		transform: translateX(0);
+		opacity: 1;
+	}
+}
+
+@keyframes leave {
+	from {
+		transform: translateX(0);
+		opacity: 1;
+	}
+	to {
+		transform: translateX(100%);
+		opacity: 0;
+	}
+}
+
+.animate-enter {
+	animation: enter 0.3s ease-out;
+}
+
+.animate-leave {
+	animation: leave 0.2s ease-in forwards;
 }

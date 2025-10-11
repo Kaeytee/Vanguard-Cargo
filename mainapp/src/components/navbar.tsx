@@ -5,7 +5,7 @@ import { Button } from "./ui/button";
 import { cn } from "../lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 // import { useTheme } from "../context/ThemeProvider";
-import { useAuth } from "../hooks/useAuth";
+import { useReduxAuth as useAuth } from "../hooks/useReduxAuth";
 import { useLogout } from "../hooks/useLogout";
 import { featureFlags } from "../config/featureFlags";
 

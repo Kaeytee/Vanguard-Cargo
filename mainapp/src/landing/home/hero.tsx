@@ -245,7 +245,7 @@ const popularBrands = [
                   <Globe className="h-5 w-5" />
                 </div>
                 <div className="text-sm leading-relaxed">
-                  <div className="font-semibold">John Doe (TTL-12345)</div>
+                  <div className="font-semibold">Alex Quaicoe (TTL-12345)</div>
                   <div>2891 NE 2nd Ave</div>
                   <div>Alexandria, VA 22304, USA</div>
                 </div>

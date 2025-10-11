@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../hooks/useAuth';
+import { useReduxAuth as useAuth } from '../hooks/useReduxAuth';
 import { supabase } from '../lib/supabase';
 
 const SupabaseDebug: React.FC = () => {

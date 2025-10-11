@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Bell, CheckCircle, AlertCircle, Info, Trash2, Eye } from 'lucide-react';
 import { useTranslation } from '../../lib/translations';
 import { notificationService, type Notification } from '../../services/notificationService';
-import { useAuth } from '../../hooks/useAuth';
+import { useReduxAuth as useAuth } from '../../hooks/useReduxAuth';
 import { useNotificationRealtime } from '../../hooks/useRealtime';
 import { useNotificationToast } from '../../hooks/useNotificationToast';
 
@@ -83,12 +83,23 @@ const NotificationsPage = () => {
   // Real-time subscription for notification updates
   const { isConnected } = useNotificationRealtime({
     onInsert: useCallback((newNotificationData: any) => {
+      // Map database type to UI category
+      const mapTypeToCategory = (type: string) => {
+        const typeMap: Record<string, string> = {
+          'package_update': 'shipment',
+          'shipment_update': 'shipment',
+          'system': 'system',
+          'promotion': 'system'
+        };
+        return typeMap[type] || 'system';
+      };
+      
       // Transform the data to match our interface
       const newNotification: Notification = {
         ...newNotificationData,
-        is_read: newNotificationData.read_status,
-        category: 'system', // Default category since it's not in new schema
-        priority: 'normal' // Default priority since it's not in new schema
+        // Database already has is_read field
+        category: mapTypeToCategory(newNotificationData.type),
+        priority: 'normal' // Default priority
       };
       
       // Add new notification to the beginning of the list

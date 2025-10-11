@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, type ReactNode } from 'react';
 import { preferencesService, type UserPreferences } from '../services/preferencesService';
-import { useAuth } from '../hooks/useAuth';
+import { useReduxAuth as useAuth } from '../hooks/useReduxAuth';
 import { PreferencesContext, type PreferencesContextType } from './PreferencesContext';
 
 interface PreferencesProviderProps {

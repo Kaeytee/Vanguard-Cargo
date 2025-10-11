@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Save, MapPin, Package } from 'lucide-react';
 import type { IncomingPackage } from '../app/packageIntake/packageIntake';
-import { useAuth } from '../hooks/useAuth';
+import { useReduxAuth as useAuth } from '../hooks/useReduxAuth';
 
 interface PackageEditModalProps {
   isOpen: boolean;

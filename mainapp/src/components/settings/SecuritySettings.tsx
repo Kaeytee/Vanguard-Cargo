@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Shield, CheckCircle2, AlertCircle } from 'lucide-react';
 import { authService } from '../../services/authService';
-import { useAuth } from '../../hooks/useAuth';
+import { useReduxAuth as useAuth } from '../../hooks/useReduxAuth';
 
 /**
  * SecuritySettings Component

@@ -2,7 +2,7 @@
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 import React, { useState, useEffect } from "react";
-import { useAuth } from "../../hooks/useAuth";
+import { useReduxAuth as useAuth } from "../../hooks/useReduxAuth";
 
 const useRouter = () => {
   return {

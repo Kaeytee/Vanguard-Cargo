@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Check, AlertCircle, Settings } from 'lucide-react';
 // import { motion } from 'framer-motion';
 import { supabase } from '../lib/supabase';
-import { useAuth } from '../hooks/useAuth';
+import { useReduxAuth as useAuth } from '../hooks/useReduxAuth';
 import WhatsAppVerificationModal from './WhatsAppVerificationModal';
 
 /**

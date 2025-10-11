@@ -11,7 +11,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import { useAuth } from '../hooks/useAuth';
+import { useReduxAuth as useAuth } from '../hooks/useReduxAuth';
 import { packageService, type Package } from '../services/packageService';
 import { receiptService } from '../services/receiptService';
 import AuthCodeDisplay from '../components/AuthCodeDisplay';

@@ -6,12 +6,16 @@ import { cn } from '../../lib/utils';
 import registerbg from '../../images/register-bg.jpg';
 import { useNavigate } from 'react-router-dom';
 import DeliveryImage from '../../images/delivery-man.png';
-import { useAuth } from '../../hooks/useAuth';
+import { useReduxAuth } from '../../hooks/useReduxAuth';
 import { RegisterSuccessStep } from './RegisterSuccessStep';
 // Import Google reCAPTCHA component
 import ReCAPTCHA from 'react-google-recaptcha';
 // Import reCAPTCHA configuration
 import { recaptchaConfig } from '../../config/recaptcha';
+// Import rate limiter for brute force protection
+import { registrationRateLimiter } from '../../utils/rateLimiter';
+// Import Supabase client for pre-flight email checks
+import { supabase } from '../../lib/supabase';
 
 /**
  * Extend Window interface to include grecaptcha property
@@ -52,6 +56,8 @@ export default function Register() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [phoneError, setPhoneError] = useState('');
+  const [isCheckingEmail, setIsCheckingEmail] = useState(false);
+  const [emailExists, setEmailExists] = useState(false);
   const [errors, setErrors] = useState<{
     firstName: string;
     lastName: string;
@@ -116,7 +122,7 @@ export default function Register() {
   });
   
   const navigate = useNavigate();
-  const { signUp } = useAuth();
+  const { signUp } = useReduxAuth();
 
   // reCAPTCHA state
   const [captchaValue, setCaptchaValue] = useState<string | null>(null);
@@ -304,6 +310,49 @@ export default function Register() {
   // Email validation helper
   const isValidEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
+  /**
+   * Check if email already exists in database
+   * Called on email field blur to prevent duplicate registrations
+   * Provides immediate feedback without waiting for form submit
+   */
+  const checkEmailExists = async (email: string) => {
+    // Skip if email is empty or invalid
+    if (!email || !isValidEmail(email)) {
+      setEmailExists(false);
+      return;
+    }
+
+    setIsCheckingEmail(true);
+    
+    try {
+      const { data: existingUser } = await supabase
+        .from('users')
+        .select('email')
+        .eq('email', email.toLowerCase())
+        .maybeSingle();
+
+      if (existingUser) {
+        setEmailExists(true);
+        setErrors(prev => ({
+          ...prev,
+          email: 'This email is already registered. Please sign in instead.'
+        }));
+      } else {
+        setEmailExists(false);
+        // Clear email error if it was about duplication
+        if (errors.email.includes('already registered')) {
+          setErrors(prev => ({ ...prev, email: '' }));
+        }
+      }
+    } catch (error) {
+      console.error('Error checking email:', error);
+      // Don't block user if check fails
+      setEmailExists(false);
+    } finally {
+      setIsCheckingEmail(false);
+    }
+  };
+
   // Validate single field for real-time validation
   const validateField = (fieldName: string, data: typeof formData): string => {
     switch (fieldName) {
@@ -327,7 +376,12 @@ export default function Register() {
       case 'country':
         return !data.country ? 'Country is required' : '';
       case 'password':
-        return data.password.length < 8 ? 'Password must be at least 8 characters' : '';
+        if (!data.password) return 'Password is required';
+        if (data.password.length < 8) return 'Password must be at least 8 characters';
+        if (!/[A-Z]/.test(data.password)) return 'Password must contain at least one uppercase letter';
+        if (!/[a-z]/.test(data.password)) return 'Password must contain at least one lowercase letter';
+        if (!/[0-9]/.test(data.password)) return 'Password must contain at least one number';
+        return '';
       case 'confirmPassword':
         if (!data.confirmPassword) return 'Please confirm your password';
         return data.password !== data.confirmPassword ? 'Passwords do not match' : '';
@@ -378,8 +432,27 @@ export default function Register() {
 
   // Handle form submission
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    // Prevent default form submission behavior
+    // CRITICAL: Prevent default form submission behavior FIRST
     e.preventDefault();
+    e.stopPropagation();
+    
+    console.log('📝 Form submit triggered', { formData });
+    
+    // STEP 1: Check rate limit (brute force protection)
+    const rateLimitStatus = registrationRateLimiter.checkLimit(formData.email);
+    
+    if (!rateLimitStatus.allowed) {
+      // Rate limit exceeded - show error and block registration
+      setErrors(prev => ({ 
+        ...prev, 
+        general: `Too many registration attempts. Please try again in ${rateLimitStatus.resetTimeFormatted}.` 
+      }));
+      console.warn('🛡️ Registration rate limit exceeded:', {
+        email: formData.email,
+        resetTime: rateLimitStatus.resetTimeFormatted
+      });
+      return;
+    }
     
     // Validate reCAPTCHA (only if reCAPTCHA is enabled, loaded without errors, and we're not in a fallback state)
     if (recaptchaConfig.enabled && recaptchaConfig.siteKey !== 'disabled' && !recaptchaError && !captchaValue) {
@@ -387,11 +460,11 @@ export default function Register() {
       return;
     }
     
-    // Validate form
+    // Validate form - CRITICAL: Must happen before ANY Supabase calls
     const newErrors = validate();
     setErrors(newErrors);
     
-    // Check if there are any errors
+    // Check if there are any errors - STOP here if validation fails
     if (Object.values(newErrors).some(error => error)) {
       // If there are errors, focus on the first error field
       const firstErrorField = Object.keys(newErrors).find(key => newErrors[key as keyof typeof newErrors]);
@@ -404,25 +477,44 @@ export default function Register() {
       return;
     }
 
-    // Removed loading state to eliminate blue loading screen
+    // Clear any previous errors
     setErrors(prev => ({ ...prev, general: '' }));
 
     try {
-      // Use Supabase signUp function
-      const result = await signUp({
-        email: formData.email,
+      // FINAL EMAIL CHECK: This should have been caught on blur, but double-check
+      if (emailExists) {
+        setErrors(prev => ({
+          ...prev,
+          general: 'This email is already registered. Please sign in instead.',
+          email: 'Email already exists'
+        }));
+        const emailField = document.getElementById('email');
+        if (emailField) emailField.focus();
+        return;
+      }
+
+      // Prepare data for Supabase signup
+      const signupData = {
+        email: formData.email.trim().toLowerCase(),
         password: formData.password,
-        firstName: formData.firstName,
-        lastName: formData.lastName,
+        firstName: formData.firstName.trim(),
+        lastName: formData.lastName.trim(),
         phone: formData.phoneNumber,
-        streetAddress: formData.address,
-        city: formData.city,
-        country: formData.country,
-        postalCode: formData.zip,
-      });
+        streetAddress: formData.address.trim(),
+        city: formData.city.trim(),
+        country: formData.country.trim(),
+        postalCode: formData.zip.trim(),
+      };
+      
+      console.log('🚀 Sending signup request to Supabase', signupData);
+      
+      // Use Supabase signUp function
+      const result = await signUp(signupData);
+      
+      console.log('📬 Signup result:', { error: result.error });
 
       if (!result.error) {
-        // Store user data before clearing form
+        // Registration successful - store user data before clearing form
         setRegisteredUser({
           email: formData.email,
           firstName: formData.firstName,
@@ -464,6 +556,11 @@ export default function Register() {
         // Show success step instead of immediate redirect
         // The success step will handle navigation to login
       } else {
+        // STEP 2: Record failed registration attempt for rate limiting
+        registrationRateLimiter.recordAttempt(formData.email);
+        
+        console.error('❌ Registration failed:', result.error);
+        
         // Convert technical errors to user-friendly messages
         let userFriendlyMessage = 'Registration failed. Please try again.';
         
@@ -471,23 +568,40 @@ export default function Register() {
           const errorMsg = result.error.toLowerCase();
           
           if (errorMsg.includes('email') && errorMsg.includes('already')) {
-            userFriendlyMessage = 'An account with this email already exists. Please try logging in instead.';
+            userFriendlyMessage = 'An account with this email already exists. Please sign in instead.';
+            // Mark email field as having error
+            setErrors((prev) => ({ ...prev, general: userFriendlyMessage, email: 'Email already registered' }));
+            return;
+          } else if (errorMsg.includes('profile already exists') || errorMsg.includes('user already registered')) {
+            userFriendlyMessage = '⚠️ This email is already registered but verification is incomplete. Please try signing in, or use a different email address. If you need help, contact support.';
+            setErrors((prev) => ({ ...prev, general: userFriendlyMessage, email: 'Email already registered' }));
+            return;
           } else if (errorMsg.includes('permission denied') || errorMsg.includes('policy')) {
             userFriendlyMessage = 'Registration is temporarily unavailable. Please try again in a few minutes.';
           } else if (errorMsg.includes('network') || errorMsg.includes('connection')) {
             userFriendlyMessage = 'Network error. Please check your connection and try again.';
           } else if (errorMsg.includes('password')) {
-            userFriendlyMessage = 'Password must be at least 6 characters long.';
+            userFriendlyMessage = 'Password must be at least 6 characters with uppercase, lowercase, and number.';
+            setErrors((prev) => ({ ...prev, general: userFriendlyMessage, password: 'Password requirements not met' }));
+            return;
+          } else if (errorMsg.includes('422') || errorMsg.includes('unprocessable') || errorMsg.includes('validation')) {
+            userFriendlyMessage = '⚠️ Invalid data format. Please check all fields and try again. Make sure password has 8+ characters, uppercase, lowercase, and a number.';
+            console.error('Validation error details:', result.error);
           } else if (errorMsg.includes('invalid') && errorMsg.includes('email')) {
             userFriendlyMessage = 'Please enter a valid email address.';
-          } else if (errorMsg.includes('rate') || errorMsg.includes('429') || errorMsg.includes('too many')) {
-            userFriendlyMessage = 'Too many registration attempts. Please wait 5 minutes before trying again.';
+            setErrors((prev) => ({ ...prev, general: userFriendlyMessage, email: 'Invalid email format' }));
+            return;
+          } else if (errorMsg.includes('rate') || errorMsg.includes('429') || errorMsg.includes('too many') || errorMsg.includes('over_email_send_rate_limit')) {
+            userFriendlyMessage = '⚠️ Too many registration attempts detected. Please wait 10-15 minutes before trying again. If you already have an account, try signing in instead.';
           }
         }
         
         setErrors((prev) => ({ ...prev, general: userFriendlyMessage }));
       }
     } catch (err) {
+      // STEP 2: Record failed registration attempt for rate limiting
+      registrationRateLimiter.recordAttempt(formData.email);
+      
       setErrors(prev => ({ 
         ...prev, 
         general: 'Registration is temporarily unavailable. Please try again in a few minutes.' 
@@ -497,12 +611,30 @@ export default function Register() {
     }
   };
 
-  // Form validation
+  // Password strength checks
+  const passwordChecks = {
+    hasMinLength: formData.password.length >= 8,
+    hasUppercase: /[A-Z]/.test(formData.password),
+    hasLowercase: /[a-z]/.test(formData.password),
+    hasNumber: /[0-9]/.test(formData.password),
+    passwordsMatch: formData.password && formData.password === formData.confirmPassword
+  };
+
+  const isPasswordValid = 
+    passwordChecks.hasMinLength &&
+    passwordChecks.hasUppercase &&
+    passwordChecks.hasLowercase &&
+    passwordChecks.hasNumber &&
+    passwordChecks.passwordsMatch;
+
+  // Form validation - STRICT: All fields must be valid AND no existing email
   const isFormValid =
     formData.firstName &&
     formData.lastName &&
     formData.email &&
     isValidEmail(formData.email) &&
+    !emailExists &&
+    !isCheckingEmail &&
     formData.phoneNumber &&
     isValidPhoneNumber(formData.phoneNumber) &&
     !phoneError &&
@@ -511,15 +643,18 @@ export default function Register() {
     formData.state &&
     formData.zip &&
     formData.country &&
-    formData.password &&
-    formData.password.length >= 8 &&
-    formData.password === formData.confirmPassword &&
+    isPasswordValid &&
     formData.agreeToTerms &&
     (!recaptchaConfig.enabled || recaptchaError || captchaValue);
 
   const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
-    const { name } = e.target;
+    const { name, value } = e.target;
     setTouched((prev) => ({ ...prev, [name]: true }));
+    
+    // Special handling for email field - check if it exists
+    if (name === 'email' && value && isValidEmail(value)) {
+      checkEmailExists(value);
+    }
     
     // Validate only the specific field that lost focus
     const fieldError = validateField(name, formData);
@@ -574,14 +709,31 @@ export default function Register() {
                       <h2 className="text-3xl font-bold text-gray-900 mb-2">Create Account</h2>
                       <p className="text-gray-600">Begin your cargo journey here</p>
                     </div>
-                    {/* Error Message */}
+                    {/* Error Messages - Show ALL errors */}
                     {errors.general && (
                       <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6 error-shake">
-                        {errors.general}
+                        <p className="font-medium">{errors.general}</p>
+                      </div>
+                    )}
+                    
+                    {/* Show all field errors if present (debugging) */}
+                    {Object.entries(errors).some(([key, val]) => key !== 'general' && val) && (
+                      <div className="bg-yellow-50 border border-yellow-200 px-4 py-3 rounded-lg mb-4">
+                        <p className="text-sm font-medium text-yellow-800 mb-2">⚠️ Please fix the following errors:</p>
+                        <ul className="text-xs text-yellow-700 space-y-1">
+                          {Object.entries(errors).map(([key, value]) => 
+                            key !== 'general' && value ? (
+                              <li key={key} className="flex items-start">
+                                <span className="mr-2">•</span>
+                                <span><strong>{key}:</strong> {value}</span>
+                              </li>
+                            ) : null
+                          )}
+                        </ul>
                       </div>
                     )}
 
-                    <form onSubmit={handleSubmit} className="space-y-6">
+                    <form onSubmit={handleSubmit} className="space-y-6" noValidate>
                       <div className="space-y-4">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
@@ -640,25 +792,43 @@ export default function Register() {
                     <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
                       Email Address *
                     </label>
-                    <input
-                      type="email"
-                      id="email"
-                      name="email"
-                      value={formData.email}
-                      onChange={handleInputChange}
-                      onBlur={handleBlur}
-                      placeholder="you@example.com"
-                      className={cn(
-                        'w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all duration-200 outline-none',
-                        errors.email && touched.email ? 'border-red-300' : 'border-gray-300'
+                    <div className="relative">
+                      <input
+                        type="email"
+                        id="email"
+                        name="email"
+                        value={formData.email}
+                        onChange={handleInputChange}
+                        onBlur={handleBlur}
+                        placeholder="you@example.com"
+                        className={cn(
+                          'w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all duration-200 outline-none',
+                          errors.email && touched.email ? 'border-red-300' : 'border-gray-300'
+                        )}
+                        aria-invalid={!!errors.email}
+                        aria-describedby="email-error"
+                      />
+                      {/* Email checking indicator */}
+                      {isCheckingEmail && (
+                        <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
+                          <div className="animate-spin h-4 w-4 border-2 border-red-500 border-t-transparent rounded-full"></div>
+                        </div>
                       )}
-                      aria-invalid={!!errors.email}
-                      aria-describedby="email-error"
-                    />
+                      {/* Email exists indicator */}
+                      {!isCheckingEmail && formData.email && isValidEmail(formData.email) && !emailExists && touched.email && (
+                        <div className="absolute right-4 top-1/2 transform -translate-y-1/2 text-green-600">
+                          <Check className="w-5 h-5" />
+                        </div>
+                      )}
+                    </div>
                     {errors.email && touched.email && (
                       <p id="email-error" className="mt-1 text-sm text-red-600">
                         {errors.email}
                       </p>
+                    )}
+                    {/* Show helpful message when checking */}
+                    {isCheckingEmail && (
+                      <p className="mt-1 text-xs text-gray-500">Checking if email is available...</p>
                     )}
                   </div>
                   <div>
@@ -866,6 +1036,44 @@ export default function Register() {
                         )}
                       </button>
                     </div>
+                    
+                    {/* Password Strength Requirements - Show while typing */}
+                    {formData.password && (
+                      <div className="mt-2 space-y-1">
+                        <p className="text-xs font-medium text-gray-600 mb-1">Password must contain:</p>
+                        <div className="grid grid-cols-2 gap-1">
+                          <div className={cn(
+                            "flex items-center text-xs",
+                            passwordChecks.hasMinLength ? "text-green-600" : "text-gray-500"
+                          )}>
+                            <span className="mr-1">{passwordChecks.hasMinLength ? "✓" : "○"}</span>
+                            At least 8 characters
+                          </div>
+                          <div className={cn(
+                            "flex items-center text-xs",
+                            passwordChecks.hasUppercase ? "text-green-600" : "text-gray-500"
+                          )}>
+                            <span className="mr-1">{passwordChecks.hasUppercase ? "✓" : "○"}</span>
+                            One uppercase letter
+                          </div>
+                          <div className={cn(
+                            "flex items-center text-xs",
+                            passwordChecks.hasLowercase ? "text-green-600" : "text-gray-500"
+                          )}>
+                            <span className="mr-1">{passwordChecks.hasLowercase ? "✓" : "○"}</span>
+                            One lowercase letter
+                          </div>
+                          <div className={cn(
+                            "flex items-center text-xs",
+                            passwordChecks.hasNumber ? "text-green-600" : "text-gray-500"
+                          )}>
+                            <span className="mr-1">{passwordChecks.hasNumber ? "✓" : "○"}</span>
+                            One number
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    
                     {errors.password && touched.password && (
                       <p id="password-error" className="mt-1 text-sm text-red-600">
                         {errors.password}

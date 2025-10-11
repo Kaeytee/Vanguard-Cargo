@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { CheckCircle, Mail, RefreshCw, AlertCircle, ArrowLeft } from 'lucide-react';
 import { authService } from '../../services/authService';
-import { useAuth } from '../../hooks/useAuth';
+import { useReduxAuth as useAuth } from '../../hooks/useReduxAuth';
 import AnimateInView from '../../components/ui/animate-in-view';
 import loginbg from '../../images/register-bg.jpg';
 import Image from '../../images/forgot.jpg';

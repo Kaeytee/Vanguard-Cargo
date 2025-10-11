@@ -13,7 +13,7 @@ import {
 import { CONTACT_INFO, getPhoneLink } from "../../constants/contact";
 import { SupportService } from "../../services/supportService";
 import type { SupportMessageData } from "../../services/supportService";
-import { useAuth } from "../../hooks/useAuth";
+import { useReduxAuth as useAuth } from "../../hooks/useReduxAuth";
 
 interface ContactSectionProps {
   containerVariants: import("framer-motion").Variants;
