@@ -40,6 +40,17 @@ This folder contains all technical documentation for developers, security implem
 ### Integration Guides
 - `VALIDATION_INTEGRATION_GUIDE.md` - Validation system integration
 
+### Notification System
+- `NOTIFICATION_TRIGGERS_FIX.md` - Automatic notification triggers for status changes
+- `NOTIFICATION_TOAST_SYSTEM.md` - Real-time toast notification system
+- `NOTIFICATION_SCHEMA_FIX.md` - Database schema alignment fix
+- `ADDRESS_FETCH_ERROR_FIX.md` - Address fetching error resolution
+
+### SQL Scripts
+- `/sql/90_package_status_notification_trigger.sql` - Package status notification trigger
+- `/sql/91_shipment_status_notification_trigger.sql` - Shipment status notification trigger
+- `/sql/92_test_notification_triggers.sql` - Trigger testing scripts
+
 ### Technical Reference
 - `TECHNICAL_README.md` - Original technical README with all implementation details
 

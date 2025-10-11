@@ -4,7 +4,7 @@ import { Settings, LogOut, Menu, X } from "lucide-react";
 import { useAppSelector } from "@/store/hooks";
 import { selectUser, selectProfile } from "@/store/slices/authSlice";
 import { useLogout } from "../hooks/useLogout";
-import PackageNotificationBadge from "./PackageNotificationBadge";
+// import PackageNotificationBadge from "./PackageNotificationBadge"; // Commented out - notification bell removed
 import { getAvatarUrl } from "../utils/imageUtils";
 
 interface AppNavbarProps {
@@ -106,8 +106,8 @@ const AppNavbar: React.FC<AppNavbarProps> = ({
 
         {/* Right section - notifications, user profile */}
         <div className="flex items-center gap-2 sm:gap-3 lg:gap-5">
-          {/* Package Notifications */}
-          <PackageNotificationBadge />
+          {/* Package Notifications - Commented out */}
+          {/* <PackageNotificationBadge /> */}
 
           {/* User profile */}
           <div className="relative" ref={userDropdownRef}>
