@@ -38,11 +38,18 @@ const Dashboard: React.FC = () => {
         console.log('📍 Fetching US address for user:', user.id);
         const addressResult = await addressService.getUserAddress(user.id);
         
-        if (!addressResult.error && addressResult.data) {
+        // Handle different scenarios
+        if (addressResult.error) {
+          // Actual error occurred
+          console.error('❌ Error fetching address:', addressResult.error);
+        } else if (addressResult.data) {
+          // Address found successfully
           console.log('✅ US Address fetched:', addressResult.data);
           setUsAddress(addressResult.data);
         } else {
-          console.error('❌ Failed to fetch address:', addressResult.error);
+          // No address found (not an error - user needs to be assigned one)
+          console.log('ℹ️ No address assigned to user yet');
+          setUsAddress(null);
         }
       } catch (error) {
         console.error('❌ Error fetching dashboard data:', error);

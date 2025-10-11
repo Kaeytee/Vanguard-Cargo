@@ -1,7 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Outlet } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
 import Sidebar from './Sidebar';
 import AppNavbar from './AppNavbar';
+import { useNotificationRealtime } from '../hooks/useRealtime';
+import { useNotificationToast } from '../hooks/useNotificationToast';
+import type { Notification } from '../services/notificationService';
 
 interface AppLayoutProps {
   children?: React.ReactNode;
@@ -33,6 +37,64 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   
   // State for screen size detection
   const [isLargeScreen, setIsLargeScreen] = useState<boolean>(false);
+  
+  // Initialize notification toast hook
+  const { showNotification } = useNotificationToast();
+  
+  // Use ref to store the latest showNotification function to avoid dependency issues
+  const showNotificationRef = useRef(showNotification);
+  
+  // Update ref when showNotification changes
+  useEffect(() => {
+    showNotificationRef.current = showNotification;
+  }, [showNotification]);
+  
+  /**
+   * Handle new notification arrival
+   * Shows toast notification whenever a new notification is created
+   * Using ref to avoid dependency on showNotification changing
+   */
+  const handleNewNotification = useCallback((newNotificationData: any) => {
+    console.log('🔔 New notification received:', newNotificationData);
+    
+    // Map database type to UI category
+    const mapTypeToCategory = (type: string) => {
+      const typeMap: Record<string, string> = {
+        'package_update': 'shipment',
+        'shipment_update': 'shipment',
+        'system': 'system',
+        'promotion': 'system'
+      };
+      return typeMap[type] || 'system';
+    };
+    
+    // Transform the data to match our interface
+    const newNotification: Notification = {
+      ...newNotificationData,
+      // Database already has is_read field
+      category: mapTypeToCategory(newNotificationData.type),
+      priority: 'normal' // Default priority
+    };
+    
+    // Show toast notification using ref to get latest function
+    showNotificationRef.current({
+      id: newNotification.id,
+      title: newNotification.title,
+      message: newNotification.message,
+      category: newNotification.category as any,
+      priority: newNotification.priority as any,
+      created_at: newNotification.created_at
+    });
+  }, []); // Empty dependency array - callback never changes
+  
+  /**
+   * Subscribe to real-time notifications globally
+   * This ensures notifications appear as toasts regardless of which page user is on
+   * Connection is automatic - no need to track status since callback is stable
+   */
+  useNotificationRealtime({
+    onInsert: handleNewNotification
+  });
 
   /**
    * Handle window resize to manage responsive behavior
@@ -90,6 +152,21 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
 
   return (
     <div className="flex h-screen w-full overflow-hidden bg-gray-50">
+      {/* Toast notification container */}
+      <Toaster 
+        position="top-right"
+        toastOptions={{
+          duration: 6000,
+          style: {
+            background: '#fff',
+            color: '#363636',
+            padding: '16px',
+            borderRadius: '8px',
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+          },
+        }}
+      />
+      
       {/* Mobile/Tablet overlay - Transparent to show content behind */}
       {isSidebarOpen && !isLargeScreen && (
         <div 

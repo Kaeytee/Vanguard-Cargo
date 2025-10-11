@@ -1,22 +1,21 @@
 import { supabase } from '../lib/supabase';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 
-// Define a local interface to match the new 'notifications' table schema
+// Define interface to match actual database schema
 export interface Notification {
   id: string;
   user_id: string;
   title: string;
   message: string;
-  // The 'type' in the new schema ('email', 'sms') is different from the old UI type ('success', 'warning').
-  // We will need to adapt the UI to handle this. For now, we map it as a string.
+  // Database type values: 'package_update', 'shipment_update', 'system', 'promotion'
   type: string;
-  read_status: boolean; // Changed from is_read
+  is_read: boolean; // Matches database column name
+  action_url?: string | null;
   created_at: string;
 
-  // The following fields are aliased for backward compatibility within this service
-  is_read?: boolean;
-  category?: string; // No longer in the new schema, will be undefined
-  priority?: string; // No longer in the new schema, will be undefined
+  // Optional fields for UI compatibility
+  category?: string; // Derived from type for UI
+  priority?: string; // Not in database, default to 'normal'
 }
 
 
@@ -52,6 +51,17 @@ export interface UpdateNotificationSettingsData {
 }
 
 class NotificationService {
+  // Helper method to map database type to UI category
+  private mapTypeToCategory(type: string): string {
+    const typeMap: Record<string, string> = {
+      'package_update': 'shipment',
+      'shipment_update': 'shipment',
+      'system': 'system',
+      'promotion': 'system'
+    };
+    return typeMap[type] || 'system';
+  }
+
   // Get notifications for a user
   async getNotifications(
     userId: string,
@@ -62,7 +72,7 @@ class NotificationService {
     try {
       let query = supabase
         .from('notifications')
-        .select('*, is_read:read_status', { count: 'exact' }) // Remap read_status to is_read
+        .select('*', { count: 'exact' })
         .eq('user_id', userId)
         .order('created_at', { ascending: false });
 
@@ -105,7 +115,7 @@ class NotificationService {
     try {
       const { error } = await supabase
         .from('notifications')
-        .update({ read_status: true })
+        .update({ is_read: true })
         .eq('id', notificationId);
 
       return { error };
@@ -120,7 +130,7 @@ class NotificationService {
     try {
       const { error } = await supabase
         .from('notifications')
-        .update({ read_status: false })
+        .update({ is_read: false })
         .eq('id', notificationId);
 
       return { error };
@@ -175,7 +185,7 @@ class NotificationService {
         .from('notifications')
         .select('*', { count: 'exact', head: true })
         .eq('user_id', userId)
-        .eq('read_status', false);
+        .eq('is_read', false);
 
       if (error) {
         return { data: 0, error };
@@ -188,13 +198,13 @@ class NotificationService {
     }
   }
 
-  // Get notification types
+  // Get notification types based on actual database schema
   getNotificationTypes(): Array<{ value: string; label: string; icon: string }> {
     return [
-      { value: 'email', label: 'Email', icon: 'Mail' },
-      { value: 'sms', label: 'SMS', icon: 'MessageCircle' },
-      { value: 'in_app', label: 'In-App', icon: 'Bell' },
-      { value: 'push', label: 'Push', icon: 'Smartphone' },
+      { value: 'package_update', label: 'Package Update', icon: 'Package' },
+      { value: 'shipment_update', label: 'Shipment Update', icon: 'Truck' },
+      { value: 'system', label: 'System', icon: 'Bell' },
+      { value: 'promotion', label: 'Promotion', icon: 'Tag' },
     ];
   }
 
@@ -404,7 +414,7 @@ class NotificationService {
     userId: string,
     title: string,
     message: string,
-    type: string = 'in_app'
+    type: string = 'system'
   ): Promise<{ data: Notification | null; error: Error | null }> {
     try {
       const { data, error } = await supabase
@@ -414,7 +424,7 @@ class NotificationService {
           title,
           message,
           type,
-          read_status: false,
+          is_read: false,
           created_at: new Date().toISOString()
         })
         .select()
@@ -428,8 +438,8 @@ class NotificationService {
       // Transform the data to match our interface
       const notification: Notification = {
         ...data,
-        is_read: data.read_status,
-        category: 'system', // Default category
+        // Map type to category for UI
+        category: this.mapTypeToCategory(data.type),
         priority: 'normal' // Default priority
       };
 
@@ -479,7 +489,7 @@ class NotificationService {
       
       const message = `Your package from ${storeName} (${trackingNumber}) ${statusMessage}.`;
 
-      return await this.createNotification(userId, title, message, 'in_app');
+      return await this.createNotification(userId, title, message, 'package_update');
     } catch (err) {
       console.error('Create package status notification error:', err);
       return { data: null, error: err as Error };
@@ -520,7 +530,7 @@ class NotificationService {
       
       const message = `Your shipment to ${recipientName} (${trackingNumber}) ${eventMessage}.`;
 
-      return await this.createNotification(userId, title, message, 'in_app');
+      return await this.createNotification(userId, title, message, 'shipment_update');
     } catch (err) {
       console.error('Create shipment notification error:', err);
       return { data: null, error: err as Error };
