@@ -76,6 +76,9 @@ export interface RateLimitStatus {
  * @class RateLimiter
  */
 export class RateLimiter {
+  getResetTime() {
+    throw new Error('Method not implemented.');
+  }
   private config: RateLimitConfig;
   
   /**
@@ -313,11 +316,18 @@ export const loginRateLimiter = new RateLimiter({
 
 /**
  * Registration Rate Limiter
- * Limits: 3 attempts per hour
+ * Development: 10 attempts per 5 minutes (for testing)
+ * Production: 3 attempts per hour (for security)
+ * 
+ * To switch to production mode, change:
+ *   maxAttempts: 3
+ *   windowMs: 60 * 60 * 1000 (1 hour)
  */
+const isDevelopment = import.meta.env.DEV || import.meta.env.MODE === 'development';
+
 export const registrationRateLimiter = new RateLimiter({
-  maxAttempts: 3,
-  windowMs: 60 * 60 * 1000, // 1 hour
+  maxAttempts: isDevelopment ? 10 : 3, // 10 attempts in dev, 3 in prod
+  windowMs: isDevelopment ? 5 * 60 * 1000 : 60 * 60 * 1000, // 5 min in dev, 1 hour in prod
   storageKey: 'rate_limit_registration',
   message: 'Too many registration attempts. Please try again in {resetTime}.'
 });

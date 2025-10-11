@@ -1,0 +1,613 @@
+// ============================================================================
+// API Rate Limiter
+// ============================================================================
+// Description: Per-endpoint rate limiting for API requests
+// Author: Senior Software Engineer
+// Purpose: Prevent API abuse and optimize resource usage
+// Features: Per-endpoint limits, burst control, priority queuing
+// ============================================================================
+
+import { RateLimiter } from '@/utils/rateLimiter';
+import { errorLogger } from '@/utils/errors/ErrorLogger';
+import { RateLimitError } from '@/utils/errors/CustomErrors';
+
+/**
+ * Endpoint Rate Limit Configuration
+ */
+export interface EndpointRateConfig {
+  /** Maximum requests per window */
+  maxRequests: number;
+  
+  /** Time window (milliseconds) */
+  windowMs: number;
+  
+  /** Burst limit (optional) */
+  burstLimit?: number;
+  
+  /** Priority (higher = more important) */
+  priority?: number;
+}
+
+/**
+ * Rate Limit Status
+ */
+export interface RateLimitStatus {
+  /** Whether request is allowed */
+  allowed: boolean;
+  
+  /** Remaining requests in current window */
+  remaining: number;
+  
+  /** Total limit */
+  limit: number;
+  
+  /** Time until reset (milliseconds) */
+  resetIn: number;
+  
+  /** Retry after (seconds) */
+  retryAfter?: number;
+}
+
+/**
+ * Endpoint Statistics
+ */
+export interface EndpointStats {
+  /** Total requests */
+  totalRequests: number;
+  
+  /** Blocked requests */
+  blockedRequests: number;
+  
+  /** Average requests per minute */
+  avgRequestsPerMinute: number;
+  
+  /** Last request timestamp */
+  lastRequest: number;
+  
+  /** Current window start */
+  windowStart: number;
+  
+  /** Requests in current window */
+  currentWindowRequests: number;
+}
+
+/**
+ * APIRateLimiter Class
+ * 
+ * Manages rate limiting for API endpoints.
+ * Provides per-endpoint limits, burst control, and priority queuing.
+ * 
+ * Features:
+ * - Per-endpoint rate limiting
+ * - Burst control
+ * - Priority queuing
+ * - Request statistics
+ * - Auto-recovery
+ * - Custom limit overrides
+ * 
+ * @class APIRateLimiter
+ */
+export class APIRateLimiter {
+  /** Rate limiter instances by endpoint */
+  private static limiters = new Map<string, RateLimiter>();
+  
+  /** Endpoint configurations */
+  private static configs = new Map<string, EndpointRateConfig>();
+  
+  /** Endpoint statistics */
+  private static stats = new Map<string, EndpointStats>();
+  
+  /** Global default configuration */
+  private static defaultConfig: EndpointRateConfig = {
+    maxRequests: 60,
+    windowMs: 60 * 1000, // 1 minute
+    burstLimit: 10,
+    priority: 0
+  };
+  
+  /** Priority queue for pending requests */
+  private static requestQueue: Array<{
+    endpoint: string;
+    priority: number;
+    resolve: (value: boolean) => void;
+    reject: (error: Error) => void;
+    timestamp: number;
+  }> = [];
+  
+  /** Queue processing interval */
+  private static queueInterval: NodeJS.Timeout | null = null;
+  
+  /**
+   * Initialize rate limiter
+   * 
+   * @param {Partial<EndpointRateConfig>} defaultConfig - Default configuration
+   */
+  static initialize(defaultConfig?: Partial<EndpointRateConfig>): void {
+    if (defaultConfig) {
+      this.defaultConfig = {
+        ...this.defaultConfig,
+        ...defaultConfig
+      };
+    }
+    
+    // Start queue processing
+    this.startQueueProcessing();
+  }
+  
+  /**
+   * Configure endpoint rate limit
+   * 
+   * @param {string} endpoint - Endpoint path or pattern
+   * @param {Partial<EndpointRateConfig>} config - Rate limit configuration
+   */
+  static configureEndpoint(
+    endpoint: string,
+    config: Partial<EndpointRateConfig>
+  ): void {
+    const fullConfig = {
+      ...this.defaultConfig,
+      ...config
+    };
+    
+    this.configs.set(endpoint, fullConfig);
+    
+    // Create rate limiter for this endpoint
+    const limiter = new RateLimiter({
+      storageKey: `api-endpoint-${endpoint}`,
+      maxAttempts: fullConfig.maxRequests,
+      windowMs: fullConfig.windowMs
+    });
+    
+    this.limiters.set(endpoint, limiter);
+    
+    // Initialize stats
+    this.stats.set(endpoint, {
+      totalRequests: 0,
+      blockedRequests: 0,
+      avgRequestsPerMinute: 0,
+      lastRequest: 0,
+      windowStart: Date.now(),
+      currentWindowRequests: 0
+    });
+  }
+  
+  /**
+   * Check rate limit for endpoint
+   * 
+   * @param {string} endpoint - Endpoint to check
+   * @param {boolean} useQueue - Whether to queue if limit reached
+   * @returns {Promise<RateLimitStatus>} Rate limit status
+   */
+  static async checkLimit(
+    endpoint: string,
+    useQueue: boolean = false
+  ): Promise<RateLimitStatus> {
+    const normalizedEndpoint = this.normalizeEndpoint(endpoint);
+    
+    // Get or create limiter
+    let limiter = this.limiters.get(normalizedEndpoint);
+    if (!limiter) {
+      this.configureEndpoint(normalizedEndpoint, {});
+      limiter = this.limiters.get(normalizedEndpoint)!;
+    }
+    
+    // Get config
+    const config = this.configs.get(normalizedEndpoint) || this.defaultConfig;
+    
+    // Check burst limit
+    const burstCheck = this.checkBurstLimit(normalizedEndpoint, config);
+    if (!burstCheck.allowed) {
+      this.updateStats(normalizedEndpoint, false);
+      
+      if (useQueue) {
+        return this.queueRequest(normalizedEndpoint, config.priority || 0);
+      }
+      
+      return burstCheck;
+    }
+    
+    // Check rate limit
+    const allowed = await limiter.checkLimit();
+    const status = this.buildStatus(normalizedEndpoint, allowed, limiter);
+    
+    // Update statistics
+    this.updateStats(normalizedEndpoint, allowed);
+    
+    // Queue if not allowed and queuing enabled
+    if (!allowed && useQueue) {
+      return this.queueRequest(normalizedEndpoint, config.priority || 0);
+    }
+    
+    return status;
+  }
+  
+  /**
+   * Check burst limit
+   * 
+   * Prevents too many requests in a short burst.
+   * 
+   * @param {string} endpoint - Endpoint
+   * @param {EndpointRateConfig} config - Configuration
+   * @returns {RateLimitStatus} Status
+   */
+  private static checkBurstLimit(
+    endpoint: string,
+    config: EndpointRateConfig
+  ): RateLimitStatus {
+    if (!config.burstLimit) {
+      return {
+        allowed: true,
+        remaining: config.maxRequests,
+        limit: config.maxRequests,
+        resetIn: config.windowMs
+      };
+    }
+    
+    const stats = this.stats.get(endpoint);
+    if (!stats) {
+      return {
+        allowed: true,
+        remaining: config.burstLimit,
+        limit: config.burstLimit,
+        resetIn: config.windowMs
+      };
+    }
+    
+    // Check if within burst window (5 seconds)
+    const burstWindow = 5000;
+    const now = Date.now();
+    
+    if (now - stats.lastRequest > burstWindow) {
+      // Reset burst counter
+      stats.currentWindowRequests = 0;
+      stats.windowStart = now;
+      return {
+        allowed: true,
+        remaining: config.burstLimit - 1,
+        limit: config.burstLimit,
+        resetIn: burstWindow
+      };
+    }
+    
+    // Check burst limit
+    if (stats.currentWindowRequests >= config.burstLimit) {
+      const resetIn = burstWindow - (now - stats.windowStart);
+      return {
+        allowed: false,
+        remaining: 0,
+        limit: config.burstLimit,
+        resetIn,
+        retryAfter: Math.ceil(resetIn / 1000)
+      };
+    }
+    
+    return {
+      allowed: true,
+      remaining: config.burstLimit - stats.currentWindowRequests - 1,
+      limit: config.burstLimit,
+      resetIn: burstWindow - (now - stats.windowStart)
+    };
+  }
+  
+  /**
+   * Queue request
+   * 
+   * @param {string} endpoint - Endpoint
+   * @param {number} priority - Priority
+   * @returns {Promise<RateLimitStatus>} Status when processed
+   */
+  private static queueRequest(
+    endpoint: string,
+    priority: number
+  ): Promise<RateLimitStatus> {
+    return new Promise((resolve, reject) => {
+      this.requestQueue.push({
+        endpoint,
+        priority,
+        resolve: (allowed) => {
+          const limiter = this.limiters.get(endpoint)!;
+          const status = this.buildStatus(endpoint, allowed, limiter);
+          resolve(status);
+        },
+        reject,
+        timestamp: Date.now()
+      });
+      
+      // Sort queue by priority (higher first) and timestamp (older first)
+      this.requestQueue.sort((a, b) => {
+        if (a.priority !== b.priority) {
+          return b.priority - a.priority;
+        }
+        return a.timestamp - b.timestamp;
+      });
+    });
+  }
+  
+  /**
+   * Process request queue
+   */
+  private static async processQueue(): Promise<void> {
+    if (this.requestQueue.length === 0) {
+      return;
+    }
+    
+    const request = this.requestQueue[0];
+    const limiter = this.limiters.get(request.endpoint);
+    
+    if (!limiter) {
+      this.requestQueue.shift();
+      request.reject(new Error('Limiter not found'));
+      return;
+    }
+    
+    // Check if request can be processed
+    const allowed = await limiter.checkLimit();
+    
+    if (allowed) {
+      // Remove from queue and resolve
+      this.requestQueue.shift();
+      request.resolve(true);
+      this.updateStats(request.endpoint, true);
+    }
+  }
+  
+  /**
+   * Start queue processing
+   */
+  private static startQueueProcessing(): void {
+    if (this.queueInterval) {
+      clearInterval(this.queueInterval);
+    }
+    
+    // Process queue every 100ms
+    this.queueInterval = setInterval(() => {
+      this.processQueue().catch(error => {
+        errorLogger.logError(error);
+      });
+    }, 100);
+  }
+  
+  /**
+   * Stop queue processing
+   */
+  static stopQueueProcessing(): void {
+    if (this.queueInterval) {
+      clearInterval(this.queueInterval);
+      this.queueInterval = null;
+    }
+  }
+  
+  /**
+   * Build rate limit status
+   * 
+   * @param {string} endpoint - Endpoint
+   * @param {boolean} allowed - Whether allowed
+   * @param {RateLimiter} limiter - Rate limiter
+   * @returns {RateLimitStatus} Status
+   */
+  private static buildStatus(
+    endpoint: string,
+    allowed: boolean,
+    limiter: RateLimiter
+  ): RateLimitStatus {
+    const config = this.configs.get(endpoint) || this.defaultConfig;
+    const resetTime = limiter.getResetTime();
+    const now = Date.now();
+    const resetIn = Math.max(0, resetTime - now);
+    
+    return {
+      allowed,
+      remaining: allowed ? config.maxRequests - 1 : 0,
+      limit: config.maxRequests,
+      resetIn,
+      retryAfter: allowed ? undefined : Math.ceil(resetIn / 1000)
+    };
+  }
+  
+  /**
+   * Update endpoint statistics
+   * 
+   * @param {string} endpoint - Endpoint
+   * @param {boolean} allowed - Whether request was allowed
+   */
+  private static updateStats(endpoint: string, allowed: boolean): void {
+    const stats = this.stats.get(endpoint);
+    if (!stats) {
+      return;
+    }
+    
+    const now = Date.now();
+    
+    // Update counters
+    stats.totalRequests++;
+    if (!allowed) {
+      stats.blockedRequests++;
+    }
+    
+    // Update window counters
+    if (now - stats.windowStart > 60000) {
+      // New minute
+      stats.avgRequestsPerMinute = stats.currentWindowRequests;
+      stats.windowStart = now;
+      stats.currentWindowRequests = 1;
+    } else {
+      stats.currentWindowRequests++;
+    }
+    
+    stats.lastRequest = now;
+  }
+  
+  /**
+   * Get endpoint statistics
+   * 
+   * @param {string} endpoint - Endpoint
+   * @returns {EndpointStats | null} Statistics
+   */
+  static getStats(endpoint: string): EndpointStats | null {
+    const normalizedEndpoint = this.normalizeEndpoint(endpoint);
+    return this.stats.get(normalizedEndpoint) || null;
+  }
+  
+  /**
+   * Get all statistics
+   * 
+   * @returns {Map<string, EndpointStats>} All endpoint statistics
+   */
+  static getAllStats(): Map<string, EndpointStats> {
+    return new Map(this.stats);
+  }
+  
+  /**
+   * Reset endpoint limits
+   * 
+   * @param {string} endpoint - Endpoint to reset
+   */
+  static resetEndpoint(endpoint: string): void {
+    const normalizedEndpoint = this.normalizeEndpoint(endpoint);
+    const limiter = this.limiters.get(normalizedEndpoint);
+    
+    if (limiter) {
+      limiter.reset();
+    }
+    
+    const stats = this.stats.get(normalizedEndpoint);
+    if (stats) {
+      stats.windowStart = Date.now();
+      stats.currentWindowRequests = 0;
+    }
+  }
+  
+  /**
+   * Reset all limits
+   */
+  static resetAll(): void {
+    this.limiters.forEach(limiter => limiter.reset());
+    this.stats.forEach(stats => {
+      stats.windowStart = Date.now();
+      stats.currentWindowRequests = 0;
+    });
+  }
+  
+  /**
+   * Normalize endpoint for consistent matching
+   * 
+   * Removes query parameters and trailing slashes.
+   * 
+   * @param {string} endpoint - Endpoint URL
+   * @returns {string} Normalized endpoint
+   */
+  private static normalizeEndpoint(endpoint: string): string {
+    try {
+      const url = new URL(endpoint, window.location.origin);
+      return url.pathname.replace(/\/$/, '');
+    } catch {
+      return endpoint.replace(/\/$/, '');
+    }
+  }
+  
+  /**
+   * Clear all limiters and stats
+   */
+  static clear(): void {
+    this.stopQueueProcessing();
+    this.limiters.clear();
+    this.configs.clear();
+    this.stats.clear();
+    this.requestQueue = [];
+  }
+}
+
+// ============================================================================
+// PRESET CONFIGURATIONS
+// ============================================================================
+
+/**
+ * Strict rate limit (for sensitive operations)
+ */
+export const STRICT_RATE_LIMIT: EndpointRateConfig = {
+  maxRequests: 10,
+  windowMs: 60 * 1000, // 1 minute
+  burstLimit: 3,
+  priority: 10
+};
+
+/**
+ * Standard rate limit (for normal operations)
+ */
+export const STANDARD_RATE_LIMIT: EndpointRateConfig = {
+  maxRequests: 60,
+  windowMs: 60 * 1000, // 1 minute
+  burstLimit: 10,
+  priority: 5
+};
+
+/**
+ * Relaxed rate limit (for read-only operations)
+ */
+export const RELAXED_RATE_LIMIT: EndpointRateConfig = {
+  maxRequests: 120,
+  windowMs: 60 * 1000, // 1 minute
+  burstLimit: 20,
+  priority: 1
+};
+
+/**
+ * Critical rate limit (for critical operations)
+ */
+export const CRITICAL_RATE_LIMIT: EndpointRateConfig = {
+  maxRequests: 5,
+  windowMs: 60 * 1000, // 1 minute
+  burstLimit: 2,
+  priority: 100
+};
+
+// ============================================================================
+// CONVENIENCE FUNCTIONS
+// ============================================================================
+
+/**
+ * Quick check - convenience function
+ * 
+ * @param {string} endpoint - Endpoint to check
+ * @returns {Promise<boolean>} Whether request is allowed
+ */
+export async function checkAPILimit(endpoint: string): Promise<boolean> {
+  const status = await APIRateLimiter.checkLimit(endpoint);
+  
+  if (!status.allowed) {
+    throw new RateLimitError(
+      'Rate limit exceeded',
+      `Rate limit exceeded for ${endpoint}. Retry in ${status.retryAfter} seconds.`
+    );
+  }
+  
+  return status.allowed;
+}
+
+/**
+ * Configure common endpoints
+ */
+export function configureCommonEndpoints(): void {
+  // Authentication endpoints (strict)
+  APIRateLimiter.configureEndpoint('/auth/login', STRICT_RATE_LIMIT);
+  APIRateLimiter.configureEndpoint('/auth/register', STRICT_RATE_LIMIT);
+  APIRateLimiter.configureEndpoint('/auth/reset-password', STRICT_RATE_LIMIT);
+  
+  // Data modification endpoints (standard)
+  APIRateLimiter.configureEndpoint('/api/packages', STANDARD_RATE_LIMIT);
+  APIRateLimiter.configureEndpoint('/api/shipments', STANDARD_RATE_LIMIT);
+  
+  // Read-only endpoints (relaxed)
+  APIRateLimiter.configureEndpoint('/api/packages/list', RELAXED_RATE_LIMIT);
+  APIRateLimiter.configureEndpoint('/api/shipments/list', RELAXED_RATE_LIMIT);
+  
+  // Critical endpoints (critical)
+  APIRateLimiter.configureEndpoint('/api/payment', CRITICAL_RATE_LIMIT);
+  APIRateLimiter.configureEndpoint('/api/admin', CRITICAL_RATE_LIMIT);
+}
+
+// ============================================================================
+// EXPORT
+// ============================================================================
+
+export default APIRateLimiter;

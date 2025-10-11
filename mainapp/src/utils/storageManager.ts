@@ -420,6 +420,152 @@ Level: ${usage.level.toUpperCase()}
       console.warn('⚠️ Storage usage approaching limit (80%+)');
     }
   }
+  
+  // ============================================================================
+  // SECURE STORAGE METHODS
+  // ============================================================================
+  
+  /**
+   * List of sensitive keys that should be encrypted
+   * These are automatically encrypted when using setSecure/getSecure methods
+   */
+  private static readonly SENSITIVE_KEYS = [
+    'auth_token',
+    'refresh_token',
+    'user_session',
+    'payment_info',
+    'personal_data',
+    'api_keys',
+    'credentials',
+    // Add more sensitive keys as needed
+  ];
+  
+  /**
+   * Check if a key contains sensitive data
+   * 
+   * @param {string} key - Storage key
+   * @returns {boolean} True if key is sensitive
+   */
+  public static isSensitiveKey(key: string): boolean {
+    return this.SENSITIVE_KEYS.some(sensitiveKey => 
+      key.toLowerCase().includes(sensitiveKey.toLowerCase())
+    );
+  }
+  
+  /**
+   * Set item with automatic encryption for sensitive data
+   * 
+   * @param {string} key - Storage key
+   * @param {string} value - Value to store
+   * @param {boolean} forceEncrypt - Force encryption regardless of key
+   * @returns {Promise<boolean>} True if successful
+   */
+  public static async setSecure(
+    key: string, 
+    value: string, 
+    forceEncrypt: boolean = false
+  ): Promise<boolean> {
+    try {
+      // Check if key is sensitive or forced encryption
+      const shouldEncrypt = forceEncrypt || this.isSensitiveKey(key);
+      
+      if (shouldEncrypt) {
+        // Dynamically import secureStorage to avoid circular dependency
+        const { secureStorage } = await import('./secureStorage');
+        await secureStorage.setItem(key, value);
+        console.log(`🔐 Encrypted and stored: ${key}`);
+      } else {
+        // Store normally
+        this.safeSetItem(key, value);
+      }
+      
+      return true;
+    } catch (error) {
+      console.error(`Failed to set secure item "${key}":`, error);
+      return false;
+    }
+  }
+  
+  /**
+   * Get item with automatic decryption for sensitive data
+   * 
+   * @param {string} key - Storage key
+   * @param {boolean} forceDecrypt - Force decryption regardless of key
+   * @returns {Promise<string | null>} Decrypted value or null
+   */
+  public static async getSecure(
+    key: string,
+    forceDecrypt: boolean = false
+  ): Promise<string | null> {
+    try {
+      // Check if key is sensitive or forced decryption
+      const shouldDecrypt = forceDecrypt || this.isSensitiveKey(key);
+      
+      if (shouldDecrypt) {
+        // Dynamically import secureStorage to avoid circular dependency
+        const { secureStorage } = await import('./secureStorage');
+        return await secureStorage.getItem(key);
+      } else {
+        // Get normally
+        return localStorage.getItem(key);
+      }
+    } catch (error) {
+      console.error(`Failed to get secure item "${key}":`, error);
+      return null;
+    }
+  }
+  
+  /**
+   * Remove item (encrypted or unencrypted)
+   * 
+   * @param {string} key - Storage key
+   * @returns {Promise<void>}
+   */
+  public static async removeSecure(key: string): Promise<void> {
+    try {
+      // Remove from both encrypted and unencrypted storage
+      const { secureStorage } = await import('./secureStorage');
+      secureStorage.removeItem(key);
+      localStorage.removeItem(key);
+    } catch (error) {
+      console.error(`Failed to remove secure item "${key}":`, error);
+    }
+  }
+  
+  /**
+   * Migrate all sensitive data to encrypted storage
+   * 
+   * @returns {Promise<number>} Number of items migrated
+   */
+  public static async migrateSensitiveData(): Promise<number> {
+    try {
+      const { secureStorage } = await import('./secureStorage');
+      let migratedCount = 0;
+      
+      // Check all localStorage keys
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        
+        if (key && this.isSensitiveKey(key)) {
+          // Migrate sensitive data
+          const migrated = await secureStorage.migrateItem(key);
+          if (migrated) {
+            migratedCount++;
+            console.log(`🔄 Migrated to encrypted storage: ${key}`);
+          }
+        }
+      }
+      
+      if (migratedCount > 0) {
+        console.log(`✅ Migrated ${migratedCount} sensitive items to encrypted storage`);
+      }
+      
+      return migratedCount;
+    } catch (error) {
+      console.error('Failed to migrate sensitive data:', error);
+      return 0;
+    }
+  }
 }
 
 // Make available globally for debugging
@@ -430,6 +576,18 @@ if (typeof window !== 'undefined') {
   };
   (window as any).cleanupStorage = () => {
     StorageManager.cleanup();
+  };
+  (window as any).migrateSensitiveData = async () => {
+    const count = await StorageManager.migrateSensitiveData();
+    console.log(`✅ Migrated ${count} items`);
+  };
+  (window as any).checkEncryption = async () => {
+    const { secureStorage } = await import('./secureStorage');
+    const stats = secureStorage.getStatistics();
+    console.log('🔐 Encryption Statistics:');
+    console.log(`  Encrypted items: ${stats.encryptedItems}`);
+    console.log(`  Unencrypted items: ${stats.unencryptedItems}`);
+    console.log(`  Total size: ${(stats.totalSize / 1024).toFixed(2)} KB`);
   };
 }
 

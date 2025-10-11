@@ -2,7 +2,6 @@
 // Redux Auth Hook - Compatibility Wrapper
 // ============================================================================
 // Description: Drop-in replacement for Context API useAuth hook
-// Author: Senior Software Engineer  
 // Purpose: Provides same interface as useAuth but uses Redux
 // Architecture: Clean Code, OOP Principles, Type-Safe
 // ============================================================================
@@ -22,7 +21,6 @@ import {
 } from '@/store/slices/authSlice';
 import type { User, Session } from '@supabase/supabase-js';
 import type { AuthUser } from '@/services/authService';
-import { supabase } from '@/lib/supabase';
 
 /**
  * Redux Auth Hook Interface
@@ -83,19 +81,6 @@ export function useReduxAuth(): UseReduxAuthReturn {
   const isAuthenticated = useAppSelector(selectIsAuthenticated);
 
   /**
-   * Get current session from Supabase
-   * Note: Redux doesn't store session, fetch from Supabase
-   */
-  const getSession = useCallback(async (): Promise<Session | null> => {
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      return session;
-    } catch (err) {
-      return null;
-    }
-  }, []);
-
-  /**
    * Sign in with email and password
    * Compatible with Context API signIn method
    * 
@@ -109,7 +94,7 @@ export function useReduxAuth(): UseReduxAuthReturn {
   ): Promise<{ error: string | null }> => {
     try {
       // Dispatch Redux login action
-      const result = await dispatch(loginUser({ email, password })).unwrap();
+      await dispatch(loginUser({ email, password })).unwrap();
       
       // Success - no error
       return { error: null };
@@ -139,7 +124,7 @@ export function useReduxAuth(): UseReduxAuthReturn {
   }): Promise<{ error: string | null }> => {
     try {
       // Dispatch Redux register action
-      await dispatch(registerUser(data)).unwrap();
+      await dispatch(registerUser(data as any)).unwrap();
       
       // Success - no error
       return { error: null };

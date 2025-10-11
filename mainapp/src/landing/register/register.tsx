@@ -572,6 +572,10 @@ export default function Register() {
             // Mark email field as having error
             setErrors((prev) => ({ ...prev, general: userFriendlyMessage, email: 'Email already registered' }));
             return;
+          } else if (errorMsg.includes('profile already exists') || errorMsg.includes('user already registered')) {
+            userFriendlyMessage = '⚠️ This email is already registered but verification is incomplete. Please try signing in, or use a different email address. If you need help, contact support.';
+            setErrors((prev) => ({ ...prev, general: userFriendlyMessage, email: 'Email already registered' }));
+            return;
           } else if (errorMsg.includes('permission denied') || errorMsg.includes('policy')) {
             userFriendlyMessage = 'Registration is temporarily unavailable. Please try again in a few minutes.';
           } else if (errorMsg.includes('network') || errorMsg.includes('connection')) {

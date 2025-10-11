@@ -15,6 +15,7 @@ import { queryClient } from './lib/reactQuery';
 import { clearMockData } from './utils/clearMockData';
 import { StorageManager } from './utils/storageManager';
 import { tabSyncManager } from './utils/tabSyncManager';
+import { secureStorage } from './utils/secureStorage';
 import './index.css';
 import App from './App.tsx';
 
@@ -27,6 +28,19 @@ StorageManager.monitor();
 // Initialize multi-tab synchronization
 tabSyncManager.initialize();
 console.log('🔄 Multi-tab synchronization initialized');
+
+// Initialize secure storage (encryption) and migrate sensitive data
+secureStorage.initialize().then(async () => {
+  console.log('🔐 Secure storage initialized');
+  
+  // Migrate any existing sensitive data to encrypted storage
+  const migratedCount = await StorageManager.migrateSensitiveData();
+  if (migratedCount > 0) {
+    console.log(`✅ Migrated ${migratedCount} sensitive items to encrypted storage`);
+  }
+}).catch(error => {
+  console.error('❌ Failed to initialize secure storage:', error);
+});
 
 // ============================================================================
 // SERVICE WORKER REGISTRATION

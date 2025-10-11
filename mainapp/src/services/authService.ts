@@ -39,8 +39,50 @@ export interface SignInData {
 }
 
 class AuthService {
+  /**
+   * Clean up orphaned auth users (auth user exists but no profile)
+   * This can happen when registration fails after auth user creation
+   * 
+   * @param email - Email to check for orphaned user
+   * @returns {Promise<boolean>} True if cleanup was performed
+   * @private
+   */
+  private async cleanupOrphanedAuthUser(email: string): Promise<boolean> {
+    try {
+      console.log('🔍 Checking for orphaned auth user:', email);
+      
+      // Check if profile exists
+      const { data: existingProfile, error: _profileError } = await supabase
+        .from('users')
+        .select('id, email')
+        .eq('email', email.toLowerCase())
+        .maybeSingle();
+      
+      // If profile exists, no cleanup needed
+      if (existingProfile) {
+        console.log('✅ Profile exists, no cleanup needed');
+        return false;
+      }
+      
+      // Profile doesn't exist - check if auth user exists
+      // We can't directly query auth.users, but we can try to sign in
+      // to detect if auth user exists without profile
+      console.warn('⚠️ Auth user may exist without profile - this is an orphaned user');
+      console.log('💡 User should use a different email or contact support to clean up');
+      
+      return false; // We can't auto-cleanup due to security - needs admin intervention
+      
+    } catch (err) {
+      console.error('Error checking for orphaned user:', err);
+      return false;
+    }
+  }
+
   async signUp(data: SignUpData): Promise<{ user: User | null; error: AuthError | null }> {
     try {
+      // STEP 0: Check for orphaned auth users before attempting registration
+      await this.cleanupOrphanedAuthUser(data.email);
+      
       // Step 1: Create auth user with metadata
       const { data: authData, error } = await supabase.auth.signUp({
         email: data.email,
