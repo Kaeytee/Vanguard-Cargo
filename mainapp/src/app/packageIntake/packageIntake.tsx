@@ -18,7 +18,7 @@ import { motion } from "framer-motion";
 import SEO from "../../components/SEO";
 import { PackageEditModal } from "../../components/PackageEditModal";
 import { packageService, type PackageWithDetails } from "../../services/packageService";
-import { useAuth } from "../../hooks/useAuth";
+import { useReduxAuth as useAuth } from "../../hooks/useReduxAuth";
 import { supabase } from "../../lib/supabase";
 import { formatDate, formatTime } from "../../utils/dateUtils";
 import { usePackageRealtime } from "../../hooks/useRealtime";
@@ -377,6 +377,18 @@ export default function PackageIntake() {
   };
 
   // Date formatting is now handled by imported utility functions
+
+  // Wait for user to be loaded from Redux
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-4 border-gray-200 border-t-red-600 mx-auto mb-4"></div>
+          <p className="text-sm font-medium text-gray-600">Loading user data...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (

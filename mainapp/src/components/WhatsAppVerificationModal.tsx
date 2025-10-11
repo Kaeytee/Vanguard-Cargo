@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, ChevronDown, MessageCircle, Check, AlertCircle, Shield } from 'lucide-react';
 import { WhatsAppVerificationService } from '../services/whatsappVerificationService';
 import type { VerificationStep } from '../services/whatsappVerificationService';
-import { useAuth } from '../hooks/useAuth';
+import { useReduxAuth as useAuth } from '../hooks/useReduxAuth';
 
 /**
  * WhatsApp Verification Modal Component

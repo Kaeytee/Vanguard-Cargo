@@ -1,12 +1,13 @@
-import { useEffect, useCallback } from 'react';
-import { useAuth } from './useAuth';
-import { realtimeService, type RealtimePayload } from '../services/realtimeService';
+import { useEffect, useRef, useState, useCallback } from 'react';
+import { supabase } from '../lib/supabase';
+import type { RealtimeChannel, RealtimePostgresChangesPayload } from '@supabase/supabase-js';
+import { useReduxAuth as useAuth } from './useReduxAuth';
 
 /**
  * useRealtime - React hook for managing real-time subscriptions
  * 
  * This hook provides a simple interface for components to subscribe to real-time
- * database changes without managing subscriptions manually.
+{{ ... }}
  * 
  * Features:
  * - Automatic cleanup on component unmount
@@ -21,7 +22,7 @@ export interface UseRealtimeOptions {
   onInsert?: (data: any) => void | Promise<void>;
   onUpdate?: (data: any) => void | Promise<void>;
   onDelete?: (data: any) => void | Promise<void>;
-  onChange?: (payload: RealtimePayload) => void | Promise<void>;
+  onChange?: (payload: RealtimePostgresChangesPayload<any>) => void | Promise<void>;
 }
 
 /**
@@ -32,12 +33,14 @@ export interface UseRealtimeOptions {
 export function useRealtime(options: UseRealtimeOptions) {
   const { user } = useAuth();
   const { table, enabled = true, onInsert, onUpdate, onDelete, onChange } = options;
+  const channelRef = useRef<RealtimeChannel | null>(null);
+  const [isConnected, setIsConnected] = useState(false);
 
   // Handle real-time payload and route to appropriate callback
-  const handleRealtimeChange = useCallback(async (payload: RealtimePayload) => {
+  const handleRealtimeChange = useCallback(async (payload: RealtimePostgresChangesPayload<any>) => {
     console.log(`📡 Real-time change [${table}]:`, {
       event: payload.eventType,
-      id: payload.new?.id || payload.old?.id
+      id: (payload.new as any)?.id || (payload.old as any)?.id
     });
 
     try {
@@ -65,38 +68,52 @@ export function useRealtime(options: UseRealtimeOptions) {
           break;
       }
     } catch (error) {
-      // Error handling real-time change
+      console.error('Error handling real-time change:', error);
     }
   }, [table, onInsert, onUpdate, onDelete, onChange]);
 
   // Set up subscription
   useEffect(() => {
     if (!user?.id || !enabled) {
+      setIsConnected(false);
       return;
     }
 
     const channelName = `${table}-${user.id}`;
     
-    // Subscribe using the centralized service
-    realtimeService.subscribe(
-      channelName,
-      {
-        table,
-        userId: user.id,
-        event: '*'
-      },
-      handleRealtimeChange
-    );
+    // Create Supabase real-time channel
+    const channel = supabase
+      .channel(channelName)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: table,
+          filter: `user_id=eq.${user.id}`
+        },
+        handleRealtimeChange
+      )
+      .subscribe((status) => {
+        console.log(`📡 Real-time subscription status [${table}]:`, status);
+        setIsConnected(status === 'SUBSCRIBED');
+      });
+
+    channelRef.current = channel;
 
     // Cleanup on unmount
     return () => {
-      realtimeService.unsubscribe(channelName);
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
+        setIsConnected(false);
+      }
     };
   }, [user?.id, table, enabled, handleRealtimeChange]);
 
   return {
-    isConnected: user?.id && enabled && realtimeService.isSubscribed(`${table}-${user.id}`),
-    connectionHealth: realtimeService.getConnectionHealth()
+    isConnected,
+    connectionHealth: isConnected ? 'connected' : 'disconnected'
   };
 }
 

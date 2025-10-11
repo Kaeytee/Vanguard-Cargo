@@ -3,11 +3,12 @@ import { lazy, Suspense } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { Analytics } from "@vercel/analytics/react";
 import { featureFlags } from "./config/featureFlags";
+import { useTabSync } from "./hooks/useTabSync";
 
 // ============================================================================
 // EAGER IMPORTS - Components needed immediately
 // ============================================================================
-import AuthProvider from "./context/AuthContext";
+// AuthProvider removed - using Redux for authentication
 import Navbar from "./components/navbar";
 import Footer from "./components/footer";
 import { ReduxAuthGuard } from "./components/ReduxAuthGuard";
@@ -69,6 +70,7 @@ const LoadingFallback = () => (
  * 1. **Lazy Loading**: All routes are code-split for faster initial load
  * 2. **Suspense Boundaries**: Prevent UI blocking during component load
  * 3. **Strategic Eager Loading**: Critical components (Navbar, Footer, AuthGuard) loaded immediately
+ * 4. **Multi-Tab Synchronization**: Auth state syncs across all browser tabs
  * 
  * This reduces initial bundle size by ~60-70%, dramatically improving:
  * - First Contentful Paint (FCP)
@@ -78,8 +80,12 @@ const LoadingFallback = () => (
  * @returns {JSX.Element} The App component
  */
 export default function App() {
+  // Initialize multi-tab synchronization
+  // This hooks listens for auth events from other tabs and syncs state
+  useTabSync();
+  
   return (
-    <AuthProvider>
+    <>
       <Analytics />
       <Suspense fallback={<LoadingFallback />}>
         <Routes>
@@ -234,7 +240,7 @@ export default function App() {
           <Route path="*" element={<SmartNotFound />} />
         </Routes>
       </Suspense>
-    </AuthProvider>
+    </>
   );
 }
 

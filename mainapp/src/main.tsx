@@ -9,15 +9,24 @@ import { Toaster } from 'react-hot-toast';
 import ScrollToTop from './components/ScrollToTop'; // Import ScrollToTop for UX improvement
 import { ThemeProvider } from './context/ThemeProvider';
 import { PreferencesProvider } from './context/PreferencesProvider';
-import { AuthProvider } from './context/AuthContext';
+// AuthProvider removed - using Redux for authentication
 import { store, persistor } from './store/store';
 import { queryClient } from './lib/reactQuery';
 import { clearMockData } from './utils/clearMockData';
+import { StorageManager } from './utils/storageManager';
+import { tabSyncManager } from './utils/tabSyncManager';
 import './index.css';
 import App from './App.tsx';
 
 // Clear mock data on app startup for production experience
 clearMockData();
+
+// Monitor localStorage usage and auto-cleanup if needed
+StorageManager.monitor();
+
+// Initialize multi-tab synchronization
+tabSyncManager.initialize();
+console.log('🔄 Multi-tab synchronization initialized');
 
 // ============================================================================
 // SERVICE WORKER REGISTRATION
@@ -89,9 +98,8 @@ createRoot(document.getElementById('root')!).render(
             {/* ScrollToTop ensures every route change starts at the top of the page */}
             <ScrollToTop />
             <ThemeProvider>
-              <AuthProvider>
-                <PreferencesProvider>
-                  <App />
+              <PreferencesProvider>
+                <App />
                   {/* SpeedInsights component for Vercel performance monitoring */}
                   <SpeedInsights />
                   {/* Toast Notifications */}
@@ -122,7 +130,6 @@ createRoot(document.getElementById('root')!).render(
                     }}
                   />
                 </PreferencesProvider>
-              </AuthProvider>
             </ThemeProvider>
           </BrowserRouter>
         </QueryClientProvider>

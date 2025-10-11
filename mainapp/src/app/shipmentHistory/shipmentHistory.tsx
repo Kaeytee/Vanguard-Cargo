@@ -8,7 +8,7 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search, Calendar } from "lucide-react";
-import { useAuth } from "../../hooks/useAuth";
+import { useReduxAuth as useAuth } from "../../hooks/useReduxAuth";
 import { supabase } from "../../lib/supabase";
 // Removed debug imports - no longer needed
 

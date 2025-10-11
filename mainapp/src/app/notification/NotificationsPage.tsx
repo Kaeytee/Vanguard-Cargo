@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Bell, CheckCircle, AlertCircle, Info, Trash2, Eye } from 'lucide-react';
 import { useTranslation } from '../../lib/translations';
 import { notificationService, type Notification } from '../../services/notificationService';
-import { useAuth } from '../../hooks/useAuth';
+import { useReduxAuth as useAuth } from '../../hooks/useReduxAuth';
 import { useNotificationRealtime } from '../../hooks/useRealtime';
 import { useNotificationToast } from '../../hooks/useNotificationToast';
 

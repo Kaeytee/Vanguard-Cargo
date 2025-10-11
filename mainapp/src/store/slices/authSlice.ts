@@ -12,6 +12,7 @@ import type { PayloadAction } from '@reduxjs/toolkit';
 import type { User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import { authService, type AuthUser, type SignUpData } from '@/services/authService';
+import { broadcastLogin } from '@/utils/tabSyncManager';
 
 // ============================================================================
 // TYPES & INTERFACES
@@ -443,6 +444,10 @@ const authSlice = createSlice({
         state.isInitialized = true;
         state.error = null;
         console.log('✅ Auth state updated - isAuthenticated:', state.isAuthenticated);
+        
+        // Broadcast login to other tabs for synchronization
+        broadcastLogin({ user: action.payload.user, profile: action.payload.profile });
+        console.log('📡 Login broadcasted to other tabs');
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.isLoading = false;
@@ -456,11 +461,14 @@ const authSlice = createSlice({
         state.isLoading = true;
         state.error = null;
       })
-      .addCase(registerUser.fulfilled, (state, action) => {
+      .addCase(registerUser.fulfilled, (state) => {
         state.isLoading = false;
-        state.user = action.payload.user;
-        state.profile = action.payload.profile;
-        state.isAuthenticated = true;
+        // CRITICAL: Do NOT set isAuthenticated = true after registration
+        // User must verify email and sign in before being authenticated
+        // Just clear the error to indicate successful registration
+        state.user = null; // Clear user - not authenticated yet
+        state.profile = null; // Clear profile - not authenticated yet
+        state.isAuthenticated = false; // NOT authenticated until email verified + login
         state.error = null;
       })
       .addCase(registerUser.rejected, (state, action) => {

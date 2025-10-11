@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Eye, EyeOff, Loader2 } from 'lucide-react';
+import { Eye, EyeOff, Loader2, Shield } from 'lucide-react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { loginUser, selectIsLoading } from '@/store/slices/authSlice';
@@ -14,6 +14,8 @@ import { recaptchaConfig } from '../../config/recaptcha';
 import { EmailVerificationBanner } from '../../components/ui/EmailVerificationBanner';
 // Import account status warning modal
 import AccountStatusWarning from '../../components/ui/AccountStatusWarning';
+// Import rate limiter for brute force protection
+import { loginRateLimiter } from '../../utils/rateLimiter';
 
 /**
  * Extend Window interface to include grecaptcha property
@@ -71,6 +73,10 @@ export default function Login() {
 
 	// Local loading state for pre-check
 	const [isCheckingStatus, setIsCheckingStatus] = useState(false);
+
+	// Rate limiting state
+	const [rateLimitWarning, setRateLimitWarning] = useState<string | null>(null);
+	const [remainingAttempts, setRemainingAttempts] = useState<number | null>(null);
 
 	/**
 	 * Handle resending email verification from banner
@@ -232,6 +238,29 @@ export default function Login() {
 	const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
 		setError("");
+		setRateLimitWarning(null);
+
+		// STEP 1: Check rate limit (brute force protection)
+		const rateLimitStatus = loginRateLimiter.checkLimit(email);
+		
+		if (!rateLimitStatus.allowed) {
+			// Rate limit exceeded - show error and block login
+			setError(rateLimitStatus.message || 'Too many login attempts. Please try again later.');
+			setRateLimitWarning(rateLimitStatus.resetTimeFormatted);
+			console.warn('🛡️ Login rate limit exceeded:', {
+				email,
+				resetTime: rateLimitStatus.resetTimeFormatted
+			});
+			return;
+		}
+
+		// Show remaining attempts warning if low
+		if (rateLimitStatus.remainingAttempts <= 2 && rateLimitStatus.remainingAttempts > 0) {
+			setRemainingAttempts(rateLimitStatus.remainingAttempts);
+			console.warn(`⚠️ ${rateLimitStatus.remainingAttempts} login attempts remaining before rate limit`);
+		} else {
+			setRemainingAttempts(null);
+		}
 
 		// Validate reCAPTCHA (only if reCAPTCHA is enabled, loaded without errors, and we're not in a fallback state)
 		if (recaptchaConfig.enabled && recaptchaConfig.siteKey !== 'disabled' && !recaptchaError && !captchaValue) {
@@ -251,17 +280,22 @@ export default function Login() {
 			// Login successful - Redux will handle state updates
 			console.log('✅ Login successful!', result);
 			
-			// Clear errors
+			// Clear errors and rate limit warnings
 			setError("");
 			setShowResendVerification(false);
 			setShowEmailVerificationBanner(false);
 			setIsCheckingStatus(false);
+			setRateLimitWarning(null);
+			setRemainingAttempts(null);
 			
 			// Navigate immediately (Redux Persist handles state save automatically)
 			const from = (location.state as { from?: string })?.from || '/app/dashboard';
 			navigate(from, { replace: true });
 			
 		} catch (err: any) {
+			// STEP 2: Record failed login attempt for rate limiting
+			loginRateLimiter.recordAttempt(email);
+			
 			// Stop loading state
 			setIsCheckingStatus(false);
 			
@@ -389,6 +423,27 @@ export default function Login() {
 								{error && (
 									<div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
 										{error}
+										{rateLimitWarning && (
+											<div className="mt-2 flex items-center gap-2 text-sm">
+												<Shield className="w-4 h-4" />
+												<span>Try again in: <strong>{rateLimitWarning}</strong></span>
+											</div>
+										)}
+									</div>
+								)}
+
+								{/* Rate Limit Warning */}
+								{remainingAttempts !== null && remainingAttempts <= 2 && !error && (
+									<div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded-lg">
+										<div className="flex items-center gap-2">
+											<Shield className="w-5 h-5 flex-shrink-0" />
+											<div>
+												<p className="font-semibold">Security Notice</p>
+												<p className="text-sm mt-1">
+													You have <strong>{remainingAttempts}</strong> login {remainingAttempts === 1 ? 'attempt' : 'attempts'} remaining before temporary lockout.
+												</p>
+											</div>
+										</div>
 									</div>
 								)}
 

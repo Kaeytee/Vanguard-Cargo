@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { Navigate, useLocation } from "react-router-dom";
-import { useAuth } from "../hooks/useAuth";
+import { useReduxAuth as useAuth } from "../hooks/useReduxAuth";
 
 /**
  * ProtectedRoutes - Component to protect routes that require authentication

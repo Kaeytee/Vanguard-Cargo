@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Copy, MapPin, Info, Check, AlertTriangle } from 'lucide-react';
-import { useAuth } from '../../hooks/useAuth';
+import { useReduxAuth as useAuth } from '../../hooks/useReduxAuth';
 import { motion } from "framer-motion";
 import PackageIntakeWidget from '../../components/PackageIntakeWidget';
 import { addressService, type USShippingAddress } from '../../services/addressService';

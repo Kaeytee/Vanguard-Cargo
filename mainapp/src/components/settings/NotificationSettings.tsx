@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { MdNotificationsNone } from 'react-icons/md';
 import { notificationService, type NotificationSettings as NotificationSettingsType } from '../../services/notificationService';
-import { useAuth } from '../../hooks/useAuth';
+import { useReduxAuth as useAuth } from '../../hooks/useReduxAuth';
 
 export default function NotificationSettings() {
   const { user } = useAuth();

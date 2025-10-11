@@ -12,7 +12,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 // Translation imports removed as not currently used
-import { useAuth } from '../../hooks/useAuth';
+import { useReduxAuth as useAuth } from '../../hooks/useReduxAuth';
 import { TrackingService, type TrackingData, type TrackingEvent } from '../../services/trackingService';
 import { AlertCircle, ArrowDownToLine, CheckCircle, Clock, Copy, MapPin, Plane, RefreshCw, Search, Package, Settings, Truck, Calculator, FileText, CreditCard, Shield, AlertTriangle, RotateCcw } from 'lucide-react';
 

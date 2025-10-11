@@ -1,4 +1,4 @@
-import { useAuth } from '../hooks/useAuth';
+import { useReduxAuth as useAuth } from '../hooks/useReduxAuth';
 import NotFoundWithLayout from '../landing/layouts/NotFoundWithLayout';
 import AppNotFoundWithLayout from '../app/layouts/AppNotFoundWithLayout';
 

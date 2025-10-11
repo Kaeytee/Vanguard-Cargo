@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { FaUser, FaEnvelope, FaPhone, FaMapMarkerAlt } from 'react-icons/fa';
-import { useAuth } from '../../hooks/useAuth';
+import { useReduxAuth as useAuth } from '../../hooks/useReduxAuth';
 
 export default function Profile() {
   const { user, profile, loading: authLoading, refreshProfile } = useAuth();
