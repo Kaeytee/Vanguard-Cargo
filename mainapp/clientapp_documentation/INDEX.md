@@ -55,6 +55,7 @@ This folder contains all technical documentation for developers, security implem
 
 ### Landing Page & UI Enhancements
 - `LANDING_PAGE_ENHANCEMENTS.md` - Marquee banner, WhatsApp button, mobile improvements
+- `LANDING_PAGE_UPDATES.md` - Logo update, CTA changes, savings update, page simplification
 - `ADDRESS_FETCH_ERROR_FIX.md` - Address fetching error resolution
 
 ### File Organization

@@ -152,7 +152,7 @@ export default function Services() {
 								<h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight text-gray-700">
 									Shop the US.
 									<span className="block text-red-600">Ship to Ghana.</span>
-									<span className="block text-3xl md:text-4xl font-medium text-gray-700">Save Up to 70%.</span>
+									<span className="block text-3xl md:text-4xl font-medium text-gray-700">Save up to 80%.</span>
 								</h1>
 								<p className="text-xl text-gray-700 mb-8 leading-relaxed">
 									Get your free US shipping address and start shopping from thousands of American stores. 

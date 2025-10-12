@@ -9,6 +9,7 @@ import { useReduxAuth as useAuth } from "../hooks/useReduxAuth";
 import { useLogout } from "../hooks/useLogout";
 import { featureFlags } from "../config/featureFlags";
 import whatsappLogo from "../assets/whatsapp.svg";
+import navLogo from "../assets/navlogo.png";
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -120,9 +121,11 @@ export default function Navbar() {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link to="/" className="flex-shrink-0">
-            <span className="text-xl sm:text-2xl font-bold text-primary tracking-tight">
-              Vanguard Cargo
-            </span>
+            <img 
+              src={navLogo} 
+              alt="Vanguard Cargo" 
+              className="h-10 sm:h-12 w-auto object-contain"
+            />
           </Link>
           
           {/* Desktop Navigation - Hidden on tablet and below */}
@@ -132,7 +135,7 @@ export default function Navbar() {
                 key={link.href}
                 to={link.href}
                 className={cn(
-                  "px-3 py-2 text-sm font-medium transition-colors duration-200 relative group",
+                  "px-3 py-2 text-base lg:text-lg font-medium transition-colors duration-200 relative group",
                   pathname === link.href
                     ? "text-primary"
                     : "text-gray-700 hover:text-primary"
@@ -222,7 +225,7 @@ export default function Navbar() {
                     )}
                     title={!featureFlags.authEnabled ? "Authentication temporarily disabled" : "Get your free US address"}
                   >
-                    <span className="hidden xl:inline">Get US Address</span>
+                    <span className="hidden xl:inline">Shop to Ghana</span>
                     <span className="xl:hidden">Sign Up</span>
                     <MapPin className="w-4 h-4" />
                   </Link>
@@ -406,7 +409,7 @@ export default function Navbar() {
                         )}
                         title={!featureFlags.authEnabled ? "Authentication temporarily disabled" : "Create a new account"}
                       >
-                        Get US Address <MapPin className="w-5 h-5" />
+                        Shop to Ghana <MapPin className="w-5 h-5" />
                       </Link>
                     )}
                   </>
