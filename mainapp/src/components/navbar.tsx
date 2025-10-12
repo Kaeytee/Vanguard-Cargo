@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useReduxAuth as useAuth } from "../hooks/useReduxAuth";
 import { useLogout } from "../hooks/useLogout";
 import { featureFlags } from "../config/featureFlags";
+import whatsappLogo from "../assets/whatsapp.svg";
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -91,6 +92,21 @@ export default function Navbar() {
   const hideLogin = pathname === "/login";
   const hideRegister = pathname === "/register";
 
+  /**
+   * WhatsApp configuration
+   * Update phone number and message as needed
+   */
+  const whatsappNumber = "233555555555"; // Replace with actual WhatsApp number
+  const whatsappMessage = "Hi! I'm interested in Vanguard Cargo shipping services.";
+  const whatsappLink = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(whatsappMessage)}`;
+
+  /**
+   * Handle WhatsApp click
+   */
+  const handleWhatsAppClick = () => {
+    window.open(whatsappLink, '_blank', 'noopener,noreferrer');
+  };
+
   return (
     <header
       className={cn(
@@ -157,8 +173,17 @@ export default function Navbar() {
             ))}
           </div>
 
-          {/* Desktop Auth Buttons - Full size for large screens */}
+          {/* Desktop WhatsApp & Auth Buttons - Full size for large screens */}
           <div className="hidden lg:flex items-center space-x-3">
+            {/* WhatsApp Button */}
+            <button
+              onClick={handleWhatsAppClick}
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-md transition-all duration-200 shadow-sm"
+              title="Chat with us on WhatsApp"
+            >
+              <img src={whatsappLogo} alt="WhatsApp" className="w-4 h-4" />
+              <span className="hidden xl:inline">WhatsApp</span>
+            </button>
             {user ? (
               <div className="flex items-center gap-3">
                 {user.email && (
@@ -206,8 +231,16 @@ export default function Navbar() {
             )}
           </div>
 
-          {/* Tablet Auth Buttons - Compact for medium screens */}
+          {/* Tablet WhatsApp & Auth Buttons - Compact for medium screens */}
           <div className="hidden md:flex lg:hidden items-center space-x-2">
+            {/* WhatsApp Button */}
+            <button
+              onClick={handleWhatsAppClick}
+              className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-md transition-all duration-200 shadow-sm"
+              title="Chat with us on WhatsApp"
+            >
+              <img src={whatsappLogo} alt="WhatsApp" className="w-3 h-3" />
+            </button>
             {user ? (
               <Button
                 onClick={confirmLogout}
@@ -246,8 +279,32 @@ export default function Navbar() {
               </>
             )}
           </div>
-          {/* Mobile menu button */}
-          <div className="flex items-center md:hidden">
+          {/* Mobile: WhatsApp + Login + Menu Button */}
+          <div className="flex items-center gap-2 md:hidden">
+            {/* WhatsApp Button - Shows first on mobile */}
+            <button
+              onClick={handleWhatsAppClick}
+              className="flex items-center justify-center p-2 text-white bg-green-600 hover:bg-green-700 rounded-md transition-all duration-200"
+              title="Chat with us on WhatsApp"
+            >
+              <img src={whatsappLogo} alt="WhatsApp" className="w-5 h-5" />
+            </button>
+
+            {/* Login Button - Shows second on mobile (if not logged in and not on login page) */}
+            {!user && !hideLogin && (
+              <Link
+                to={featureFlags.authEnabled ? "/login" : "/"}
+                className={cn(
+                  "flex items-center justify-center px-3 py-2 text-sm font-medium text-primary hover:text-primary/80 transition-all duration-200 rounded-md hover:bg-red-600/10 border border-primary",
+                  !featureFlags.authEnabled && "opacity-50 cursor-not-allowed pointer-events-none"
+                )}
+                title={!featureFlags.authEnabled ? "Authentication temporarily disabled" : "Log in to your account"}
+              >
+                Login
+              </Link>
+            )}
+
+            {/* Mobile menu button - Shows last */}
             <button
               ref={menuButtonRef}
               onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -265,11 +322,11 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* Mobile menu */}
+      {/* Mobile menu - White background when active */}
       <AnimatePresence>
         {isMenuOpen && (
           <motion.div
-            className="fixed inset-0 z-40 flex flex-col bg-white/98 backdrop-blur-md md:hidden overflow-y-auto pt-16 safe-area-padding"
+            className="fixed inset-0 z-40 flex flex-col bg-white md:hidden overflow-y-auto pt-16 safe-area-padding"
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}

@@ -240,3 +240,22 @@ body {
 .animate-leave {
 	animation: leave 0.2s ease-in forwards;
 }
+
+/* Marquee banner animation */
+@keyframes marquee {
+	0% {
+		transform: translateX(0);
+	}
+	100% {
+		transform: translateX(-50%);
+	}
+}
+
+.animate-marquee {
+	animation: marquee 40s linear infinite;
+}
+
+/* Pause animation on hover */
+.marquee-wrapper:hover .animate-marquee {
+	animation-play-state: paused;
+}

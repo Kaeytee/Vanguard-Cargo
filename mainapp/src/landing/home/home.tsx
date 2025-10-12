@@ -1,5 +1,6 @@
 
 import SEO from '../../components/SEO';
+import MarqueeBanner from '../../components/MarqueeBanner';
 import Hero from './hero';
 import Services from './services';
 import WhyChoose from './whyChoose';
@@ -15,6 +16,9 @@ export default function Home() {
 				keywords="package forwarding Ghana, USA to Ghana shipping, international shipping, US address Ghana, cargo forwarding, online shopping USA, package consolidation, shipping service Ghana, freight forwarding"
 				url="https://www.vanguardcargo.co/"
 			/>
+
+			{/* Marquee Banner - Promotional scrolling banner */}
+			<MarqueeBanner />
 
 			{/* Hero Section */}
 			<Hero />
