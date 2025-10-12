@@ -50,7 +50,7 @@ const popularBrands = [
   },
   {
     name: "Samsung",
-    logo: "https://upload.wikimedia.org/wikipedia/commons/2/24/Samsung_Logo.svg",
+    logo: "https://logos-world.net/wp-content/uploads/2020/04/Samsung-Logo-700x394.png",
     category: "Electronics",
     url: "https://www.samsung.com"
   },
