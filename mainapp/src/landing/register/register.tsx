@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Eye, EyeOff, Check } from 'lucide-react';
+import { Eye, EyeOff, Check, Loader2 } from 'lucide-react';
 import 'react-phone-number-input/style.css';
 import PhoneInput, { isValidPhoneNumber, parsePhoneNumber } from 'react-phone-number-input';
 import { cn } from '../../lib/utils';
@@ -36,6 +36,9 @@ declare global {
  * @returns {JSX.Element} The Register page component
  */
 export default function Register() {
+  // Loading state for form submission
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   // Form state
   const [formData, setFormData] = useState({
     firstName: '',
@@ -436,6 +439,9 @@ export default function Register() {
     e.preventDefault();
     e.stopPropagation();
     
+    // Set loading state
+    setIsSubmitting(true);
+    
     console.log('📝 Form submit triggered', { formData });
     
     // STEP 1: Check rate limit (brute force protection)
@@ -451,12 +457,14 @@ export default function Register() {
         email: formData.email,
         resetTime: rateLimitStatus.resetTimeFormatted
       });
+      setIsSubmitting(false);
       return;
     }
     
     // Validate reCAPTCHA (only if reCAPTCHA is enabled, loaded without errors, and we're not in a fallback state)
     if (recaptchaConfig.enabled && recaptchaConfig.siteKey !== 'disabled' && !recaptchaError && !captchaValue) {
       setErrors(prev => ({ ...prev, general: 'Please verify that you are not a robot.' }));
+      setIsSubmitting(false);
       return;
     }
     
@@ -474,6 +482,7 @@ export default function Register() {
           errorElement.focus();
         }
       }
+      setIsSubmitting(false);
       return;
     }
 
@@ -490,6 +499,7 @@ export default function Register() {
         }));
         const emailField = document.getElementById('email');
         if (emailField) emailField.focus();
+        setIsSubmitting(false);
         return;
       }
 
@@ -607,7 +617,8 @@ export default function Register() {
         general: 'Registration is temporarily unavailable. Please try again in a few minutes.' 
       }));
     } finally {
-      // Removed setLoading(false) to eliminate loading state
+      // Reset loading state after registration attempt completes
+      setIsSubmitting(false);
     }
   };
 
@@ -665,7 +676,7 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-red-50 to-red-100 flex items-center justify-center p-4" style={{ backgroundImage: `url(${registerbg})`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
+    <div className="min-h-screen bg-gradient-to-br from-red-50 to-red-100 flex items-center justify-center py-14 p-4" style={{ backgroundImage: `url(${registerbg})`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
       <style>
         {`
           .error-shake {
@@ -1182,15 +1193,22 @@ export default function Register() {
 
                   <button
                     type="submit"
-                    disabled={!isFormValid}
+                    disabled={!isFormValid || isSubmitting}
                     className={cn(
-                      'w-full font-semibold px-6 py-3 rounded-lg transition-all duration-200 flex items-center justify-center mt-6',
-                      isFormValid
+                      'w-full font-semibold px-6 py-3 rounded-lg transition-all duration-200 flex items-center justify-center gap-2 mt-6',
+                      isFormValid && !isSubmitting
                         ? 'bg-red-500 hover:bg-red-600 text-white transform hover:scale-105 hover:shadow-lg'
                         : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                     )}
                   >
-                    Create Account
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                        <span>Creating Account...</span>
+                      </>
+                    ) : (
+                      'Create Account'
+                    )}
                   </button>
                   
                   {/* Login Link */}

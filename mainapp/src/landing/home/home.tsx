@@ -1,9 +1,10 @@
 
 import SEO from '../../components/SEO';
+import MarqueeBanner from '../../components/MarqueeBanner';
 import Hero from './hero';
 import Services from './services';
-import WhyChoose from './whyChoose';
-import Testimonials from './testimonials';
+// import WhyChoose from './whyChoose';
+// import Testimonials from './testimonials';
 import CTA from './cta';
 
 export default function Home() {
@@ -16,6 +17,9 @@ export default function Home() {
 				url="https://www.vanguardcargo.co/"
 			/>
 
+			{/* Marquee Banner - Promotional scrolling banner */}
+			<MarqueeBanner />
+
 			{/* Hero Section */}
 			<Hero />
 
@@ -23,10 +27,10 @@ export default function Home() {
 			<Services />
 
 			{/* Why Choose Us Section */}
-			<WhyChoose />
+			{/* <WhyChoose /> */}
 
 			{/* Testimonials Section */}
-			<Testimonials />
+			{/* <Testimonials /> */}
 
 			{/* Call to Action Section */}
 			<CTA />

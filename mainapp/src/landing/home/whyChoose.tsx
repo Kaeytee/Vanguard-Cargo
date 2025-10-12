@@ -7,7 +7,7 @@ export default function WhyChoose() {
 		{
 			icon: 'savings',
 			title: 'Massive Savings',
-			description: 'Save up to 70% on shipping costs with our package consolidation service',
+			description: 'Save up to 80% on shipping costs with our package consolidation service',
 			stat: '70%',
 			statLabel: 'Average savings'
 		},

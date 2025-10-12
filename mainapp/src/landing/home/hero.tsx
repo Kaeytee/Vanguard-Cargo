@@ -50,7 +50,7 @@ const popularBrands = [
   },
   {
     name: "Samsung",
-    logo: "https://upload.wikimedia.org/wikipedia/commons/2/24/Samsung_Logo.svg",
+    logo: "https://logos-world.net/wp-content/uploads/2020/04/Samsung-Logo-700x394.png",
     category: "Electronics",
     url: "https://www.samsung.com"
   },
@@ -150,7 +150,7 @@ const popularBrands = [
               {/* Key Benefits */}
               <div className="grid sm:grid-cols-2 gap-4 mb-10">
                 {[
-                  "Save up to 70% on shipping",
+                  "Save up to 80% on shipping",
                   "Package consolidation",
                   "Real-time tracking",
                   "Secure delivery to Ghana",
@@ -259,7 +259,7 @@ const popularBrands = [
 
               {/* Floating Benefits */}
               <div className="absolute -top-4 -right-4 bg-red-600 text-white px-3 py-2 rounded-full text-xs font-bold animate-bounce">
-                70% SAVINGS
+                UP TO 80% SAVINGS
               </div>
               <div className="absolute -bottom-4 -left-4 bg-red-600 text-white px-3 py-2 rounded-full text-xs font-bold">
                 INSTANT SETUP
