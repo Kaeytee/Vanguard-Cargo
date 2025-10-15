@@ -319,6 +319,11 @@ export default function Register() {
    * Provides immediate feedback without waiting for form submit
    */
   const checkEmailExists = async (email: string) => {
+    // Don't check if form is submitting or already succeeded
+    if (isSubmitting || success) {
+      return;
+    }
+    
     // Skip if email is empty or invalid
     if (!email || !isValidEmail(email)) {
       setEmailExists(false);
@@ -530,6 +535,10 @@ export default function Register() {
           firstName: formData.firstName,
           lastName: formData.lastName
         });
+        
+        // Clear email check state to prevent false duplicate error
+        setEmailExists(false);
+        setIsCheckingEmail(false);
         
         setSuccess(true);
         
