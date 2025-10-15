@@ -317,19 +317,18 @@ export const loginRateLimiter = new RateLimiter({
 /**
  * Registration Rate Limiter
  * Development: 10 attempts per 5 minutes (for testing)
- * Production: 3 attempts per hour (for security)
+ * Production: 5 attempts per 30 minutes (reasonable for normal users)
  * 
- * To switch to production mode, change:
- *   maxAttempts: 3
- *   windowMs: 60 * 60 * 1000 (1 hour)
+ * Note: This is PER-USER rate limiting based on email address
+ * Each user can attempt registration independently
  */
 const isDevelopment = import.meta.env.DEV || import.meta.env.MODE === 'development';
 
 export const registrationRateLimiter = new RateLimiter({
-  maxAttempts: isDevelopment ? 10 : 3, // 10 attempts in dev, 3 in prod
-  windowMs: isDevelopment ? 5 * 60 * 1000 : 60 * 60 * 1000, // 5 min in dev, 1 hour in prod
+  maxAttempts: isDevelopment ? 10 : 5, // 10 attempts in dev, 5 in prod (per email)
+  windowMs: isDevelopment ? 5 * 60 * 1000 : 30 * 60 * 1000, // 5 min in dev, 30 min in prod
   storageKey: 'rate_limit_registration',
-  message: 'Too many registration attempts. Please try again in {resetTime}.'
+  message: 'Too many registration attempts for this email. Please try again in {resetTime}.'
 });
 
 /**
