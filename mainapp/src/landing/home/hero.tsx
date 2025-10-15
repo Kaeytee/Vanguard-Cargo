@@ -132,12 +132,13 @@ const popularBrands = [
               className="text-center lg:text-left"
             >
               <div className="flex items-center justify-center lg:justify-start mb-6">
-                <span className="bg-red-600 text-white px-4 py-2 rounded-full text-sm font-bold flex items-center gap-2">
-                  <MapPin className="w-4 h-4" />
-                  <Plane className="w-4 h-4" />
-                  <MapPin className="w-4 h-4" />
-                  FREE US ADDRESS
-                </span>
+                <Link to="/register">
+                  <span className="bg-red-600 text-white px-4 py-2 rounded-full text-sm font-bold flex items-center gap-2">
+                    <Plane className="w-4 h-4" />
+                    <MapPin className="w-4 h-4" />
+                    FREE US ADDRESS
+                  </span>
+                </Link>
               </div>
 
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-700 mb-6 leading-tight">
@@ -161,7 +162,7 @@ const popularBrands = [
                   </div>
                 ))}
               </div>
-
+              
               {/* CTA Buttons */}
               <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start mb-8">
                 <Link
@@ -189,81 +190,9 @@ const popularBrands = [
               transition={{ duration: 0.8, delay: 0.2 }}
               className="relative"
             >
-              {/* Customer Testimonial Card */}
-              <div className="bg-white rounded-2xl p-8 shadow-2xl transform rotate-1 hover:rotate-0 transition-transform duration-300 mb-6">
-                <div className="flex items-center mb-4">
-                  <div className="w-12 h-12 mr-4">
-                    <img 
-                      src={testimonials[currentTestimonial].avatar}
-                      alt={`${testimonials[currentTestimonial].name} profile`}
-                      className="w-full h-full rounded-full object-cover"
-                    />
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-gray-900">
-                      {testimonials[currentTestimonial].name}
-                    </h4>
-                    <p className="text-gray-600 text-sm">
-                      {testimonials[currentTestimonial].location}
-                    </p>
-                  </div>
-                  <div className="ml-auto flex text-red-400">
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} className="h-4 w-4 fill-current" />
-                    ))}
-                  </div>
-                </div>
-                <p className="text-gray-800 italic">
-                  "{testimonials[currentTestimonial].text}"
-                </p>
+              
 
-                {/* Testimonial Navigation */}
-                <div className="flex justify-center mt-6 space-x-2">
-                  {testimonials.map((_, index) => (
-                    <button
-                      key={index}
-                      onClick={() => setCurrentTestimonial(index)}
-                      className={`w-3 h-3 rounded-full transition-colors duration-300 ${
-                        index === currentTestimonial
-                          ? "bg-red-600"
-                          : "bg-gray-300"
-                      }`}
-                    />
-                  ))}
-                </div>
-              </div>
 
-              {/* US Address Preview Card */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.5 }}
-                className="bg-gradient-to-r from-red-600 to-red-700 text-white p-6 rounded-xl shadow-lg"
-              >
-                <div className="flex items-center justify-between mb-3">
-                  <div className="text-sm font-semibold">YOUR US ADDRESS:</div>
-                  <Globe className="h-5 w-5" />
-                </div>
-                <div className="text-sm leading-relaxed">
-                  <div className="font-semibold">Alex Quaicoe (TTL-12345)</div>
-                  <div>2891 NE 2nd Ave</div>
-                  <div>Alexandria, VA 22304, USA</div>
-                </div>
-                <div className="mt-4 pt-3 border-t border-white/20">
-                  <div className="flex items-center text-sm">
-                    <CheckCircle className="h-4 w-4 mr-2" />
-                    <span>Ready to receive packages!</span>
-                  </div>
-                </div>
-              </motion.div>
-
-              {/* Floating Benefits */}
-              <div className="absolute -top-4 -right-4 bg-red-600 text-white px-3 py-2 rounded-full text-xs font-bold animate-bounce">
-                UP TO 80% SAVINGS
-              </div>
-              <div className="absolute -bottom-4 -left-4 bg-red-600 text-white px-3 py-2 rounded-full text-xs font-bold">
-                INSTANT SETUP
-              </div>
             </motion.div>
           </div>
         </div>
