@@ -14,6 +14,7 @@ import Footer from "./components/footer";
 import { ReduxAuthGuard } from "./components/ReduxAuthGuard";
 import AppLayout from "./components/AppLayout";
 import PublicRoute from "./components/PublicRoute";
+import FloatingSupportButton from "./components/FloatingSupportButton";
 
 // ============================================================================
 // LAZY IMPORTS - Code-split routes for better performance
@@ -87,6 +88,8 @@ export default function App() {
   return (
     <>
       <Analytics />
+      {/* Floating Support Button - Appears on all pages */}
+      <FloatingSupportButton />
       <Suspense fallback={<LoadingFallback />}>
         <Routes>
       {/* Public Routes - Landing Pages with Navbar and Footer */}
