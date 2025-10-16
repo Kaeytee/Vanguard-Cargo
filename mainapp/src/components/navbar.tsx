@@ -124,7 +124,7 @@ export default function Navbar() {
             <img 
               src={navLogo} 
               alt="Vanguard Cargo" 
-              className="h-10 sm:h-12 w-auto object-contain"
+              className="h-7 sm:h-10 md:h-12 w-auto object-contain"
             />
           </Link>
           

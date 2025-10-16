@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import AnimateInView from '../../components/ui/animate-in-view';
 import { motion } from 'framer-motion';
 import { MapPin, Check, Rocket } from 'lucide-react';
+import deliveryImage from '../../assets/deliver.png';
 
 // Simple animated button component
 const AnimatedButton = ({
@@ -33,13 +34,6 @@ const AnimatedButton = ({
 export default function CTA() {
 	return (
 		<section className="py-16 bg-gradient-to-br from-red-900 via-red-800 to-red-700 text-white relative overflow-hidden">
-			{/* Background decorative elements */}
-			<div className="absolute inset-0">
-				<div className="absolute top-10 left-10 w-20 h-20 bg-red-400 rounded-full opacity-10 animate-pulse"></div>
-				<div className="absolute top-40 right-20 w-16 h-16 bg-red-400 rounded-full opacity-10 animate-bounce"></div>
-				<div className="absolute bottom-20 left-1/4 w-12 h-12 bg-red-400 rounded-full opacity-10 animate-ping"></div>
-			</div>
-
 			<div className="container mx-auto px-4 flex flex-col md:flex-row items-center gap-10 relative z-10">
 				{/* Left Content Area */}
 				<div className="flex-1 text-center md:text-left">
@@ -99,34 +93,13 @@ export default function CTA() {
 				{/* Right Image Area */}
 				<div className="flex-1 flex justify-center items-center">
 					<AnimateInView variant="fadeInRight" delay={0.4}>
-						<div className="relative max-w-xs md:max-w-md">
-							{/* Mock US Address Card */}
-							<div className="bg-white rounded-2xl p-6 shadow-2xl transform rotate-3 hover:rotate-0 transition-transform duration-300">
-								<div className="text-center mb-4">
-									<div className="text-2xl mb-2"><MapPin className="w-8 h-8 mx-auto text-red-600" /></div>
-									<h3 className="font-bold text-gray-900">Your US Address</h3>
-								</div>
-								<div className="text-gray-800 text-sm space-y-1">
-									<div className="font-semibold">John Doe (TTL-12345)</div>
-									<div>2891 NE 2nd Ave</div>
-									<div>Alexandria, VA 22304</div>
-									<div>United States</div>
-								</div>
-								<div className="mt-4 pt-4 border-t border-gray-200">
-									<div className="flex items-center text-red-600 text-sm">
-										<Check className="w-4 h-4 mr-2" />
-										<span>Ready to receive packages!</span>
-									</div>
-								</div>
-							</div>
-							
-							{/* Floating elements */}
-							<div className="absolute -top-4 -right-4 bg-red-600 text-white px-3 py-1 rounded-full text-xs font-bold animate-bounce">
-								FREE!
-							</div>
-							<div className="absolute -bottom-4 -left-4 bg-red-500 text-white px-3 py-1 rounded-full text-xs font-bold">
-								Instant Setup
-							</div>
+						<div className="relative max-w-xs md:max-w-md w-full">
+							{/* Delivery Image */}
+							<img 
+								src={deliveryImage} 
+								alt="Fast Delivery to Ghana" 
+								className="w-full h-auto object-contain rounded-lg"
+							/>
 						</div>
 					</AnimateInView>
 				</div>

@@ -2,8 +2,9 @@ import { Link } from "react-router-dom";
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { cn } from "../../lib/utils";
-import { Plane, Box, FileText, ArrowUpCircle, MapPin } from "lucide-react";
+import { Plane, Box, ArrowUpCircle, MapPin } from "lucide-react";
 import AnimateInView from "../../components/ui/animate-in-view";
+import deliveryImage from "../../assets/delivery.png";
 
 export default function Services() {
   // Track hover state for each service item
@@ -12,7 +13,7 @@ export default function Services() {
   // Define service items based on the package forwarding workflow
   const serviceItems = [
     {
-      icon: Plane,
+      icon: MapPin,
       title: "Get Your US Address",
       description: "Sign up instantly and receive your personal US shipping address. Start shopping from any US store immediately.",
       image: "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
@@ -33,13 +34,17 @@ export default function Services() {
       step: "3"
     },
     {
-      icon: FileText,
+      icon: Plane,
       title: "Secure Delivery to Ghana",
       description: "We handle customs, tracking, and delivery to pickup locations in Ghana. Sit back and wait for your packages!",
-      image: "https://images.unsplash.com/photo-1521791136064-7986c2920216?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+      image: deliveryImage,
       step: "4"
     },
   ];
+
+  function setActive(_arg0: boolean): void {
+    throw new Error("Function not implemented.");
+  }
 
   return (
     <section className="py-16 bg-white">
@@ -134,7 +139,11 @@ export default function Services() {
           <div className="text-center mt-12">
             <Link
               to="/register"
-              className="bg-red-600 hover:bg-red-700 text-white font-medium px-8 py-4 rounded-lg transition-all duration-300 transform hover:scale-105 hover:shadow-lg flex items-center gap-2 justify-center"
+              className="text-white font-medium px-8 py-4 rounded-lg transition-all duration-300 transform hover:scale-105 hover:shadow-lg flex items-center gap-2 justify-center"
+              style={{ backgroundColor: '#D81515' }}
+              onClick={() => setActive(true)}
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#E2553F'}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#D81515'}
             >
               Get My Free US Address Now <MapPin className="w-5 h-5" />
             </Link>
