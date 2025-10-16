@@ -6,12 +6,12 @@ import {
 	Plane,
 	Package,
 	FileText,
-	Shield,
-	AlertTriangle,
-	Truck,
-	ShoppingBag,
-	Bell,
-	Archive,
+	// Shield, // Commented out - used in Value-Added Services section
+	// AlertTriangle, // Commented out - used in Value-Added Services section
+	// Truck, // Commented out - used in Value-Added Services section
+	// ShoppingBag, // Commented out - used in Value-Added Services section
+	// Bell, // Commented out - used in Value-Added Services section
+	// Archive, // Commented out - used in Value-Added Services section
 	// Rocket, // Commented out - used in commented Savings section
 	// DollarSign // Commented out - used in commented Savings section
 } from 'lucide-react';
@@ -29,7 +29,7 @@ import servicesImage from '../../assets/services.jpg';
 export default function Services() {
 	// Track hover state for service sections and additional service cards
 	const [hoveredServiceIndex, setHoveredServiceIndex] = useState<number | null>(null);
-	const [hoveredAdditionalIndex, setHoveredAdditionalIndex] = useState<number | null>(null);
+	// const [hoveredAdditionalIndex, setHoveredAdditionalIndex] = useState<number | null>(null); // Commented out - used in Value-Added Services section
 
 	// Define main service sections focused on package forwarding
 	const mainServices = [
@@ -77,8 +77,8 @@ export default function Services() {
 		}
 	];
 
-	// Define additional package forwarding services
-	const additionalServices = [
+	// Define additional package forwarding services - COMMENTED OUT (used in Value-Added Services section)
+	/* const additionalServices = [
 		{
 			icon: Shield,
 			title: 'Package Protection',
@@ -109,7 +109,7 @@ export default function Services() {
 			title: 'Storage & Warehousing',
 			description: 'Free 30-day storage at our US facility, giving you time to accumulate packages for consolidation.'
 		}
-	];
+	]; */
 
 	return (
 		<div className="services-container">
@@ -441,8 +441,8 @@ export default function Services() {
 				</div>
 			</section> */}
 
-			{/* Additional Services Section */}
-			<section className="py-16 px-4 sm:px-6 lg:px-8 bg-white">
+			{/* Additional Services Section - COMMENTED OUT */}
+			{/* <section className="py-16 px-4 sm:px-6 lg:px-8 bg-white">
 				<div className="max-w-6xl mx-auto">
 					<AnimateInView variant="fadeInDown">
 						<div className="text-center mb-4">
@@ -508,7 +508,7 @@ export default function Services() {
 						})}
 					</div>
 				</div>
-			</section>
+			</section> */}
 
 			{/* Call to Action Section */}
 			<AnimateInView variant="fadeInUp" delay={0.2}>
