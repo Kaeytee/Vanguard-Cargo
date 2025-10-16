@@ -124,12 +124,6 @@ export default function CustomerRating({
           Customer Rating
         </div>
       )}
-      {/* Setup reminder - only visible in development */}
-      {import.meta.env.DEV && (
-        <div className="text-xs text-orange-500 mt-2 max-w-xs">
-          ⚠️ Trustpilot not configured. See /src/config/trustpilot.ts for setup instructions.
-        </div>
-      )}
     </div>
   );
 }
