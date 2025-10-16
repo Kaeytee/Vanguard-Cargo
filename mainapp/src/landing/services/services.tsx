@@ -18,6 +18,7 @@ import {
 import { cn } from '../../lib/utils';
 import AnimateInView from '../../components/ui/animate-in-view';
 import SEO from '../../components/SEO';
+import CustomerRating from '../../components/CustomerRating';
 import air from '../../images/air.png';
 import packaging from '../../images/packaging.png';
 import customs from '../../images/customs.png';
@@ -225,8 +226,8 @@ export default function Services() {
 												<div className="text-gray-600">Average Savings</div>
 											</div>
 											<div>
-												<div className="text-2xl font-bold text-red-600">4.9★</div>
-												<div className="text-gray-600">Customer Rating</div>
+												{/* Trustpilot Customer Rating - will show real rating when configured */}
+												<CustomerRating variant="micro" showText={true} centerAlign={true} />
 											</div>
 										</div>
 									</div>

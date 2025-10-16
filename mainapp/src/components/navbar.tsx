@@ -94,15 +94,31 @@ export default function Navbar() {
   const hideRegister = pathname === "/register";
 
   /**
-   * WhatsApp configuration
-   * Update phone number and message as needed
+   * WhatsApp Business Configuration
+   * Professional contact setup for customer inquiries
    */
-  const whatsappNumber = "233555555555"; // Replace with actual WhatsApp number
-  const whatsappMessage = "Hi! I'm interested in Vanguard Cargo shipping services.";
+  const whatsappNumber = "233544197819"; // Vanguard Cargo WhatsApp Business number
+  
+  /**
+   * Professional WhatsApp message template
+   * Provides clear introduction and expected information
+   */
+  const whatsappMessage = `Hello Vanguard Cargo Team! 👋
+
+I'm interested in learning more about your package forwarding services from the USA to Ghana.
+
+I would like to know about:
+• Getting my free US shipping address
+• Shipping rates and delivery times
+• Package consolidation services
+
+Thank you!`;
+
   const whatsappLink = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(whatsappMessage)}`;
 
   /**
    * Handle WhatsApp click
+   * Opens WhatsApp Web or app with pre-filled professional message
    */
   const handleWhatsAppClick = () => {
     window.open(whatsappLink, '_blank', 'noopener,noreferrer');
