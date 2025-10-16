@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { MessageCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -10,15 +10,34 @@ import { motion, AnimatePresence } from 'framer-motion';
  * When clicked, it redirects users to the contact/support page.
  * Includes hover effects and responsive design.
  * 
+ * VISIBILITY: Hidden on contact/support pages (no need to show button when already on support page)
+ * 
  * @component
- * @returns {JSX.Element} The floating support button component
+ * @returns {JSX.Element | null} The floating support button component or null if on support page
  */
 export default function FloatingSupportButton() {
+	// Get current location to check if we're on contact/support page
+	const location = useLocation();
+	
 	// State to track hover status for animation effects
 	const [isHovered, setIsHovered] = useState<boolean>(false);
 	
 	// State to show/hide tooltip on hover
 	const [showTooltip, setShowTooltip] = useState<boolean>(false);
+
+	/**
+	 * Check if current page is a support/contact page
+	 * @returns {boolean} True if on support/contact page, false otherwise
+	 */
+	const isOnSupportPage = (): boolean => {
+		const path = location.pathname.toLowerCase();
+		return path === '/contact' || path === '/app/support';
+	};
+
+	// Don't render button if user is already on contact/support page
+	if (isOnSupportPage()) {
+		return null;
+	}
 
 	/**
 	 * Handle mouse enter event
