@@ -28,12 +28,6 @@ export default function Footer() {
 								Home
 							</Link>
 							<Link
-								to="/about"
-								className="block text-gray-600 hover:text-red-600 transition-colors duration-200"
-							>
-								About Us
-							</Link>
-							<Link
 								to="/services"
 								className="block text-gray-600 hover:text-red-600 transition-colors duration-200"
 							>
@@ -48,39 +42,42 @@ export default function Footer() {
 						</div>
 					</div>
 
-					{/* Resources */}
+					{/* Account */}
 					<div className="space-y-4">
-						<h3 className="text-lg font-semibold text-gray-900">Resources</h3>
+						<h3 className="text-lg font-semibold text-gray-900">Account</h3>
 						<div className="space-y-2">
-							<a
-								href="#"
+							<Link
+								to="/login"
 								className="block text-gray-600 hover:text-red-600 transition-colors duration-200"
 							>
-								Air Freight
-							</a>
-							<a
-								href="#"
+								Login
+							</Link>
+							<Link
+								to="/register"
 								className="block text-gray-600 hover:text-red-600 transition-colors duration-200"
 							>
-								Ocean Freight
-							</a>
-							<a
-								href="#"
+								Register
+							</Link>
+							<Link
+								to="/app/dashboard"
 								className="block text-gray-600 hover:text-red-600 transition-colors duration-200"
 							>
-								Land Freight
-							</a>
-							<a
-								href="#"
+								My Dashboard
+							</Link>
+							<Link
+								to="/app/tracking"
 								className="block text-gray-600 hover:text-red-600 transition-colors duration-200"
 							>
-								Customs Brokerage
-							</a>
+								Track Package
+							</Link>
 						</div>
 					</div>
+
 					{/* Contact */}
 					<div className="space-y-4">
-						<h3 className="text-lg font-semibold text-gray-900">Contact</h3>
+						<h3 className="text-lg font-semibold text-gray-900">
+							Contact
+						</h3>
 						<div className="space-y-2 text-gray-600">
 							<p className="text-sm">
 								{CONTACT_INFO.ADDRESS.LINE1}<br />
