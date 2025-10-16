@@ -254,7 +254,7 @@ export default function App() {
  * - TTI: ~5-6s
  * 
  * AFTER (With Code Splitting):
- * - Initial Bundle: ~250KB (70% reduction)
+ * - Initial Bundle: ~250KB (80% reduction)
  * - Load Time: ~1-2s on 3G (50% faster)
  * - TTI: ~2-3s (50% faster)
  * 

@@ -12,8 +12,8 @@ import {
 	ShoppingBag,
 	Bell,
 	Archive,
-	Rocket,
-	DollarSign
+	// Rocket, // Commented out - used in commented Savings section
+	// DollarSign // Commented out - used in commented Savings section
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import AnimateInView from '../../components/ui/animate-in-view';
@@ -50,7 +50,7 @@ export default function Services() {
 		{
 			icon: Package,
 			title: 'Package Consolidation & Savings',
-			description: 'Our smart consolidation service combines multiple purchases into one shipment, saving you up to 70% on shipping costs. We repackage items efficiently and remove unnecessary packaging to reduce weight.',
+			description: 'Our smart consolidation service combines multiple purchases into one shipment, saving you up to 80% on shipping costs. We repackage items efficiently and remove unnecessary packaging to reduce weight.',
 			benefits: [
 				'Combine up to 10 packages',
 				'Professional repackaging',
@@ -102,7 +102,7 @@ export default function Services() {
 		{
 			icon: Bell,
 			title: 'Smart Notifications',
-			description: 'Real-time SMS and email alerts for package arrivals, shipping updates, and delivery confirmations.'
+			description: 'Real-time email alerts for package arrivals, shipping updates, and delivery confirmations.'
 		},
 		{
 			icon: Archive,
@@ -221,7 +221,7 @@ export default function Services() {
 												<div className="text-gray-600">Packages Delivered</div>
 											</div>
 											<div>
-												<div className="text-2xl font-bold text-red-600">70%</div>
+												<div className="text-2xl font-bold text-red-600">80%</div>
 												<div className="text-gray-600">Average Savings</div>
 											</div>
 											<div>
@@ -353,8 +353,8 @@ export default function Services() {
 				);
 			})}
 
-			{/* Savings Calculator Section */}
-			<section className="py-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-red-900 via-red-800 to-red-700 text-white">
+			{/* Savings Calculator Section - COMMENTED OUT */}
+			{/* <section className="py-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-red-900 via-red-800 to-red-700 text-white">
 				<div className="max-w-4xl mx-auto">
 					<AnimateInView variant="fadeInDown">
 						<div className="text-center mb-12">
@@ -439,7 +439,7 @@ export default function Services() {
 						</AnimateInView>
 					</div>
 				</div>
-			</section>
+			</section> */}
 
 			{/* Additional Services Section */}
 			<section className="py-16 px-4 sm:px-6 lg:px-8 bg-white">
@@ -521,7 +521,7 @@ export default function Services() {
 							transition={{ duration: 0.6 }}
 							viewport={{ once: true }}
 						>
-							Ready to Optimize Your cargo?
+							Ready to Receive Your Packages?
 						</motion.h2>
 						<motion.p
 							className="text-xl text-red-100 mb-8"
@@ -531,7 +531,7 @@ export default function Services() {
 							viewport={{ once: true }}
 						>
 							Contact our team today to discuss your specific requirements and
-							discover how our services can benefit your business.
+							discover how our services can benefit you.
 						</motion.p>
 						<Link to="/contact">
 							<motion.button

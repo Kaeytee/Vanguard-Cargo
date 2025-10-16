@@ -31,7 +31,7 @@ const FaqSection: React.FC<FaqSectionProps> = ({
     {
       question: "How much can I save with your service?",
       answer:
-        "Our customers typically save 40-70% on shipping costs through consolidation and our bulk shipping rates. The exact savings depend on the number and size of your packages.",
+        "Our customers typically save 40-80% on shipping costs through consolidation and our bulk shipping rates. The exact savings depend on the number and size of your packages.",
     },
     {
       question: "What items can I ship from the US to Ghana?",
