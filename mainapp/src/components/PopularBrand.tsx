@@ -216,7 +216,7 @@ const PopularBrand = () => {
 				Get Your US Address & Start Shopping
 			 </Link>
 			 <p className="text-sm text-gray-500 mt-3">
-				Free setup • No monthly fees • 70% shipping savings
+				Free setup • No monthly fees • 80% shipping savings
 			 </p>
 		  </motion.div>
 		</div>

@@ -40,10 +40,6 @@ export default function Contact() {
 
 	// Hover states
 	const [hoveredContact, setHoveredContact] = useState<number | null>(null);
-	const [hoveredLocation, setHoveredLocation] = useState<number | null>(null);
-	
-	// Selected location for map
-	const [selectedLocation, setSelectedLocation] = useState<number>(0);
 
 	// Handle form input changes
 	const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -134,37 +130,19 @@ export default function Contact() {
 		}
 	];
 
-	// Location items with maps
-	const locations = [
-		{
-			title: 'Accra, Ghana',
-			subtitle: 'Main Office',
-			isMain: true,
-			mapImage: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80',
-			mapAlt: 'Map of Accra, Ghana showing main office location'
-		},
-		{
-			title: 'Washington, D.C., USA',
-			subtitle: 'Field Office',
-			isMain: false,
-			mapImage: 'https://images.unsplash.com/photo-1551522435-a13afa10f103?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80',
-			mapAlt: 'Map of Washington DC, USA showing field office location'
-		}
-	];
-
 	// FAQ items
 	const faqItems = [
 		{
 			question: 'How do I get my free US address?',
-			answer: 'Simply register for an account on our platform, and you\'ll receive a unique US shipping address within minutes. This address can receive packages from any US retailer and we\'ll consolidate and forward them to you in Ghana.'
+			answer: 'Simply register for an account on our platform, and you\'ll receive a unique US shipping address within minutes. This address can receive packages from any US retailer and we\'ll consolidate and forward them to you in Ghana in just 3 days.'
 		},
 		{
 			question: 'How much money can I save with package consolidation?',
-			answer: 'Our customers typically save 40-70% on shipping costs by consolidating multiple packages into one shipment. The exact savings depend on the number of packages, their weight, and dimensions.'
+			answer: 'Our customers typically save 40-80% on shipping costs by consolidating multiple packages into one shipment. Plus, enjoy our fast 3-day delivery to Ghana. The exact savings depend on the number of packages, their weight, and dimensions.'
 		},
 		{
 			question: 'How long does shipping take from the US to Ghana?',
-			answer: 'Standard shipping typically takes 7-14 business days from our US warehouse to Ghana. We also offer express shipping options that can deliver in 3-7 business days for urgent packages.'
+			answer: 'We offer fast 3-day delivery from our US warehouse to Ghana! Your packages are processed quickly and delivered to your doorstep in just 3 business days.'
 		},
 		{
 			question: 'What items cannot be shipped through your service?',
@@ -172,7 +150,7 @@ export default function Contact() {
 		},
 		{
 			question: 'How do I track my packages?',
-			answer: 'You can track your packages in real-time through your dashboard. We provide tracking updates from the moment your package arrives at our US warehouse until it\'s delivered to your door in Ghana.'
+			answer: 'You can track your packages in real-time through your dashboard. We provide tracking updates from the moment your package arrives at our US warehouse until it\'s delivered to your door in Ghana within 3 days.'
 		}
 	];
 
@@ -256,13 +234,31 @@ export default function Contact() {
 								
 								{/* Quick action button */}
 								<motion.a 
-									href="tel:+233544197819"
+									href="tel:+233303982320"
 									className="inline-flex items-center bg-red-600 hover:bg-red-700 text-white font-bold px-8 py-4 rounded-lg transition-all duration-300"
 									whileHover={{ scale: 1.05, y: -2 }}
 									whileTap={{ scale: 0.95 }}
 								>
-									Call Us Now: +233 544 197 819
+									Call Us Now: 0303982320
 								</motion.a>
+
+								{/* Scroll indicator */}
+								<motion.div 
+									className="mt-12 flex flex-col items-center md:items-start text-gray-600"
+									initial={{ opacity: 0 }}
+									animate={{ opacity: 1 }}
+									transition={{ delay: 1, duration: 0.5 }}
+								>
+									<p className="text-sm font-medium mb-2">Or fill out the contact form below</p>
+									<motion.div
+										className="flex items-center space-x-2"
+										animate={{ y: [0, 8, 0] }}
+										transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+									>
+										<ChevronDown className="w-5 h-5 text-red-600" />
+										<span className="text-xs text-gray-500">Scroll down</span>
+									</motion.div>
+								</motion.div>
 							</div>
 						</AnimateInView>
 						
@@ -281,7 +277,7 @@ export default function Contact() {
 										<div className="space-y-4">
 											<div className="bg-gray-50 rounded-lg p-4">
 												<div className="text-sm text-gray-600">Email Support</div>
-												<div className="font-semibold text-gray-900">support@www.vanguardcargo.co</div>
+												<div className="font-semibold text-gray-900">support@vanguardcargo.co</div>
 											</div>
 											<div className="bg-gray-50 rounded-lg p-4">
 												<div className="text-sm text-gray-600">Office Hours</div>
@@ -489,132 +485,6 @@ export default function Contact() {
 				</div>
 			</section>
 
-			{/* Our Locations Section */}
-			<section className="py-16 px-4 sm:px-6 lg:px-8 bg-gray-50">
-				<div className="max-w-7xl mx-auto">
-					<div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-						{/* Content */}
-						<AnimateInView variant="fadeInLeft" delay={0.2}>
-							<div>
-								<div className="flex items-center space-x-3 mb-6">
-									<motion.div 
-										className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center"
-										whileHover={{ scale: 1.1, rotate: 5 }}
-										transition={{ type: "spring", stiffness: 300, damping: 15 }}
-									>
-										<MapPin className="w-5 h-5 text-red-500" />
-									</motion.div>
-									<h2 className="text-2xl font-bold text-gray-900">Our Locations</h2>
-								</div>
-								
-								<p className="text-gray-600 leading-relaxed mb-8">
-									Our core service is reliable, efficient air cargo delivery for personal 
-									and business shipments. Whether you're sending small parcels or 
-									larger cargo, we handle every step with care.
-								</p>
-								
-								<p className="text-sm text-gray-500 mb-6 italic">
-									Click on a location below to view it on the map
-								</p>
-
-								<div className="space-y-4">
-									{locations.map((location, index) => {
-										const isHovered = hoveredLocation === index;
-										const isSelected = selectedLocation === index;
-										
-										return (
-											<AnimateInView 
-												key={index}
-												variant="fadeInLeft" 
-												delay={0.4 + index * 0.1}
-											>
-												<motion.div 
-													className={cn(
-														"p-4 rounded-lg border-l-4 transition-all duration-300 cursor-pointer",
-														location.isMain 
-															? "border-red-500 bg-red-50" 
-															: isSelected 
-																? "border-red-500 bg-red-50"
-																: "border-gray-300 bg-white",
-														isHovered && "shadow-lg",
-														isSelected && "ring-2 ring-red-200"
-													)}
-													onMouseEnter={() => setHoveredLocation(index)}
-													onMouseLeave={() => setHoveredLocation(null)}
-													onClick={() => setSelectedLocation(index)}
-													whileHover={{ x: 5, scale: 1.02 }}
-													whileTap={{ scale: 0.98 }}
-													transition={{ type: "spring", stiffness: 300, damping: 20 }}
-												>
-													<h3 className="font-semibold text-gray-900">{location.title}</h3>
-													<p className={cn(
-														"text-sm",
-														(location.isMain || isSelected) ? "text-red-600" : "text-gray-600"
-													)}>
-														{location.subtitle}
-													</p>
-												</motion.div>
-											</AnimateInView>
-										);
-									})}
-								</div>
-							</div>
-						</AnimateInView>
-
-						{/* Map */}
-						<AnimateInView variant="fadeInRight" delay={0.3}>
-							<motion.div 
-								className="relative"
-								whileHover={{ scale: 1.02 }}
-								transition={{ duration: 0.3 }}
-							>
-								<motion.img 
-									key={selectedLocation}
-									src={locations[selectedLocation].mapImage}
-									alt={locations[selectedLocation].mapAlt}
-									className="w-full h-80 lg:h-96 object-cover rounded-lg shadow-lg"
-									initial={{ opacity: 0 }}
-									animate={{ opacity: 1 }}
-									transition={{ duration: 0.5 }}
-								/>
-								{/* Map overlay pins */}
-								<div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-									<motion.div 
-										className="relative"
-										animate={{ y: [0, -5, 0] }}
-										transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-									>
-										{/* Pin shadow */}
-										<div className="absolute top-8 left-1/2 transform -translate-x-1/2 w-6 h-3 bg-black/20 rounded-full blur-sm" />
-										
-										{/* Pin */}
-										<div className="relative">
-											<motion.div 
-												className="w-8 h-8 bg-red-500 rounded-full shadow-lg border-4 border-white"
-												animate={{ scale: [1, 1.2, 1] }}
-												transition={{ duration: 1.5, repeat: Infinity }}
-											/>
-											{/* Pin point */}
-											<div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2 w-0 h-0 border-l-4 border-r-4 border-t-8 border-l-transparent border-r-transparent border-t-red-500" />
-										</div>
-									</motion.div>
-								</div>
-								
-								{/* Location indicator */}
-								<div className="absolute bottom-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-2 rounded-lg shadow-lg">
-									<p className="text-sm font-semibold text-gray-900">
-										{locations[selectedLocation].title}
-									</p>
-									<p className="text-xs text-red-600">
-										{locations[selectedLocation].subtitle}
-									</p>
-								</div>
-							</motion.div>
-						</AnimateInView>
-					</div>
-				</div>
-			</section>
-
 			{/* FAQ Section */}
 			<section className="py-16 px-4 sm:px-6 lg:px-8 bg-white">
 				<div className="max-w-4xl mx-auto">
@@ -673,59 +543,6 @@ export default function Contact() {
 					</div>
 				</div>
 			</section>
-
-			{/* Final CTA Section */}
-			<AnimateInView variant="fadeInUp" delay={0.2}>
-				<section className="bg-gradient-to-r from-red-500 to-red-600 py-16 px-4 sm:px-6 lg:px-8">
-					<div className="max-w-4xl mx-auto text-center">
-						<motion.h2 
-							className="text-3xl font-bold text-white mb-4"
-							initial={{ opacity: 0, y: 20 }}
-							whileInView={{ opacity: 1, y: 0 }}
-							transition={{ duration: 0.6 }}
-							viewport={{ once: true }}
-						>
-							Ready to Get Started?
-						</motion.h2>
-						<motion.p 
-							className="text-xl text-red-100 mb-8"
-							initial={{ opacity: 0, y: 20 }}
-							whileInView={{ opacity: 1, y: 0 }}
-							transition={{ duration: 0.6, delay: 0.2 }}
-							viewport={{ once: true }}
-						>
-							Our team is ready to help you with your package forwarding needs. Contact us 
-							today for a personalized solution.
-						</motion.p>
-						
-						<div className="flex flex-col sm:flex-row gap-4 justify-center">
-							<motion.button 
-								className="bg-white text-red-600 hover:bg-gray-50 font-semibold px-8 py-3 rounded-md transition-colors duration-200"
-								whileHover={{ scale: 1.05, y: -2 }}
-								whileTap={{ scale: 0.95 }}
-								initial={{ opacity: 0, y: 20 }}
-								whileInView={{ opacity: 1, y: 0 }}
-								transition={{ duration: 0.6, delay: 0.4 }}
-								viewport={{ once: true }}
-							>
-								Request a quote
-							</motion.button>
-							
-							<motion.button 
-								className="bg-transparent text-white border-2 border-white hover:bg-white hover:text-red-600 font-semibold px-8 py-3 rounded-md transition-colors duration-200"
-								whileHover={{ scale: 1.05, y: -2 }}
-								whileTap={{ scale: 0.95 }}
-								initial={{ opacity: 0, y: 20 }}
-								whileInView={{ opacity: 1, y: 0 }}
-								transition={{ duration: 0.6, delay: 0.5 }}
-								viewport={{ once: true }}
-							>
-								Explore Services
-							</motion.button>
-						</div>
-					</div>
-				</section>
-			</AnimateInView>
 		</div>
 	);
 }

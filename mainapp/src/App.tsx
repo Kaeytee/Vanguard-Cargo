@@ -14,6 +14,7 @@ import Footer from "./components/footer";
 import { ReduxAuthGuard } from "./components/ReduxAuthGuard";
 import AppLayout from "./components/AppLayout";
 import PublicRoute from "./components/PublicRoute";
+import FloatingSupportButton from "./components/FloatingSupportButton";
 
 // ============================================================================
 // LAZY IMPORTS - Code-split routes for better performance
@@ -87,6 +88,8 @@ export default function App() {
   return (
     <>
       <Analytics />
+      {/* Floating Support Button - Appears on all pages */}
+      <FloatingSupportButton />
       <Suspense fallback={<LoadingFallback />}>
         <Routes>
       {/* Public Routes - Landing Pages with Navbar and Footer */}
@@ -254,7 +257,7 @@ export default function App() {
  * - TTI: ~5-6s
  * 
  * AFTER (With Code Splitting):
- * - Initial Bundle: ~250KB (70% reduction)
+ * - Initial Bundle: ~250KB (80% reduction)
  * - Load Time: ~1-2s on 3G (50% faster)
  * - TTI: ~2-3s (50% faster)
  * 

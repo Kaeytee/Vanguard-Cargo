@@ -58,7 +58,7 @@ export default function About() {
 	// Define benefit items for the checklist
 	const benefits = [
 		'Free US shipping address for all customers',
-		'Package consolidation saving up to 70%',
+		'Package consolidation saving up to 80%',
 		'Real-time tracking from US to Ghana',
 		'Professional customer support team',
 		'Full insurance coverage on all shipments'
@@ -205,7 +205,7 @@ export default function About() {
 												</div>
 												<div className="bg-gray-50 rounded-lg p-3">
 													<div className="font-semibold text-gray-900">Huge Savings</div>
-													<div className="text-gray-600">Up to 70% off shipping costs</div>
+													<div className="text-gray-600">Up to 80% off shipping costs</div>
 												</div>
 												<div className="bg-gray-50 rounded-lg p-3">
 													<div className="font-semibold text-gray-900">Trusted Service</div>

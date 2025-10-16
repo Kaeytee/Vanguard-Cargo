@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import AnimateInView from '../../components/ui/animate-in-view';
 import { motion } from 'framer-motion';
 import { MapPin, Check, Rocket } from 'lucide-react';
+import deliveryImage from '../../assets/deliver.png';
 
 // Simple animated button component
 const AnimatedButton = ({
@@ -32,57 +33,50 @@ const AnimatedButton = ({
 
 export default function CTA() {
 	return (
-		<section className="py-16 bg-gradient-to-br from-red-900 via-red-800 to-red-700 text-white relative overflow-hidden">
-			{/* Background decorative elements */}
-			<div className="absolute inset-0">
-				<div className="absolute top-10 left-10 w-20 h-20 bg-red-400 rounded-full opacity-10 animate-pulse"></div>
-				<div className="absolute top-40 right-20 w-16 h-16 bg-red-400 rounded-full opacity-10 animate-bounce"></div>
-				<div className="absolute bottom-20 left-1/4 w-12 h-12 bg-red-400 rounded-full opacity-10 animate-ping"></div>
-			</div>
-
-			<div className="container mx-auto px-4 flex flex-col md:flex-row items-center gap-10 relative z-10">
+		<section className="py-12 md:py-16 bg-red-700 text-white relative overflow-hidden">
+			<div className="container mx-auto px-4 sm:px-6 flex flex-col md:flex-row items-center gap-8 md:gap-10 relative z-10">
 				{/* Left Content Area */}
-				<div className="flex-1 text-center md:text-left">
+				<div className="flex-1 text-center md:text-left w-full">
 					<AnimateInView>
-						<h2 className="text-3xl md:text-4xl font-bold mb-4 text-white flex items-center justify-center md:justify-start gap-2">
-							Ready to Start Shopping in the US?
-							<MapPin className="w-8 h-8" />
+						<h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 md:mb-4 text-white flex flex-col sm:flex-row items-center justify-center md:justify-start gap-2">
+							<span>Ready to Start Shopping in the US?</span>
+							<MapPin className="w-7 h-7 sm:w-8 sm:h-8 flex-shrink-0" />
 						</h2>
 					</AnimateInView>
 					<AnimateInView variant="fadeInUp" delay={0.2}>
-						<p className="text-lg mb-6 text-white/90">
+						<p className="text-base sm:text-lg mb-5 md:mb-6 text-white/90 px-2 sm:px-0">
 							Join 5000+ Ghanaians who save money and shop from any US store with their free Vanguard address.
 						</p>
 					</AnimateInView>
 
 					{/* Benefits list */}
 					<AnimateInView variant="fadeInUp" delay={0.3}>
-						<div className="flex flex-wrap justify-center md:justify-start gap-4 mb-8">
-							<div className="flex items-center bg-white/20 rounded-full px-4 py-2">
-								<Check className="w-4 h-4 text-red-300 mr-2" />
-								<span className="text-sm">Free US address</span>
+						<div className="flex flex-wrap justify-center md:justify-start gap-3 md:gap-4 mb-6 md:mb-8 px-2 sm:px-0">
+							<div className="flex items-center bg-white/20 rounded-full px-3 sm:px-4 py-1.5 sm:py-2">
+								<Check className="w-4 h-4 text-red-300 mr-2 flex-shrink-0" />
+								<span className="text-xs sm:text-sm whitespace-nowrap">Free US address</span>
 							</div>
-							<div className="flex items-center bg-white/20 rounded-full px-4 py-2">
-								<Check className="w-4 h-4 text-red-300 mr-2" />
-								<span className="text-sm">Package consolidation</span>
+							<div className="flex items-center bg-white/20 rounded-full px-3 sm:px-4 py-1.5 sm:py-2">
+								<Check className="w-4 h-4 text-red-300 mr-2 flex-shrink-0" />
+								<span className="text-xs sm:text-sm whitespace-nowrap">Package consolidation</span>
 							</div>
-							<div className="flex items-center bg-white/20 rounded-full px-4 py-2">
-								<Check className="w-4 h-4 text-red-300 mr-2" />
-								<span className="text-sm">Save up to 80%</span>
+							<div className="flex items-center bg-white/20 rounded-full px-3 sm:px-4 py-1.5 sm:py-2">
+								<Check className="w-4 h-4 text-red-300 mr-2 flex-shrink-0" />
+								<span className="text-xs sm:text-sm whitespace-nowrap">Save up to 80%</span>
 							</div>
 						</div>
 					</AnimateInView>
 
 					<AnimateInView variant="fadeInUp" delay={0.4}>
-						<div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
-							<Link to="/register">
-								<AnimatedButton size="lg" className="bg-white hover:bg-red-100 text-red-900 font-bold flex items-center gap-2">
+						<div className="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center md:justify-start w-full px-2 sm:px-0">
+							<Link to="/register" className="w-full sm:w-auto">
+								<AnimatedButton size="lg" className="w-full sm:w-auto bg-white hover:bg-red-100 text-red-900 font-bold flex items-center justify-center gap-2">
 									Get My Free US Address 
-									<Rocket className="w-5 h-5" />
+									<Rocket className="w-4 h-4 sm:w-5 sm:h-5" />
 								</AnimatedButton>
 							</Link>
-							<Link to="/services">
-								<AnimatedButton size="lg" className="bg-transparent border-2 border-white text-white hover:bg-white hover:text-red-900 font-medium">
+							<Link to="/services" className="w-full sm:w-auto">
+								<AnimatedButton size="lg" className="w-full sm:w-auto bg-transparent border-2 border-white text-white hover:bg-white hover:text-red-900 font-medium">
 									Learn More
 								</AnimatedButton>
 							</Link>
@@ -90,43 +84,22 @@ export default function CTA() {
 					</AnimateInView>
 
 					<AnimateInView variant="fadeInUp" delay={0.5}>
-						<p className="text-red-200 mt-4 text-sm">
+						<p className="text-red-200 mt-4 text-xs sm:text-sm px-2 sm:px-0">
 							No setup fees • No monthly charges • Start shopping immediately
 						</p>
 					</AnimateInView>
 				</div>
 
-				{/* Right Image Area */}
-				<div className="flex-1 flex justify-center items-center">
+				{/* Right Image Area - Hidden on mobile */}
+				<div className="hidden md:flex flex-1 justify-center items-center">
 					<AnimateInView variant="fadeInRight" delay={0.4}>
-						<div className="relative max-w-xs md:max-w-md">
-							{/* Mock US Address Card */}
-							<div className="bg-white rounded-2xl p-6 shadow-2xl transform rotate-3 hover:rotate-0 transition-transform duration-300">
-								<div className="text-center mb-4">
-									<div className="text-2xl mb-2"><MapPin className="w-8 h-8 mx-auto text-red-600" /></div>
-									<h3 className="font-bold text-gray-900">Your US Address</h3>
-								</div>
-								<div className="text-gray-800 text-sm space-y-1">
-									<div className="font-semibold">John Doe (TTL-12345)</div>
-									<div>2891 NE 2nd Ave</div>
-									<div>Alexandria, VA 22304</div>
-									<div>United States</div>
-								</div>
-								<div className="mt-4 pt-4 border-t border-gray-200">
-									<div className="flex items-center text-red-600 text-sm">
-										<Check className="w-4 h-4 mr-2" />
-										<span>Ready to receive packages!</span>
-									</div>
-								</div>
-							</div>
-							
-							{/* Floating elements */}
-							<div className="absolute -top-4 -right-4 bg-red-600 text-white px-3 py-1 rounded-full text-xs font-bold animate-bounce">
-								FREE!
-							</div>
-							<div className="absolute -bottom-4 -left-4 bg-red-500 text-white px-3 py-1 rounded-full text-xs font-bold">
-								Instant Setup
-							</div>
+						<div className="relative max-w-xs md:max-w-md w-full">
+							{/* Delivery Image */}
+							<img 
+								src={deliveryImage} 
+								alt="Fast Delivery to Ghana" 
+								className="w-full h-auto object-contain rounded-lg"
+							/>
 						</div>
 					</AnimateInView>
 				</div>
