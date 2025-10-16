@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useReduxAuth as useAuth } from "../hooks/useReduxAuth";
 import { useLogout } from "../hooks/useLogout";
 import { featureFlags } from "../config/featureFlags";
-import whatsappLogo from "../assets/whatsapp.svg";
+import whatsappLogo from "../assets/whatsapp.png";
 import navLogo from "../assets/navlogo.png";
 
 export default function Navbar() {
@@ -181,10 +181,10 @@ export default function Navbar() {
             {/* WhatsApp Button */}
             <button
               onClick={handleWhatsAppClick}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-md transition-all duration-200 shadow-sm"
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-green-700 hover:bg-green-700 rounded-md transition-all duration-200 shadow-sm"
               title="Chat with us on WhatsApp"
             >
-              <img src={whatsappLogo} alt="WhatsApp" className="w-4 h-4" />
+              <img src={whatsappLogo} alt="WhatsApp" className="w-6 h-6 text-white " />
               <span className="hidden xl:inline">WhatsApp</span>
             </button>
             {user ? (
