@@ -128,6 +128,23 @@ Your security is our priority:
 - Safe payment processing
 - Regular security updates
 
+### Data Protection Rights
+
+You have full control over your personal data:
+
+- **View Privacy Policy** - `/privacy-policy` - Comprehensive data practices
+- **Request Data Deletion** - `/data-deletion` - GDPR-compliant deletion requests
+- **Data Portability** - Request your data export
+- **Update Information** - Modify your profile anytime
+
+**Data Deletion Process:**
+1. Visit `/data-deletion` page
+2. Fill out the deletion request form
+3. Receive email confirmation within 1-2 business days
+4. Data deletion completed within 30 days (GDPR compliant)
+
+All deletion requests are processed securely through our support system and tracked in our database for compliance and audit purposes.
+
 ---
 
 ## 📞 Need Help?

@@ -122,6 +122,7 @@ export default function Footer() {
 								</svg>
 							</a>
 						</div>
+
 					</div>
 				</div>
 
@@ -143,6 +144,12 @@ export default function Footer() {
 								className="text-gray-600 hover:text-red-600 text-sm transition-colors duration-200"
 							>
 								Terms of Service
+							</Link>
+							<Link
+								to="/data-deletion"
+								className="text-gray-600 hover:text-red-600 text-sm transition-colors duration-200"
+							>
+								Data Deletion
 							</Link>
 						</div>
 					</div>
