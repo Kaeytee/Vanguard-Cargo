@@ -25,6 +25,7 @@ const Services = lazy(() => import("./landing/services/services"));
 const Contact = lazy(() => import("./landing/contact/contact"));
 const TermsOfService = lazy(() => import("./pages/TermsOfService"));
 const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
+const DataDeletion = lazy(() => import("./pages/DataDeletion"));
 
 // Authentication pages
 const Login = lazy(() => import("./landing/login/login"));
@@ -149,6 +150,16 @@ export default function App() {
           <>
             <Navbar />
             <PrivacyPolicy />
+            <Footer />
+          </>
+        }
+      />
+      <Route
+        path="/data-deletion"
+        element={
+          <>
+            <Navbar />
+            <DataDeletion />
             <Footer />
           </>
         }
