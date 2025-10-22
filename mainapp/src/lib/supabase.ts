@@ -329,6 +329,53 @@ export interface Database {
           created_at?: string;
         };
       };
+      direct_purchase_requests: {
+        Row: {
+          id: string;
+          user_id: string | null;
+          name: string;
+          email: string;
+          phone: string | null;
+          suite_number: string | null;
+          purchase_details: string;
+          status: 'new' | 'in_progress' | 'quoted' | 'approved' | 'purchased' | 'completed' | 'cancelled';
+          admin_notes: string | null;
+          estimated_cost: number | null;
+          final_cost: number | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id?: string | null;
+          name: string;
+          email: string;
+          phone?: string | null;
+          suite_number?: string | null;
+          purchase_details: string;
+          status?: 'new' | 'in_progress' | 'quoted' | 'approved' | 'purchased' | 'completed' | 'cancelled';
+          admin_notes?: string | null;
+          estimated_cost?: number | null;
+          final_cost?: number | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string | null;
+          name?: string;
+          email?: string;
+          phone?: string | null;
+          suite_number?: string | null;
+          purchase_details?: string;
+          status?: 'new' | 'in_progress' | 'quoted' | 'approved' | 'purchased' | 'completed' | 'cancelled';
+          admin_notes?: string | null;
+          estimated_cost?: number | null;
+          final_cost?: number | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
     };
     Views: Record<string, never>;
     Functions: {

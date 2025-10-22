@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react'
-import { Copy, MapPin, Info, Check, AlertTriangle } from 'lucide-react';
+import { Copy, MapPin, Info, Check, AlertTriangle, ShoppingCart, X, Send } from 'lucide-react';
 import { useReduxAuth as useAuth } from '../../hooks/useReduxAuth';
 import { motion } from "framer-motion";
 import PackageIntakeWidget from '../../components/PackageIntakeWidget';
 import { addressService, type USShippingAddress } from '../../services/addressService';
+import { supabase } from '../../lib/supabase';
 // Removed unused import
 import shopImage from '../../assets/shop.jpg';
 
@@ -12,6 +13,11 @@ const Dashboard: React.FC = () => {
   const { user, profile } = useAuth();
   const [usAddress, setUsAddress] = useState<USShippingAddress | null>(null);
   const [copiedStates, setCopiedStates] = useState<{[key: string]: boolean}>({});
+  
+  // Direct Purchase Modal State
+  const [showDirectPurchaseModal, setShowDirectPurchaseModal] = useState(false);
+  const [directPurchaseNote, setDirectPurchaseNote] = useState('');
+  const [isSubmittingRequest, setIsSubmittingRequest] = useState(false);
 
   // Use profile from AuthContext instead of separate state
   // Extract first name from profile or user email
@@ -178,6 +184,55 @@ const popularBrands = [
     }
   };
 
+  // Handle direct purchase request submission
+  const handleDirectPurchaseRequest = async () => {
+    if (!user || !profile) {
+      alert('Please sign in to request a direct purchase');
+      return;
+    }
+
+    if (!directPurchaseNote.trim()) {
+      alert('Please provide details about what you want us to purchase');
+      return;
+    }
+
+    setIsSubmittingRequest(true);
+
+    try {
+      // Call the Supabase Edge Function for direct purchase
+      const { data, error } = await supabase.functions.invoke('direct-purchase', {
+        body: {
+          name: `${profile.firstName || 'User'} ${profile.lastName || 'Name'}`,
+          email: profile.email || user.email,
+          phone: profile.phone || 'Not provided',
+          suite_number: profile.suite_number || 'Not assigned',
+          note: directPurchaseNote.trim(),
+          user_id: user.id
+        }
+      });
+
+      if (error) {
+        console.error('❌ Error submitting direct purchase request:', error);
+        alert('Failed to submit your request. Please try again or contact support.');
+        return;
+      }
+
+      console.log('✅ Direct purchase request submitted successfully:', data);
+      
+      // Reset form and close modal
+      setDirectPurchaseNote('');
+      setShowDirectPurchaseModal(false);
+      
+      alert('Your direct purchase request has been submitted successfully! Our team will contact you shortly.');
+      
+    } catch (error) {
+      console.error('❌ Unexpected error:', error);
+      alert('An unexpected error occurred. Please try again or contact support.');
+    } finally {
+      setIsSubmittingRequest(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 via-white to-gray-50">
       <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
@@ -286,6 +341,19 @@ const popularBrands = [
             <p className="text-lg sm:text-xl text-gray-600 font-light max-w-3xl mx-auto leading-relaxed">
               Your personal US shipping address is ready. Shop from any US store and have packages delivered to your Vanguard Cargo address.
             </p>
+            
+            {/* Direct Purchase Button */}
+            <div className="mt-8 flex justify-center">
+              <motion.button
+                onClick={() => setShowDirectPurchaseModal(true)}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="inline-flex items-center gap-3 px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold rounded-2xl shadow-xl shadow-green-200 transition-all duration-300 text-sm sm:text-base"
+              >
+                <ShoppingCart className="w-5 h-5" />
+                Can't Shop Yourself? We'll Do It For You!
+              </motion.button>
+            </div>
           </div>
 
           {/* Steps Section */}
@@ -369,7 +437,7 @@ const popularBrands = [
                     <div className="flex items-center justify-between p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-gradient-to-br from-gray-50/80 to-white/80 hover:from-gray-100/80 hover:to-white/80 transition-all border border-gray-200/50">
                       <div className="flex-1 min-w-0 pr-2">
                         <p className="text-xs font-medium text-gray-500 mb-1">Name</p>
-                        <p className="text-xs sm:text-sm md:text-base font-medium text-gray-900 truncate">
+                        <p className="text-xs sm:text-sm md:text-base font-medium text-gray-900 break-words">
                           Vanguard Cargo LLC ({profile?.suite_number})
                         </p>
                       </div>
@@ -607,6 +675,137 @@ const popularBrands = [
         </div>
         */}
       </div>
+
+      {/* Direct Purchase Modal */}
+      {showDirectPurchaseModal && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowDirectPurchaseModal(false);
+            }
+          }}
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+            className="relative overflow-hidden rounded-3xl bg-white/90 backdrop-blur-xl border border-gray-200/50 shadow-2xl w-full max-w-lg mx-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-green-50/50 via-white/50 to-emerald-50/50"></div>
+            
+            {/* Modal Header */}
+            <div className="relative p-6 sm:p-8 border-b border-gray-200/50">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center shadow-lg shadow-green-200">
+                    <ShoppingCart className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-semibold text-gray-900">Direct Purchase Request</h3>
+                    <p className="text-sm text-gray-600">We'll shop for you!</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowDirectPurchaseModal(false)}
+                  className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-xl transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Body */}
+            <div className="relative p-6 sm:p-8 space-y-6">
+              {/* Information Card */}
+              <div className="bg-gradient-to-br from-blue-50/80 to-indigo-50/80 backdrop-blur-sm border border-blue-200/50 rounded-2xl p-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 bg-blue-500 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <Info className="w-4 h-4 text-white" />
+                  </div>
+                  <div className="text-sm text-blue-900 leading-relaxed">
+                    <p className="font-semibold mb-1">How it works:</p>
+                    <p>Tell us what you want to purchase and we'll handle the shopping, payment, and delivery to your US address. Our team will contact you with pricing and next steps.</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* User Information Display */}
+              <div className="bg-gradient-to-br from-gray-50/80 to-white/80 border border-gray-200/50 rounded-2xl p-4 space-y-3">
+                <h4 className="font-semibold text-gray-900 text-sm">Your Information:</h4>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Name:</span>
+                    <span className="font-medium text-gray-900">{profile?.firstName || 'User'} {profile?.lastName || 'Name'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Email:</span>
+                    <span className="font-medium text-gray-900">{profile?.email || user?.email || 'Not provided'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Phone:</span>
+                    <span className="font-medium text-gray-900">{profile?.phone || 'Not provided'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Suite:</span>
+                    <span className="font-medium text-gray-900">{profile?.suite_number || 'Not assigned'}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Purchase Details */}
+              <div className="space-y-3">
+                <label className="block text-sm font-semibold text-gray-900">
+                  What would you like us to purchase? *
+                </label>
+                <textarea
+                  value={directPurchaseNote}
+                  onChange={(e) => setDirectPurchaseNote(e.target.value)}
+                  placeholder="Please provide details about the item(s) you want us to purchase. Include product links, specifications, quantity, budget range, and any special instructions..."
+                  rows={6}
+                  className="w-full px-4 py-3 border border-gray-300/50 rounded-xl bg-white/80 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:border-green-500 resize-none text-sm"
+                />
+                <p className="text-xs text-gray-500">
+                  Be as specific as possible to help us find exactly what you need.
+                </p>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="relative p-6 sm:p-8 border-t border-gray-200/50 bg-gradient-to-r from-gray-50/50 to-white/50">
+              <div className="flex flex-col-reverse sm:flex-row gap-3 sm:gap-4">
+                <button
+                  onClick={() => setShowDirectPurchaseModal(false)}
+                  className="flex-1 px-4 py-3 text-gray-700 font-medium rounded-xl border border-gray-300 hover:bg-gray-50 transition-colors text-sm"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDirectPurchaseRequest}
+                  disabled={isSubmittingRequest || !directPurchaseNote.trim()}
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed text-white font-semibold rounded-xl shadow-lg transition-all text-sm"
+                >
+                  {isSubmittingRequest ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      Submitting...
+                    </>
+                  ) : (
+                    <>
+                      <Send className="w-4 h-4" />
+                      Submit Request
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
     </div>
   );
 };

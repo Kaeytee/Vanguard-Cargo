@@ -981,7 +981,7 @@ export default function Register() {
                     </div>
                     <div>
                       <label htmlFor="state" className="block text-sm font-medium text-gray-700 mb-1">
-                        State/Province *
+                        State/Province 
                       </label>
                       <input
                         type="text"
@@ -997,7 +997,7 @@ export default function Register() {
                         )}
                         aria-invalid={!!errors.state}
                         aria-describedby="state-error"
-                        required
+                        
                       />
                       {errors.state && touched.state && (
                         <p id="state-error" className="mt-1 text-sm text-red-600">
@@ -1010,7 +1010,7 @@ export default function Register() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label htmlFor="zip" className="block text-sm font-medium text-gray-700 mb-1">
-                        Postal/ZIP Code *
+                        Postal/ZIP Code 
                       </label>
                       <input
                         type="text"
@@ -1026,7 +1026,7 @@ export default function Register() {
                         )}
                         aria-invalid={!!errors.zip}
                         aria-describedby="zip-error"
-                        required
+                        
                       />
                       {errors.zip && touched.zip && (
                         <p id="zip-error" className="mt-1 text-sm text-red-600">
