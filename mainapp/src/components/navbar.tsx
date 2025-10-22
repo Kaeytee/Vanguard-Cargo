@@ -206,7 +206,7 @@ Thank you!`;
             {user ? (
               <div className="flex items-center gap-3">
                 {user.email && (
-                  <span className="text-sm text-gray-600 mr-2 hidden xl:block">
+                  <span className="text-sm text-gray-600 mr-2 hidden 2xl:block truncate max-w-[200px]" title={user.email}>
                     {user.email}
                   </span>
                 )}
@@ -388,7 +388,7 @@ Thank you!`;
                 {user ? (
                   <>
                     {user.email && (
-                      <span className="text-sm text-gray-600 mb-2 text-center font-medium">
+                      <span className="text-sm text-gray-600 mb-2 text-center font-medium truncate px-4" title={user.email}>
                         {user.email}
                       </span>
                     )}
