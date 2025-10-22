@@ -47,9 +47,9 @@ export default function MarqueeBanner() {
   }, []);
 
   return (
-    <div className="w-full bg-gradient-to-r from-red-600 via-red-500 to-red-600 text-white overflow-hidden shadow-md border-b border-red-700 relative">
+    <div className="w-full bg-gray-700 text-white overflow-hidden shadow-md border-b border-gray-800 relative">
       {/* Animated stripe pattern overlay */}
-      <div className="absolute inset-0 opacity-10 bg-[repeating-linear-gradient(45deg,transparent,transparent_10px,rgba(255,255,255,0.1)_10px,rgba(255,255,255,0.1)_20px)]"></div>
+      <div className="absolute inset-0 opacity-10 "></div>
       
       {/* Marquee container - increased padding for height */}
       <div 
@@ -80,8 +80,6 @@ export default function MarqueeBanner() {
       </div>
 
       {/* Gradient fade edges */}
-      <div className="absolute left-0 top-0 bottom-0 w-16 bg-gradient-to-r from-red-600 to-transparent pointer-events-none z-20"></div>
-      <div className="absolute right-0 top-0 bottom-0 w-16 bg-gradient-to-l from-red-600 to-transparent pointer-events-none z-20"></div>
-    </div>
+        </div>
   );
 }
