@@ -6,7 +6,8 @@ content: [
   ],  theme: {
     extend: {
       fontFamily: {
-        sans: ['Poppins', 'ui-sans-serif', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial'],
+        // Use the CSS variable so the font stack can be changed at runtime via --font-sans
+        sans: ['var(--font-sans)'],
       },
     },
   },

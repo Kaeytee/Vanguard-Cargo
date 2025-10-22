@@ -17,6 +17,7 @@
 /* Dark mode base styles */
 :root {
 	--background: 0 0% 100%;
+	--font-sans: "Poppins", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
 	--foreground: 222.2 84% 4.9%;
 	--card: 0 0% 100%;
 	--card-foreground: 222.2 84% 4.9%;	--popover: 0 0% 100%;
@@ -163,9 +164,9 @@
 }
 
 body {
-		background-color: hsl(var(--background));
-		transition: background-color 0.3s ease, color 0.3s ease;
-		font-family: "Poppins", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+	background-color: hsl(var(--background));
+	transition: background-color 0.3s ease, color 0.3s ease;
+	font-family: var(--font-sans);
 }
 
 /* Poppins utility classes (weights and italics) */
