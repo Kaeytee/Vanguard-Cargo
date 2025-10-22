@@ -217,7 +217,7 @@ const AccountSettingsContent = ({ t }: { t: (key: TranslationKey) => string }) =
       errors.phone = t('invalidPhone');
     }
     
-    // Address validation (optional) - no validation needed
+  // Address validation (optional) - no validation needed
     
     // City validation (optional, but validate format if provided)
     if (formData?.city?.trim() && !/^[a-zA-Z\s-]{2,}$/.test(formData.city)) {

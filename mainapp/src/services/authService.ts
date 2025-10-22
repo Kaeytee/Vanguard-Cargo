@@ -373,10 +373,11 @@ class AuthService {
       if (updates.firstName) dbUpdates.first_name = updates.firstName;
       if (updates.lastName) dbUpdates.last_name = updates.lastName;
       if (updates.phone) dbUpdates.phone_number = updates.phone;
-      if (updates.streetAddress) dbUpdates.street_address = updates.streetAddress;
-      if (updates.city) dbUpdates.city = updates.city;
-      if (updates.country) dbUpdates.country = updates.country;
-      if (updates.postalCode) dbUpdates.postal_code = updates.postalCode;
+  // Note: allow clearing fields by passing empty string or null/undefined
+  if (updates.streetAddress !== undefined) dbUpdates.street_address = updates.streetAddress || null;
+  if (updates.city !== undefined) dbUpdates.city = updates.city || null;
+  if (updates.country !== undefined) dbUpdates.country = updates.country || null;
+  if (updates.postalCode !== undefined) dbUpdates.postal_code = updates.postalCode || null;
       if (updates.avatarUrl) dbUpdates.avatar_url = updates.avatarUrl;
       if (updates.profileImage !== undefined) dbUpdates.avatar_url = updates.profileImage;
 

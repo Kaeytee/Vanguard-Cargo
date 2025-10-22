@@ -362,6 +362,7 @@ export default function Register() {
   };
 
   // Validate single field for real-time validation
+  // City, State and ZIP are optional now — validate only when provided
   const validateField = (fieldName: string, data: typeof formData): string => {
     switch (fieldName) {
       case 'firstName':
@@ -376,11 +377,20 @@ export default function Register() {
         if (data.address.length < 5) return 'Please enter a valid address (minimum 5 characters)';
         return '';
       case 'city':
-        return !data.city ? 'City is required' : '';
+        // Optional: only validate if user entered a value
+        if (!data.city || !data.city.trim()) return '';
+        if (data.city.trim().length < 2) return 'Please enter a valid city';
+        return '';
       case 'state':
-        return !data.state ? 'State/Province is required' : '';
+        // Optional: only validate if user entered a value
+        if (!data.state || !data.state.trim()) return '';
+        if (data.state.trim().length < 1) return 'Please enter a valid state/province';
+        return '';
       case 'zip':
-        return !data.zip ? 'ZIP/Postal code is required' : '';
+        // Optional: only validate if user entered a value
+        if (!data.zip || !data.zip.trim()) return '';
+        if (!/^[0-9A-Za-z\s-]{3,10}$/.test(data.zip.trim())) return 'Please enter a valid ZIP/Postal code';
+        return '';
       case 'country':
         return !data.country ? 'Country is required' : '';
       case 'password':
@@ -516,9 +526,11 @@ export default function Register() {
         lastName: formData.lastName.trim(),
         phone: formData.phoneNumber,
         streetAddress: formData.address.trim(),
-        city: formData.city.trim(),
+  // City/state/postal are optional - send undefined when empty so typings align
+  city: formData.city.trim() || undefined,
+  state: formData.state.trim() || undefined,
         country: formData.country.trim(),
-        postalCode: formData.zip.trim(),
+  postalCode: formData.zip.trim() || undefined,
       };
       
       console.log('🚀 Sending signup request to Supabase', signupData);
@@ -697,9 +709,7 @@ export default function Register() {
     isValidPhoneNumber(formData.phoneNumber) &&
     !phoneError &&
     formData.address &&
-    formData.city &&
-    formData.state &&
-    formData.zip &&
+    // city/state/zip are optional so they are not required for form validity
     formData.country &&
     isPasswordValid &&
     formData.agreeToTerms &&
@@ -921,8 +931,8 @@ export default function Register() {
                   
                   {/* Address Information Section */}
                   <div className="mt-4 mb-2">
-                    <h3 className="text-md font-semibold text-gray-700">Address Information *</h3>
-                    <p className="text-sm text-gray-500 mb-3">All address fields are required for shipping documents</p>
+                    <h3 className="text-md font-semibold text-gray-700">Address Information</h3>
+                    <p className="text-sm text-gray-500 mb-3">Street address and country are required. City, state/province and postal/ZIP code are optional.</p>
                   </div>
                   
                   <div>
@@ -971,7 +981,7 @@ export default function Register() {
                         )}
                         aria-invalid={!!errors.city}
                         aria-describedby="city-error"
-                        required
+                        
                       />
                       {errors.city && touched.city && (
                         <p id="city-error" className="mt-1 text-sm text-red-600">
