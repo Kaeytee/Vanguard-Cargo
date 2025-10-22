@@ -1,5 +1,6 @@
 import { supabase } from '../lib/supabase';
 import type { AuthError, User, Session } from '@supabase/supabase-js';
+import { emailService } from './emailService';
 
 export interface AuthUser {
   id: string;
@@ -201,6 +202,9 @@ class AuthService {
 
       // Update user's last login timestamp in background (non-blocking)
       this.updateLastLoginAsync(authData.user.id);
+
+      // Send login welcome email with user details and service instructions (non-blocking)
+      this.sendLoginWelcomeEmailAsync(authData.user.id, data.email);
 
       return { user: authData.user, error: null };
     } catch (err) {
@@ -539,6 +543,32 @@ class AuthService {
         // Only log errors in development
         if (process.env.NODE_ENV === 'development') {
           console.warn('[AuthService] Background last login update failed:', error);
+        }
+      }
+    })();
+  }
+
+  /**
+   * Send login welcome email with user details and service instructions
+   * This is sent asynchronously (non-blocking) on successful login
+   * 
+   * @param {string} userId - User ID
+   * @param {string} email - User email
+   * @private
+   */
+  private sendLoginWelcomeEmailAsync(userId: string, email: string): void {
+    // Fire and forget - use async IIFE for proper error handling
+    (async () => {
+      try {
+        await emailService.sendLoginWelcomeEmail({
+          userId,
+          email
+        });
+        console.log('📧 Login welcome email queued for:', email);
+      } catch (error) {
+        // Only log errors in development
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('[AuthService] Background login welcome email failed:', error);
         }
       }
     })();
