@@ -437,8 +437,8 @@ const popularBrands = [
                     <div className="flex items-center justify-between p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-gradient-to-br from-gray-50/80 to-white/80 hover:from-gray-100/80 hover:to-white/80 transition-all border border-gray-200/50">
                       <div className="flex-1 min-w-0 pr-2">
                         <p className="text-xs font-medium text-gray-500 mb-1">Name</p>
-                        <p className="text-xs sm:text-sm md:text-base font-medium text-gray-900 break-words">
-                          Vanguard Cargo LLC ({profile?.suite_number})
+                        <p className="text-sm sm:text-base md:text-lg lg:text-xl font-bold text-red-600 break-words">
+                          Vanguard Cargo LLC <br />({profile?.suite_number})
                         </p>
                       </div>
                       <button
@@ -461,7 +461,7 @@ const popularBrands = [
                     <div className="flex items-center justify-between p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-gradient-to-br from-gray-50/80 to-white/80 hover:from-gray-100/80 hover:to-white/80 transition-all border border-gray-200/50">
                       <div className="flex-1 min-w-0 pr-2">
                         <p className="text-xs font-medium text-gray-500 mb-1">Street Address</p>
-                        <p className="text-xs sm:text-sm md:text-base font-medium text-gray-900">4700 Eisenhower Avenue</p>
+                        <p className="text-sm sm:text-base md:text-lg lg:text-xl font-bold text-red-600">4700 Eisenhower Avenue</p>
                       </div>
                       <button
                         onClick={() => copyToClipboard('4700 Eisenhower Avenue', 'address1')}
@@ -480,7 +480,7 @@ const popularBrands = [
                     <div className="flex items-center justify-between p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-gradient-to-br from-gray-50/80 to-white/80 hover:from-gray-100/80 hover:to-white/80 transition-all border border-gray-200/50">
                       <div className="flex-1 min-w-0 pr-2">
                         <p className="text-xs font-medium text-gray-500 mb-1">Apartment/Suite</p>
-                        <p className="text-xs sm:text-sm md:text-base font-medium text-gray-900">ALX-E2</p>
+                        <p className="text-sm sm:text-base md:text-lg lg:text-xl font-bold text-red-600">ALX-E2</p>
                       </div>
                       <button
                         onClick={() => copyToClipboard('ALX-E2', 'address2')}
@@ -499,7 +499,7 @@ const popularBrands = [
                     <div className="flex items-center justify-between p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-gradient-to-br from-gray-50/80 to-white/80 hover:from-gray-100/80 hover:to-white/80 transition-all border border-gray-200/50">
                       <div className="flex-1 min-w-0 pr-2">
                         <p className="text-xs font-medium text-gray-500 mb-1">City, State ZIP</p>
-                        <p className="text-xs sm:text-sm md:text-base font-medium text-gray-900">
+                        <p className="text-sm sm:text-base md:text-lg lg:text-xl font-bold text-red-600">
                           {usAddress?.city || 'Alexandria'}, {usAddress?.state_province || 'VA'} {usAddress?.postal_code || '22304'}
                         </p>
                       </div>
@@ -520,7 +520,7 @@ const popularBrands = [
                     <div className="flex items-center justify-between p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-gradient-to-br from-gray-50/80 to-white/80 hover:from-gray-100/80 hover:to-white/80 transition-all border border-gray-200/50">
                       <div className="flex-1 min-w-0 pr-2">
                         <p className="text-xs font-medium text-gray-500 mb-1">Country</p>
-                        <p className="text-xs sm:text-sm md:text-base font-medium text-gray-900">{usAddress?.country || 'USA'}</p>
+                        <p className="text-sm sm:text-base md:text-lg lg:text-xl font-bold text-red-600">{usAddress?.country || 'USA'}</p>
                       </div>
                       <button
                         onClick={() => copyToClipboard(usAddress?.country || 'USA', 'country')}
@@ -682,7 +682,8 @@ const popularBrands = [
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto"
+          style={{ zIndex: 9999 }}
           onClick={(e) => {
             if (e.target === e.currentTarget) {
               setShowDirectPurchaseModal(false);
@@ -693,7 +694,7 @@ const popularBrands = [
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="relative overflow-hidden rounded-3xl bg-white/90 backdrop-blur-xl border border-gray-200/50 shadow-2xl w-full max-w-lg mx-4"
+            className="relative overflow-hidden rounded-3xl bg-white/90 backdrop-blur-xl border border-gray-200/50 shadow-2xl w-full max-w-lg mx-4 my-8 max-h-[90vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="absolute inset-0 bg-gradient-to-br from-green-50/50 via-white/50 to-emerald-50/50"></div>
