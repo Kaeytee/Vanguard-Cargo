@@ -33,6 +33,7 @@ const Register = lazy(() => import("./landing/register/register"));
 const ForgotPassword = lazy(() => import("./landing/forgot-password/forgot-password"));
 const EmailVerification = lazy(() => import("./landing/email-verification/email-verification"));
 const ResendVerification = lazy(() => import("./landing/resend-verification/resend-verification"));
+const EmailVerificationHandler = lazy(() => import("./pages/EmailVerificationHandler"));
 
 // Protected app pages
 const Dashboard = lazy(() => import("./app/dashboard/dashboard"));
@@ -215,6 +216,14 @@ export default function App() {
         element={
           <PublicRoute>
             <ResendVerification />
+          </PublicRoute>
+        } 
+      />
+      <Route 
+        path="/auth/confirm" 
+        element={
+          <PublicRoute>
+            <EmailVerificationHandler />
           </PublicRoute>
         } 
       />
