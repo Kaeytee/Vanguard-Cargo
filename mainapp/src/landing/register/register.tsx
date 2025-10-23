@@ -536,9 +536,10 @@ export default function Register() {
       console.log('🚀 Sending signup request to Supabase', signupData);
       
       // Use Supabase signUp function
-      const result = await signUp(signupData);
-      
-      console.log('📬 Signup result:', { error: result.error });
+  const result = await signUp(signupData);
+
+  // DEBUG: surface signUp result for troubleshooting
+  console.log('📬 Signup result:', result);
 
       if (!result.error) {
         // Registration successful - store user data before clearing form

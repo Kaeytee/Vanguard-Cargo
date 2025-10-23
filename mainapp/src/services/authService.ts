@@ -85,7 +85,7 @@ class AuthService {
       await this.cleanupOrphanedAuthUser(data.email);
       
       // Step 1: Create auth user with metadata
-      const { data: authData, error } = await supabase.auth.signUp({
+      const signupPayload = {
         email: data.email,
         password: data.password,
         options: {
@@ -99,7 +99,14 @@ class AuthService {
             postal_code: data.postalCode,
           },
         },
-      });
+      };
+
+      // DEBUG: log signup payload to help troubleshoot missing phone numbers
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[AuthService] signUp payload:', signupPayload);
+      }
+
+      const { data: authData, error } = await supabase.auth.signUp(signupPayload as any);
   
       if (error || !authData.user) {
         return { user: null, error };
@@ -107,7 +114,7 @@ class AuthService {
       
       // Step 2: Create user profile using secure RPC function
       try {
-        const { data: profileResult, error: rpcError } = await supabase.rpc('create_user_profile_secure', {
+        const rpcPayload = {
           user_id: authData.user.id,
           email: authData.user.email,
           first_name: data.firstName || 'User',
@@ -117,7 +124,19 @@ class AuthService {
           city: data.city || null,
           country: data.country || null,
           postal_code: data.postalCode || null
-        });
+        };
+
+        // DEBUG: log RPC payload before calling create_user_profile_secure
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[AuthService] create_user_profile_secure payload:', rpcPayload);
+        }
+
+        const { data: profileResult, error: rpcError } = await supabase.rpc('create_user_profile_secure', rpcPayload as any);
+
+        // DEBUG: log RPC result for troubleshooting
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[AuthService] create_user_profile_secure result:', { profileResult, rpcError });
+        }
 
         if (rpcError) {
           return { 
