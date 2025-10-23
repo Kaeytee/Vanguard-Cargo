@@ -117,7 +117,7 @@ export default function Home() {
                   viewport={{ once: true }}
                   className="text-lg sm:text-xl text-gray-600 font-light max-w-3xl mx-auto leading-relaxed"
                 >
-                  Access thousands of US stores and brands. Use your Vanguard address at checkout and we'll handle the rest.
+                  Shop from  <span className="font-semibold text-red-500">ANY</span> US store or brand. Use your Vanguard address at checkout and we'll handle the rest.
                 </motion.p>
               </div>
       
