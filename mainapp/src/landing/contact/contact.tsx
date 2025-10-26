@@ -114,7 +114,7 @@ export default function Contact() {
 			icon: Phone,
 			title: 'Phone',
 			description: 'Available 24/7 for urgent matters',
-			details: '+233 544 197 819 (Mobile)\n030 398 2320 (Landline)'
+			details: '+233 544 197 819 (Mobile)\n030 398 2320 (Landline)\n030 398 2330 (Landline)\n030 298 2329 (Landline)'
 		},
 		{
 			icon: MapPin,
@@ -232,17 +232,19 @@ export default function Contact() {
 									</div>
 								</div>
 								
-								{/* Quick action button */}
-								<motion.a 
-									href="tel:+233303982320"
-									className="inline-flex items-center bg-red-600 hover:bg-red-700 text-white font-bold px-8 py-4 rounded-lg transition-all duration-300"
-									whileHover={{ scale: 1.05, y: -2 }}
-									whileTap={{ scale: 0.95 }}
-								>
-									Call Us Now: 0303982320
-								</motion.a>
-
-								{/* Scroll indicator */}
+							
+							{/* Quick action button */}
+							<motion.a 
+								href="tel:+233303982320"
+								className="inline-flex items-center bg-red-600 hover:bg-red-700 text-white font-bold px-8 py-4 rounded-lg transition-all duration-300"
+								whileHover={{ scale: 1.05, y: -2 }}
+								whileTap={{ scale: 0.95 }}
+							>
+								Call Us Now: 0303982320
+							</motion.a>
+							<p className="text-sm text-gray-600 mt-2">
+								Other lines: 0303982330 • 0302982329
+							</p>								{/* Scroll indicator */}
 								<motion.div 
 									className="mt-12 flex flex-col items-center md:items-start text-gray-600"
 									initial={{ opacity: 0 }}

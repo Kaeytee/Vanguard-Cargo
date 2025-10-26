@@ -328,7 +328,7 @@ const PrivacyPolicy: React.FC = () => {
                 <p>4700 Eisenhower Avenue</p>
                 <p>Alexandria, VA 22304, USA</p>
                 <p>Email: privacy@vanguardcargo.co</p>
-                <p>Local Office Lines: 0303982320, 0544197819</p>
+                <p>Local Office Lines: 0303982320, 0303982330, 0302982329, 0544197819</p>
               </div>
               <p className="text-sm text-gray-600">
                 For general inquiries, you can also reach us at support@vanguardcargo.co

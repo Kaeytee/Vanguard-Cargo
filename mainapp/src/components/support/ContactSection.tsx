@@ -156,12 +156,18 @@ const ContactSection: React.FC<ContactSectionProps> = ({
                   >
                     {CONTACT_INFO.MOBILE_DISPLAY} (Mobile)
                   </a>
-                  <a
-                    href={getPhoneLink(CONTACT_INFO.LANDLINE_PHONE)}
-                    className="block text-gray-800 font-medium hover:text-red-500 transition-colors text-sm sm:text-base"
-                  >
-                    {CONTACT_INFO.LANDLINE_DISPLAY} (Landline)
-                  </a>
+                  <div className="text-xs sm:text-sm text-gray-600 font-semibold mt-2 mb-1">
+                    Business Landlines:
+                  </div>
+                  {CONTACT_INFO.BUSINESS_LANDLINES.map((landline, index) => (
+                    <a
+                      key={index}
+                      href={getPhoneLink(landline.number)}
+                      className="block text-gray-800 font-medium hover:text-red-500 transition-colors text-sm sm:text-base"
+                    >
+                      {landline.display}
+                    </a>
+                  ))}
                 </div>
               </div>
             </div>

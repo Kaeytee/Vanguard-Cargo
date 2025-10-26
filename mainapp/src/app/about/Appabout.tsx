@@ -283,7 +283,9 @@ const AppAbout: React.FC = () => {
             <br />
             Accra, Ghana
             <br />
-            Phone: +233 800 123 4567
+            Mobile: +233 544 197 819
+            <br />
+            Business Lines: 030 398 2320 • 030 398 2330 • 030 298 2329
             <br />
             Email: info@vanguardcargo.co
           </p>

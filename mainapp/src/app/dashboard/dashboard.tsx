@@ -730,7 +730,7 @@ const popularBrands = [
                   </div>
                   <div className="text-sm text-blue-900 leading-relaxed">
                     <p className="font-semibold mb-1">How it works:</p>
-                    <p>Tell us what you want to purchase and we'll handle the shopping, payment, and delivery to your US address. Our team will contact you with pricing and next steps.</p>
+                    <p>Tell us what you want to purchase and we'll handle the shopping, payment, and delivery to you. Our team will contact you with pricing and next steps.</p>
                   </div>
                 </div>
               </div>
