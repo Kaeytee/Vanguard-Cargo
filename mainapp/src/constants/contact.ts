@@ -11,10 +11,21 @@ export const CONTACT_INFO = {
   // Phone Numbers
   MOBILE_PHONE: '+233544197819',
   LANDLINE_PHONE: '0303982320',
+  LANDLINE_PHONE_2: '0303982330',
+  LANDLINE_PHONE_3: '0302982329',
   
   // Formatted Display Numbers
   MOBILE_DISPLAY: '+233 544 197 819',
   LANDLINE_DISPLAY: '030 398 2320',
+  LANDLINE_DISPLAY_2: '030 398 2330',
+  LANDLINE_DISPLAY_3: '030 298 2329',
+  
+  // All Business Landlines (for easy iteration)
+  BUSINESS_LANDLINES: [
+    { number: '0303982320', display: '030 398 2320' },
+    { number: '0303982330', display: '030 398 2330' },
+    { number: '0302982329', display: '030 298 2329' }
+  ],
   
   // Email Addresses
   SUPPORT_EMAIL: 'support@vanguardcargo.co',

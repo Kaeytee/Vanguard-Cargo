@@ -88,7 +88,14 @@ export default function Footer() {
 							</p>
 							<div className="text-sm">
 								<p>Mobile: <a href={getPhoneLink(CONTACT_INFO.MOBILE_PHONE)} className="hover:text-red-600 transition-colors">{CONTACT_INFO.MOBILE_DISPLAY}</a></p>
-								<p>Landline: <a href={getPhoneLink(CONTACT_INFO.LANDLINE_PHONE)} className="hover:text-red-600 transition-colors">{CONTACT_INFO.LANDLINE_DISPLAY}</a></p>
+								<p className="font-semibold mt-1">Business Lines:</p>
+								{CONTACT_INFO.BUSINESS_LANDLINES.map((landline, index) => (
+									<p key={index}>
+										<a href={getPhoneLink(landline.number)} className="hover:text-red-600 transition-colors">
+											{landline.display}
+										</a>
+									</p>
+								))}
 							</div>
 						</div>
 
