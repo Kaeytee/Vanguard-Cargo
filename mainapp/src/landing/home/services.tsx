@@ -139,7 +139,7 @@ export default function Services() {
           <div className="text-center mt-12">
             <Link
               to="/register"
-              className="text-white font-medium px-8 py-4 rounded-lg transition-all duration-300 transform hover:scale-105 hover:shadow-lg flex items-center gap-2 justify-center"
+              className="text-white font-medium px-8 py-4 rounded-lg transition-all duration-300 transform hover:scale-105 flex items-center gap-2 justify-center animate-pulse-glow hover:animate-none"
               style={{ backgroundColor: '#D81515' }}
               onClick={() => setActive(true)}
               onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#E2553F'}

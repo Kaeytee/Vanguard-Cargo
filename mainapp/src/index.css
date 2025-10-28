@@ -159,6 +159,37 @@
 	animation-delay: 0.2s;
 }
 
+/* Custom pulse animation with outer glow */
+@keyframes pulse-glow {
+	0%, 100% {
+		box-shadow: 0 0 0 0 rgba(216, 21, 21, 0.7),
+		            0 4px 6px -1px rgba(0, 0, 0, 0.1);
+	}
+	50% {
+		box-shadow: 0 0 0 15px rgba(216, 21, 21, 0),
+		            0 10px 15px -3px rgba(0, 0, 0, 0.3);
+	}
+}
+
+@keyframes pulse-glow-white {
+	0%, 100% {
+		box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7),
+		            0 4px 6px -1px rgba(0, 0, 0, 0.1);
+	}
+	50% {
+		box-shadow: 0 0 0 15px rgba(255, 255, 255, 0),
+		            0 10px 15px -3px rgba(0, 0, 0, 0.3);
+	}
+}
+
+.animate-pulse-glow {
+	animation: pulse-glow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.animate-pulse-glow-white {
+	animation: pulse-glow-white 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
 .animation-delay-400 {
 	animation-delay: 0.4s;
 }

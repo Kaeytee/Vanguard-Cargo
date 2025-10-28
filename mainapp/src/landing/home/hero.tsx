@@ -122,7 +122,7 @@ export default function Hero() {
             <div className="space-y-4 pt-4">
               <Link
                 to="/register"
-                className="inline-block w-full sm:w-auto text-white px-8 py-4 rounded-lg font-semibold text-lg transition-all duration-200 shadow-lg hover:shadow-xl text-center hover:bg-red-600 active:scale-95"
+                className="inline-block w-full sm:w-auto text-white px-8 py-4 rounded-lg font-semibold text-lg transition-all duration-200 shadow-lg hover:shadow-xl text-center hover:bg-red-600 active:scale-95 animate-pulse-glow hover:animate-none"
                 style={{ backgroundColor: '#D81515' }}
               >
                 Get My Free US Address
