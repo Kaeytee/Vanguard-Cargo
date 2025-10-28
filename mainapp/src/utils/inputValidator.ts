@@ -337,16 +337,16 @@ export class InputValidator {
     password: string,
     options: PasswordValidationOptions = {}
   ): ValidationResult {
-    // Apply defaults
+    // Apply defaults - RELAXED REQUIREMENTS
     const opts = {
       allowEmpty: false,
-      minLength: 8,
+      minLength: 6,
       maxLength: 128,
-      requireUppercase: true,
-      requireLowercase: true,
+      requireUppercase: false,
+      requireLowercase: false,
       requireNumber: true,
-      requireSpecial: true,
-      disallowCommon: true,
+      requireSpecial: false,
+      disallowCommon: false,
       ...options
     };
     

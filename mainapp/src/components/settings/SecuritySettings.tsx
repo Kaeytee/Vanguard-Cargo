@@ -31,19 +31,15 @@ function SecuritySettings() {
   const getPasswordStrength = (password: string) => {
     let strength = 0;
     const checks = {
-      length: password.length >= 8,
-      lowercase: /[a-z]/.test(password),
-      uppercase: /[A-Z]/.test(password),
+      length: password.length >= 6,
       number: /\d/.test(password),
-      special: /[!@#$%^&*(),.?":{}|<>]/.test(password)
     };
 
     strength = Object.values(checks).filter(Boolean).length;
     
-    if (strength <= 2) return { level: 'weak', color: 'red', text: 'Weak' };
-    if (strength <= 3) return { level: 'medium', color: 'yellow', text: 'Medium' };
-    if (strength <= 4) return { level: 'strong', color: 'green', text: 'Strong' };
-    return { level: 'very-strong', color: 'green', text: 'Very Strong' };
+    if (strength === 0) return { level: 'weak', color: 'red', text: 'Too Weak' };
+    if (strength === 1) return { level: 'medium', color: 'yellow', text: 'Acceptable' };
+    return { level: 'strong', color: 'green', text: 'Good' };
   };
 
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -86,8 +82,13 @@ function SecuritySettings() {
     }
 
     // Check password strength
-    if (passwords.newPassword.length < 8) {
-      setError('Password must be at least 8 characters long');
+    if (passwords.newPassword.length < 6) {
+      setError('Password must be at least 6 characters long');
+      return;
+    }
+
+    if (!/\d/.test(passwords.newPassword)) {
+      setError('Password must contain at least one number');
       return;
     }
     
@@ -249,7 +250,7 @@ function SecuritySettings() {
             </div>
           )}
           <p className="text-xs text-gray-500 mt-1">
-            Password should contain uppercase, lowercase, numbers, and special characters
+            Password should be at least 6 characters and contain a number
           </p>
         </div>
 
