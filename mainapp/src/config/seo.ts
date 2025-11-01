@@ -12,7 +12,7 @@ export const DEFAULT_SEO = {
   title: 'Vanguard Cargo - Premium Package Forwarding from USA to Ghana',
   description: 'Ship from any US store to Ghana with Vanguard Cargo. Get your free US address, consolidate packages, and save up to 80% on international shipping. Trusted by thousands of Ghanaians.',
   keywords: 'package forwarding, shipping to Ghana, US address, international shipping, cargo forwarding, Ghana shipping, online shopping USA, package consolidation',
-  author: 'Vanguard Cargo',
+  author: 'Vanguard Cargo LLC',
   image: `${BASE_URL}/logo.svg`,
   twitterHandle: '@vanguardcargo'
 };
@@ -21,7 +21,7 @@ export const DEFAULT_SEO = {
 export const ORGANIZATION_SCHEMA = {
   "@context": "https://schema.org",
   "@type": "Organization",
-  "name": "Vanguard Cargo",
+  "name": "Vanguard Cargo LLC",
   "url": BASE_URL,
   "logo": `${BASE_URL}/logo.svg`,
   "description": "Premium package forwarding service from USA to Ghana. Get your free US address and ship with confidence.",

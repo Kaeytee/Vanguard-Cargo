@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <!-- Background circle -->
-  <circle cx="256" cy="256" r="256" fill="#ef4444"/>
-  
-  <!-- User silhouette -->
-  <path d="M256 280C309.019 280 352 237.019 352 184C352 130.981 309.019 88 256 88C202.981 88 160 130.981 160 184C160 237.019 202.981 280 256 280Z" fill="white"/>
-  <path d="M380 400C380 356.667 323.333 320 256 320C188.667 320 132 356.667 132 400V424H380V400Z" fill="white"/>
-</svg>
