@@ -10,6 +10,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
 import { supabase } from '@/lib/supabase';
+import type { RootState } from '../store';
 
 // ============================================================================
 // TYPES & INTERFACES
@@ -212,8 +213,8 @@ export const { addNotification, clearNotifications, clearError } = notifications
 export default notificationsSlice.reducer;
 
 // Selectors
-export const selectNotifications = (state: { notifications: NotificationsState }) => state.notifications.items;
-export const selectUnreadCount = (state: { notifications: NotificationsState }) => state.notifications.unreadCount;
-export const selectUnreadNotifications = (state: { notifications: NotificationsState }) =>
+export const selectNotifications = (state: RootState) => state.notifications.items;
+export const selectUnreadCount = (state: RootState) => state.notifications.unreadCount;
+export const selectUnreadNotifications = (state: RootState) =>
   state.notifications.items.filter(n => !n.is_read);
-export const selectIsLoading = (state: { notifications: NotificationsState }) => state.notifications.isLoading;
+export const selectIsLoading = (state: RootState) => state.notifications.isLoading;

@@ -13,6 +13,7 @@ import type { User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import { authService, type AuthUser, type SignUpData } from '@/services/authService';
 import { broadcastLogin } from '@/utils/tabSyncManager';
+import type { RootState } from '../store';
 
 // ============================================================================
 // TYPES & INTERFACES
@@ -532,12 +533,12 @@ export const { setUser, clearUser, setError, clearError } = authSlice.actions;
 export default authSlice.reducer;
 
 // Export selectors
-export const selectUser = (state: { auth: AuthState }) => state.auth.user;
-export const selectProfile = (state: { auth: AuthState }) => state.auth.profile;
-export const selectIsAuthenticated = (state: { auth: AuthState }) => state.auth.isAuthenticated;
-export const selectIsLoading = (state: { auth: AuthState }) => state.auth.isLoading;
-export const selectError = (state: { auth: AuthState }) => state.auth.error;
-export const selectIsInitialized = (state: { auth: AuthState }) => state.auth.isInitialized;
+export const selectUser = (state: RootState) => state.auth.user;
+export const selectProfile = (state: RootState) => state.auth.profile;
+export const selectIsAuthenticated = (state: RootState) => state.auth.isAuthenticated;
+export const selectIsLoading = (state: RootState) => state.auth.isLoading;
+export const selectError = (state: RootState) => state.auth.error;
+export const selectIsInitialized = (state: RootState) => state.auth.isInitialized;
 
 // ============================================================================
 // DOCUMENTATION
