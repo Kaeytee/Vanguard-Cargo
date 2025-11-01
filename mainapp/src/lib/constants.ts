@@ -30,6 +30,13 @@ export const WATERMARK_LOGO = '/logo.svg';
  */
 export const LOGO_URL = 'https://vanguardcargo.co/logo.svg';
 
+/**
+ * Email icons/images - used in email templates (Supabase functions)
+ * Full absolute URLs for external email clients
+ */
+export const EMAIL_ICON_URL = 'https://vanguardcargo.co/ICONS.png';
+export const EMAIL_LOGO_URL = LOGO_URL;
+
 // ============================================
 
 export const DELIVERY_TYPES = [
