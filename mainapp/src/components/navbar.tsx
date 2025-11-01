@@ -8,8 +8,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useReduxAuth as useAuth } from "../hooks/useReduxAuth";
 import { useLogout } from "../hooks/useLogout";
 import { featureFlags } from "../config/featureFlags";
+import { NAV_LOGO } from "../lib/constants";
 import whatsappLogo from "../assets/whatsapp.png";
-import navLogo from "../assets/navlogo.png";
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -138,7 +138,7 @@ Thank you!`;
           {/* Logo */}
           <Link to="/" className="flex-shrink-0">
             <img 
-              src={navLogo} 
+              src={NAV_LOGO} 
               alt="Vanguard Cargo" 
               className="h-7 sm:h-10 md:h-12 w-auto object-contain"
             />

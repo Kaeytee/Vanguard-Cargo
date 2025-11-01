@@ -13,7 +13,7 @@ export const DEFAULT_SEO = {
   description: 'Ship from any US store to Ghana with Vanguard Cargo. Get your free US address, consolidate packages, and save up to 80% on international shipping. Trusted by thousands of Ghanaians.',
   keywords: 'package forwarding, shipping to Ghana, US address, international shipping, cargo forwarding, Ghana shipping, online shopping USA, package consolidation',
   author: 'Vanguard Cargo',
-  image: `${BASE_URL}/og-image.jpg`,
+  image: `${BASE_URL}/logo.svg`,
   twitterHandle: '@vanguardcargo'
 };
 
@@ -23,7 +23,7 @@ export const ORGANIZATION_SCHEMA = {
   "@type": "Organization",
   "name": "Vanguard Cargo",
   "url": BASE_URL,
-  "logo": `${BASE_URL}/logo.png`,
+  "logo": `${BASE_URL}/logo.svg`,
   "description": "Premium package forwarding service from USA to Ghana. Get your free US address and ship with confidence.",
   "address": {
     "@type": "PostalAddress",
@@ -143,7 +143,7 @@ export const LOCAL_BUSINESS_SCHEMA = {
   "@context": "https://schema.org",
   "@type": "LocalBusiness",
   "name": "Vanguard Cargo",
-  "image": `${BASE_URL}/logo.png`,
+  "image": `${BASE_URL}/logo.svg`,
   "telephone": "+233-XX-XXX-XXXX",
   "email": "support@vanguardcargo.co",
   "address": {

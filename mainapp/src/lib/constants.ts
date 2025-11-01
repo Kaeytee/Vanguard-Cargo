@@ -1,5 +1,37 @@
  import {DUMMY_USER} from "../app/app-config";
 
+// ============================================
+// LOGO CONFIGURATION - CENTRALIZED
+// ============================================
+// Single source of truth for all logo references in the application
+// Update these paths to change logos app-wide
+
+/**
+ * Main application logo (used in navbar, headers, etc.)
+ * Path relative to public folder
+ */
+export const APP_LOGO = '/logo.svg';
+
+/**
+ * Logo for navigation bar specifically
+ * Can be different from main logo if needed for sizing
+ */
+export const NAV_LOGO = '/logo.svg';
+
+/**
+ * Logo used in watermark/background overlays
+ * Should be a path accessible from the public folder or src/assets
+ */
+export const WATERMARK_LOGO = '/logo.svg';
+
+/**
+ * Absolute URL for logo (used in SEO, meta tags, structured data)
+ * Used in index.html and SEO configurations
+ */
+export const LOGO_URL = 'https://vanguardcargo.co/logo.svg';
+
+// ============================================
+
 export const DELIVERY_TYPES = [
 	{ id: "air", label: "Air Freight (Primary)", primary: true, description: "International air freight - fast, reliable cross-border shipping" },
 	{ id: "ground", label: "Ground (Future)", disabled: true, description: "Cross-border ground transportation (coming soon)" },
