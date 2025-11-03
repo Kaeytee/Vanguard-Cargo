@@ -39,7 +39,7 @@ export const ORGANIZATION_SCHEMA = {
     "areaServed": ["GH", "US"]
   },
   "sameAs": [
-    "https://facebook.com/vanguardcargo",
+    "https://www.facebook.com/profile.php?id=61583182550816",
     "https://twitter.com/vanguardcargo",
     "https://instagram.com/vanguardcargo"
   ],

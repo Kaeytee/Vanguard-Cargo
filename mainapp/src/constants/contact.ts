@@ -47,7 +47,7 @@ export const CONTACT_INFO = {
   
   // Social Media (placeholder for future use)
   SOCIAL_MEDIA: {
-    FACEBOOK: '#',
+    FACEBOOK: 'https://www.facebook.com/profile.php?id=61583182550816',
     LINKEDIN: '#',
     TWITTER: '#',
     INSTAGRAM: '#'

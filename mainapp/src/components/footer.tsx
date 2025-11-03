@@ -102,7 +102,7 @@ export default function Footer() {
 						{/* Social Media Icons */}
 						<div className="flex space-x-4 pt-2">
 							<a
-								href="#"
+								href="https://www.facebook.com/profile.php?id=61583182550816"
 								className="text-gray-600 hover:text-red-600 transition-colors duration-200"
 								aria-label="Facebook"
 							>
