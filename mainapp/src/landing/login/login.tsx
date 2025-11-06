@@ -16,6 +16,8 @@ import { EmailVerificationBanner } from '../../components/ui/EmailVerificationBa
 import AccountStatusWarning from '../../components/ui/AccountStatusWarning';
 // Import rate limiter for brute force protection
 import { loginRateLimiter } from '../../utils/rateLimiter';
+// Import Google OAuth button
+import GoogleAuthButton from '../../components/auth/GoogleAuthButton';
 
 /**
  * Extend Window interface to include grecaptcha property
@@ -406,6 +408,24 @@ export default function Login() {
 							<div className="mb-8 text-center lg:text-left">
 								<h2 className="text-3xl font-bold text-gray-900 mb-2">Welcome Back</h2>
 								<p className="text-gray-600">Begin your cargo journey here</p>
+							</div>
+
+							{/* Google OAuth Button */}
+							<div className="mb-6">
+								<GoogleAuthButton 
+									redirectTo="/app/dashboard"
+									buttonText="Continue with Google"
+								/>
+								
+								{/* Divider */}
+								<div className="relative my-6">
+									<div className="absolute inset-0 flex items-center">
+										<div className="w-full border-t border-gray-300"></div>
+									</div>
+									<div className="relative flex justify-center text-sm">
+										<span className="px-4 bg-white text-gray-500">Or sign in with email</span>
+									</div>
+								</div>
 							</div>
 
 							<form onSubmit={handleSubmit} className="space-y-6">

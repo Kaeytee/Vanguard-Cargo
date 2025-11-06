@@ -100,10 +100,26 @@ export const initializeAuth = createAsyncThunk(
       }
 
       // Get user profile from database using authService for consistent field mapping
-      const profile = await authService.getUserProfile(session.user.id);
+      let profile = await authService.getUserProfile(session.user.id);
 
+      // If profile doesn't exist, this might be an OAuth sign-in
+      // Try to create the profile automatically
       if (!profile) {
-        throw new Error('Profile not found');
+        console.log('⚠️ Profile not found - attempting OAuth profile creation');
+        const oauthResult = await authService.handleOAuthSignIn(session.user);
+        
+        if (oauthResult.error) {
+          console.error('❌ Failed to create OAuth profile:', oauthResult.error);
+          throw new Error(oauthResult.error.message || 'Profile not found');
+        }
+        
+        profile = oauthResult.profile;
+        
+        if (!profile) {
+          throw new Error('Profile not found');
+        }
+        
+        console.log('✅ OAuth profile created successfully');
       }
 
       // Check account status on initialization (e.g., page refresh)
