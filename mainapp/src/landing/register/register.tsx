@@ -47,19 +47,22 @@ export default function Register() {
     lastName: '',
     email: '',
     phoneNumber: '',
-    address: '',
-    city: '',
-    state: '',
-    zip: '',
-    country: '',
+    // COMMENTED OUT FOR REGISTRATION SIMPLIFICATION - Can be restored later
+    // address: '',
+    // city: '',
+    // state: '',
+    // zip: '',
+    // country: '',
     password: '',
-    confirmPassword: '',
+    // COMMENTED OUT FOR REGISTRATION SIMPLIFICATION - Can be restored later
+    // confirmPassword: '',
     agreeToTerms: false,
   });
 
   // UI state and validation
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  // COMMENTED OUT FOR REGISTRATION SIMPLIFICATION - Can be restored later
+  // const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [phoneError, setPhoneError] = useState('');
   const [isCheckingEmail, setIsCheckingEmail] = useState(false);
   const [emailExists, setEmailExists] = useState(false);
@@ -68,13 +71,15 @@ export default function Register() {
     lastName: string;
     email: string;
     password: string;
-    confirmPassword: string;
+    // COMMENTED OUT FOR REGISTRATION SIMPLIFICATION - Can be restored later
+    // confirmPassword: string;
     phoneNumber: string;
-    address: string;
-    city: string;
-    state: string;
-    zip: string;
-    country: string;
+    // COMMENTED OUT FOR REGISTRATION SIMPLIFICATION - Can be restored later
+    // address: string;
+    // city: string;
+    // state: string;
+    // zip: string;
+    // country: string;
     agreeToTerms: string;
     general: string;
   }>({
@@ -82,13 +87,15 @@ export default function Register() {
     lastName: '',
     email: '',
     password: '',
-    confirmPassword: '',
+    // COMMENTED OUT FOR REGISTRATION SIMPLIFICATION - Can be restored later
+    // confirmPassword: '',
     phoneNumber: '',
-    address: '',
-    city: '',
-    state: '',
-    zip: '',
-    country: '',
+    // COMMENTED OUT FOR REGISTRATION SIMPLIFICATION - Can be restored later
+    // address: '',
+    // city: '',
+    // state: '',
+    // zip: '',
+    // country: '',
     agreeToTerms: '',
     general: '',
   });
@@ -103,26 +110,30 @@ export default function Register() {
     lastName: boolean;
     email: boolean;
     password: boolean;
-    confirmPassword: boolean;
+    // COMMENTED OUT FOR REGISTRATION SIMPLIFICATION - Can be restored later
+    // confirmPassword: boolean;
     phoneNumber: boolean;
-    address: boolean;
-    city: boolean;
-    state: boolean;
-    zip: boolean;
-    country: boolean;
+    // COMMENTED OUT FOR REGISTRATION SIMPLIFICATION - Can be restored later
+    // address: boolean;
+    // city: boolean;
+    // state: boolean;
+    // zip: boolean;
+    // country: boolean;
     agreeToTerms: boolean;
   }>({
     firstName: false,
     lastName: false,
     email: false,
     password: false,
-    confirmPassword: false,
+    // COMMENTED OUT FOR REGISTRATION SIMPLIFICATION - Can be restored later
+    // confirmPassword: false,
     phoneNumber: false,
-    address: false,
-    city: false,
-    state: false,
-    zip: false,
-    country: false,
+    // COMMENTED OUT FOR REGISTRATION SIMPLIFICATION - Can be restored later
+    // address: false,
+    // city: false,
+    // state: false,
+    // zip: false,
+    // country: false,
     agreeToTerms: false,
   });
   
@@ -374,35 +385,39 @@ export default function Register() {
       case 'email':
         if (!data.email) return 'Email is required';
         return !isValidEmail(data.email) ? 'Please enter a valid email address' : '';
-      case 'address':
-        if (!data.address) return 'Address is required';
-        if (data.address.length < 5) return 'Please enter a valid address (minimum 5 characters)';
-        return '';
-      case 'city':
-        // Optional: only validate if user entered a value
-        if (!data.city || !data.city.trim()) return '';
-        if (data.city.trim().length < 2) return 'Please enter a valid city';
-        return '';
-      case 'state':
-        // Optional: only validate if user entered a value
-        if (!data.state || !data.state.trim()) return '';
-        if (data.state.trim().length < 1) return 'Please enter a valid state/province';
-        return '';
-      case 'zip':
-        // Optional: only validate if user entered a value
-        if (!data.zip || !data.zip.trim()) return '';
-        if (!/^[0-9A-Za-z\s-]{3,10}$/.test(data.zip.trim())) return 'Please enter a valid ZIP/Postal code';
-        return '';
-      case 'country':
-        return !data.country ? 'Country is required' : '';
+      // COMMENTED OUT FOR REGISTRATION SIMPLIFICATION - Can be restored later
+      // case 'address':
+      //   if (!data.address) return 'Address is required';
+      //   if (data.address.length < 5) return 'Please enter a valid address (minimum 5 characters)';
+      //   return '';
+      // case 'city':
+      //   // Optional: only validate if user entered a value
+      //   if (!data.city || !data.city.trim()) return '';
+      //   if (data.city.trim().length < 2) return 'Please enter a valid city';
+      //   return '';
+      // case 'state':
+      //   // Optional: only validate if user entered a value
+      //   if (!data.state || !data.state.trim()) return '';
+      //   if (data.state.trim().length < 1) return 'Please enter a valid state/province';
+      //   return '';
+      // case 'zip':
+      //   // Optional: only validate if user entered a value
+      //   if (!data.zip || !data.zip.trim()) return '';
+      //   if (!/^[0-9A-Za-z\s-]{3,10}$/.test(data.zip.trim())) return 'Please enter a valid ZIP/Postal code';
+      //   return '';
+      // case 'country':
+      //   return !data.country ? 'Country is required' : '';
       case 'password':
         if (!data.password) return 'Password is required';
+        // SIMPLIFIED PASSWORD VALIDATION - Only require 6 characters minimum
         if (data.password.length < 6) return 'Password must be at least 6 characters';
-        if (!/[0-9]/.test(data.password)) return 'Password must contain at least one number';
+        // COMMENTED OUT FOR REGISTRATION SIMPLIFICATION - Can be restored later
+        // if (!/[0-9]/.test(data.password)) return 'Password must contain at least one number';
         return '';
-      case 'confirmPassword':
-        if (!data.confirmPassword) return 'Please confirm your password';
-        return data.password !== data.confirmPassword ? 'Passwords do not match' : '';
+      // COMMENTED OUT FOR REGISTRATION SIMPLIFICATION - Can be restored later
+      // case 'confirmPassword':
+      //   if (!data.confirmPassword) return 'Please confirm your password';
+      //   return data.password !== data.confirmPassword ? 'Passwords do not match' : '';
       case 'phoneNumber':
         if (!data.phoneNumber) return 'Phone number is required';
         return !isValidPhoneNumber(data.phoneNumber) ? 'Valid phone number is required' : '';
@@ -420,13 +435,15 @@ export default function Register() {
       lastName: '',
       email: '',
       password: '',
-      confirmPassword: '',
+      // COMMENTED OUT FOR REGISTRATION SIMPLIFICATION - Can be restored later
+      // confirmPassword: '',
       phoneNumber: '',
-      address: '',
-      city: '',
-      state: '',
-      zip: '',
-      country: '',
+      // COMMENTED OUT FOR REGISTRATION SIMPLIFICATION - Can be restored later
+      // address: '',
+      // city: '',
+      // state: '',
+      // zip: '',
+      // country: '',
       agreeToTerms: '',
       general: '',
     };
@@ -436,13 +453,15 @@ export default function Register() {
     newErrors.lastName = validateField('lastName', formData);
     newErrors.email = validateField('email', formData);
     newErrors.password = validateField('password', formData);
-    newErrors.confirmPassword = validateField('confirmPassword', formData);
+    // COMMENTED OUT FOR REGISTRATION SIMPLIFICATION - Can be restored later
+    // newErrors.confirmPassword = validateField('confirmPassword', formData);
     newErrors.phoneNumber = validateField('phoneNumber', formData);
-    newErrors.address = validateField('address', formData);
-    newErrors.city = validateField('city', formData);
-    newErrors.state = validateField('state', formData);
-    newErrors.zip = validateField('zip', formData);
-    newErrors.country = validateField('country', formData);
+    // COMMENTED OUT FOR REGISTRATION SIMPLIFICATION - Can be restored later
+    // newErrors.address = validateField('address', formData);
+    // newErrors.city = validateField('city', formData);
+    // newErrors.state = validateField('state', formData);
+    // newErrors.zip = validateField('zip', formData);
+    // newErrors.country = validateField('country', formData);
     newErrors.agreeToTerms = validateField('agreeToTerms', formData);
     
     return newErrors;
@@ -519,18 +538,20 @@ export default function Register() {
       }
 
       // Prepare data for Supabase signup
+      // NOTE: Address fields are commented out in the UI but still sent to backend for compatibility
       const signupData = {
         email: formData.email.trim().toLowerCase(),
         password: formData.password,
         firstName: formData.firstName.trim(),
         lastName: formData.lastName.trim(),
         phone: formData.phoneNumber,
-        streetAddress: formData.address.trim(),
+        // REGISTRATION SIMPLIFICATION: Sending empty/undefined for address fields since they're not collected in UI
+        streetAddress: '', // formData.address.trim(),
   // City/state/postal are optional - send undefined when empty so typings align
-  city: formData.city.trim() || undefined,
-  state: formData.state.trim() || undefined,
-        country: formData.country.trim(),
-  postalCode: formData.zip.trim() || undefined,
+  city: undefined, // formData.city.trim() || undefined,
+  state: undefined, // formData.state.trim() || undefined,
+        country: 'Ghana', // Default country, was: formData.country.trim(),
+  postalCode: undefined, // formData.zip.trim() || undefined,
       };
       
       console.log('🚀 Sending signup request to Supabase', signupData);
@@ -559,13 +580,15 @@ export default function Register() {
           lastName: '',
           email: '',
           password: '',
-          confirmPassword: '',
+          // COMMENTED OUT FOR REGISTRATION SIMPLIFICATION - Can be restored later
+          // confirmPassword: '',
           phoneNumber: '',
-          address: '',
-          city: '',
-          state: '',
-          zip: '',
-          country: '',
+          // COMMENTED OUT FOR REGISTRATION SIMPLIFICATION - Can be restored later
+          // address: '',
+          // city: '',
+          // state: '',
+          // zip: '',
+          // country: '',
           agreeToTerms: '',
           general: ''
         });
@@ -578,13 +601,15 @@ export default function Register() {
           lastName: '',
           email: '',
           phoneNumber: '',
-          address: '',
-          city: '',
-          state: '',
-          zip: '',
-          country: '',
+          // COMMENTED OUT FOR REGISTRATION SIMPLIFICATION - Can be restored later
+          // address: '',
+          // city: '',
+          // state: '',
+          // zip: '',
+          // country: '',
           password: '',
-          confirmPassword: '',
+          // COMMENTED OUT FOR REGISTRATION SIMPLIFICATION - Can be restored later
+          // confirmPassword: '',
           agreeToTerms: false,
         });
         setTouched({
@@ -592,13 +617,15 @@ export default function Register() {
           lastName: false,
           email: false,
           password: false,
-          confirmPassword: false,
+          // COMMENTED OUT FOR REGISTRATION SIMPLIFICATION - Can be restored later
+          // confirmPassword: false,
           phoneNumber: false,
-          address: false,
-          city: false,
-          state: false,
-          zip: false,
-          country: false,
+          // COMMENTED OUT FOR REGISTRATION SIMPLIFICATION - Can be restored later
+          // address: false,
+          // city: false,
+          // state: false,
+          // zip: false,
+          // country: false,
           agreeToTerms: false,
         });
         
@@ -683,18 +710,23 @@ export default function Register() {
   };
 
   // Password strength checks
+  // SIMPLIFIED FOR REGISTRATION SIMPLIFICATION - Only check minimum length now
   const passwordChecks = {
     hasMinLength: formData.password.length >= 6,
-    hasNumber: /[0-9]/.test(formData.password),
-    passwordsMatch: formData.password && formData.password === formData.confirmPassword
+    // COMMENTED OUT FOR REGISTRATION SIMPLIFICATION - Can be restored later
+    // hasNumber: /[0-9]/.test(formData.password),
+    // passwordsMatch: formData.password && formData.password === formData.confirmPassword
   };
 
-  const isPasswordValid = 
-    passwordChecks.hasMinLength &&
-    passwordChecks.hasNumber &&
-    passwordChecks.passwordsMatch;
+  // SIMPLIFIED FOR REGISTRATION SIMPLIFICATION - Only require minimum length
+  const isPasswordValid = passwordChecks.hasMinLength;
+    // COMMENTED OUT FOR REGISTRATION SIMPLIFICATION - Can be restored later
+    // passwordChecks.hasMinLength &&
+    // passwordChecks.hasNumber &&
+    // passwordChecks.passwordsMatch;
 
   // Form validation - STRICT: All fields must be valid AND no existing email
+  // SIMPLIFIED FOR REGISTRATION SIMPLIFICATION - Removed address fields
   const isFormValid =
     formData.firstName &&
     formData.lastName &&
@@ -705,9 +737,10 @@ export default function Register() {
     formData.phoneNumber &&
     isValidPhoneNumber(formData.phoneNumber) &&
     !phoneError &&
-    formData.address &&
-    // city/state/zip are optional so they are not required for form validity
-    formData.country &&
+    // COMMENTED OUT FOR REGISTRATION SIMPLIFICATION - Can be restored later
+    // formData.address &&
+    // // city/state/zip are optional so they are not required for form validity
+    // formData.country &&
     isPasswordValid &&
     formData.agreeToTerms &&
     (!recaptchaConfig.enabled || recaptchaError || captchaValue);
@@ -944,8 +977,9 @@ export default function Register() {
                     )}
                   </div>
                   
+                  {/* ========== COMMENTED OUT FOR REGISTRATION SIMPLIFICATION - Can be restored later ========== */}
                   {/* Address Information Section */}
-                  <div className="mt-4 mb-2">
+                  {/* <div className="mt-4 mb-2">
                     <h3 className="text-md font-semibold text-gray-700">Address Information</h3>
                     <p className="text-sm text-gray-500 mb-3">Street address and country are required. City, state/province and postal/ZIP code are optional.</p>
                   </div>
@@ -1087,7 +1121,9 @@ export default function Register() {
                         </p>
                       )}
                     </div>
-                  </div>
+                  </div> */}
+                  {/* ========== END OF COMMENTED ADDRESS SECTION ========== */}
+                  
                   <div>
                     <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
                       Password *
@@ -1121,10 +1157,11 @@ export default function Register() {
                     </div>
                     
                     {/* Password Strength Requirements - Show while typing */}
+                    {/* SIMPLIFIED FOR REGISTRATION SIMPLIFICATION - Only show minimum length */}
                     {formData.password && (
                       <div className="mt-2 space-y-1">
                         <p className="text-xs font-medium text-gray-600 mb-1">Password must contain:</p>
-                        <div className="grid grid-cols-2 gap-1">
+                        <div className="grid grid-cols-1 gap-1">
                           <div className={cn(
                             "flex items-center text-xs",
                             passwordChecks.hasMinLength ? "text-green-600" : "text-gray-500"
@@ -1132,13 +1169,14 @@ export default function Register() {
                             <span className="mr-1">{passwordChecks.hasMinLength ? "✓" : "○"}</span>
                             At least 6 characters
                           </div>
-                          <div className={cn(
+                          {/* COMMENTED OUT FOR REGISTRATION SIMPLIFICATION - Can be restored later */}
+                          {/* <div className={cn(
                             "flex items-center text-xs",
                             passwordChecks.hasNumber ? "text-green-600" : "text-gray-500"
                           )}>
                             <span className="mr-1">{passwordChecks.hasNumber ? "✓" : "○"}</span>
                             One number
-                          </div>
+                          </div> */}
                         </div>
                       </div>
                     )}
@@ -1149,7 +1187,10 @@ export default function Register() {
                       </p>
                     )}
                   </div>
-                  <div>
+                  
+                  {/* ========== COMMENTED OUT FOR REGISTRATION SIMPLIFICATION - Can be restored later ========== */}
+                  {/* Confirm Password Field */}
+                  {/* <div>
                     <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
                       Confirm Password *
                     </label>
@@ -1185,7 +1226,9 @@ export default function Register() {
                         {errors.confirmPassword}
                       </p>
                     )}
-                  </div>
+                  </div> */}
+                  {/* ========== END OF COMMENTED CONFIRM PASSWORD SECTION ========== */}
+                  
                   <div className="space-y-3 pt-4">
                     <label className="flex items-start space-x-3 cursor-pointer">
                       <div className="relative">
