@@ -15,6 +15,7 @@ import { ReduxAuthGuard } from "./components/ReduxAuthGuard";
 import AppLayout from "./components/AppLayout";
 import PublicRoute from "./components/PublicRoute";
 import FloatingSupportButton from "./components/FloatingSupportButton";
+import OAuthHandler from "./components/OAuthHandler";
 
 // ============================================================================
 // LAZY IMPORTS - Code-split routes for better performance
@@ -91,6 +92,8 @@ export default function App() {
   return (
     <>
       <Analytics />
+      {/* OAuth Handler - Detects OAuth redirects and routes to callback page */}
+      <OAuthHandler />
       {/* Floating Support Button - Appears on all pages */}
       <FloatingSupportButton />
       <Suspense fallback={<LoadingFallback />}>

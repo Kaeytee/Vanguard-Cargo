@@ -38,18 +38,15 @@ export default function GoogleAuthButton({
       setIsLoading(true);
       setError(null);
 
-      // Construct the callback URL for OAuth
-      // After Google authentication, user will be redirected to /auth/callback
-      // which processes the session and updates Redux store
-      const callbackUrl = `${window.location.origin}/auth/callback`;
-      
-      console.log('🔐 Initiating Google OAuth with callback:', callbackUrl);
+      console.log('🔐 Initiating Google OAuth sign-in');
 
       // Sign in with Google OAuth
+      // Supabase automatically handles the OAuth flow and redirects back
+      // to your configured Site URL in the Supabase dashboard
       const { data, error: oauthError } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: callbackUrl,
+          // skipBrowserRedirect: false is default - allows normal OAuth flow
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',
@@ -65,7 +62,8 @@ export default function GoogleAuthButton({
       }
 
       console.log('✅ Google OAuth initiated:', data);
-      // User will be redirected to Google - no further code runs
+      // User will be redirected to Google, then back to your Site URL
+      // The session will be automatically established by Supabase
     } catch (err) {
       console.error('❌ Unexpected error during Google sign-in:', err);
       setError('An unexpected error occurred. Please try again.');
