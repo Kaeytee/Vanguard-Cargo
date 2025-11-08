@@ -116,11 +116,11 @@ const AppNavbar: React.FC<AppNavbarProps> = ({
               onClick={toggleUserDropdown}
               aria-label="User menu"
             >
-              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full overflow-hidden ring-2 ring-gray-200 bg-white flex items-center justify-center p-0.5">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full overflow-hidden ring-2 ring-gray-200 shadow-sm">
                 <img
                   src={userData.image}
                   alt="User"
-                  className="w-full h-full object-contain"
+                  className="w-full h-full object-cover rounded-full"
                 />
               </div>
               <span className="hidden sm:block text-sm font-medium text-gray-800 max-w-24 truncate">
@@ -131,11 +131,11 @@ const AppNavbar: React.FC<AppNavbarProps> = ({
             {showUserDropdown && (
               <div className="absolute right-0 mt-2 bg-white rounded-lg shadow-xl border min-w-[250px] z-50">
                 <div className="flex items-center gap-3 p-4 border-b border-gray-200">
-                  <div className="w-12 h-12 rounded-full overflow-hidden ring-2 ring-gray-200 bg-white flex items-center justify-center p-1">
+                  <div className="w-14 h-14 rounded-full overflow-hidden ring-2 ring-gray-200 shadow-md">
                     <img
                       src={userData.image}
                       alt="User"
-                      className="w-full h-full object-contain"
+                      className="w-full h-full object-cover rounded-full"
                     />
                   </div>
                   <div className="flex-1 min-w-0">

@@ -91,18 +91,18 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate }) => {
 
       {/* User profile section */}
       <div className="flex flex-col items-center p-6 border-red-500/20">
-        <div className="w-16 h-16 rounded-full overflow-hidden mb-3 ring-2 ring-white/20 transition-transform duration-200 hover:scale-105 bg-white flex items-center justify-center p-1">
+        <div className="w-20 h-20 rounded-full overflow-hidden mb-4 ring-2 ring-white/30 transition-transform duration-200 hover:scale-105 shadow-lg">
           <img
             src={userData.image}
             alt="User Avatar"
-            className="w-full h-full object-contain"
+            className="w-full h-full object-cover rounded-full"
           />
         </div>
-        <div className="text-center">
-          <h3 className="m-0 text-base font-semibold truncate max-w-full">
+        <div className="text-center space-y-1">
+          <h3 className="m-0 text-lg font-bold truncate max-w-full">
             {userData.name}
           </h3>
-          <p className="mt-1 text-xs opacity-80 truncate max-w-full">
+          <p className="text-sm opacity-90 truncate max-w-full">
             {userData.email}
           </p>
         </div>
