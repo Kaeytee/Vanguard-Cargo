@@ -40,6 +40,9 @@ declare global {
 export default function Register() {
   // Loading state for form submission
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // State to control whether email form is shown
+  const [showEmailForm, setShowEmailForm] = useState(false);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -820,10 +823,28 @@ export default function Register() {
                           <div className="w-full border-t border-gray-300"></div>
                         </div>
                         <div className="relative flex justify-center text-sm">
-                          <span className="px-4 bg-white text-gray-500">Or continue with email</span>
+                          <span className="px-4 bg-white text-gray-500">Or</span>
                         </div>
                       </div>
+
+                      {/* Continue with Email Button - Shows when form is hidden */}
+                      {!showEmailForm && (
+                        <button
+                          type="button"
+                          onClick={() => setShowEmailForm(true)}
+                          className="w-full px-4 py-3 border-2 border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 flex items-center justify-center gap-2"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                          </svg>
+                          Continue with Email
+                        </button>
+                      )}
                     </div>
+
+                    {/* Email Registration Form - Only shown when Continue with Email is clicked */}
+                    {showEmailForm && (
+                      <React.Fragment>
 
                     {/* Error Messages - Show ALL errors */}
                     {errors.general && (
@@ -1330,6 +1351,8 @@ export default function Register() {
                     </p>
                   </div>
                     </form>
+                      </React.Fragment>
+                    )}
                 </React.Fragment>
                 )}
             </div>

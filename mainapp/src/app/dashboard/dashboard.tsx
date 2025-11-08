@@ -246,7 +246,7 @@ const popularBrands = [
                         <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-white rounded-full"></div>
                       </div>
                       <p className="text-xs sm:text-base text-gray-700 leading-relaxed">
-                        <span className="font-semibold text-gray-900">Include your suite number</span> — Always add "Vanguard Cargo LLC" followed by your unique suite number
+                        <span className="font-semibold text-gray-900">Use separate name fields</span> — Enter "Vanguard" as First Name and "Cargo" as Last Name
                       </p>
                     </div>
                     <div className="flex items-start gap-2 sm:gap-3">
@@ -254,7 +254,15 @@ const popularBrands = [
                         <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-white rounded-full"></div>
                       </div>
                       <p className="text-xs sm:text-base text-gray-700 leading-relaxed">
-                        <span className="font-semibold text-gray-900">Use complete address</span> — Enter all address fields exactly as shown below
+                        <span className="font-semibold text-gray-900">Include your suite number</span> — In the Apartment/Suite field, enter "ALX-E2" followed by your unique suite number
+                      </p>
+                    </div>
+                    <div className="flex items-start gap-2 sm:gap-3">
+                      <div className="w-5 h-5 sm:w-6 sm:h-6 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-white rounded-full"></div>
+                      </div>
+                      <p className="text-xs sm:text-base text-gray-700 leading-relaxed">
+                        <span className="font-semibold text-gray-900">Use complete address</span> — Enter all address fields exactly as shown below (use the copy buttons for accuracy)
                       </p>
                     </div>
                     <div className="flex items-start gap-2 sm:gap-3">
