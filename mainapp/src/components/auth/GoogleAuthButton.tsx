@@ -3,8 +3,6 @@ import { Loader2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 
 interface GoogleAuthButtonProps {
-  /** Optional redirect path after successful authentication */
-  redirectTo?: string;
   /** Button text - defaults to "Continue with Google" */
   buttonText?: string;
   /** Additional CSS classes */
@@ -18,17 +16,16 @@ interface GoogleAuthButtonProps {
  * 
  * Reusable button for Google OAuth authentication
  * Works for both registration and login flows
+ * Redirects to /auth/callback after OAuth to process session
  * 
  * @example
  * ```tsx
  * <GoogleAuthButton 
- *   redirectTo="/app/dashboard"
  *   buttonText="Sign up with Google"
  * />
  * ```
  */
 export default function GoogleAuthButton({
-  redirectTo = '/app/dashboard',
   buttonText = 'Continue with Google',
   className = '',
   variant = 'default',
@@ -41,16 +38,18 @@ export default function GoogleAuthButton({
       setIsLoading(true);
       setError(null);
 
-      // Construct the full redirect URL
-      const targetUrl = `${window.location.origin}${redirectTo}`;
+      // Construct the callback URL for OAuth
+      // After Google authentication, user will be redirected to /auth/callback
+      // which processes the session and updates Redux store
+      const callbackUrl = `${window.location.origin}/auth/callback`;
       
-      console.log('🔐 Initiating Google OAuth with redirect:', targetUrl);
+      console.log('🔐 Initiating Google OAuth with callback:', callbackUrl);
 
       // Sign in with Google OAuth
       const { data, error: oauthError } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: targetUrl,
+          redirectTo: callbackUrl,
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',
