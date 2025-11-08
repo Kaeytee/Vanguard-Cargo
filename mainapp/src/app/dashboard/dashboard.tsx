@@ -3,15 +3,12 @@ import { Copy, MapPin, Info, Check, AlertTriangle, ShoppingCart, X, Send } from 
 import { useReduxAuth as useAuth } from '../../hooks/useReduxAuth';
 import { motion } from "framer-motion";
 import PackageIntakeWidget from '../../components/PackageIntakeWidget';
-import { addressService, type USShippingAddress } from '../../services/addressService';
 import { supabase } from '../../lib/supabase';
-// Removed unused import
 import shopImage from '../../assets/shop.jpg';
 
 
 const Dashboard: React.FC = () => {
   const { user, profile } = useAuth();
-  const [usAddress, setUsAddress] = useState<USShippingAddress | null>(null);
   const [copiedStates, setCopiedStates] = useState<{[key: string]: boolean}>({});
   
   // Direct Purchase Modal State
@@ -33,37 +30,6 @@ const Dashboard: React.FC = () => {
       profile
     });
   }, [user, profile]);
-
-  // Fetch user data on component mount
-  useEffect(() => {
-    const fetchDashboardData = async () => {
-      if (!user) return;
-
-      try {
-        // Fetch user's US shipping address
-        console.log('📍 Fetching US address for user:', user.id);
-        const addressResult = await addressService.getUserAddress(user.id);
-        
-        // Handle different scenarios
-        if (addressResult.error) {
-          // Actual error occurred
-          console.error('❌ Error fetching address:', addressResult.error);
-        } else if (addressResult.data) {
-          // Address found successfully
-          console.log('✅ US Address fetched:', addressResult.data);
-          setUsAddress(addressResult.data);
-        } else {
-          // No address found (not an error - user needs to be assigned one)
-          console.log('ℹ️ No address assigned to user yet');
-          setUsAddress(null);
-        }
-      } catch (error) {
-        console.error('❌ Error fetching dashboard data:', error);
-      }
-    };
-
-    fetchDashboardData();
-  }, [user]);
 // Popular brands data
 const popularBrands = [
   {
@@ -433,23 +399,41 @@ const popularBrands = [
                   </div>
               
                   <div className="space-y-2 sm:space-y-3">
-                    {/* Name */}
+                    {/* First Name */}
                     <div className="flex items-center justify-between p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-gradient-to-br from-gray-50/80 to-white/80 hover:from-gray-100/80 hover:to-white/80 transition-all border border-gray-200/50">
                       <div className="flex-1 min-w-0 pr-2">
-                        <p className="text-xs font-medium text-gray-500 mb-1">Name</p>
-                        <p className="text-sm sm:text-base md:text-lg lg:text-xl font-bold text-red-600 break-words">
-                          Vanguard Cargo LLC <br />({profile?.suite_number})
+                        <p className="text-xs font-medium text-gray-500 mb-1">First Name</p>
+                        <p className="text-sm sm:text-base md:text-lg lg:text-xl font-bold text-red-600">
+                          Vanguard
                         </p>
                       </div>
                       <button
-                        onClick={() => copyToClipboard(
-                          `Vanguard Cargo LLC (${profile?.suite_number || ''})`,
-                          'name'
-                        )}
+                        onClick={() => copyToClipboard('Vanguard', 'firstName')}
                         className="ml-2 sm:ml-3 flex-shrink-0 p-2 sm:p-2.5 text-red-600 hover:bg-red-50 rounded-lg sm:rounded-xl transition-colors"
-                        title="Copy name"
+                        title="Copy first name"
                       >
-                        {copiedStates['name'] ? (
+                        {copiedStates['firstName'] ? (
+                          <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                        ) : (
+                          <Copy className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                        )}
+                      </button>
+                    </div>
+
+                    {/* Last Name */}
+                    <div className="flex items-center justify-between p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-gradient-to-br from-gray-50/80 to-white/80 hover:from-gray-100/80 hover:to-white/80 transition-all border border-gray-200/50">
+                      <div className="flex-1 min-w-0 pr-2">
+                        <p className="text-xs font-medium text-gray-500 mb-1">Last Name</p>
+                        <p className="text-sm sm:text-base md:text-lg lg:text-xl font-bold text-red-600">
+                          Cargo
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => copyToClipboard('Cargo', 'lastName')}
+                        className="ml-2 sm:ml-3 flex-shrink-0 p-2 sm:p-2.5 text-red-600 hover:bg-red-50 rounded-lg sm:rounded-xl transition-colors"
+                        title="Copy last name"
+                      >
+                        {copiedStates['lastName'] ? (
                           <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                         ) : (
                           <Copy className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
@@ -480,10 +464,10 @@ const popularBrands = [
                     <div className="flex items-center justify-between p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-gradient-to-br from-gray-50/80 to-white/80 hover:from-gray-100/80 hover:to-white/80 transition-all border border-gray-200/50">
                       <div className="flex-1 min-w-0 pr-2">
                         <p className="text-xs font-medium text-gray-500 mb-1">Apartment/Suite</p>
-                        <p className="text-sm sm:text-base md:text-lg lg:text-xl font-bold text-red-600">ALX-E2</p>
+                        <p className="text-sm sm:text-base md:text-lg lg:text-xl font-bold text-red-600">ALX-E2-{profile?.suite_number || '931'}</p>
                       </div>
                       <button
-                        onClick={() => copyToClipboard('ALX-E2', 'address2')}
+                        onClick={() => copyToClipboard(`ALX-E2-${profile?.suite_number}`, 'address2')}
                         className="ml-2 sm:ml-3 flex-shrink-0 p-2 sm:p-2.5 text-red-600 hover:bg-red-50 rounded-lg sm:rounded-xl transition-colors"
                         title="Copy suite number"
                       >
@@ -500,11 +484,11 @@ const popularBrands = [
                       <div className="flex-1 min-w-0 pr-2">
                         <p className="text-xs font-medium text-gray-500 mb-1">City, State ZIP</p>
                         <p className="text-sm sm:text-base md:text-lg lg:text-xl font-bold text-red-600">
-                          {usAddress?.city || 'Alexandria'}, {usAddress?.state_province || 'VA'} {usAddress?.postal_code || '22304'}
+                          Alexandria, VA 22304
                         </p>
                       </div>
                       <button
-                        onClick={() => copyToClipboard(`${usAddress?.city || 'Alexandria'}, ${usAddress?.state_province || 'VA'} ${usAddress?.postal_code || '22304'}`, 'city')}
+                        onClick={() => copyToClipboard('Alexandria, VA 22304', 'city')}
                         className="ml-2 sm:ml-3 flex-shrink-0 p-2 sm:p-2.5 text-red-600 hover:bg-red-50 rounded-lg sm:rounded-xl transition-colors"
                         title="Copy city, state, zip"
                       >
@@ -520,10 +504,10 @@ const popularBrands = [
                     <div className="flex items-center justify-between p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-gradient-to-br from-gray-50/80 to-white/80 hover:from-gray-100/80 hover:to-white/80 transition-all border border-gray-200/50">
                       <div className="flex-1 min-w-0 pr-2">
                         <p className="text-xs font-medium text-gray-500 mb-1">Country</p>
-                        <p className="text-sm sm:text-base md:text-lg lg:text-xl font-bold text-red-600">{usAddress?.country || 'USA'}</p>
+                        <p className="text-sm sm:text-base md:text-lg lg:text-xl font-bold text-red-600">USA</p>
                       </div>
                       <button
-                        onClick={() => copyToClipboard(usAddress?.country || 'USA', 'country')}
+                        onClick={() => copyToClipboard('USA', 'country')}
                         className="ml-2 sm:ml-3 flex-shrink-0 p-2 sm:p-2.5 text-red-600 hover:bg-red-50 rounded-lg sm:rounded-xl transition-colors"
                         title="Copy country"
                       >
