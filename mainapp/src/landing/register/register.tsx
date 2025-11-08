@@ -778,7 +778,6 @@ export default function Register() {
                     {/* Google OAuth Button */}
                     <div className="mb-6">
                       <GoogleAuthButton 
-                        redirectTo="/app/dashboard"
                         buttonText="Sign up with Google"
                       />
                       

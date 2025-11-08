@@ -34,6 +34,7 @@ const ForgotPassword = lazy(() => import("./landing/forgot-password/forgot-passw
 const EmailVerification = lazy(() => import("./landing/email-verification/email-verification"));
 const ResendVerification = lazy(() => import("./landing/resend-verification/resend-verification"));
 const EmailVerificationHandler = lazy(() => import("./pages/EmailVerificationHandler"));
+const AuthCallback = lazy(() => import("./pages/AuthCallback"));
 
 // Protected app pages
 const Dashboard = lazy(() => import("./app/dashboard/dashboard"));
@@ -226,6 +227,10 @@ export default function App() {
             <EmailVerificationHandler />
           </PublicRoute>
         } 
+      />
+      <Route 
+        path="/auth/callback" 
+        element={<AuthCallback />} 
       />
 
       {/* Protected Routes - Client App with AppLayout */}
