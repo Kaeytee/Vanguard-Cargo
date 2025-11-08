@@ -46,6 +46,8 @@ export default function GoogleAuthButton({
       console.log('🔐 Initiating Google OAuth with callback:', callbackUrl);
 
       // Sign in with Google OAuth
+      // Supabase automatically handles the OAuth flow and redirects back
+      // to your configured Site URL in the Supabase dashboard
       const { data, error: oauthError } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
@@ -65,7 +67,8 @@ export default function GoogleAuthButton({
       }
 
       console.log('✅ Google OAuth initiated:', data);
-      // User will be redirected to Google - no further code runs
+      // User will be redirected to Google, then back to your Site URL
+      // The session will be automatically established by Supabase
     } catch (err) {
       console.error('❌ Unexpected error during Google sign-in:', err);
       setError('An unexpected error occurred. Please try again.');
