@@ -10,6 +10,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
 import { supabase } from '@/lib/supabase';
+import type { RootState } from '../store';
 
 // ============================================================================
 // TYPES & INTERFACES
@@ -440,13 +441,13 @@ export const {
 export default packagesSlice.reducer;
 
 // Export selectors
-export const selectPackages = (state: { packages: PackagesState }) => state.packages.filteredItems;
-export const selectAllPackages = (state: { packages: PackagesState }) => state.packages.items;
-export const selectSelectedPackage = (state: { packages: PackagesState }) => {
+export const selectPackages = (state: RootState) => state.packages.filteredItems;
+export const selectAllPackages = (state: RootState) => state.packages.items;
+export const selectSelectedPackage = (state: RootState) => {
   const id = state.packages.selectedPackageId;
   return id ? state.packages.items.find(p => p.id === id) : null;
 };
-export const selectPackageStats = (state: { packages: PackagesState }) => state.packages.stats;
-export const selectIsLoading = (state: { packages: PackagesState }) => state.packages.isLoading;
-export const selectError = (state: { packages: PackagesState }) => state.packages.error;
-export const selectFilters = (state: { packages: PackagesState }) => state.packages.filters;
+export const selectPackageStats = (state: RootState) => state.packages.stats;
+export const selectIsLoading = (state: RootState) => state.packages.isLoading;
+export const selectError = (state: RootState) => state.packages.error;
+export const selectFilters = (state: RootState) => state.packages.filters;

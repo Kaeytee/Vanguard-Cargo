@@ -9,7 +9,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Trash2, AlertCircle, Send, CheckCircle, XCircle } from 'lucide-react';
-import logoImage from '../assets/logo.png';
+import { APP_LOGO } from '../lib/constants';
 import { SupportService } from '../services/supportService';
 import type { SupportMessageData } from '../services/supportService';
 
@@ -141,7 +141,7 @@ Please process this request according to GDPR and data protection regulations.
       <div 
         className="fixed inset-0 bg-no-repeat bg-center bg-contain opacity-5 pointer-events-none z-0"
         style={{
-          backgroundImage: `url(${logoImage})`,
+          backgroundImage: `url(${APP_LOGO})`,
           backgroundSize: '400px',
           backgroundPosition: 'center',
         }}
@@ -153,7 +153,7 @@ Please process this request according to GDPR and data protection regulations.
           <div className="flex items-center justify-center">
             <div className="flex items-center gap-3">
               <img 
-                src={logoImage} 
+                src={APP_LOGO} 
                 alt="Vanguard Cargo Logo" 
                 className="w-10 h-10 object-contain"
               />

@@ -6,6 +6,7 @@ import AppNavbar from './AppNavbar';
 import { useNotificationRealtime } from '../hooks/useRealtime';
 import { useNotificationToast } from '../hooks/useNotificationToast';
 import type { Notification } from '../services/notificationService';
+import { WATERMARK_LOGO } from '../lib/constants';
 
 interface AppLayoutProps {
   children?: React.ReactNode;
@@ -206,9 +207,10 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
               <div 
                 className="absolute inset-0 bg-no-repeat bg-center bg-cover pointer-events-none"
                 style={{
-                  backgroundImage: "url('/src/assets/logo.png')",
+                  backgroundImage: `url('${WATERMARK_LOGO}')`,
                   backgroundSize: '300px 300px',
-                  backgroundPosition: 'center center'
+                  backgroundPosition: 'center center',
+                  opacity: 0.05
                 }}
               />
               {/* Content overlay */}

@@ -250,6 +250,106 @@ class AuthService {
     }
   }
 
+  /**
+   * Handle OAuth sign-in (Google, etc.)
+   * Automatically creates user profile if it doesn't exist
+   * 
+   * @param user - The authenticated user from OAuth provider
+   * @returns {Promise<{ profile: AuthUser | null; error: AuthError | null }>}
+   */
+  async handleOAuthSignIn(user: User): Promise<{ profile: AuthUser | null; error: AuthError | null }> {
+    try {
+      // Check if user profile already exists
+      let profile = await this.getUserProfile(user.id);
+      
+      if (profile) {
+        // Profile exists, return it
+        console.log('✅ OAuth user profile found:', profile);
+        return { profile, error: null };
+      }
+
+      // Profile doesn't exist, create it using OAuth metadata
+      console.log('📝 Creating profile for OAuth user:', user.email);
+      
+      // Extract user metadata from OAuth provider
+      const metadata = user.user_metadata || {};
+      const firstName = metadata.first_name || metadata.given_name || metadata.name?.split(' ')[0] || 'User';
+      const lastName = metadata.last_name || metadata.family_name || metadata.name?.split(' ').slice(1).join(' ') || '';
+      
+      try {
+        // Create user profile using RPC function
+        const { data: profileResult, error: rpcError } = await supabase.rpc('create_user_profile_secure', {
+          user_id: user.id,
+          email: user.email || '',
+          first_name: firstName,
+          last_name: lastName,
+          phone_number: metadata.phone || null,
+          street_address: null,
+          city: null,
+          country: null,
+          postal_code: null
+        } as any);
+
+        if (rpcError) {
+          console.error('❌ Failed to create OAuth user profile:', rpcError);
+          return { 
+            profile: null, 
+            error: { 
+              message: `Failed to create user profile: ${rpcError.message}`,
+              name: 'ProfileCreationError'
+            } as AuthError 
+          };
+        }
+
+        if (!profileResult?.success) {
+          console.error('❌ OAuth profile creation returned error:', profileResult?.error);
+          return { 
+            profile: null, 
+            error: { 
+              message: `Failed to create user profile: ${profileResult?.error || 'Unknown error'}`,
+              name: 'ProfileCreationError'
+            } as AuthError 
+          };
+        }
+
+        // Fetch the newly created profile
+        profile = await this.getUserProfile(user.id);
+        
+        if (!profile) {
+          return { 
+            profile: null, 
+            error: { 
+              message: 'Profile created but could not be retrieved',
+              name: 'ProfileRetrievalError'
+            } as AuthError 
+          };
+        }
+
+        console.log('✅ OAuth user profile created successfully:', profile);
+        return { profile, error: null };
+
+      } catch (profileError) {
+        console.error('❌ Error creating OAuth user profile:', profileError);
+        return { 
+          profile: null, 
+          error: { 
+            message: 'Failed to create user profile',
+            name: 'ProfileCreationError'
+          } as AuthError 
+        };
+      }
+    } catch (err) {
+      console.error('❌ Error handling OAuth sign-in:', err);
+      return { 
+        profile: null, 
+        error: { 
+          message: 'OAuth sign-in handling failed',
+          name: 'OAuthError'
+        } as AuthError 
+      };
+    }
+  }
+
   async signOut(): Promise<{ error: AuthError | null }> {
     try {
       // Get current user before signing out for logging

@@ -3,12 +3,12 @@
 // ============================================================================
 // Description: Helper functions for handling images and avatars
 // Author: Senior Software Engineer
-// Features: Supabase storage URL construction, fallbacks
+// Features: Supabase storage URL construction, company logo as default avatar
 // Architecture: Clean Code, OOP Principles, Type-Safe
 // ============================================================================
 
 import { supabase } from '../lib/supabase';
-import defaultAvatar from '../assets/default-avatar.svg';
+import { APP_LOGO } from '../lib/constants';
 
 /**
  * Get the full public URL for a Supabase storage file
@@ -42,15 +42,15 @@ export function getSupabaseStorageUrl(bucketName: string, filePath: string | nul
 }
 
 /**
- * Get avatar URL with fallback to default
+ * Get avatar URL with fallback to company logo
  * 
  * @param avatarUrl - The avatar URL from user profile
- * @returns Avatar URL or default avatar
+ * @returns Avatar URL or company logo as default
  */
 export function getAvatarUrl(avatarUrl: string | null | undefined): string {
-  // If no avatar URL, use default
+  // If no avatar URL, use company logo as default
   if (!avatarUrl || avatarUrl.trim() === '') {
-    return defaultAvatar;
+    return APP_LOGO;
   }
 
   // If it's already a full URL, return as-is
@@ -61,8 +61,8 @@ export function getAvatarUrl(avatarUrl: string | null | undefined): string {
   // If it's a storage path, construct the full URL
   const fullUrl = getSupabaseStorageUrl('avatars', avatarUrl);
   
-  // Return the full URL or default avatar if construction failed
-  return fullUrl || defaultAvatar;
+  // Return the full URL or company logo if construction failed
+  return fullUrl || APP_LOGO;
 }
 
 /**
@@ -96,8 +96,8 @@ export function getOptimizedAvatarUrl(
 ): string {
   const url = getAvatarUrl(avatarUrl);
   
-  // If it's the default avatar, return as-is
-  if (url === defaultAvatar) {
+  // If it's the default logo, return as-is
+  if (url === APP_LOGO) {
     return url;
   }
 

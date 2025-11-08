@@ -9,6 +9,7 @@
 
 import { createSlice } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
+import type { RootState } from '../store';
 
 // ============================================================================
 // TYPES & INTERFACES
@@ -251,14 +252,14 @@ export const {
 export default uiSlice.reducer;
 
 // Export selectors
-export const selectTheme = (state: { ui: UIState }) => state.ui.theme;
-export const selectSidebar = (state: { ui: UIState }) => state.ui.sidebar;
-export const selectIsMobileMenuOpen = (state: { ui: UIState }) => state.ui.isMobileMenuOpen;
-export const selectActiveModal = (state: { ui: UIState }) => state.ui.activeModal;
-export const selectModalData = (state: { ui: UIState }) => state.ui.modalData;
-export const selectToasts = (state: { ui: UIState }) => state.ui.toasts;
-export const selectIsGlobalLoading = (state: { ui: UIState }) => state.ui.isGlobalLoading;
-export const selectLoadingMessage = (state: { ui: UIState }) => state.ui.loadingMessage;
+export const selectTheme = (state: RootState) => state.ui.theme;
+export const selectSidebar = (state: RootState) => state.ui.sidebar;
+export const selectIsMobileMenuOpen = (state: RootState) => state.ui.isMobileMenuOpen;
+export const selectActiveModal = (state: RootState) => state.ui.activeModal;
+export const selectModalData = (state: RootState) => state.ui.modalData;
+export const selectToasts = (state: RootState) => state.ui.toasts;
+export const selectIsGlobalLoading = (state: RootState) => state.ui.isGlobalLoading;
+export const selectLoadingMessage = (state: RootState) => state.ui.loadingMessage;
 
 // ============================================================================
 // DOCUMENTATION

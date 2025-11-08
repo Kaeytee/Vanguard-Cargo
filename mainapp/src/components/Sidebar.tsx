@@ -91,11 +91,11 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate }) => {
 
       {/* User profile section */}
       <div className="flex flex-col items-center p-6 border-red-500/20">
-        <div className="w-16 h-16 rounded-full overflow-hidden mb-3 ring-2 ring-white/20 transition-transform duration-200 hover:scale-105">
+        <div className="w-16 h-16 rounded-full overflow-hidden mb-3 ring-2 ring-white/20 transition-transform duration-200 hover:scale-105 bg-white flex items-center justify-center p-1">
           <img
             src={userData.image}
             alt="User Avatar"
-            className="w-full h-full object-cover"
+            className="w-full h-full object-contain"
           />
         </div>
         <div className="text-center">

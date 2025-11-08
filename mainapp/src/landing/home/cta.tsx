@@ -70,7 +70,7 @@ export default function CTA() {
 					<AnimateInView variant="fadeInUp" delay={0.4}>
 						<div className="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center md:justify-start w-full px-2 sm:px-0">
 							<Link to="/register" className="w-full sm:w-auto">
-								<AnimatedButton size="lg" className="w-full sm:w-auto bg-white hover:bg-red-100 text-red-900 font-bold flex items-center justify-center gap-2">
+								<AnimatedButton size="lg" className="w-full sm:w-auto bg-white hover:bg-red-100 text-red-900 font-bold flex items-center justify-center gap-2 animate-pulse-glow-white hover:animate-none">
 									Get My Free US Address 
 									<Rocket className="w-4 h-4 sm:w-5 sm:h-5" />
 								</AnimatedButton>

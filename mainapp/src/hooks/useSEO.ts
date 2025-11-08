@@ -111,7 +111,7 @@ export function useSEO({
     setMetaTag('web_author', author);
     setMetaTag('rating', 'general');
     setMetaTag('subject', 'Package Forwarding and International Shipping Services');
-    setMetaTag('copyright', '© 2025 Vanguard Cargo. All rights reserved.');
+    setMetaTag('copyright', `© ${new Date().getFullYear()} Vanguard Cargo. All rights reserved.`);
     setMetaTag('reply-to', 'support@vanguardcargo.co');
     setMetaTag('abstract', description);
     setMetaTag('topic', 'Logistics and Shipping Services');

@@ -13,6 +13,7 @@ import type { User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import { authService, type AuthUser, type SignUpData } from '@/services/authService';
 import { broadcastLogin } from '@/utils/tabSyncManager';
+import type { RootState } from '../store';
 
 // ============================================================================
 // TYPES & INTERFACES
@@ -99,10 +100,26 @@ export const initializeAuth = createAsyncThunk(
       }
 
       // Get user profile from database using authService for consistent field mapping
-      const profile = await authService.getUserProfile(session.user.id);
+      let profile = await authService.getUserProfile(session.user.id);
 
+      // If profile doesn't exist, this might be an OAuth sign-in
+      // Try to create the profile automatically
       if (!profile) {
-        throw new Error('Profile not found');
+        console.log('⚠️ Profile not found - attempting OAuth profile creation');
+        const oauthResult = await authService.handleOAuthSignIn(session.user);
+        
+        if (oauthResult.error) {
+          console.error('❌ Failed to create OAuth profile:', oauthResult.error);
+          throw new Error(oauthResult.error.message || 'Profile not found');
+        }
+        
+        profile = oauthResult.profile;
+        
+        if (!profile) {
+          throw new Error('Profile not found');
+        }
+        
+        console.log('✅ OAuth profile created successfully');
       }
 
       // Check account status on initialization (e.g., page refresh)
@@ -532,12 +549,12 @@ export const { setUser, clearUser, setError, clearError } = authSlice.actions;
 export default authSlice.reducer;
 
 // Export selectors
-export const selectUser = (state: { auth: AuthState }) => state.auth.user;
-export const selectProfile = (state: { auth: AuthState }) => state.auth.profile;
-export const selectIsAuthenticated = (state: { auth: AuthState }) => state.auth.isAuthenticated;
-export const selectIsLoading = (state: { auth: AuthState }) => state.auth.isLoading;
-export const selectError = (state: { auth: AuthState }) => state.auth.error;
-export const selectIsInitialized = (state: { auth: AuthState }) => state.auth.isInitialized;
+export const selectUser = (state: RootState) => state.auth.user;
+export const selectProfile = (state: RootState) => state.auth.profile;
+export const selectIsAuthenticated = (state: RootState) => state.auth.isAuthenticated;
+export const selectIsLoading = (state: RootState) => state.auth.isLoading;
+export const selectError = (state: RootState) => state.auth.error;
+export const selectIsInitialized = (state: RootState) => state.auth.isInitialized;
 
 // ============================================================================
 // DOCUMENTATION
