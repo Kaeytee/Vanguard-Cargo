@@ -140,7 +140,7 @@ Thank you!`;
             <img 
               src={NAV_LOGO} 
               alt="Vanguard Cargo" 
-              className="h-7 sm:h-10 md:h-12 w-auto object-contain"
+              className="h-20 sm:h-16 md:h-20 w-auto object-contain"
             />
           </Link>
           
