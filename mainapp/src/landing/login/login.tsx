@@ -413,7 +413,6 @@ export default function Login() {
 							{/* Google OAuth Button */}
 							<div className="mb-6">
 								<GoogleAuthButton 
-									redirectTo="/app/dashboard"
 									buttonText="Continue with Google"
 								/>
 								
