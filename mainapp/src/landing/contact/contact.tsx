@@ -12,7 +12,6 @@ import {
 import { cn } from '../../lib/utils';
 import AnimateInView from '../../components/ui/animate-in-view';
 import SEO from '../../components/SEO';
-import supportImage from '../../assets/support.jpg';
 import { SupportService } from '../../services/supportService';
 import type { SupportMessageData } from '../../services/supportService';
 
@@ -181,9 +180,9 @@ export default function Contact() {
 				</div>
 				
 				<div className="relative max-w-6xl mx-auto">
-					<div className="grid lg:grid-cols-2 gap-12 items-center">
+					<div className="grid lg:grid-cols-5 gap-12 items-center">
 						{/* Content Side */}
-						<AnimateInView variant="fadeInLeft">
+						<AnimateInView variant="fadeInLeft" className="lg:col-span-2">
 							<div className="text-gray-700">
 								<motion.div 
 									className="inline-block bg-red-500 text-white px-4 py-2 rounded-full text-sm font-bold mb-6"
@@ -265,16 +264,19 @@ export default function Contact() {
 						</AnimateInView>
 						
 						{/* Visual Side - Placeholder for SVG */}
-						<AnimateInView variant="fadeInRight" delay={0.2}>
+						<AnimateInView variant="fadeInRight" delay={0.2} className="lg:col-span-3">
 							<div className="relative">
 								<div className="bg-white rounded-2xl p-8 border border-gray-200 shadow-lg">
 									<div className="text-center text-gray-700">
-										<div className="w-full h-64 bg-gray-100 rounded-lg overflow-hidden mb-6">
-											<img 
-												src={supportImage} 
-												alt="Customer support illustration" 
-												className="w-full h-full object-cover"
-											/>
+										<div className="w-full h-96 bg-gray-100 rounded-lg overflow-hidden mb-6">
+											<iframe
+    className="w-full h-full object-cover"
+    src="https://www.youtube.com/embed/duKg8JPhPTE?autoplay=1&loop=1&playlist=duKg8JPhPTE&mute=1&controls=0&showinfo=0&modestbranding=1&rel=0"
+    title="YouTube video player"
+    frameBorder="0"
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+    allowFullScreen
+></iframe>
 										</div>
 										<div className="space-y-4">
 											<div className="bg-gray-50 rounded-lg p-4">
