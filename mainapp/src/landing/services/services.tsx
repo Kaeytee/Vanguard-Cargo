@@ -211,7 +211,7 @@ export default function Services() {
 										<div className="w-full h-96 bg-gray-100 rounded-lg overflow-hidden mb-6">
 											<iframe
 												className="w-full h-full object-cover"
-												src="https://www.youtube.com/embed/ZAOWbgASAtQ?autoplay=1&loop=1&playlist=ZAOWbgASAtQ&mute=1&controls=0&showinfo=0&modestbranding=1&rel=0"
+												src="https://www.youtube.com/embed/ZAOWbgASAtQ?controls=1&modestbranding=1&rel=0"
 												title="Vanguard Cargo - Services Overview"
 												frameBorder="0"
 												allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
