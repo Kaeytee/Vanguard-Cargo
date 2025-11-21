@@ -22,7 +22,6 @@ import CustomerRating from '../../components/CustomerRating';
 import air from '../../images/air.png';
 import packaging from '../../images/packaging.png';
 import customs from '../../images/customs.png';
-import servicesImage from '../../assets/services.jpg';
 /**
  * Services component - Displays the Services page content with animations
  * @returns {JSX.Element} The Services page component
@@ -139,9 +138,9 @@ export default function Services() {
 				</div>
 
 				<div className="relative max-w-6xl mx-auto">
-					<div className="grid lg:grid-cols-2 gap-12 items-center">
+					<div className="grid lg:grid-cols-5 gap-12 items-center">
 						{/* Content Side */}
-						<AnimateInView variant="fadeInLeft">
+						<AnimateInView variant="fadeInLeft" className="lg:col-span-2">
 							<div className="text-gray-700">
 								<motion.div
 									className="inline-block bg-red-500 text-white px-4 py-2 rounded-full text-sm font-bold mb-6"
@@ -205,16 +204,19 @@ export default function Services() {
 						</AnimateInView>
 
 						{/* Visual Side - Placeholder for SVG */}
-						<AnimateInView variant="fadeInRight" delay={0.2}>
+						<AnimateInView variant="fadeInRight" delay={0.2} className="lg:col-span-3">
 							<div className="relative">
 								<div className="bg-white rounded-2xl p-8 border border-gray-200 shadow-lg">
 									<div className="text-center text-gray-700">
-										<div className="w-full h-64 bg-gray-100 rounded-lg overflow-hidden mb-6">
-											<img
-												src={servicesImage}
-												alt="Services illustration"
+										<div className="w-full h-96 bg-gray-100 rounded-lg overflow-hidden mb-6">
+											<iframe
 												className="w-full h-full object-cover"
-											/>
+												src="https://www.youtube.com/embed/ZAOWbgASAtQ?autoplay=1&loop=1&playlist=ZAOWbgASAtQ&mute=1&controls=0&showinfo=0&modestbranding=1&rel=0"
+												title="Vanguard Cargo - Services Overview"
+												frameBorder="0"
+												allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+												allowFullScreen
+											></iframe>
 										</div>
 										<div className="grid grid-cols-3 gap-4 text-sm">
 											<div>
