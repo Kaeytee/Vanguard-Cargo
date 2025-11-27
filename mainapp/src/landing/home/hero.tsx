@@ -1,5 +1,4 @@
 "use client";
-
 import { HeroParallax } from "@/components/ui/hero-parallax";
 
 import img1 from "@/assets/hero/1.png";
@@ -18,6 +17,7 @@ import img12 from "@/assets/hero/12.png";
 export default function Hero() {
   return <HeroParallax products={products} />;
 }
+
 export const products = [
   {
     title: "Reliable Cargo Trucking",

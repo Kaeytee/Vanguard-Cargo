@@ -8,8 +8,8 @@ import {
   useSpring,
   MotionValue,
 } from "motion/react";
+import { TypewriterEffectSmooth } from "@/components/ui/typewriter-effect";
 import GoogleAuthButton from "@/components/auth/GoogleAuthButton";
-import { TypewriterEffect } from "@/components/ui/typewriter-effect";
 
 export const HeroParallax = ({
   products,
@@ -106,46 +106,57 @@ export const Header = () => {
   const words = [
     {
       text: "Shop",
-      className: "text-black dark:text-black text-4xl sm:text-6xl md:text-8xl lg:text-9xl",
+      className: "text-gray-800",
     },
     {
       text: "in",
-      className: "text-black dark:text-black text-4xl sm:text-6xl md:text-8xl lg:text-9xl",
+      className: "text-gray-800",
     },
     {
       text: "the",
-      className: "text-black dark:text-black text-4xl sm:text-6xl md:text-8xl lg:text-9xl",
+      className: "text-gray-800",
     },
     {
       text: "US.",
-      className: "text-black dark:text-black text-4xl sm:text-6xl md:text-8xl lg:text-9xl",
+      className: "text-gray-800",
     },
     {
       text: "Ship",
-      className: "text-red-600 dark:text-red-600 text-4xl sm:text-6xl md:text-8xl lg:text-9xl",
+      className: "text-red-600",
     },
     {
       text: "to",
-      className: "text-red-600 dark:text-red-600 text-4xl sm:text-6xl md:text-8xl lg:text-9xl",
+      className: "text-red-600",
     },
     {
       text: "Ghana.",
-      className: "text-red-600 dark:text-red-600 text-4xl sm:text-6xl md:text-8xl lg:text-9xl",
+      className: "text-red-600",
     },
   ];
+
   return (
-    <div className="max-w-7xl relative mx-auto py-20 md:py-40 px-4 w-full left-0 top-0 z-50">
-      <TypewriterEffect words={words} />
-      <p className="max-w-2xl text-2xl md:text-3xl mt-8 text-gray-700 dark:text-neutral-200 font-medium bg-white/50 dark:bg-black/50 backdrop-blur-sm p-4 rounded-lg">
+    <div className="max-w-7xl relative mx-auto py-8 md:py-40 px-4 w-full left-0 top-0 z-50">
+      {/* Left-aligned TypewriterEffect */}
+      <div className="flex flex-col items-start">
+        <TypewriterEffectSmooth 
+          words={words} 
+          className="justify-start"
+          cursorClassName="bg-red-600"
+        />
+      </div>
+      
+      <p className="max-w-2xl text-base md:text-xl mt-4 md:mt-8 text-gray-700 font-medium">
         Your trusted partner for fast, affordable, and secure shipping from the US to Ghana.
         Get your free US address today and start shopping from your favorite brands.
       </p>
-      <div className="flex flex-col md:flex-row space-y-4 md:space-y-0 space-x-0 md:space-x-4 mt-8 items-center md:items-start">
-        <div className="w-full md:w-64">
-          <GoogleAuthButton buttonText="Login with Google" />
+      
+      {/* CTA Buttons */}
+      <div className="flex flex-col sm:flex-row gap-4 mt-4 md:mt-8 items-start">
+        <div className="w-full sm:w-64">
+          <GoogleAuthButton buttonText="Get Started" />
         </div>
-        <Link to="/services">
-          <button className="w-40 h-12 rounded-xl bg-white text-black border border-black text-sm font-bold shadow-lg hover:bg-gray-50 transition-colors">
+        <Link to="/services" className="w-full sm:w-64">
+          <button className="w-full flex items-center justify-center gap-3 px-6 py-3 rounded-lg font-medium transition-all duration-200 bg-white border-2 border-red-600 text-red-600 hover:bg-red-50 hover:border-red-700 hover:shadow-md">
             Learn More
           </button>
         </Link>
