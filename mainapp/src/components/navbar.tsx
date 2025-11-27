@@ -10,6 +10,7 @@ import { useLogout } from "../hooks/useLogout";
 import { featureFlags } from "../config/featureFlags";
 import { NAV_LOGO } from "../lib/constants";
 import whatsappLogo from "../assets/whatsapp.png";
+import { useGoogleAuth } from "../hooks/useGoogleAuth";
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -20,6 +21,7 @@ export default function Navbar() {
   const { confirmLogout } = useLogout();
   const navRef = useRef<HTMLDivElement>(null);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
+  const { signInWithGoogle, isLoading } = useGoogleAuth();
 
   // Handle scroll position with simple throttling
   const updateScroll = useCallback(() => {
@@ -98,7 +100,7 @@ export default function Navbar() {
    * Professional contact setup for customer inquiries
    */
   const whatsappNumber = "233544197819"; // Vanguard Cargo WhatsApp Business number
-  
+
   /**
    * Professional WhatsApp message template
    * Provides clear introduction and expected information
@@ -137,13 +139,13 @@ Thank you!`;
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link to="/" className="flex-shrink-0">
-            <img 
-              src={NAV_LOGO} 
-              alt="Vanguard Cargo" 
+            <img
+              src={NAV_LOGO}
+              alt="Vanguard Cargo"
               className="h-20 sm:h-16 md:h-20 w-auto object-contain"
             />
           </Link>
-          
+
           {/* Desktop Navigation - Hidden on tablet and below */}
           <div className="hidden lg:flex items-center space-x-6 xl:space-x-8">
             {navLinks.map((link) => (
@@ -167,7 +169,7 @@ Thank you!`;
               </Link>
             ))}
           </div>
-          
+
           {/* Tablet Navigation - Compact nav for medium screens */}
           <div className="hidden md:flex lg:hidden items-center space-x-4">
             {navLinks.slice(0, 3).map((link) => (
@@ -181,7 +183,7 @@ Thank you!`;
                     : "text-gray-700 hover:text-primary"
                 )}
               >
-{link.label === "How It Works" ? "Services" : link.label}
+                {link.label === "How It Works" ? "Services" : link.label}
                 <span
                   className={cn(
                     "absolute bottom-0 left-0 h-0.5 bg-red-600 transition-all duration-200",
@@ -221,16 +223,17 @@ Thank you!`;
             ) : (
               <>
                 {!hideLogin && (
-                  <Link
-                    to={featureFlags.authEnabled ? "/login" : "/"}
+                  <button
+                    onClick={signInWithGoogle}
+                    disabled={isLoading || !featureFlags.authEnabled}
                     className={cn(
                       "px-4 py-2 text-sm font-medium text-primary hover:text-primary/80 transition-all duration-200 rounded-md hover:bg-red-600/10 border border-primary",
-                      !featureFlags.authEnabled && "opacity-0 cursor-not-allowed pointer-events-none"
+                      (!featureFlags.authEnabled || isLoading) && "opacity-50 cursor-not-allowed pointer-events-none"
                     )}
-                    title={!featureFlags.authEnabled ? "Authentication temporarily disabled" : "Log in to your account"}
+                    title={!featureFlags.authEnabled ? "Authentication temporarily disabled" : "Log in with Google"}
                   >
-                    Log In
-                  </Link>
+                    {isLoading ? "Loading..." : "Log In"}
+                  </button>
                 )}
                 {!hideRegister && (
                   <Link
@@ -272,16 +275,17 @@ Thank you!`;
             ) : (
               <>
                 {!hideLogin && (
-                  <Link
-                    to={featureFlags.authEnabled ? "/login" : "/"}
+                  <button
+                    onClick={signInWithGoogle}
+                    disabled={isLoading || !featureFlags.authEnabled}
                     className={cn(
                       "px-3 py-1.5 text-sm font-medium text-primary hover:text-primary/80 transition-all duration-200 rounded-md hover:bg-red-600/10 border border-primary",
-                      !featureFlags.authEnabled && "opacity-0 cursor-not-allowed pointer-events-none"
+                      (!featureFlags.authEnabled || isLoading) && "opacity-50 cursor-not-allowed pointer-events-none"
                     )}
-                    title={!featureFlags.authEnabled ? "Authentication temporarily disabled" : "Log in to your account"}
+                    title={!featureFlags.authEnabled ? "Authentication temporarily disabled" : "Log in with Google"}
                   >
-                    Login
-                  </Link>
+                    {isLoading ? "..." : "Login"}
+                  </button>
                 )}
                 {!hideRegister && (
                   <Link
@@ -311,16 +315,17 @@ Thank you!`;
 
             {/* Login Button - Shows second on mobile (if not logged in and not on login page) */}
             {!user && !hideLogin && (
-              <Link
-                to={featureFlags.authEnabled ? "/login" : "/"}
+              <button
+                onClick={signInWithGoogle}
+                disabled={isLoading || !featureFlags.authEnabled}
                 className={cn(
                   "flex items-center justify-center px-3 py-2 text-sm font-medium text-primary hover:text-primary/80 transition-all duration-200 rounded-md hover:bg-red-600/10 border border-primary",
-                  !featureFlags.authEnabled && "opacity-50 cursor-not-allowed pointer-events-none"
+                  (!featureFlags.authEnabled || isLoading) && "opacity-50 cursor-not-allowed pointer-events-none"
                 )}
-                title={!featureFlags.authEnabled ? "Authentication temporarily disabled" : "Log in to your account"}
+                title={!featureFlags.authEnabled ? "Authentication temporarily disabled" : "Log in with Google"}
               >
-                Login
-              </Link>
+                {isLoading ? "..." : "Login"}
+              </button>
             )}
 
             {/* Mobile menu button - Shows last */}
@@ -403,17 +408,20 @@ Thank you!`;
                 ) : (
                   <>
                     {!hideLogin && (
-                      <Link
-                        to={featureFlags.authEnabled ? "/login" : "/"}
-                        onClick={() => setIsMenuOpen(false)}
+                      <button
+                        onClick={() => {
+                          signInWithGoogle();
+                          setIsMenuOpen(false);
+                        }}
+                        disabled={isLoading || !featureFlags.authEnabled}
                         className={cn(
                           "w-full px-6 py-3 text-center text-red-600 border-2 border-red-600 rounded-lg hover:bg-red-600 hover:text-white active:bg-red-700 transition-all duration-200 font-semibold text-lg",
-                          !featureFlags.authEnabled && "opacity-50 cursor-not-allowed pointer-events-none"
+                          (!featureFlags.authEnabled || isLoading) && "opacity-50 cursor-not-allowed pointer-events-none"
                         )}
-                        title={!featureFlags.authEnabled ? "Authentication temporarily disabled" : "Log in to your account"}
+                        title={!featureFlags.authEnabled ? "Authentication temporarily disabled" : "Log in with Google"}
                       >
-                        Login
-                      </Link>
+                        {isLoading ? "Loading..." : "Login"}
+                      </button>
                     )}
                     {!hideRegister && (
                       <Link
