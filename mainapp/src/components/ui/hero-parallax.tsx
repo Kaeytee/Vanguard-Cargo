@@ -138,25 +138,28 @@ export const Header = () => {
     <div className="max-w-7xl relative mx-auto py-8 md:py-40 px-4 w-full left-0 top-0 z-50">
       {/* Left-aligned TypewriterEffect */}
       <div className="flex flex-col items-start">
-        <TypewriterEffectSmooth 
-          words={words} 
+        <TypewriterEffectSmooth
+          words={words}
           className="justify-start"
           cursorClassName="bg-red-600"
         />
       </div>
-      
+
       <p className="max-w-2xl text-base md:text-xl mt-4 md:mt-8 text-gray-700 font-medium">
         Your trusted partner for fast, affordable, and secure shipping from the US to Ghana.
         Get your free US address today and start shopping from your favorite brands.
       </p>
-      
+
       {/* CTA Buttons */}
       <div className="flex flex-col sm:flex-row gap-4 mt-4 md:mt-8 items-start">
         <div className="w-full sm:w-64">
-          <GoogleAuthButton buttonText="Get Started" />
+          <GoogleAuthButton
+            buttonText="Get Started"
+            className="border-red-600 text-red-600 hover:bg-red-50 hover:border-red-700 hover:shadow-md"
+          />
         </div>
         <Link to="/services" className="w-full sm:w-64">
-          <button className="w-full flex items-center justify-center gap-3 px-6 py-3 rounded-lg font-medium transition-all duration-200 bg-white border-2 border-red-600 text-red-600 hover:bg-red-50 hover:border-red-700 hover:shadow-md">
+          <button className="w-full flex items-center justify-center gap-3 px-6 py-3 rounded-lg font-medium transition-all duration-200 bg-white border-2 border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400 hover:shadow-md">
             Learn More
           </button>
         </Link>
