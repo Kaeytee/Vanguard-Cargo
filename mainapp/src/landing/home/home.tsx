@@ -1,4 +1,5 @@
 
+import { useNavigate } from 'react-router-dom';
 import SEO from '../../components/SEO';
 import MarqueeBanner from '../../components/MarqueeBanner';
 import Hero from './hero';
@@ -7,9 +8,10 @@ import Services from './services';
 // import Testimonials from './testimonials';
 import CTA from './cta';
 import { motion } from "framer-motion";
-
+import FaqSection from '../../components/support/FaqSection';
 
 export default function Home() {
+  const navigate = useNavigate();
   const popularBrands = [
     {
       name: "Amazon",
@@ -225,6 +227,23 @@ export default function Home() {
 
       {/* Call to Action Section */}
       <CTA />
+
+      {/* FAQ Section */}
+      <section className="py-16 bg-gray-50">
+        <div className="container mx-auto px-4 max-w-4xl">
+          <FaqSection
+            containerVariants={{
+              hidden: { opacity: 0 },
+              visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
+            }}
+            itemVariants={{
+              hidden: { y: 20, opacity: 0 },
+              visible: { y: 0, opacity: 1, transition: { duration: 0.4 } }
+            }}
+            onSwitchToContact={() => navigate('/contact')}
+          />
+        </div>
+      </section>
     </div>
   )
 }

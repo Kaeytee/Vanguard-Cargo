@@ -41,7 +41,7 @@ const FaqSection: React.FC<FaqSectionProps> = ({
     {
       question: "How long does shipping take to Ghana?",
       answer:
-        "Standard shipping takes 7-14 business days from our US warehouse to Ghana. We also offer express shipping options for 3-7 business days delivery.",
+        "All shipments take exactly 3 days from our US warehouse to Ghana. We pride ourselves on speed and reliability for every package.",
     },
     {
       question: "How do I track my packages?",

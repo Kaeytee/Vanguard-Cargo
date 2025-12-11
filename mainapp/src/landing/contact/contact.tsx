@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { 
-	Phone, 
-	MapPin, 
-	Mail, 
+import {
+	Phone,
+	MapPin,
+	Mail,
 	Send,
 	ChevronDown,
 	CheckCircle,
@@ -141,7 +141,7 @@ export default function Contact() {
 		},
 		{
 			question: 'How long does shipping take from the US to Ghana?',
-			answer: 'We offer fast 3-day delivery from our US warehouse to Ghana! Your packages are processed quickly and delivered to your doorstep in just 3 business days.'
+			answer: 'All shipments take exactly 3 days from our US warehouse to Ghana. We pride ourselves on speed and reliability for every package.'
 		},
 		{
 			question: 'What items cannot be shipped through your service?',
@@ -155,36 +155,36 @@ export default function Contact() {
 
 	return (
 		<div className="contact-container">
-			<SEO 
+			<SEO
 				title="Contact Vanguard Cargo - Get Support for Your Package Forwarding"
 				description="Get in touch with Vanguard Cargo for expert package forwarding support. Contact our team for shipping quotes, tracking assistance, or general inquiries. We're here to help with your USA to Ghana shipping needs."
 				keywords="contact Vanguard Cargo, package forwarding support, shipping customer service, Ghana logistics contact, international shipping help, cargo forwarding assistance"
 				url="https://www.vanguardcargo.co/contact"
 			/>
-			
+
 			{/* Enhanced Contact Hero Section */}
 			<section className="relative py-20 px-4 sm:px-6 lg:px-8 bg-gray-50 overflow-hidden">
 				{/* Background elements */}
 				<div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgba(0,0,0,0.05)_1px,transparent_0)] [background-size:20px_20px]"></div>
-				
+
 				{/* SVG Background Placeholder */}
 				<div className="absolute inset-0 opacity-10">
 					<svg viewBox="0 0 100 100" className="w-full h-full">
 						<defs>
 							<pattern id="contact-pattern" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
-								<circle cx="2" cy="2" r="1" fill="gray" opacity="0.5"/>
+								<circle cx="2" cy="2" r="1" fill="gray" opacity="0.5" />
 							</pattern>
 						</defs>
-						<rect width="100" height="100" fill="url(#contact-pattern)"/>
+						<rect width="100" height="100" fill="url(#contact-pattern)" />
 					</svg>
 				</div>
-				
+
 				<div className="relative max-w-6xl mx-auto">
 					<div className="grid lg:grid-cols-5 gap-12 items-center">
 						{/* Content Side */}
 						<AnimateInView variant="fadeInLeft" className="lg:col-span-2">
 							<div className="text-gray-700">
-								<motion.div 
+								<motion.div
 									className="inline-block bg-red-500 text-white px-4 py-2 rounded-full text-sm font-bold mb-6"
 									whileHover={{ scale: 1.05 }}
 									transition={{ duration: 0.2 }}
@@ -196,10 +196,10 @@ export default function Contact() {
 									<span className="block text-red-600">We're Here to Help</span>
 								</h1>
 								<p className="text-xl text-gray-700 mb-8 leading-relaxed">
-									Have questions about package forwarding? Need help with your shipment? Our dedicated 
+									Have questions about package forwarding? Need help with your shipment? Our dedicated
 									support team is ready to assist you every step of the way.
 								</p>
-								
+
 								{/* Contact methods preview */}
 								<div className="space-y-4 mb-8">
 									<div className="flex items-center space-x-4">
@@ -230,21 +230,21 @@ export default function Contact() {
 										</div>
 									</div>
 								</div>
-								
-							
-							{/* Quick action button */}
-							<motion.a 
-								href="tel:+233303982320"
-								className="inline-flex items-center bg-red-600 hover:bg-red-700 text-white font-bold px-8 py-4 rounded-lg transition-all duration-300"
-								whileHover={{ scale: 1.05, y: -2 }}
-								whileTap={{ scale: 0.95 }}
-							>
-								Call Us Now: 0303982320
-							</motion.a>
-							<p className="text-sm text-gray-600 mt-2">
-								Other lines: 0303982330 • 0302982329
-							</p>								{/* Scroll indicator */}
-								<motion.div 
+
+
+								{/* Quick action button */}
+								<motion.a
+									href="tel:+233303982320"
+									className="inline-flex items-center bg-red-600 hover:bg-red-700 text-white font-bold px-8 py-4 rounded-lg transition-all duration-300"
+									whileHover={{ scale: 1.05, y: -2 }}
+									whileTap={{ scale: 0.95 }}
+								>
+									Call Us Now: 0303982320
+								</motion.a>
+								<p className="text-sm text-gray-600 mt-2">
+									Other lines: 0303982330 • 0302982329
+								</p>								{/* Scroll indicator */}
+								<motion.div
 									className="mt-12 flex flex-col items-center md:items-start text-gray-600"
 									initial={{ opacity: 0 }}
 									animate={{ opacity: 1 }}
@@ -262,7 +262,7 @@ export default function Contact() {
 								</motion.div>
 							</div>
 						</AnimateInView>
-						
+
 						{/* Visual Side - Placeholder for SVG */}
 						<AnimateInView variant="fadeInRight" delay={0.2} className="lg:col-span-3">
 							<div className="relative">
@@ -270,13 +270,13 @@ export default function Contact() {
 									<div className="text-center text-gray-700">
 										<div className="w-full h-96 bg-gray-100 rounded-lg overflow-hidden mb-6">
 											<iframe
-					    className="w-full h-full object-cover"
-					    src="https://www.youtube.com/embed/duKg8JPhPTE?controls=1&modestbranding=1&rel=0"
-					    title="YouTube video player"
-					    frameBorder="0"
-					    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-					    allowFullScreen
-					></iframe>
+												className="w-full h-full object-cover"
+												src="https://www.youtube.com/embed/duKg8JPhPTE?controls=1&modestbranding=1&rel=0"
+												title="YouTube video player"
+												frameBorder="0"
+												allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+												allowFullScreen
+											></iframe>
 										</div>
 										<div className="space-y-4">
 											<div className="bg-gray-50 rounded-lg p-4">
@@ -302,7 +302,7 @@ export default function Contact() {
 					<div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
 						{/* Contact Form */}
 						<AnimateInView variant="fadeInLeft" delay={0.2}>
-							<motion.div 
+							<motion.div
 								className="bg-white"
 								whileHover={{ y: -2 }}
 								transition={{ duration: 0.3 }}
@@ -400,7 +400,7 @@ export default function Contact() {
 
 									{/* Success Message */}
 									{isSubmitted && submitSuccess && (
-										<motion.div 
+										<motion.div
 											className="text-green-600 text-sm mt-4 flex items-center bg-green-50 p-3 rounded-md border border-green-200"
 											initial={{ opacity: 0, y: 10 }}
 											animate={{ opacity: 1, y: 0 }}
@@ -410,10 +410,10 @@ export default function Contact() {
 											<span>{submitSuccess}</span>
 										</motion.div>
 									)}
-									
+
 									{/* Error Message */}
 									{submitError && (
-										<motion.div 
+										<motion.div
 											className="text-red-600 text-sm mt-4 flex items-center bg-red-50 p-3 rounded-md border border-red-200"
 											initial={{ opacity: 0, y: 10 }}
 											animate={{ opacity: 1, y: 0 }}
@@ -439,14 +439,14 @@ export default function Contact() {
 									{contactInfo.map((contact, index) => {
 										const isHovered = hoveredContact === index;
 										const Icon = contact.icon;
-										
+
 										return (
-											<AnimateInView 
+											<AnimateInView
 												key={index}
-												variant="fadeInRight" 
+												variant="fadeInRight"
 												delay={0.5 + index * 0.1}
 											>
-												<motion.div 
+												<motion.div
 													className={cn(
 														"flex items-start space-x-4 p-4 rounded-lg transition-all duration-300",
 														isHovered && "bg-red-50"
@@ -456,7 +456,7 @@ export default function Contact() {
 													whileHover={{ x: 5 }}
 													transition={{ type: "spring", stiffness: 300, damping: 20 }}
 												>
-													<motion.div 
+													<motion.div
 														className={cn(
 															"flex-shrink-0 w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center transition-all duration-300",
 															isHovered && "bg-red-500"
@@ -464,11 +464,11 @@ export default function Contact() {
 														animate={isHovered ? { scale: 1.1, rotate: 5 } : { scale: 1, rotate: 0 }}
 														transition={{ type: "spring", stiffness: 300, damping: 15 }}
 													>
-														<Icon 
+														<Icon
 															className={cn(
 																"w-5 h-5 text-red-500 transition-colors duration-300",
 																isHovered && "text-white"
-															)} 
+															)}
 														/>
 													</motion.div>
 													<div>
@@ -502,14 +502,14 @@ export default function Contact() {
 					<div className="space-y-4">
 						{faqItems.map((faq, index) => {
 							const isExpanded = expandedFAQ === index;
-							
+
 							return (
-								<AnimateInView 
+								<AnimateInView
 									key={index}
-									variant="fadeInUp" 
+									variant="fadeInUp"
 									delay={index * 0.1}
 								>
-									<motion.div 
+									<motion.div
 										className="border border-gray-200 rounded-lg overflow-hidden"
 										whileHover={{ y: -2 }}
 										transition={{ duration: 0.2 }}
@@ -526,12 +526,12 @@ export default function Contact() {
 												<ChevronDown className="w-5 h-5 text-gray-500" />
 											</motion.div>
 										</button>
-										
+
 										<motion.div
 											initial={false}
-											animate={{ 
+											animate={{
 												height: isExpanded ? "auto" : 0,
-												opacity: isExpanded ? 1 : 0 
+												opacity: isExpanded ? 1 : 0
 											}}
 											transition={{ duration: 0.3 }}
 											className="overflow-hidden"
